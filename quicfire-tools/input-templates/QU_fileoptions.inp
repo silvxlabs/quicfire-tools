@@ -1,0 +1,8 @@
+!QUIC 6.26
+2   !output data file format flag (1=ascii, 2=binary, 3=both, 4=none)
+0   !flag to write out non-mass conserved initial field (uofield.dat) (1=write,0=no write)
+0   !flag to write out the file uosensorfield.dat, the initial sensor velocity field (1=write,0=no write)
+0   !flag to write out the file QU_staggered_velocity.bin used by QUIC-Pressure(1=write,0=no write)
+0   !Output fire energy per timestep
+1   !flag for automatically killing simulation once fire behavior has quit (1=on,0=off)
+1   !flag to output startup wind files for topo-influenced wind fields

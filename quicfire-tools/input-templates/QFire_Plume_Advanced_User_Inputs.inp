@@ -1,0 +1,16 @@
+150000		! N/A, max number of plume at each time step
+0.1			! m/s, minimum vertical velocity of a plume. If wc is below minimum, the plume is eliminated
+10			! m/s, maximum vertical velocity of a plume
+$msr		! N/A, minimum speed ratio (plume vertical velocity/wind speed). If below, the plume is eliminated
+0			! 1/s^2, brunt vaisala frequency squared
+1			! N/A creeping flag: 0 = off, 1 = on
+0			! N/A, plume time step flag (0 = fixed, 1 = adaptable) 
+1			! s, time step plume
+1			! s, sor option
+2			! N/A, alpha 2 for fire cells
+0			! N/A, fraction of ignition energy that goes into en 2 atmos
+30			! deg, max angle for merging two plumes
+0.7			! N/A, fraction of a plume length that a point on a second plume can be for merging
+0.0         !Plume cutoff [m] (<0 no cutoff)
+
+

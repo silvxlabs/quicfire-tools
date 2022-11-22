@@ -1,0 +1,64 @@
+!QUIC 6.26
+$nx !nx - Domain Length(X) Grid Cells
+$ny !ny - Domain Width(Y) Grid Cells
+29 !nz - Domain Height(Z) Grid Cells
+$dx !dx (meters)
+$dy !dy (meters)
+3 !Vertical stretching flag(0=uniform,1=custom,2=parabolic Z,3=parabolic DZ,4=exponential)
+1.000000 !Surface dz (meters)
+3 !Number of uniform surface cells
+!dz array (meters)
+1.000000
+1.000000
+1.000000
+1.000000
+1.000000
+1.104746
+1.418984
+1.942715
+2.675937
+3.618652
+4.770859
+6.132559
+7.703750
+9.484434
+11.474609
+13.674277
+16.083438
+18.702090
+21.530234
+24.682715
+30.
+40.
+50.
+60.
+70.
+80.
+90.
+100.
+110.
+1 !total time increments
+0 !UTC conversion
+!Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)
+$timenow
+2 !rooftop flag (0-none, 1-log profile, 2-vortex)
+3 !upwind cavity flag (0-none, 1-Rockle, 2-MVP, 3-HMVP)
+4 !street canyon flag (0-none, 1-Roeckle, 2-CPB, 3-exp. param. PKK, 4-Roeckle w/ Fackrel)
+1 !street intersection flag (0-off, 1-on)
+3 !wake flag (0-none, 1-Rockle, 2-Modified Rockle, 3-Area Scaled)
+1 !sidewall flag (0-off, 1-on)
+2 !Canopy flag (1-Cionco w/o wakes, 2-Cionco w/ wakes)
+1 !Season flag (1-Summer, 2-Winter, 3-Transition)
+50 !Maximum number of iterations
+0.9 !omega relax value (For sor solver) Must be between 0 and 2
+3 !Residual Reduction (Orders of Magnitude)
+0 !Use Diffusion Algorithm (1 = on)
+20 !Number of Diffusion iterations
+0 !Domain rotation relative to true north (cw = +)
+0.0  !UTMX of domain origin (m)
+0.   !UTMY of domain origin (m)
+1 !UTM zone
+17 !UTM zone leter (1=A,2=B,etc.)
+0 !QUIC-CFD Flag
+0 !Explosive building damage flag (1 = on)
+0 !Building Array Flag (1 = on)
