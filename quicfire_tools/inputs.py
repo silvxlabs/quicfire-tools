@@ -8,21 +8,22 @@ from pathlib import Path
 from string import Template
 
 
-class SimulationInputModule:
+class InputModule:
     """
-    Simulation Input Module
+    Input Module
     """
 
     def __init__(self, directory: Path | str):
         if type(directory) == str:
-            directory = Path(directory)
+            path = Path(directory)
+            directory = path.resolve()
 
         directory.mkdir(exist_ok=True)
         self.directory = directory
 
-    def setup_simulation_files(self, params):
+    def setup_input_files(self, params):
         """
-        Populates simulation file templates with user defined parameters
+        Populates input file templates with user defined parameters
 
         Parameters
         ----------
@@ -39,10 +40,8 @@ class SimulationInputModule:
         params["timenow"] = int(time.time())
 
         # Write fuels data
-        fuel_data = self._write_fuel_data(params)
-        params["fuel_density"] = fuel_data[0]
-        params["fuel_moisture"] = fuel_data[1]
-        params["fuel_height"] = fuel_data[2]
+        params["fuel_density"], params["fuel_moisture"], params["fuel_height"] \
+            = self._write_fuel_data(params)
 
         # Write ignition data
         params["ignition_locations"] = self._write_ignition_locations(params)
@@ -209,20 +208,21 @@ class SimulationInputModule:
 
 if __name__ == '__main__':
     test_params = {
-        "nx": 200,
-        "ny": 200,
+        "nx": 100,
+        "ny": 100,
         "nz": 1,
-        "dx": 2.,
-        "dy": 2.,
+        "dx": 1.,
+        "dy": 1.,
         "dz": 1.,
         "wind_speed": 4.,
-        "wind_direction": 265,
+        "wind_direction": 270,
         "sim_time": 60,
         "auto_kill": 1,
         "num_cpus": 1,
         "fuel_flag": 3,
-        "ignition_flag": 6,
+        "ignition_flag": 1,
         "output_time": 10,
     }
-    sim_test = SimulationInputModule("test")
-    sim_test.setup_simulation_files(test_params)
+
+    sim_test = InputModule("../tests/test-simulation/")
+    sim_test.setup_input_files(test_params)
