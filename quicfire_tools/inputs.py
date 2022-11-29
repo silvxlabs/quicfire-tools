@@ -41,7 +41,7 @@ class InputModule:
 
         # Write fuels data
         params["fuel_density"], params["fuel_moisture"], params["fuel_height"] \
-            = self._write_fuel_data(params)
+            = self._write_fuel(params)
 
         # Write ignition data
         params["ignition_locations"] = self._write_ignition_locations(params)
@@ -52,7 +52,10 @@ class InputModule:
         for fname in template_files_list:
             self._fill_form_with_dict(fname, params)
 
-    def _write_fuel_data(self, params: dict) -> tuple[str, str, str]:
+    def _write_topo(self, params: dict) -> str:
+        pass
+
+    def _write_fuel(self, params: dict) -> tuple[str, str, str]:
         """
         Writes fuel data to the QUIC_fire.inp input file. This function
 
