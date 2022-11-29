@@ -52,9 +52,6 @@ class InputModule:
         for fname in template_files_list:
             self._fill_form_with_dict(fname, params)
 
-    def _write_topo(self, params: dict) -> str:
-        pass
-
     def _write_fuel(self, params: dict) -> tuple[str, str, str]:
         """
         Writes fuel data to the QUIC_fire.inp input file. This function
