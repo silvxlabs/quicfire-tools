@@ -1,7 +1,0 @@
-!Relative filepath to topo .dat file (ex:: "../path/to/topo.dat")
-"topo.dat"
-5              !Topo flag 0:Flat 1:Gaussian Hill 3:Constant slope with flat section 5:Custom .dat
-0              !Smoothing Flag
-250000           !Total startup iterations
-1000            !Iteration Reset Period
-3              !Preconditioning
