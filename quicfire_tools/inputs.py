@@ -36,6 +36,8 @@ class InputModule:
             Sets up simulation files in the simulation directory.
 
         """
+        self._validate_params_dict(params)
+
         # Get current unix time
         params["timenow"] = int(time.time())
 
@@ -52,7 +54,8 @@ class InputModule:
         for fname in template_files_list:
             self._fill_form_with_dict(fname, params)
 
-    def _write_fuel(self, params: dict) -> tuple[str, str, str]:
+    @staticmethod
+    def _write_fuel(params: dict) -> tuple[str, str, str]:
         """
         Writes fuel data to the QUIC_fire.inp input file. This function
 
@@ -72,22 +75,13 @@ class InputModule:
 
         # Uniform fuel properties
         if fuel_flag == 1:
-            try:
-                fuel_density = "\n" + str(params["fuel_density"])
-                fuel_moisture = "\n" + str(params["fuel_moisture"])
-                fuel_height = "\n" + str(params["fuel_height"])
-            except KeyError as e:
-                raise KeyError(f"{e.args[0]} value must be defined if fuel flag"
-                               f" is 1")
+            fuel_density = "\n" + str(params["fuel_density"])
+            fuel_moisture = "\n" + str(params["fuel_moisture"])
+            fuel_height = "\n" + str(params["fuel_height"])
 
-        # Custom fuel .dat files
-        elif fuel_flag in (3, 4):
-            fuel_density, fuel_moisture, fuel_height = "", "", ""
-
-        # Unsupported fuel flag
+        # Custom fuel .dat files (fuel flags 3 or 4)
         else:
-            raise ValueError("Invalid fuel flag. Only fuel flags 1, 3, and 4 "
-                             "are supported.")
+            fuel_density, fuel_moisture, fuel_height = "", "", ""
 
         return fuel_density, fuel_moisture, fuel_height
 
@@ -110,13 +104,12 @@ class InputModule:
         """
         if params["ignition_flag"] == 6:
             return ""
-        elif params["ignition_flag"] == 1:
-            return self._write_line_fire_ignition(params)
-        else:
-            raise ValueError("Invalid ignition flag. Only ignition flags 1 "
-                             "(rectangular) and 6 (file) are supported.")
 
-    def _write_line_fire_ignition(self, params: dict) -> str:
+        else:  # Ignition flag 1
+            return self._write_line_fire_ignition(params)
+
+    @staticmethod
+    def _write_line_fire_ignition(params: dict) -> str:
         """
         Writes line fire ignition locations to the QUIC_fire.inp input file.
 
@@ -204,6 +197,122 @@ class InputModule:
                 src = Template(ftemp.read())
                 result = src.substitute(params)
                 fout.write(result)
+
+    @staticmethod
+    def _validate_params_dict(params):
+        """
+        Validates the params dictionary.
+
+        Parameters
+        ----------
+        params: dict
+            Dictionary of user defined parameters.
+
+        Returns
+        -------
+        None:
+            Raises ValueError if any parameters are invalid.
+        """
+        # Check for required parameters
+        required_params = ["nx", "ny", "nz", "dx", "dy", "dz", "wind_speed",
+                           "wind_direction", "sim_time", "num_cpus",
+                           "fuel_flag", "ignition_flag", "output_time"]
+        for param in required_params:
+            if param not in params:
+                raise KeyError(f"Parameter {param} is required.")
+
+        # nx, ny, and nz must be integers greater than 0
+        for param in ("nx", "ny", "nz"):
+            if not isinstance(params[param], int):
+                raise TypeError(f"Parameter {param} must be an integer.")
+            if params[param] <= 0:
+                raise ValueError(f"Parameter {param} must be greater than 0.")
+
+        # dx, dy, and dz must be numbers greater than 0
+        for param in ("dx", "dy", "dz"):
+            if not isinstance(params[param], (int, float)):
+                raise TypeError(f"Parameter {param} must be a number.")
+            if params[param] <= 0:
+                raise ValueError(f"Parameter {param} must be greater than 0.")
+
+        # wind_speed must be a number greater than or equal to 0
+        if not isinstance(params["wind_speed"], (int, float)):
+            raise TypeError("Parameter wind_speed must be a number.")
+        if params["wind_speed"] < 0:
+            raise ValueError("Parameter wind_speed must be greater than or "
+                             "equal to 0.")
+
+        # wind_direction must be a number between 0 and 360
+        if not isinstance(params["wind_direction"], (int, float)):
+            raise TypeError("Parameter wind_direction must be a number.")
+        if params["wind_direction"] < 0 or params["wind_direction"] > 360:
+            raise ValueError("Parameter wind_direction must be between 0 and "
+                             "360.")
+
+        # sim_time must be an integer greater than 0
+        if not isinstance(params["sim_time"], int):
+            raise TypeError("Parameter sim_time must be an integer.")
+        if params["sim_time"] <= 0:
+            raise ValueError("Parameter sim_time must be greater than 0.")
+
+        # auto_kill must be an integer equal to 0 or 1
+        if not isinstance(params["auto_kill"], int):
+            raise TypeError("Parameter auto_kill must be an integer.")
+        if params["auto_kill"] not in (0, 1):
+            raise ValueError("Parameter auto_kill must be 0 or 1.")
+
+        # num_cpus must be an integer greater than 0
+        if not isinstance(params["num_cpus"], int):
+            raise TypeError("Parameter num_cpus must be an integer.")
+        if params["num_cpus"] <= 0:
+            raise ValueError("Parameter num_cpus must be greater than 0.")
+
+        # output_time must be an integer greater than 0
+        if not isinstance(params["output_time"], int):
+            raise TypeError("Parameter output_time must be an integer.")
+        if params["output_time"] <= 0:
+            raise ValueError("Parameter output_time must be greater than 0.")
+
+        # Fuel flag must be an integer
+        if not isinstance(params["fuel_flag"], int):
+            raise TypeError("Parameter fuel_flag must be an integer.")
+
+        # Fuel flags 1, 3, 4 are currently supported
+        if params["fuel_flag"] not in (1, 3, 4):
+            raise ValueError("Parameter fuel_flag must be 1, 3, or 4. Future"
+                             "versions of this package will support more.")
+
+        # If fuel_flag is 1, then the user must provide fuel_density,
+        # fuel_moisture, and fuel_height parameters
+        if params["fuel_flag"] == 1:
+            if "fuel_density" not in params:
+                raise KeyError("Parameter fuel_density is required when "
+                               "fuel_flag is 1.")
+            if "fuel_moisture" not in params:
+                raise KeyError("Parameter fuel_moisture is required when "
+                               "fuel_flag is 1.")
+            if "fuel_height" not in params:
+                raise KeyError("Parameter fuel_height is required when "
+                               "fuel_flag is 1.")
+
+        # fuel_density, fuel_moisture, and fuel_height must be numbers greater
+        # or equal to 0
+        for param in ("fuel_density", "fuel_moisture", "fuel_height"):
+            if param in params:
+                if not isinstance(params[param], (int, float)):
+                    raise TypeError(f"Parameter {param} must be a number.")
+                if params[param] < 0:
+                    raise ValueError(f"Parameter {param} must be greater than"
+                                     " or equal to 0.")
+
+        # Ignition flag must be an integer
+        if not isinstance(params["ignition_flag"], int):
+            raise TypeError("Parameter ignition_flag must be an integer.")
+
+        # Ignition flags 1 and 6 are currently supported
+        if params["ignition_flag"] not in (1, 6):
+            raise ValueError("Parameter ignition_flag must be 1 or 6. Future"
+                             "versions of this package will support more.")
 
 
 if __name__ == '__main__':
