@@ -77,7 +77,11 @@ class InputModule:
         if fuel_flag == 1:
             fuel_density = "\n" + str(params["fuel_density"])
             fuel_moisture = "\n" + str(params["fuel_moisture"])
-            fuel_height = "\n" + str(params["fuel_height"])
+            fuel_height = (f"\n{fuel_flag}    ! fuel height flag: 1 = uniform; "
+                           f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
+                           f" files for quic grid, 4 = Firetech files for "
+                           f"different grid (need interpolation)"
+                           f"\n{str(params['fuel_height'])}")
 
         # Custom fuel .dat files (fuel flags 3 or 4)
         else:

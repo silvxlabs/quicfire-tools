@@ -240,6 +240,7 @@ def test_invalid_input_parameters():
         SUT.setup_input_files(test_custom_params)
 
 
+# TODO: Update fuel height test
 def test_write_fuel_data():
     # Test fuel flag 1
     fuel_data_params = TEST_PARAMS.copy()

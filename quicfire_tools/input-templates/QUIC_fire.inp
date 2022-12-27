@@ -19,8 +19,7 @@ $dz                 ! m, dz
 2                   ! File is stream (1) or headers (2)
 ! FUEL
 $fuel_flag		    ! fuel density flag: 1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)    $fuel_density
-$fuel_flag		    ! fuel moisture flag: 1 = uniform; 2 = provided thru QF_FuelMoisture.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)  $fuel_moisture
-$fuel_flag          ! fuel height flag: 1 = uniform; 2 = provided thru QF_FuelMoisture.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)    $fuel_height
+$fuel_flag		    ! fuel moisture flag: 1 = uniform; 2 = provided thru QF_FuelMoisture.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)  $fuel_moisture $fuel_height_flag
 ! IGNITION LOCATIONS
 $ignition_flag      ! 1 = rectangle, 2 = square ring, 3 = circular ring, 4 = file (QF_Ignitions.inp), 5 = time-dependent ignitions (QF_IgnitionPattern.inp), 6 = ignite.dat (firetech)      $ignition_locations
 ! FIREBRANDS
