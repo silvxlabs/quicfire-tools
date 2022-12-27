@@ -36,7 +36,7 @@ class InputModule:
             Sets up simulation files in the simulation directory.
 
         """
-        self._validate_params_dict(params)
+        params = self._validate_params_dict(params)
 
         # Get current unix time
         params["timenow"] = int(time.time())
@@ -273,6 +273,12 @@ class InputModule:
         if params["output_time"] <= 0:
             raise ValueError("Parameter output_time must be greater than 0.")
 
+        # topo_flag must be an integer equal to 0 or 5
+        if not isinstance(params["topo_flag"], int):
+            raise TypeError("Parameter topo_flag must be an integer.")
+        if params["topo_flag"] not in (0, 5):
+            raise ValueError("Parameter topo_flag must be 0 or 5.")
+
         # Fuel flag must be an integer
         if not isinstance(params["fuel_flag"], int):
             raise TypeError("Parameter fuel_flag must be an integer.")
@@ -314,6 +320,8 @@ class InputModule:
             raise ValueError("Parameter ignition_flag must be 1 or 6. Future"
                              "versions of this package will support more.")
 
+        return params.copy()
+
 
 if __name__ == '__main__':
     test_params = {
@@ -331,6 +339,7 @@ if __name__ == '__main__':
         "fuel_flag": 3,
         "ignition_flag": 1,
         "output_time": 10,
+        "topo_flag": 0,
     }
 
     sim_test = InputModule("../tests/test-simulation/")

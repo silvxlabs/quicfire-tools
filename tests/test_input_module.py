@@ -227,6 +227,18 @@ def test_invalid_input_parameters():
     with pytest.raises(ValueError):
         SUT.setup_input_files(test_custom_params)
 
+    # Test non-integer topo_flag parameter
+    test_custom_params = TEST_PARAMS.copy()
+    test_custom_params["topo_flag"] = 1.0
+    with pytest.raises(TypeError):
+        SUT.setup_input_files(test_custom_params)
+
+    # Test non-supported topo_flag parameter
+    test_custom_params = TEST_PARAMS.copy()
+    test_custom_params["topo_flag"] = 2
+    with pytest.raises(ValueError):
+        SUT.setup_input_files(test_custom_params)
+
 
 def test_write_fuel_data():
     # Test fuel flag 1
