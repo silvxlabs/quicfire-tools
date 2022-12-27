@@ -216,7 +216,8 @@ class InputModule:
         # Check for required parameters
         required_params = ["nx", "ny", "nz", "dx", "dy", "dz", "wind_speed",
                            "wind_direction", "sim_time", "num_cpus",
-                           "fuel_flag", "ignition_flag", "output_time"]
+                           "fuel_flag", "ignition_flag", "output_time",
+                           "topo_flag"]
         for param in required_params:
             if param not in params:
                 raise KeyError(f"Parameter {param} is required.")
