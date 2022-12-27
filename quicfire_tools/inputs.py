@@ -42,8 +42,8 @@ class InputModule:
         params["timenow"] = int(time.time())
 
         # Write fuels data
-        params["fuel_density"], params["fuel_moisture"], params["fuel_height"] \
-            = self._write_fuel(params)
+        (params["fuel_density"], params["fuel_moisture"],
+         params["fuel_height_flag"]) = self._write_fuel(params)
 
         # Write ignition data
         params["ignition_locations"] = self._write_ignition_locations(params)
