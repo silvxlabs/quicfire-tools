@@ -1,7 +1,7 @@
 !QUIC 6.26
 $nx !nx - Domain Length(X) Grid Cells
 $ny !ny - Domain Width(Y) Grid Cells
-25 ! NZ - domain height(Z) grid cells
+32 ! NZ - domain height(Z) grid cells
 $dx ! DX [m]
 $dy ! DY [m]
 3 !Vertical stretching flag (0 = uniform, 1 = custom, 2 = parabolic Z, 3 = parabolic DZ, 4 = exponential)
@@ -33,6 +33,13 @@ $dy ! DY [m]
 26.401292
 29.302056
 32.354352
+35.354352
+38.354352
+41.354352
+44.354352
+47.354352
+50.354352
+53.354352
 1 ! Number of time increments
 0 ! UTC conversion [hours]
 ! Begining of time step in Unix epoch time [integer seconds since 1970/1/1 00:00:00]

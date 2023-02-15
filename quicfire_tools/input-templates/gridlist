@@ -1,7 +1,7 @@
 &compresslist
        irst=0 nt=60000 nts=10 ntp=10
        nprocx=10 nprocy=20
-       n=$nx m=$ny l=$nz aa1=0.1
+       n=$nx m=$ny l=$nz aa1=$dz
        nv=8
        dx=$dx dy=$dy dz=$dz
        dts=0.001  ! small time step

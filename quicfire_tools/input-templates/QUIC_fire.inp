@@ -22,13 +22,14 @@ $fuel_flag		    ! fuel density flag: 1 = uniform; 2 = provided thru QF_FuelDensi
 $fuel_flag		    ! fuel moisture flag: 1 = uniform; 2 = provided thru QF_FuelMoisture.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)  $fuel_moisture $fuel_height_flag
 ! IGNITION LOCATIONS
 $ignition_flag      ! 1 = rectangle, 2 = square ring, 3 = circular ring, 4 = file (QF_Ignitions.inp), 5 = time-dependent ignitions (QF_IgnitionPattern.inp), 6 = ignite.dat (firetech)      $ignition_locations
+2                   ! number of ignitions
 ! FIREBRANDS
 0				    ! 0 = off, 1 = on
 ! OUTPUT FILES (formats depend on the grid type flag)
-1					! Output gridded energy-to-atmosphere (3D fire grid + extra layers)
+0					! Output gridded energy-to-atmosphere (3D fire grid + extra layers)
 0					! Output compressed array reaction rate (fire grid)
 1					! Output compressed array fuel density (fire grid)
-1					! Output gridded wind (u,v,w,sigma) (3D fire grid)
+0					! Output gridded wind (u,v,w,sigma) (3D fire grid)
 0					! Output gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
 0					! Output gridded QU winds with fire effects, averaged (QUIC-URB grid)
 0					! Output plume trajectories (ONLY FOR DEBUG)
