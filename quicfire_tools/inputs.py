@@ -106,7 +106,7 @@ class InputModule:
             Data string to write to the QUIC_fire.inp input file.
 
         """
-        if params["ignition_flag"] == 6:
+        if params["ignition_flag"] == 6 or params["ignition_flag"] == 7:
             return ""
 
         else:  # Ignition flag 1
@@ -140,7 +140,7 @@ class InputModule:
         dx, dy = params["dx"], params["dy"]
 
         # Hold number ignitions constant at 100 per documentation
-        num_ignition_cells = 100
+        # num_ignition_cells = 100
 
         # Compute cardinal direction from wind direction
         dirs = ["N", "E", "S", "W"]
@@ -176,7 +176,7 @@ class InputModule:
             fire_source_ylen = int(0.8 * ny * dy)
 
         ignition_list = ["", fire_source_x0, fire_source_y0, fire_source_xlen,
-                         fire_source_ylen, num_ignition_cells]
+                         fire_source_ylen]
         return "\n".join((str(x) for x in ignition_list))
 
     def _fill_form_with_dict(self, template_file_path: Path, params: dict):
@@ -289,8 +289,8 @@ class InputModule:
             raise TypeError("Parameter fuel_flag must be an integer.")
 
         # Fuel flags 1, 3, 4 are currently supported
-        if params["fuel_flag"] not in (1, 3, 4):
-            raise ValueError("Parameter fuel_flag must be 1, 3, or 4. Future"
+        if params["fuel_flag"] not in (1, 3, 4, 5):
+            raise ValueError("Parameter fuel_flag must be 1, 3, 4, or 5. Future"
                              "versions of this package will support more.")
 
         # If fuel_flag is 1, then the user must provide fuel_density,
