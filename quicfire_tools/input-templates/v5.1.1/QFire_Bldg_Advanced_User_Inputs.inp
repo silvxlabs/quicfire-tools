@@ -1,0 +1,8 @@
+0			! N/A, flag to convert QUIC-URB buildings to fuel (0 = no, 1 = yes)
+0.5		! kg/m3, thin fuel density within buildings (if no fuel is specified)
+2.			! N/A, attenuation coefficient within buildings
+0.01	   ! m, surface roughness within buildings
+1			! N/A, flag to convert fuel to canopy for winds (0 = no, 1 = yes)
+1			! N/A, update canopy winds when fuel is consumed (0 = no, 1 = yes)
+1			! N/A, attenuation coefficient within fuel for the Cionco profile (default = 1)
+0.1	   ! m, surface roughness within fuel (default = 0.1 m)

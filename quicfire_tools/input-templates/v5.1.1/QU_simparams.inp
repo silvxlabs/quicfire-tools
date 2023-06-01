@@ -1,0 +1,67 @@
+!QUIC 6.26
+$nx !nx - Domain Length(X) Grid Cells
+$ny !ny - Domain Width(Y) Grid Cells
+32 ! NZ - domain height(Z) grid cells
+$dx ! DX [m]
+$dy ! DY [m]
+3 !Vertical stretching flag (0 = uniform, 1 = custom, 2 = parabolic Z, 3 = parabolic DZ, 4 = exponential)
+1.000000 ! Surface DZ [m]
+5 ! Number of uniform surface cells
+! DZ array [m]
+1.000000
+1.000000
+1.000000
+1.000000
+1.000000
+1.078399
+1.313596
+1.705591
+2.254385
+2.959976
+3.822366
+4.841553
+6.017539
+7.350323
+8.839905
+10.486285
+12.289463
+14.249439
+16.366213
+18.639786
+21.070156
+23.657325
+26.401292
+29.302056
+32.354352
+35.354352
+38.354352
+41.354352
+44.354352
+47.354352
+50.354352
+53.354352
+1 ! Number of time increments
+0 ! UTC conversion [hours]
+! Begining of time step in Unix epoch time [integer seconds since 1970/1/1 00:00:00]
+$timenow
+2 ! Rooftop flag (0 = none, 1 = log profile, 2 = vortex)
+3 ! Upwind cavity flag (0 = none, 1 = Rockle, 2 = MVP, 3 = HMVP)
+4 ! Street canyon flag (0 = none, 1 = Roeckle, 2 = CPB, 3 = exp. param. PKK, 4 = Roeckle w/ Fackrel)
+1 ! Street intersection flag (0 = off, 1 = on)
+4 ! Wake flag (0 = none, 1 = Rockle, 2 = modified Rockle, 3 = area scaled)
+1 ! Sidewall flag (0 = off, 1 = on)
+1 ! Individual tree wake flag
+2 ! Canopy flag (0 = off, 1 = Cionco w/o wakes, 2 = Cionco w/ wakes)
+1 ! Season flag (1 = Summer, 2 = Winter, 3 = Transition)
+10 ! Maximum number of iterations
+3 ! Residual reduction (Orders of Magnitude)
+0 ! Use diffusion algorithm (0 = off, 1 = on)
+20 ! Number of diffusion iterations
+0 ! Domain rotation relative to true north [degrees] (cw = +)
+0.0 ! UTMX of domain origin [m]
+0.0 ! UTMY of domain origin [m]
+1 ! UTM zone
+17 ! UTM zone leter (1 = A, 2 = B, etc.)
+0 ! QUIC-CFD Flag
+0 ! Explosive building damage flag (1 = on)
+0 ! Building Array Flag (1 = on)

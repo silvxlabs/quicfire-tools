@@ -1,0 +1,43 @@
+1					! Fire flag: 1 = run fire; 0 = no fire
+-1				    ! Random number generator: -1: use time and date, any other integer > 0 is used as the seed
+! FIRE TIMES
+$timenow		    ! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
+$sim_time			! Total simulation time for the fire [s]
+1					! time step for the fire simulation [s]
+1					! Number of fire time steps done before updating the quic wind field (integer, >= 1)
+$output_time		! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
+$output_time		! After how many quic updates to print out wind-related files
+$output_time		! After how many fire time steps to average emissions and radiation
+$output_time		! After how many quic updates to print out averaged wind-related files
+! FIRE GRID
+$nz					! Number of vertical layers of fire grid cells (integer)
+0					! Vertical stretching flag: 0 = uniform dz, 1 = custom
+$dz                 ! m, dz
+! FILE PATH
+""
+1                   ! Fuel types are in separate files
+2                   ! File is stream (1) or headers (2)
+! FUEL
+$fuel_flag		    ! fuel density flag: 1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)    $fuel_density
+$fuel_flag		    ! fuel moisture flag: 1 = uniform; 2 = provided thru QF_FuelMoisture.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)  $fuel_moisture $fuel_height_flag
+! IGNITION LOCATIONS
+$ignition_flag      ! 1 = rectangle, 2 = square ring, 3 = circular ring, 4 = file (QF_Ignitions.inp), 5 = time-dependent ignitions (QF_IgnitionPattern.inp), 6 = ignite.dat (firetech)      $ignition_locations
+2                   ! number of ignitions
+! FIREBRANDS
+0				    ! 0 = off, 1 = on
+! OUTPUT FILES (formats depend on the grid type flag)
+0					! Output gridded energy-to-atmosphere (3D fire grid + extra layers)
+0					! Output compressed array reaction rate (fire grid)
+1					! Output compressed array fuel density (fire grid)
+0					! Output gridded wind (u,v,w,sigma) (3D fire grid)
+0					! Output gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
+0					! Output gridded QU winds with fire effects, averaged (QUIC-URB grid)
+0					! Output plume trajectories (ONLY FOR DEBUG)
+0					! Output compressed array fuel moisture (fire grid)
+1					! Output vertically-integrated % mass burnt (fire grid)
+0					! Output trajectories firebrands
+0					! Output compressed array emissions (fire grid)
+0					! Output gridded thermal radiation (fire grid)
+0                   ! Output surface fire intensity at every fire time step
+! AUTOKILL
+$auto_kill          ! Kill if the fire is out and there are no more ignitions or firebrands (0 = no, 1 = yes)
