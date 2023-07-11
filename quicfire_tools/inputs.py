@@ -7,6 +7,49 @@ import time
 from pathlib import Path
 from string import Template
 
+# External Imports
+from pydantic import BaseModel, Field, validator
+
+class SimulationParameters(BaseModel):
+    nx: int = Field(..., gt=0)
+    ny: int = Field(..., gt=0)
+    nz: int = Field(..., gt=0)
+    dx: float = Field(..., gt=0)
+    dy: float = Field(..., gt=0)
+    dz: float = Field(..., gt=0)
+    wind_speed: float = Field(..., ge=0)
+    wind_direction: float = Field(..., ge=0, le=360)
+    sim_time: int = Field(..., gt=0)
+    auto_kill: int = Field(..., ge=0, le=1)
+    num_cpus: int = Field(..., gt=0)
+    fuel_flag: int = Field(...)
+    ignition_flag: int = Field(...)
+    output_time: int = Field(..., gt=0)
+    topo_flag: int = Field(...)
+    fuel_density: float = Field(None, ge=0)
+    fuel_moisture: float = Field(None, ge=0)
+    fuel_height: float = Field(None, ge=0)
+
+    @validator("fuel_flag")
+    def validate_fuel_flag(cls, v):
+        assert v in (1, 3, 4, 5), "fuel_flag must be 1, 3, 4, or 5"
+        return v
+
+    @validator("topo_flag")
+    def validate_topo_flag(cls, v):
+        assert v in (0, 5), "topo_flag must be 0 or 5"
+        return v
+    
+    @validator("ignition_flag")
+    def validate_ignition_flag(cls, v):
+        assert v in (1, 6), "ignition_flag must be 1 or 6. Future versions may support more options."
+        return v
+
+    @validator("fuel_density", "fuel_moisture", "fuel_height", always=True)
+    def validate_fuel_parameters(cls, v, values, field):
+        if values.get('fuel_flag') == 1 and v is None:
+            raise ValueError(f"Parameter {field.name} is required when fuel_flag is 1")
+        return v
 
 class InputModule:
     """
@@ -27,7 +70,7 @@ class InputModule:
 
         Parameters
         ----------
-        params: dict
+        params: SimulationParameters
             Dictionary of user defined parameters.
 
         Returns
@@ -36,8 +79,6 @@ class InputModule:
             Sets up simulation files in the simulation directory.
 
         """
-        params = self._validate_params_dict(params)
-
         # Get current unix time
         params["timenow"] = int(time.time())
 
@@ -205,9 +246,7 @@ class InputModule:
                 src = Template(ftemp.read())
                 result = src.substitute(params)
                 fout.write(result)
-
-    @staticmethod
-    def _validate_params_dict(params):
+                
         """
         Validates the params dictionary.
 
@@ -324,32 +363,27 @@ class InputModule:
         if not isinstance(params["ignition_flag"], int):
             raise TypeError("Parameter ignition_flag must be an integer.")
 
-        # # Ignition flags 1 and 6 are currently supported
-        # if params["ignition_flag"] not in (1, 7):
-        #     raise ValueError("Parameter ignition_flag must be 1 or 6. Future"
-        #                      "versions of this package will support more.")
-
         return params.copy()
 
 
 if __name__ == '__main__':
-    test_params = {
-        "nx": 100,
-        "ny": 100,
-        "nz": 1,
-        "dx": 1.,
-        "dy": 1.,
-        "dz": 1.,
-        "wind_speed": 4.,
-        "wind_direction": 270,
-        "sim_time": 60,
-        "auto_kill": 1,
-        "num_cpus": 1,
-        "fuel_flag": 3,
-        "ignition_flag": 1,
-        "output_time": 10,
-        "topo_flag": 0,
-    }
+    test_params = SimulationParameters(
+        nx=100,
+        ny=100,
+        nz=1,
+        dx=1.,
+        dy=1.,
+        dz=1.,
+        wind_speed=4.,
+        wind_direction=270,
+        sim_time=60,
+        auto_kill=1,
+        num_cpus=1,
+        fuel_flag=3,
+        ignition_flag=1,
+        output_time=10,
+        topo_flag=0,
+    )
 
     sim_test = InputModule("../tests/test-simulation/")
     sim_test.setup_input_files(test_params)
