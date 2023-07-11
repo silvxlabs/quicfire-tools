@@ -1,6 +1,7 @@
 """
 QUIC-Fire Tools Simulation Input Module
 """
+from __future__ import annotations
 
 # Core Imports
 import time
@@ -8,7 +9,8 @@ from pathlib import Path
 from string import Template
 
 # External Imports
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
+
 
 class SimulationParameters(BaseModel):
     nx: int = Field(..., gt=0)
@@ -30,26 +32,29 @@ class SimulationParameters(BaseModel):
     fuel_moisture: float = Field(None, ge=0)
     fuel_height: float = Field(None, ge=0)
 
-    @validator("fuel_flag")
+    @field_validator("fuel_flag")
     def validate_fuel_flag(cls, v):
         assert v in (1, 3, 4, 5), "fuel_flag must be 1, 3, 4, or 5"
         return v
 
-    @validator("topo_flag")
+    @field_validator("topo_flag")
     def validate_topo_flag(cls, v):
         assert v in (0, 5), "topo_flag must be 0 or 5"
         return v
-    
-    @validator("ignition_flag")
+
+    @field_validator("ignition_flag")
     def validate_ignition_flag(cls, v):
-        assert v in (1, 6), "ignition_flag must be 1 or 6. Future versions may support more options."
+        assert v in (1,
+                     6), "ignition_flag must be 1 or 6. Future versions may support more options."
         return v
 
-    @validator("fuel_density", "fuel_moisture", "fuel_height", always=True)
+    @field_validator("fuel_density", "fuel_moisture", "fuel_height", always=True)
     def validate_fuel_parameters(cls, v, values, field):
         if values.get('fuel_flag') == 1 and v is None:
-            raise ValueError(f"Parameter {field.name} is required when fuel_flag is 1")
+            raise ValueError(
+                f"Parameter {field.name} is required when fuel_flag is 1")
         return v
+
 
 class InputModule:
     """
@@ -94,7 +99,8 @@ class InputModule:
             version = params["version"]
         except KeyError:
             version = "latest"
-        template_files_path = Path(__file__).parent / "input-templates" / version
+        template_files_path = Path(
+            __file__).parent / "input-templates" / version
         template_files_list = template_files_path.glob("*")
         for fname in template_files_list:
             self._fill_form_with_dict(fname, params)
@@ -246,7 +252,7 @@ class InputModule:
                 src = Template(ftemp.read())
                 result = src.substitute(params)
                 fout.write(result)
-                
+
         """
         Validates the params dictionary.
 
