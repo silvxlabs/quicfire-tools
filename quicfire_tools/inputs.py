@@ -14,11 +14,11 @@ class InputModule:
     """
 
     def __init__(self, directory: Path | str):
-        if type(directory) == str:
+        if isinstance(directory, str):
             path = Path(directory)
             directory = path.resolve()
 
-        directory.mkdir(exist_ok=True)
+        directory.mkdir(parents=True, exist_ok=True)
         self.directory = directory
 
     def setup_input_files(self, params):
@@ -49,7 +49,11 @@ class InputModule:
         params["ignition_locations"] = self._write_ignition_locations(params)
 
         # Write input template files
-        template_files_path = Path(__file__).parent / "input-templates"
+        try:
+            version = params["version"]
+        except KeyError:
+            version = "latest"
+        template_files_path = Path(__file__).parent / "input-templates" / version
         template_files_list = template_files_path.glob("*")
         for fname in template_files_list:
             self._fill_form_with_dict(fname, params)
@@ -320,10 +324,10 @@ class InputModule:
         if not isinstance(params["ignition_flag"], int):
             raise TypeError("Parameter ignition_flag must be an integer.")
 
-        # Ignition flags 1 and 6 are currently supported
-        if params["ignition_flag"] not in (1, 6):
-            raise ValueError("Parameter ignition_flag must be 1 or 6. Future"
-                             "versions of this package will support more.")
+        # # Ignition flags 1 and 6 are currently supported
+        # if params["ignition_flag"] not in (1, 7):
+        #     raise ValueError("Parameter ignition_flag must be 1 or 6. Future"
+        #                      "versions of this package will support more.")
 
         return params.copy()
 
