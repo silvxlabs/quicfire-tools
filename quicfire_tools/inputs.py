@@ -44,16 +44,28 @@ class SimulationParameters(BaseModel):
 
     @field_validator("ignition_flag")
     def validate_ignition_flag(cls, v):
-        assert v in (1,
-                     6), "ignition_flag must be 1 or 6. Future versions may support more options."
+        assert v in (1, 6), "ignition_flag must be 1 or 6. Future versions may support more options."
         return v
 
-    @field_validator("fuel_density", "fuel_moisture", "fuel_height", always=True)
-    def validate_fuel_parameters(cls, v, values, field):
-        if values.get('fuel_flag') == 1 and v is None:
-            raise ValueError(
-                f"Parameter {field.name} is required when fuel_flag is 1")
+    @field_validator("fuel_density")
+    def validate_fuel_density(cls, v, values):
+        if values["fuel_flag"] == 1:
+            assert v is not None, "fuel_density must be specified for fuel_flag=1"
         return v
+
+    @field_validator("fuel_moisture")
+    def validate_fuel_moisture(cls, v, values):
+        if values["fuel_flag"] == 1:
+            assert v is not None, "fuel_moisture must be specified for fuel_flag=1"
+        return v
+
+    @field_validator("fuel_height")
+    def validate_fuel_height(cls, v, values):
+        if values["fuel_flag"] == 1:
+            assert v is not None, "fuel_height must be specified for fuel_flag=1"
+        return v
+
+
 
 
 class InputModule:
