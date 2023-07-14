@@ -152,17 +152,13 @@ OUTPUTS_MAP = {
 class SimulationOutputs:
 
     def __init__(self, outputs_directory: Path | str) -> None:
-        if isinstance(outputs_directory, str):
-            path = Path(outputs_directory)
-            outputs_directory = path.resolve()
+        # Convert to Path and resolve
+        outputs_directory = Path(outputs_directory).resolve()
 
-        # Validate the outputs directory
-        if not outputs_directory.exists():
-            raise FileNotFoundError(
-                f"The directory {outputs_directory} does not exist.")
-        elif not outputs_directory.is_dir():
-            raise NotADirectoryError(
-                f"The path {outputs_directory} is not a directory.")
+        # Validate
+        self._validate_outputs_dir(outputs_directory)
+
+        # Assign
         self._outputs_directory = outputs_directory
 
         # Build a list of present output files and their times
@@ -170,6 +166,22 @@ class SimulationOutputs:
 
         # Get indexing information from the fire grid
         self._fire_indexes = self._process_fire_indexes()
+
+    def _validate_outputs_dir(self, outputs_directory):
+        """Validate the outputs directory."""
+        # Check if the outputs directory exists and is a directory
+        if not outputs_directory.exists():
+            raise FileNotFoundError(
+                f"The directory {outputs_directory} does not exist.")
+        elif not outputs_directory.is_dir():
+            raise NotADirectoryError(
+                f"The path {outputs_directory} is not a directory.")
+        
+        # Check for required files
+        required_files = ['fire_indexes.bin'] 
+        for f in required_files:
+            if not (outputs_directory / f).exists():
+                raise FileNotFoundError(f"Required file {f} not found in outputs directory")
 
     def _build_output_files_map(self):
         """Build a dictionary of present output files and their times."""
