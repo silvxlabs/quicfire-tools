@@ -55,3 +55,31 @@ class SimulationParameters(BaseModel):
         if values["fuel_flag"] == 1:
             assert v is not None, "fuel_height must be specified for fuel_flag=1"
         return v
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(**d)
+
+    def to_dict(self):
+        return self.model_dump()
+
+    @classmethod
+    def from_fastfuels(cls, zarray, wind_speed, wind_direction, sim_time, auto_kill, num_cpus, fuel_flag, ignition_flag, output_time, topo_flag, fuel_density, fuel_moisture, fuel_height):
+        return cls(nx=zarray.attrs["dx"],
+                   ny=zarray.attrs["dy"],
+                   nz=zarray.attrs["dz"],
+                   dx=zarray.attrs["dx"],
+                   dy=zarray.attrs["dy"],
+                   dz=zarray.attrs["dz"],
+                   wind_speed=wind_speed,
+                   wind_direction=wind_direction,
+                   sim_time=sim_time,
+                   auto_kill=auto_kill,
+                   num_cpus=num_cpus,
+                   fuel_flag=fuel_flag,
+                   ignition_flag=ignition_flag,
+                   output_time=output_time,
+                   topo_flag=topo_flag,
+                   fuel_density=fuel_density,
+                   fuel_moisture=fuel_moisture,
+                   fuel_height=fuel_height)
