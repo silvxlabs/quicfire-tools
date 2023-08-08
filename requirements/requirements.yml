@@ -1,0 +1,13 @@
+name: fastfuels-sdk
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - requests
+  - numpy
+  - zarr
+  - scipy
+  - pandas
+  - ca-certificates
+  - openssl

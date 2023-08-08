@@ -1,24 +1,28 @@
 """
 QUIC-Fire Tools Simulation Input Module
 """
+from __future__ import annotations
 
 # Core Imports
 import time
 from pathlib import Path
 from string import Template
 
+# Internal Imports
+from quicfire_tools.parameters import SimulationParameters
 
-class InputModule:
+
+class SimulationInputs:
     """
     Input Module
     """
 
     def __init__(self, directory: Path | str):
-        if type(directory) == str:
+        if isinstance(directory, str):
             path = Path(directory)
             directory = path.resolve()
 
-        directory.mkdir(exist_ok=True)
+        directory.mkdir(parents=True, exist_ok=True)
         self.directory = directory
 
     def setup_input_files(self, params):
@@ -27,7 +31,7 @@ class InputModule:
 
         Parameters
         ----------
-        params: dict
+        params: SimulationParameters
             Dictionary of user defined parameters.
 
         Returns
@@ -36,8 +40,6 @@ class InputModule:
             Sets up simulation files in the simulation directory.
 
         """
-        params = self._validate_params_dict(params)
-
         # Get current unix time
         params["timenow"] = int(time.time())
 
@@ -49,7 +51,12 @@ class InputModule:
         params["ignition_locations"] = self._write_ignition_locations(params)
 
         # Write input template files
-        template_files_path = Path(__file__).parent / "input-templates"
+        try:
+            version = params["version"]
+        except KeyError:
+            version = "latest"
+        template_files_path = Path(
+            __file__).parent / "input-templates" / version
         template_files_list = template_files_path.glob("*")
         for fname in template_files_list:
             self._fill_form_with_dict(fname, params)
@@ -202,8 +209,6 @@ class InputModule:
                 result = src.substitute(params)
                 fout.write(result)
 
-    @staticmethod
-    def _validate_params_dict(params):
         """
         Validates the params dictionary.
 
@@ -320,32 +325,27 @@ class InputModule:
         if not isinstance(params["ignition_flag"], int):
             raise TypeError("Parameter ignition_flag must be an integer.")
 
-        # Ignition flags 1 and 6 are currently supported
-        if params["ignition_flag"] not in (1, 6):
-            raise ValueError("Parameter ignition_flag must be 1 or 6. Future"
-                             "versions of this package will support more.")
-
         return params.copy()
 
 
 if __name__ == '__main__':
-    test_params = {
-        "nx": 100,
-        "ny": 100,
-        "nz": 1,
-        "dx": 1.,
-        "dy": 1.,
-        "dz": 1.,
-        "wind_speed": 4.,
-        "wind_direction": 270,
-        "sim_time": 60,
-        "auto_kill": 1,
-        "num_cpus": 1,
-        "fuel_flag": 3,
-        "ignition_flag": 1,
-        "output_time": 10,
-        "topo_flag": 0,
-    }
+    test_params = SimulationParameters(
+        nx=100,
+        ny=100,
+        nz=1,
+        dx=1.,
+        dy=1.,
+        dz=1.,
+        wind_speed=4.,
+        wind_direction=270,
+        sim_time=60,
+        auto_kill=1,
+        num_cpus=1,
+        fuel_flag=3,
+        ignition_flag=1,
+        output_time=10,
+        topo_flag=0,
+    )
 
-    sim_test = InputModule("../tests/test-simulation/")
+    sim_test = SimulationInputs("../tests/data/test-simulation/")
     sim_test.setup_input_files(test_params)
