@@ -48,7 +48,7 @@ setup(
     package_dir={"": "."},
     packages=find_packages(exclude=["docs", "tests"]),
     package_data={
-        'quicfire_tools': ['input-templates/'],
+        'quicfire_tools': ['input-templates/*/*'],
     },
     include_package_data=True,
     install_requires=[
