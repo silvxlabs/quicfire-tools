@@ -3,7 +3,7 @@ import sys
 
 # Internal Imports
 sys.path.append("../quicfire_tools")
-from quicfire_tools.inputs import InputModule
+from quicfire_tools.inputs import SimulationInputs
 
 # External Imports
 import pytest
@@ -25,7 +25,7 @@ TEST_PARAMS = {
     "output_time": 10,
 }
 
-SUT = InputModule("pytest-simulation")
+SUT = SimulationInputs("pytest-simulation")
 
 
 def test_invalid_input_parameters():
