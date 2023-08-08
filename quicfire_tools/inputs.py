@@ -12,7 +12,7 @@ from string import Template
 from quicfire_tools.parameters import SimulationParameters
 
 
-class InputModule:
+class SimulationInputs:
     """
     Input Module
     """
@@ -347,5 +347,5 @@ if __name__ == '__main__':
         topo_flag=0,
     )
 
-    sim_test = InputModule("../tests/test-simulation/")
+    sim_test = SimulationInputs("../tests/data/test-simulation/")
     sim_test.setup_input_files(test_params)
