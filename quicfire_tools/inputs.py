@@ -40,6 +40,9 @@ class SimulationInputs:
             Sets up simulation files in the simulation directory.
 
         """
+        # Convert params to dict
+        params = params.to_dict()
+
         # Get current unix time
         params["timenow"] = int(time.time())
 
