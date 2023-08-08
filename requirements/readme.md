@@ -4,8 +4,8 @@
 
 Requirements for PyPi package.
 
-```bash
-pip install -r requirements.txt
+```
+pip list --format=freeze > requirements.txt
 ```
 
 ## docs.txt
