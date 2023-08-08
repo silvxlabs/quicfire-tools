@@ -135,6 +135,7 @@ dmypy.json
 
 # Development
 dev/
+tests/dev/
 
 # macOS
 .DS_Store
