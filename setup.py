@@ -1,5 +1,5 @@
 import os
-
+import requests
 from setuptools import find_packages, setup
 
 
@@ -9,9 +9,12 @@ def read_file(fname):
 
 
 def get_version():
-    with open(os.path.join("quicfire_tools", "_version.py")) as fd:
-        # contents are __version__ = "<vstring>"
-        return fd.read().split("=")[1].strip().strip('"')
+    """Get the version number."""
+    url = "https://api.github.com/repos/silvxlabs/quicfire-tools/releases/latest"
+    response = requests.get(url)
+    response.raise_for_status()
+    version = response.json()["tag_name"]
+    return version[1:]  # Remove the leading "v" from the version number
 
 
 NAME = "quicfire-tools"
@@ -23,8 +26,6 @@ URL = "https://github.com/silvxlabs/quicfire-tools"
 PROJECT_URLS = {
     "Bug Tracker": f"{URL}/issues"
 }
-
-print(NAME, VERSION)
 
 setup(
     name=NAME,
