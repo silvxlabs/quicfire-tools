@@ -357,3 +357,44 @@ class RasterOrigin(InputFile):
                 raise TypeError(f"{val} must be a real number")
             if val < 0:
                 raise ValueError(f"{val} must be greater than 0")
+
+
+class QU_Buildings(InputFile):
+    def __init__(self, wall_roughness_length: float = 0.1,
+                 number_of_buildings: int = 0,
+                 number_of_polygon_nodes: int = 0):
+        """
+        Initialize the QU_Buildings class to manage building-related data.
+
+        Parameters
+        ----------
+        wall_roughness_length : float
+            Wall roughness length in meters, must be greater than 0 (bld%zo).
+        number_of_buildings : int
+            Number of buildings, must be greater than 0.
+            Recommended value: 0 (building algorithms are not part of QUIC-Fire) (bld%number).
+        number_of_polygon_nodes : int
+            Number of polygon building nodes, must be greater than 0.
+            Recommended value: 0 (inumpolygon).
+        """
+        self._validate_inputs(wall_roughness_length, number_of_buildings,
+                              number_of_polygon_nodes)
+        super().__init__("QU_buildings.inp")
+        self.wall_roughness_length = wall_roughness_length
+        self.number_of_buildings = number_of_buildings
+        self.number_of_polygon_nodes = number_of_polygon_nodes
+
+    @staticmethod
+    def _validate_inputs(wall_roughness_length, number_of_buildings,
+                         number_of_polygon_nodes):
+        if not isinstance(wall_roughness_length, float) and not isinstance(
+                wall_roughness_length, int):
+            raise TypeError(f"{wall_roughness_length} must be a real number")
+        if wall_roughness_length <= 0:
+            raise ValueError(f"{wall_roughness_length} must be greater than 0")
+
+        for val in (number_of_buildings, number_of_polygon_nodes):
+            if not isinstance(val, int):
+                raise TypeError(f"{val} must be an integer")
+            if val < 0:
+                raise ValueError(f"{val} must be greater than or equal to 0")

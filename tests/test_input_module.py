@@ -8,6 +8,7 @@ from quicfire_tools.inputs import *
 # External Imports
 import pytest
 
+
 # TEST_PARAMS = {
 #     "nx": 100,
 #     "ny": 100,
@@ -78,7 +79,6 @@ class TestGridList:
             assert lines[5].split("=")[1].strip() == "1.0"
             assert lines[6].split("=")[1].strip() == "1.0"
 
-
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
             gridlist.to_file("/non_existent_path/gridlist.txt")
@@ -134,3 +134,67 @@ class TestRasterOrigin:
         with pytest.raises(FileNotFoundError):
             raster_origin.to_file("/non_existent_path/rasterorigin.txt")
 
+
+class TestQU_Buildings:
+    def test_init(self):
+        """Test the initialization of a QU_Buildings object."""
+        # Test the default initialization
+        qu_buildings = QU_Buildings()
+        assert isinstance(qu_buildings, QU_Buildings)
+        assert qu_buildings.wall_roughness_length == 0.1
+        assert qu_buildings.number_of_buildings == 0
+        assert qu_buildings.number_of_polygon_nodes == 0
+
+        # Test custom initialization
+        qu_buildings = QU_Buildings(wall_roughness_length=1.0,
+                                    number_of_buildings=0,
+                                    number_of_polygon_nodes=0)
+        assert isinstance(qu_buildings, QU_Buildings)
+        assert qu_buildings.wall_roughness_length == 1.0
+        assert qu_buildings.number_of_buildings == 0
+        assert qu_buildings.number_of_polygon_nodes == 0
+
+        # Pass bad parameters: negative values
+        with pytest.raises(ValueError):
+            QU_Buildings(wall_roughness_length=-1, number_of_buildings=0,
+                         number_of_polygon_nodes=0)
+        with pytest.raises(ValueError):
+            QU_Buildings(wall_roughness_length=1, number_of_buildings=-1,
+                         number_of_polygon_nodes=0)
+
+        # Pass bad parameters: incorrect types
+        with pytest.raises(TypeError):
+            QU_Buildings(wall_roughness_length=1.0, number_of_buildings=0.,
+                         number_of_polygon_nodes=0)
+        with pytest.raises(TypeError):
+            QU_Buildings(wall_roughness_length="1.0", number_of_buildings=0,
+                         number_of_polygon_nodes=0)
+
+    def test_to_dict(self):
+        """Test the to_dict method of a QU_Buildings object."""
+        qu_buildings = QU_Buildings(wall_roughness_length=1.0,
+                                    number_of_buildings=0,
+                                    number_of_polygon_nodes=0)
+        result_dict = qu_buildings.to_dict()
+        assert result_dict['wall_roughness_length'] == 1.0
+        assert result_dict['number_of_buildings'] == 0
+        assert result_dict['number_of_polygon_nodes'] == 0
+        assert '_validate_inputs' not in result_dict
+
+    def test_to_file(self):
+        """Test the to_file method of a QU_Buildings object."""
+        qu_buildings = QU_Buildings(wall_roughness_length=0.1,
+                                    number_of_buildings=0,
+                                    number_of_polygon_nodes=0)
+        qu_buildings.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QU_buildings.inp", 'r') as file:
+            lines = file.readlines()
+            assert float(lines[1].strip().split("\t")[0]) == 0.1
+            assert int(lines[2].strip().split("\t")[0]) == 0
+            assert int(lines[3].strip().split("\t")[0]) == 0
+
+        # Test writing to a non-existent directory
+        with pytest.raises(FileNotFoundError):
+            qu_buildings.to_file("/non_existent_path/QU_buildings.inp")

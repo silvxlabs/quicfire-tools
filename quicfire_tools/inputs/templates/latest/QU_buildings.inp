@@ -1,4 +1,4 @@
 !QUIC 6.26
-0.1			!Wall roughness length (m)
-0			!Number of Buildings
-0			!Number of Polygon Building Nodes
+$wall_roughness_length			!Wall roughness length (m)
+$number_of_buildings			!Number of Buildings
+$number_of_polygon_nodes			!Number of Polygon Building Nodes
