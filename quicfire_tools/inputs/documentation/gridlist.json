@@ -1,0 +1,51 @@
+{
+            "n": {
+                "values_accepted": "> 0",
+                "tested_values_range": "> 0",
+                "description": "Number of cells in the x-direction",
+                "units": "[-]",
+                "variable_name_fortran": "ft%nx"
+            },
+            "m": {
+                "values_accepted": "> 0",
+                "tested_values_range": "> 0",
+                "description": "Number of cells in the y-direction",
+                "units": "[-]",
+                "variable_name_fortran": "ft%ny"
+            },
+            "l": {
+                "values_accepted": "> 0",
+                "tested_values_range": "> 0",
+                "description": "Number of cells in the z-direction",
+                "units": "[-]",
+                "variable_name_fortran": "ft%nz"
+            },
+            "dx": {
+                "values_accepted": "> 0",
+                "tested_values_range": "> 0",
+                "description": "Cell size in the x-direction",
+                "units": "[m]",
+                "variable_name_fortran": "ft%dx"
+            },
+            "dy": {
+                "values_accepted": "> 0",
+                "tested_values_range": "> 0",
+                "description": "Cell size in the y-direction",
+                "units": "[m]",
+                "variable_name_fortran": "ft%dy"
+            },
+            "dz": {
+                "values_accepted": "> 0",
+                "tested_values_range": "> 0",
+                "description": "Number that multiplied by the number of cells  in the z-direction would provide the height of the domain",
+                "units": "[m]",
+                "variable_name_fortran": "zb"
+            },
+            "aa1": {
+                "values_accepted": "> 0",
+                "tested_values_range": "> 0",
+                "description": "Stretching factor for the vertical grid spacing",
+                "units": "[-]",
+                "variable_name_fortran": "aa1"
+            }
+}
