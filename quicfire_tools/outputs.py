@@ -13,6 +13,7 @@ from quicfire_tools.parameters import SimulationParameters
 # External imports
 import zarr
 import numpy as np
+import dask.array as da
 from numpy import ndarray
 
 FUELS_OUTPUTS = {
@@ -404,6 +405,23 @@ class SimulationOutputs:
             raise TypeError(f"output must be a string or OutputFile object. "
                             f"Got {type(output)}")
         return output
+
+    def to_dask(self, key: str | OutputFile,
+                timestep: None | int | list[int] = None) -> np.ndarray:
+        """Return a dask array for the given output and timestep(s)."""
+        output = self._validate_output(key)
+
+        # Create a dask array for the output file
+        shape = (len(output.times), *output.shape)
+        chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
+        dask_array = da.zeros(shape, dtype=float, chunks=chunks)
+
+        # Write each timestep to the dask array
+        for time_step in range(len(output.times)):
+            data = self.to_numpy(output.name, time_step)
+            dask_array[time_step, ...] = data
+
+        return dask_array
 
     def to_zarr(self, fpath: Path):
         """Write the data to a zarr file."""
