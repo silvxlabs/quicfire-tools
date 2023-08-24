@@ -59,7 +59,7 @@ class SimulationInputs:
         except KeyError:
             version = "latest"
         template_files_path = Path(
-            __file__).parent / "input-templates" / version
+            __file__).parent / "templates" / version
         template_files_list = template_files_path.glob("*")
         for fname in template_files_list:
             self._fill_form_with_dict(fname, params)
