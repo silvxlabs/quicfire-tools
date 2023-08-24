@@ -1,8 +1,7 @@
-n=$nx
-m=$ny 
-l=$nz
-aa1=$dz
-nv=8
+n=$n
+m=$m
+l=$l
+aa1=$aa1
 dx=$dx
 dy=$dy
 dz=$dz

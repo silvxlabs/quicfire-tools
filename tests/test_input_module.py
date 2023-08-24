@@ -3,338 +3,134 @@ import sys
 
 # Internal Imports
 sys.path.append("../quicfire_tools")
-from quicfire_tools.inputs import SimulationInputs
+from quicfire_tools.inputs import *
 
 # External Imports
 import pytest
 
-TEST_PARAMS = {
-    "nx": 100,
-    "ny": 100,
-    "nz": 1,
-    "dx": 1.,
-    "dy": 1.,
-    "dz": 1.,
-    "wind_speed": 4.,
-    "wind_direction": 265,
-    "sim_time": 60,
-    "auto_kill": 1,
-    "num_cpus": 1,
-    "fuel_flag": 3,
-    "ignition_flag": 1,
-    "output_time": 10,
-}
-
-SUT = SimulationInputs("pytest-simulation")
+# TEST_PARAMS = {
+#     "nx": 100,
+#     "ny": 100,
+#     "nz": 1,
+#     "dx": 1.,
+#     "dy": 1.,
+#     "dz": 1.,
+#     "wind_speed": 4.,
+#     "wind_direction": 265,
+#     "sim_time": 60,
+#     "auto_kill": 1,
+#     "num_cpus": 1,
+#     "fuel_flag": 3,
+#     "ignition_flag": 1,
+#     "output_time": 10,
+# }
 
 
-def test_invalid_input_parameters():
-    # Test missing nx parameter
-    test_custom_params = TEST_PARAMS.copy()
-    _ = test_custom_params.pop("nx")
-    with pytest.raises(KeyError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test non-integer nx parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["nx"] = 1.0
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test string nx parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["nx"] = "10"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test nx parameter less than 1
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["nx"] = 0
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test string dx parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["dx"] = "1.0"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test dx parameter less than 0
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["dx"] = -1.0
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test dx parameter equal to 0
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["dx"] = 0.0
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test missing wind_speed parameter
-    test_custom_params = TEST_PARAMS.copy()
-    _ = test_custom_params.pop("wind_speed")
-    with pytest.raises(KeyError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test string wind_speed parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["wind_speed"] = "4.0"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test wind_speed parameter less than 0
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["wind_speed"] = -4.0
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test wind_direction string parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["wind_direction"] = "265"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test wind_direction parameter less than 0
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["wind_direction"] = -265
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test wind_direction parameter greater than 360
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["wind_direction"] = 365
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test missing sim_time parameter
-    test_custom_params = TEST_PARAMS.copy()
-    _ = test_custom_params.pop("sim_time")
-    with pytest.raises(KeyError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test string sim_time parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["sim_time"] = "60"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test float sim_time parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["sim_time"] = 60.0
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test sim_time parameter less than 0
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["sim_time"] = -60
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test sim_time parameter equal to 0
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["sim_time"] = 0
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test string auto_kill parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["auto_kill"] = "1"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test auto_kill parameter not 0 or 1
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["auto_kill"] = 2
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test string num_cpus parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["num_cpus"] = "1"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test num_cpus parameter less than 1
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["num_cpus"] = 0
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test non-integer output_time parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["output_time"] = 1.0
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test string output_time parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["output_time"] = "1"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test output_time parameter less than 1
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["output_time"] = 0
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test non-integer fuel flag parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["fuel_flag"] = 1.0
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test non-supported fuel flag parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["fuel_flag"] = 2
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test fuel flag 1 has fuel_density, fuel_moisture, fuel_height parameters
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["fuel_flag"] = 1
-    with pytest.raises(KeyError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test fuel flag 1 string fuel_density parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["fuel_flag"] = 1
-    test_custom_params["fuel_density"] = "1.0"
-    test_custom_params["fuel_moisture"] = 0.5
-    test_custom_params["fuel_height"] = 0.5
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test fuel flag 1 fuel_density parameter less than 0
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["fuel_flag"] = 1
-    test_custom_params["fuel_density"] = -1.0
-    test_custom_params["fuel_moisture"] = 0.5
-    test_custom_params["fuel_height"] = 0.5
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test string ignition_flag parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["ignition_flag"] = "1"
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test non-supported ignition_flag parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["ignition_flag"] = 2
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test non-integer topo_flag parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["topo_flag"] = 1.0
-    with pytest.raises(TypeError):
-        SUT.setup_input_files(test_custom_params)
-
-    # Test non-supported topo_flag parameter
-    test_custom_params = TEST_PARAMS.copy()
-    test_custom_params["topo_flag"] = 2
-    with pytest.raises(ValueError):
-        SUT.setup_input_files(test_custom_params)
+# SUT = SimulationInputs("pytest-simulation")
 
 
-# TODO: Update fuel height test
-def test_write_fuel_data():
-    # Test fuel flag 1
-    fuel_data_params = TEST_PARAMS.copy()
-    fuel_data_params["fuel_flag"] = 1
-    fuel_data_params["fuel_density"] = 1.25
-    fuel_data_params["fuel_moisture"] = 0.75
-    fuel_data_params["fuel_height"] = 0.5
-    fuel_params = SUT._write_fuel(fuel_data_params)
-    assert fuel_params == ("\n1.25", "\n0.75", "\n0.5")
+class TestGridList:
+    def test_init(self):
+        """Test the initialization of a Gridlist object."""
+        # Test the default initialization
+        gridlist = Gridlist(n=10, m=10, l=10, dx=1, dy=1, dz=1, aa1=1)
+        assert isinstance(gridlist, Gridlist)
+        assert gridlist.n == 10
+        for i in ["n", "m", "l", "dx", "dy", "dz", "aa1"]:
+            assert i in gridlist.list_params()
 
-    # Test fuel flag 1
-    fuel_data_params = TEST_PARAMS.copy()
-    fuel_data_params["fuel_flag"] = 1
-    fuel_data_params["fuel_density"] = 0.0
-    fuel_data_params["fuel_moisture"] = 0.0
-    fuel_data_params["fuel_height"] = 0.0
-    fuel_params = SUT._write_fuel(fuel_data_params)
-    assert fuel_params == ("\n0.0", "\n0.0", "\n0.0")
+        # Pass bad parameters: non-real numbers
+        with pytest.raises(TypeError):
+            Gridlist(n=2.5, m=10, l=10, dx="", dy=1, dz=1, aa1=1)
+        with pytest.raises(TypeError):
+            Gridlist(n="10", m=10, l=10, dx=1, dy=1, dz=1, aa1=1)
 
-    # Test fuel flag 3
-    fuel_data_params = TEST_PARAMS.copy()
-    fuel_data_params["fuel_flag"] = 3
-    fuel_params = SUT._write_fuel(fuel_data_params)
-    assert fuel_params == ("", "", "")
+        # Pass bad parameters: zero or negative values
+        with pytest.raises(ValueError):
+            Gridlist(n=-10, m=10, l=10, dx=0, dy=1, dz=1, aa1=1)
+        with pytest.raises(ValueError):
+            Gridlist(n=10, m=10, l=10, dx=1, dy=0, dz=1, aa1=1)
 
-    # Test fuel flag 3 with spurious fuel data
-    fuel_data_params = TEST_PARAMS.copy()
-    fuel_data_params["fuel_flag"] = 3
-    fuel_data_params["fuel_density"] = 1.25
-    fuel_data_params["fuel_moisture"] = 0.75
-    fuel_data_params["fuel_height"] = 0.5
-    fuel_params = SUT._write_fuel(fuel_data_params)
-    assert fuel_params == ("", "", "")
+    def test_to_dict(self):
+        gridlist = Gridlist(n=10, m=10, l=10, dx=1, dy=1, dz=1, aa1=1)
+        result_dict = gridlist.to_dict()
+        assert result_dict['n'] == 10
+        assert result_dict['m'] == 10
+        assert result_dict['l'] == 10
+        assert result_dict['dx'] == 1
+        assert result_dict['dy'] == 1
+        assert result_dict['dz'] == 1
+        assert '_validate_inputs' not in result_dict
 
-    # Test fuel flag 4
-    fuel_data_params = TEST_PARAMS.copy()
-    fuel_data_params["fuel_flag"] = 4
-    fuel_params = SUT._write_fuel(fuel_data_params)
-    assert fuel_params == ("", "", "")
+    def test_to_file(self):
+        """Test the write_file method of a Gridlist object."""
+        gridlist = Gridlist(n=10, m=10, l=10, dx=1., dy=1., dz=1., aa1=1.)
+        gridlist.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/gridlist", 'r') as file:
+            lines = file.readlines()
+            assert lines[0].split("=")[1].strip() == "10"
+            assert lines[1].split("=")[1].strip() == "10"
+            assert lines[2].split("=")[1].strip() == "10"
+            assert lines[3].split("=")[1].strip() == "1.0"
+            assert lines[4].split("=")[1].strip() == "1.0"
+            assert lines[5].split("=")[1].strip() == "1.0"
+            assert lines[6].split("=")[1].strip() == "1.0"
 
 
-def test_write_ignition_locations():
-    # Test custom ignition flag 6
-    ignition_custom_params = TEST_PARAMS.copy()
-    ignition_custom_params["ignition_flag"] = 6
-    assert SUT._write_ignition_locations(ignition_custom_params) == ""
+        # Test writing to a non-existent directory
+        with pytest.raises(FileNotFoundError):
+            gridlist.to_file("/non_existent_path/gridlist.txt")
 
 
-def test_write_line_fire_ignition():
-    ignition_line_params = TEST_PARAMS.copy()
-    ignition_line_params["ignition_flag"] = 1
+class TestRasterOrigin:
+    def test_init(self):
+        """Test the initialization of a RasterOrigin object."""
+        # Test the default initialization
+        raster_origin = RasterOrigin()
+        assert isinstance(raster_origin, RasterOrigin)
+        assert raster_origin.utm_x == 0.
+        assert raster_origin.utm_y == 0.
 
-    # Define default ignition line locations
-    north_wind = "\n10\n89\n80\n1\n100"
-    east_wind = "\n89\n10\n1\n80\n100"
-    south_wind = "\n10\n9\n80\n1\n100"
-    west_wind = "\n9\n10\n1\n80\n100"
+        # Test the default initialization
+        raster_origin = RasterOrigin(utm_x=500.0, utm_y=1000.0)
+        assert isinstance(raster_origin, RasterOrigin)
+        assert raster_origin.utm_x == 500.0
+        assert raster_origin.utm_y == 1000.0
 
-    # Test north wind
-    ignition_line_params["wind_direction"] = 0
-    assert SUT._write_line_fire_ignition(ignition_line_params) == north_wind
+        # Pass bad parameters: non-real numbers
+        with pytest.raises(TypeError):
+            RasterOrigin(utm_x="500", utm_y=1000.0)
+        with pytest.raises(TypeError):
+            RasterOrigin(utm_x=500.0, utm_y="1000")
 
-    # Test east wind
-    ignition_line_params["wind_direction"] = 90
-    assert SUT._write_line_fire_ignition(ignition_line_params) == east_wind
+        # Pass bad parameters: zero or negative values
+        with pytest.raises(ValueError):
+            RasterOrigin(utm_x=-1, utm_y=1000.0)
+        with pytest.raises(ValueError):
+            RasterOrigin(utm_x=500.0, utm_y=-1000.0)
 
-    # Test south wind
-    ignition_line_params["wind_direction"] = 180
-    assert SUT._write_line_fire_ignition(ignition_line_params) == south_wind
+    def test_to_dict(self):
+        """Test the to_dict method of a RasterOrigin object."""
+        raster_origin = RasterOrigin(utm_x=500.0, utm_y=1000.0)
+        result_dict = raster_origin.to_dict()
+        assert result_dict['utm_x'] == 500.0
+        assert result_dict['utm_y'] == 1000.0
+        assert '_validate_inputs' not in result_dict
 
-    # Test west wind
-    ignition_line_params["wind_direction"] = 270
-    assert SUT._write_line_fire_ignition(ignition_line_params) == west_wind
+    def test_to_file(self):
+        """Test the to_file method of a RasterOrigin object."""
+        raster_origin = RasterOrigin(utm_x=500.0, utm_y=1000.0)
+        raster_origin.to_file("tmp/")
 
-    # Test 45 degree wind
-    ignition_line_params["wind_direction"] = 45
-    assert SUT._write_line_fire_ignition(ignition_line_params) == north_wind
+        # Read the content of the file and check for correctness
+        with open("tmp/rasterorigin.txt", 'r') as file:
+            lines = file.readlines()
+            assert lines[0].strip() == "500.0"
+            assert lines[1].strip() == "1000.0"
 
-    # Test 45.01 degree wind
-    ignition_line_params["wind_direction"] = 45.01
-    assert SUT._write_line_fire_ignition(ignition_line_params) == east_wind
+        # Test writing to a non-existent directory
+        with pytest.raises(FileNotFoundError):
+            raster_origin.to_file("/non_existent_path/rasterorigin.txt")
 
-    # Test -45 degree wind
-    ignition_line_params["wind_direction"] = -45
-    assert SUT._write_line_fire_ignition(ignition_line_params) == north_wind
-
-    # Test -45.01 degree wind
-    ignition_line_params["wind_direction"] = -45.01
-    assert SUT._write_line_fire_ignition(ignition_line_params) == west_wind
-
-    # Test 134.99 degree wind
-    ignition_line_params["wind_direction"] = 134.99
-    assert SUT._write_line_fire_ignition(ignition_line_params) == east_wind
-
-    # Test 135 degree wind
-    ignition_line_params["wind_direction"] = 135
-    assert SUT._write_line_fire_ignition(ignition_line_params) == south_wind

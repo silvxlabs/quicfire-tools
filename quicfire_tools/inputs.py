@@ -4,12 +4,19 @@ QUIC-Fire Tools Simulation Input Module
 from __future__ import annotations
 
 # Core Imports
+import json
 import time
+import importlib.resources
 from pathlib import Path
 from string import Template
 
 # Internal Imports
 from quicfire_tools.parameters import SimulationParameters
+
+DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
+    'inputs').joinpath("documentation")
+TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
+    'inputs').joinpath("templates")
 
 
 class SimulationInputs:
@@ -213,24 +220,140 @@ class SimulationInputs:
                 fout.write(result)
 
 
-if __name__ == '__main__':
-    test_params = SimulationParameters(
-        nx=100,
-        ny=100,
-        nz=1,
-        dx=1.,
-        dy=1.,
-        dz=1.,
-        wind_speed=4.,
-        wind_direction=270,
-        sim_time=60,
-        auto_kill=1,
-        num_cpus=1,
-        fuel_flag=3,
-        ignition_flag=1,
-        output_time=10,
-        topo_flag=0,
-    )
+class InputFile:
+    """Base class representing an input file."""
 
-    sim_test = SimulationInputs("../tests/tmp/test-simulation/")
-    sim_test.setup_input_files(test_params)
+    def __init__(self, filename):
+        self.filename = filename
+        with open(DOCS_PATH / f"{self.filename}.json", "r") as f:
+            self.param_info = json.load(f)
+
+    def list_params(self):
+        """List all parameters in the input file."""
+        return list(self.param_info.keys())
+
+    def get_param_info(self, param_name):
+        """Retrieve documentation for a parameter."""
+        return self.param_info.get(param_name, {})
+
+    def print_param_info(self, param_name):
+        """Print documentation for a parameter."""
+        info = self.get_param_info(param_name)
+
+        if info:
+            print(f"Documentation for {param_name}:")
+            try:
+                print(f"- Line: {info['line']}")
+            except KeyError:
+                pass
+            print(f"- Values accepted: {info['values_accepted']}")
+            print(f"- Tested values range: {info['tested_values_range']}")
+            print(f"- Description: {info['description']}")
+            print(f"- Units: {info['units']}")
+            print(f"- Variable name (Fortran): {info['variable_name_fortran']}")
+        else:
+            print(f"No documentation found for {param_name}")
+
+    def to_dict(self):
+        """
+        Convert the object to a dictionary, excluding attributes that start with an underscore.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the object.
+        """
+        return {attr: value for attr, value in self.__dict__.items()
+                if not attr.startswith('_')}
+
+    def to_file(self, directory: Path, version: str = "latest"):
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        template_file_path = TEMPLATES_PATH / version / f"{self.filename}"
+        with open(template_file_path, "r") as ftemp:
+            src = Template(ftemp.read())
+
+        result = src.substitute(self.to_dict())
+
+        output_file_path = directory / self.filename
+        with open(output_file_path, "w") as fout:
+            fout.write(result)
+
+
+# Print method same as before
+
+class Gridlist(InputFile):
+    def __init__(self, n: int, m: int, l: int, dx: float, dy: float, dz: float,
+                 aa1: float):
+        """
+        Initialize the Gridlist class to manage fuel-grid related data.
+
+        Parameters
+        ----------
+        n : int
+            Number of cells in the x-direction, must be greater than 0 (ft%nx).
+        m : int
+            Number of cells in the y-direction, must be greater than 0 (ft%ny).
+        l : int
+            Number of cells in the z-direction, must be greater than 0 (ft%nz).
+        dx : float
+            Cell size in the x-direction in meters, must be greater than 0.
+            Recommended value: 2 m (ft%dx).
+        dy : float
+            Cells siz in the y-direction in meters, must be greater than 0.
+            Recommended value: 2 m (ft%dy).
+        dz : float
+            Cell size in the z-direction in meters, must be greater than 0 (zb).
+        aa1 : float
+            Stretching factor for the vertical grid spacing, must be greater
+            than 0 (aa1).
+        """
+        self._validate_inputs(n, m, l, dx, dy, dz, aa1)
+        super().__init__("gridlist")
+        self.n = n
+        self.m = m
+        self.l = l
+        self.dx = dx
+        self.dy = dy
+        self.dz = dz
+        self.aa1 = aa1
+
+    @staticmethod
+    def _validate_inputs(n, m, l, dx, dy, dz, aa1):
+        for val in (n, m, l):
+            if not isinstance(val, int):
+                raise TypeError(f"{val} must be an integer")
+            if val <= 0:
+                raise ValueError(f"{val} must be greater than 0")
+        for val in (dx, dy, dz, aa1):
+            if not isinstance(val, float) and not isinstance(val, int):
+                raise TypeError(f"{val} must be a real number")
+            if val <= 0:
+                raise ValueError(f"{val} must be greater than 0")
+
+
+class RasterOrigin(InputFile):
+    def __init__(self, utm_x: float = 0., utm_y: float = 0.):
+        """
+        Initialize the RasterOrigin class to manage raster origin related data.
+
+        Parameters
+        ----------
+        utm_x : float
+            South-west corner of the domain in UTM (ft%utm_x).
+        utm_y : float
+            South-west corner of the domain in UTM (ft%utm_y).
+        """
+        self._validate_inputs(utm_x, utm_y)
+        super().__init__("rasterorigin.txt")
+        self.utm_x = utm_x
+        self.utm_y = utm_y
+
+    @staticmethod
+    def _validate_inputs(utm_x, utm_y):
+        for val in (utm_x, utm_y):
+            if not isinstance(val, float) and not isinstance(val, int):
+                raise TypeError(f"{val} must be a real number")
+            if val < 0:
+                raise ValueError(f"{val} must be greater than 0")

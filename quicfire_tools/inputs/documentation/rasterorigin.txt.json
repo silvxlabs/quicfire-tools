@@ -1,0 +1,19 @@
+{
+  "utm_x": {
+    "line": 1,
+    "values_accepted": "> 0",
+    "tested_values_range": "> 0",
+    "description": "South-west corner of the Firetec domain, UTM-x",
+    "units": "[m]",
+    "variable_name_fortran": "ft%utmx"
+  },
+
+  "utm_y": {
+    "line": 2,
+    "values_accepted": "> 0",
+    "tested_values_range": "> 0",
+    "description": "South-west corner of the Firetec domain, UTM-y",
+    "units": "[m]",
+    "variable_name_fortran": "ft%utmy"
+  }
+}
