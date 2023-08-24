@@ -7,6 +7,7 @@ from quicfire_tools.parameters import SimulationParameters
 import zarr
 import pytest
 import numpy as np
+import dask.array as da
 from scipy.io import FortranFile
 
 from pathlib import Path
@@ -34,6 +35,17 @@ SIM_PARAMS = SimulationParameters(
     output_time=100,
     topo_flag=0,
 )
+
+
+class TestSimulationOutputs:
+    sut = outputs.SimulationOutputs(OUTPUT_PATH, SIM_PARAMS)
+
+    def test_to_dask(self):
+        for output in self.sut.outputs:
+            dask_array = self.sut.to_dask(output)
+            assert isinstance(dask_array, da.Array)
+            numpy_array = self.sut.to_numpy(output)
+            assert np.allclose(numpy_array, dask_array.compute())
 
 
 class TestOutputFile:
