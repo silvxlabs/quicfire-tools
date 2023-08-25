@@ -398,3 +398,53 @@ class QU_Buildings(InputFile):
                 raise TypeError(f"{val} must be an integer")
             if val < 0:
                 raise ValueError(f"{val} must be greater than or equal to 0")
+
+class QU_Fileoptions(InputFile):
+    def __init__(self,
+                 output_data_file_format_flag: int = 2,
+                 non_mass_conserved_initial_field_flag: int = 0,
+                 initial_sensor_velocity_field_flag: int = 0,
+                 qu_staggered_velocity_file_flag: int = 0,
+                 generate_wind_startup_files_flag: int = 0):
+        """
+        Initialize the QU_Fileoptions class to manage file-related options.
+
+        Parameters
+        ----------
+        output_data_file_format_flag : int
+            Output data file format flag, values accepted [0 3],
+            recommended value 2.
+        non_mass_conserved_initial_field_flag : int
+            Flag to write out non-mass conserved initial field (uofield.dat), values accepted [0 1], recommended value 0.
+        initial_sensor_velocity_field_flag : int
+            Flag to write out the file uosensorfield.dat, values accepted [0 1], recommended value 0.
+        qu_staggered_velocity_file_flag : int
+            Flag to write out the file QU_staggered_velocity.bin, values accepted [0 1], recommended value 0.
+        generate_wind_startup_files_flag : int
+            Generate wind startup files for ensemble simulations, values accepted [0 1].
+        """
+        self._validate_inputs(output_data_file_format_flag,
+                              non_mass_conserved_initial_field_flag,
+                              initial_sensor_velocity_field_flag,
+                              qu_staggered_velocity_file_flag,
+                              generate_wind_startup_files_flag)
+        super().__init__("QU_fileoptions")
+        self.output_data_file_format_flag = output_data_file_format_flag
+        self.non_mass_conserved_initial_field_flag = non_mass_conserved_initial_field_flag
+        self.initial_sensor_velocity_field_flag = initial_sensor_velocity_field_flag
+        self.qu_staggered_velocity_file_flag = qu_staggered_velocity_file_flag
+        self.generate_wind_startup_files_flag = generate_wind_startup_files_flag
+
+    @staticmethod
+    def _validate_inputs(output_data_file_format_flag, non_mass_conserved_initial_field_flag, initial_sensor_velocity_field_flag, QU_staggered_velocity_file_flag, generate_wind_startup_files_flag):
+        for val in (output_data_file_format_flag,
+                    non_mass_conserved_initial_field_flag,
+                    initial_sensor_velocity_field_flag,
+                    QU_staggered_velocity_file_flag,
+                    generate_wind_startup_files_flag):
+            if not isinstance(val, int):
+                raise TypeError(f"{val} must be an integer")
+            if val not in [0, 1] and val != output_data_file_format_flag:
+                raise ValueError(f"{val} must be 0 or 1")
+            if val not in range(0, 4) and val == output_data_file_format_flag:
+                raise ValueError(f"{val} must be between 0 and 3")
