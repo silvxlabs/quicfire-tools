@@ -9,27 +9,6 @@ from quicfire_tools.inputs import *
 import pytest
 
 
-# TEST_PARAMS = {
-#     "nx": 100,
-#     "ny": 100,
-#     "nz": 1,
-#     "dx": 1.,
-#     "dy": 1.,
-#     "dz": 1.,
-#     "wind_speed": 4.,
-#     "wind_direction": 265,
-#     "sim_time": 60,
-#     "auto_kill": 1,
-#     "num_cpus": 1,
-#     "fuel_flag": 3,
-#     "ignition_flag": 1,
-#     "output_time": 10,
-# }
-
-
-# SUT = SimulationInputs("pytest-simulation")
-
-
 class TestGridList:
     def test_init(self):
         """Test the initialization of a Gridlist object."""
@@ -38,7 +17,7 @@ class TestGridList:
         assert isinstance(gridlist, Gridlist)
         assert gridlist.n == 10
         for i in ["n", "m", "l", "dx", "dy", "dz", "aa1"]:
-            assert i in gridlist.list_params()
+            assert i in gridlist.list_parameters()
 
         # Pass bad parameters: non-real numbers
         with pytest.raises(TypeError):
@@ -198,3 +177,90 @@ class TestQU_Buildings:
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
             qu_buildings.to_file("/non_existent_path/QU_buildings.inp")
+
+
+class TestQU_Fileoptions:
+    def test_init_default(self):
+        """Test the default initialization of a QU_Fileoptions object."""
+        file_options = QU_Fileoptions()
+
+        assert isinstance(file_options, QU_Fileoptions)
+        assert file_options.output_data_file_format_flag == 2
+        assert file_options.non_mass_conserved_initial_field_flag == 0
+        assert file_options.initial_sensor_velocity_field_flag == 0
+        assert file_options.qu_staggered_velocity_file_flag == 0
+        assert file_options.generate_wind_startup_files_flag == 0
+
+    def test_init_custom(self):
+        """Test custom initialization of a QU_Fileoptions object."""
+        file_options = QU_Fileoptions(output_data_file_format_flag=1,
+                                      non_mass_conserved_initial_field_flag=1,
+                                      initial_sensor_velocity_field_flag=1,
+                                      qu_staggered_velocity_file_flag=1,
+                                      generate_wind_startup_files_flag=1)
+
+        assert file_options.output_data_file_format_flag == 1
+        assert file_options.non_mass_conserved_initial_field_flag == 1
+        assert file_options.initial_sensor_velocity_field_flag == 1
+        assert file_options.qu_staggered_velocity_file_flag == 1
+        assert file_options.generate_wind_startup_files_flag == 1
+
+    def test_validate_inputs_type(self):
+        """Test input validation for type constraints."""
+        with pytest.raises(TypeError):
+            QU_Fileoptions(output_data_file_format_flag="a")
+        with pytest.raises(TypeError):
+            QU_Fileoptions(non_mass_conserved_initial_field_flag="b")
+        with pytest.raises(TypeError):
+            QU_Fileoptions(initial_sensor_velocity_field_flag="c")
+        with pytest.raises(TypeError):
+            QU_Fileoptions(qu_staggered_velocity_file_flag="d")
+        with pytest.raises(TypeError):
+            QU_Fileoptions(generate_wind_startup_files_flag="e")
+
+    def test_validate_inputs_value_for_flags(self):
+        """Test input validation for value constraints for flags."""
+        with pytest.raises(ValueError):
+            QU_Fileoptions(non_mass_conserved_initial_field_flag=4)
+        with pytest.raises(ValueError):
+            QU_Fileoptions(initial_sensor_velocity_field_flag=3)
+        with pytest.raises(ValueError):
+            QU_Fileoptions(qu_staggered_velocity_file_flag=4)
+        with pytest.raises(ValueError):
+            QU_Fileoptions(generate_wind_startup_files_flag=5)
+
+    def test_validate_inputs_value_for_output_format(self):
+        """Test input validation for value constraints for output_data_file_format_flag."""
+        with pytest.raises(ValueError):
+            QU_Fileoptions(output_data_file_format_flag=5)
+        with pytest.raises(ValueError):
+            QU_Fileoptions(output_data_file_format_flag=-1)
+
+    def test_to_dict(self):
+        """Test the to_dict method of a QU_Buildings object."""
+        qu_fileoptions = QU_Fileoptions()
+        result_dict = qu_fileoptions.to_dict()
+        assert result_dict['output_data_file_format_flag'] == 2
+        assert result_dict['non_mass_conserved_initial_field_flag'] == 0
+        assert result_dict['initial_sensor_velocity_field_flag'] == 0
+        assert result_dict['qu_staggered_velocity_file_flag'] == 0
+        assert result_dict['generate_wind_startup_files_flag'] == 0
+        assert '_validate_inputs' not in result_dict
+
+    def test_to_file(self):
+        """Test the to_file method of a QU_Buildings object."""
+        qu_fileoptions = QU_Fileoptions()
+        qu_fileoptions.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QU_fileoptions.inp", 'r') as file:
+            lines = file.readlines()
+            assert int(lines[1].strip().split("!")[0]) == 2
+            assert int(lines[2].strip().split("!")[0]) == 0
+            assert int(lines[3].strip().split("!")[0]) == 0
+            assert int(lines[4].strip().split("!")[0]) == 0
+            assert int(lines[5].strip().split("!")[0]) == 0
+
+        # Test writing to a non-existent directory
+        with pytest.raises(FileNotFoundError):
+            qu_fileoptions.to_file("/non_existent_path/QU_buildings.inp")

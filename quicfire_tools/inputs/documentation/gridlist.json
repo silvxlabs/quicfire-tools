@@ -23,6 +23,7 @@
             "dx": {
                 "values_accepted": "> 0",
                 "tested_values_range": "> 0",
+                "recommended_value": "2m",
                 "description": "Cell size in the x-direction",
                 "units": "[m]",
                 "variable_name_fortran": "ft%dx"
@@ -30,6 +31,7 @@
             "dy": {
                 "values_accepted": "> 0",
                 "tested_values_range": "> 0",
+                "recommended_value": "2m",
                 "description": "Cell size in the y-direction",
                 "units": "[m]",
                 "variable_name_fortran": "ft%dy"
