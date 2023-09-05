@@ -9,6 +9,9 @@ import importlib.resources
 from pathlib import Path
 from string import Template
 
+# External Imports
+import numpy as np
+
 DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("documentation")
 TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
@@ -95,6 +98,44 @@ class InputFile:
             fout.write(result)
 
 
+class InputValidator:
+
+    @classmethod
+    def real_number(cls, variable_name, value):
+        if not isinstance(value, (float, int)):
+            raise TypeError(f"{variable_name} must be a real number")
+
+    @classmethod
+    def positive_real(cls, variable_name, value):
+        cls.real_number(variable_name, value)
+        if value <= 0:
+            raise ValueError(f"{variable_name} must be greater than 0")
+
+    @classmethod
+    def integer(cls, variable_name, value):
+        if not isinstance(value, int):
+            raise TypeError(f"{variable_name} must be an integer")
+
+    @classmethod
+    def positive_integer(cls, variable_name, value):
+        cls.integer(variable_name, value)
+        if value <= 0:
+            raise ValueError(f"{variable_name} must be greater than 0")
+
+    @classmethod
+    def non_negative_integer(cls, variable_name, value):
+        cls.integer(variable_name, value)
+        if value < 0:
+            raise ValueError(
+                f"{variable_name} must be greater than or equal to 0")
+
+    @classmethod
+    def in_list(cls, variable_name, value, valid_values):
+        if value not in valid_values:
+            raise ValueError(
+                f"{variable_name} must be one of the following: {valid_values}")
+
+
 class Gridlist(InputFile):
     def __init__(self, n: int, m: int, l: int, dx: float, dy: float, dz: float,
                  aa1: float):
@@ -121,7 +162,16 @@ class Gridlist(InputFile):
             Stretching factor for the vertical grid spacing, must be greater
             than 0 (aa1).
         """
-        self._validate_inputs(n, m, l, dx, dy, dz, aa1)
+        # Validate inputs
+        InputValidator.positive_integer("n", n)
+        InputValidator.positive_integer("m", m)
+        InputValidator.positive_integer("l", l)
+        InputValidator.positive_real("dx", dx)
+        InputValidator.positive_real("dy", dy)
+        InputValidator.positive_real("dz", dz)
+        InputValidator.positive_real("aa1", aa1)
+
+        # Initialize the class
         super().__init__("gridlist")
         self.n = n
         self.m = m
@@ -130,19 +180,6 @@ class Gridlist(InputFile):
         self.dy = dy
         self.dz = dz
         self.aa1 = aa1
-
-    @staticmethod
-    def _validate_inputs(n, m, l, dx, dy, dz, aa1):
-        for val in (n, m, l):
-            if not isinstance(val, int):
-                raise TypeError(f"{val} must be an integer")
-            if val <= 0:
-                raise ValueError(f"{val} must be greater than 0")
-        for val in (dx, dy, dz, aa1):
-            if not isinstance(val, float) and not isinstance(val, int):
-                raise TypeError(f"{val} must be a real number")
-            if val <= 0:
-                raise ValueError(f"{val} must be greater than 0")
 
 
 class RasterOrigin(InputFile):
@@ -157,18 +194,14 @@ class RasterOrigin(InputFile):
         utm_y : float
             South-west corner of the domain in UTM (ft%utm_y).
         """
-        self._validate_inputs(utm_x, utm_y)
+        # Validate inputs
+        InputValidator.real_number("utm_x", utm_x)
+        InputValidator.real_number("utm_y", utm_y)
+
+        # Initialize the class
         super().__init__("rasterorigin.txt")
         self.utm_x = utm_x
         self.utm_y = utm_y
-
-    @staticmethod
-    def _validate_inputs(utm_x, utm_y):
-        for val in (utm_x, utm_y):
-            if not isinstance(val, float) and not isinstance(val, int):
-                raise TypeError(f"{val} must be a real number")
-            if val < 0:
-                raise ValueError(f"{val} must be greater than 0")
 
 
 class QU_Buildings(InputFile):
@@ -181,35 +214,26 @@ class QU_Buildings(InputFile):
         Parameters
         ----------
         wall_roughness_length : float
-            Wall roughness length in meters, must be greater than 0 (bld%zo).
+            Wall roughness length in meters, must be greater than 0..
         number_of_buildings : int
-            Number of buildings, must be greater than 0.
-            Recommended value: 0 (building algorithms are not part of QUIC-Fire) (bld%number).
+            Number of buildings, must be greater than 0. (building algorithms
+            not part of QUIC-Fire).
         number_of_polygon_nodes : int
             Number of polygon building nodes, must be greater than 0.
-            Recommended value: 0 (inumpolygon).
         """
-        self._validate_inputs(wall_roughness_length, number_of_buildings,
-                              number_of_polygon_nodes)
+        # Validate inputs
+        InputValidator.positive_real("wall_roughness_length",
+                                     wall_roughness_length)
+        InputValidator.positive_integer("number_of_buildings",
+                                        number_of_buildings)
+        InputValidator.positive_integer("number_of_polygon_nodes",
+                                        number_of_polygon_nodes)
+
+        # Initialize the class
         super().__init__("QU_buildings.inp")
         self.wall_roughness_length = wall_roughness_length
         self.number_of_buildings = number_of_buildings
         self.number_of_polygon_nodes = number_of_polygon_nodes
-
-    @staticmethod
-    def _validate_inputs(wall_roughness_length, number_of_buildings,
-                         number_of_polygon_nodes):
-        if not isinstance(wall_roughness_length, float) and not isinstance(
-                wall_roughness_length, int):
-            raise TypeError(f"{wall_roughness_length} must be a real number")
-        if wall_roughness_length <= 0:
-            raise ValueError(f"{wall_roughness_length} must be greater than 0")
-
-        for val in (number_of_buildings, number_of_polygon_nodes):
-            if not isinstance(val, int):
-                raise TypeError(f"{val} must be an integer")
-            if val < 0:
-                raise ValueError(f"{val} must be greater than or equal to 0")
 
 
 class QU_Fileoptions(InputFile):
@@ -240,11 +264,19 @@ class QU_Fileoptions(InputFile):
             Generate wind startup files for ensemble simulations, values
             accepted [0 1].
         """
-        self._validate_inputs(output_data_file_format_flag,
-                              non_mass_conserved_initial_field_flag,
-                              initial_sensor_velocity_field_flag,
-                              qu_staggered_velocity_file_flag,
-                              generate_wind_startup_files_flag)
+        # Validate inputs
+        InputValidator.in_list("output_data_file_format_flag",
+                               output_data_file_format_flag, [0, 3])
+        InputValidator.in_list("non_mass_conserved_initial_field_flag",
+                               non_mass_conserved_initial_field_flag, [0, 1])
+        InputValidator.in_list("initial_sensor_velocity_field_flag",
+                               initial_sensor_velocity_field_flag, [0, 1])
+        InputValidator.in_list("QU_staggered_velocity_file_flag",
+                               qu_staggered_velocity_file_flag, [0, 1])
+        InputValidator.in_list("generate_wind_startup_files_flag",
+                               generate_wind_startup_files_flag, [0, 1])
+
+        # Initialize the class
         super().__init__("QU_fileoptions.inp")
         self.output_data_file_format_flag = output_data_file_format_flag
         self.non_mass_conserved_initial_field_flag = non_mass_conserved_initial_field_flag
@@ -252,20 +284,4 @@ class QU_Fileoptions(InputFile):
         self.qu_staggered_velocity_file_flag = qu_staggered_velocity_file_flag
         self.generate_wind_startup_files_flag = generate_wind_startup_files_flag
 
-    @staticmethod
-    def _validate_inputs(output_data_file_format_flag,
-                         non_mass_conserved_initial_field_flag,
-                         initial_sensor_velocity_field_flag,
-                         QU_staggered_velocity_file_flag,
-                         generate_wind_startup_files_flag):
-        for val in (output_data_file_format_flag,
-                    non_mass_conserved_initial_field_flag,
-                    initial_sensor_velocity_field_flag,
-                    QU_staggered_velocity_file_flag,
-                    generate_wind_startup_files_flag):
-            if not isinstance(val, int):
-                raise TypeError(f"{val} must be an integer")
-            if val not in [0, 1] and val != output_data_file_format_flag:
-                raise ValueError(f"{val} must be 0 or 1")
-            if val not in range(0, 4) and val == output_data_file_format_flag:
-                raise ValueError(f"{val} must be between 0 and 3")
+
