@@ -4,7 +4,7 @@ $ny !ny - Domain Width(Y) Grid Cells
 32 ! NZ - domain height(Z) grid cells
 $dx ! DX [m]
 $dy ! DY [m]
-3 !Vertical stretching flag (0 = uniform, 1 = custom, 2 = parabolic Z, 3 = parabolic DZ, 4 = exponential)
+$stretch_grid_flag !Vertical stretching flag (0 = uniform, 1 = custom, 2 = parabolic Z, 3 = parabolic DZ, 4 = exponential)
 1.000000 ! Surface DZ [m]
 5 ! Number of uniform surface cells
 ! DZ array [m]

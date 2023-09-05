@@ -3,6 +3,9 @@ QUIC-Fire Tools Simulation Input Module
 """
 from __future__ import annotations
 
+# Internal Imports
+from utils import compute_parabolic_stretched_grid
+
 # Core Imports
 import json
 import importlib.resources
@@ -12,10 +15,24 @@ from string import Template
 # External Imports
 import numpy as np
 
+# TODO: Multiple wind directions
+# TODO: String for .dat files that exist
+
 DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("documentation")
 TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("templates")
+
+class SimulationInputs:
+    outputs: list = []
+
+    def to_json(self):
+        for output in outputs:
+            output.to_dict()
+
+    @classmethod
+    def from_json(cls, json):
+        pass
 
 
 class InputFile:
@@ -285,3 +302,142 @@ class QU_Fileoptions(InputFile):
         self.generate_wind_startup_files_flag = generate_wind_startup_files_flag
 
 
+class QU_Simparams(InputFile):
+    def __init__(self,
+                 nx: int,
+                 ny: int,
+                 nz: int,
+                 dx: float,
+                 dy: float,
+                 surface_vertical_cell_size: float = 1.,
+                 number_surface_cells: int = 5,
+                 stretch_grid_flag: int = 3,
+                 dz_array: list[float] = None):
+        """
+        Initialize the QU_Simparams class to manage simulation parameters.
+
+        Parameters
+        ----------
+        nx : int
+            Number of cells in the x-direction.
+        ny : int
+            Number of cells in the y-direction.
+        nz : int
+            Number of cells in the z-direction.
+        dx : float
+            Cell size in the x-direction (in meters).
+        dy : float
+            Cell size in the y-direction (in meters).
+        dz : float
+            Surface vertical cell size (in meters).
+        stretchgridflag : int
+            Vertical grid stretching flag, values accepted [0, 1, 2, 3, 4].
+        """
+        # self._validate_inputs()
+        super().__init__("QU_simparams.inp")
+        self.nx = nx
+        self.ny = ny
+        self.nz = nz
+        self.dx = dx
+        self.dy = dy
+        self.surface_vertical_cell_size = surface_vertical_cell_size
+        self.number_surface_cells = number_surface_cells
+        self.stretch_grid_flag = stretch_grid_flag
+        self.dz_array = dz_array if dz_array else []
+        self.vertical_grid = self._generate_vertical_grid()
+
+    @staticmethod
+    def _validate_inputs(nx, ny, nz, dx, dy, surface_vertical_cell_size,
+                         number_surface_cells, stretch_grid_flag, dz_array):
+        InputValidator.positive_integer("nx", nx)
+        InputValidator.positive_integer("ny", ny)
+        InputValidator.positive_integer("nz", nz)
+        InputValidator.positive_real("dx", dx)
+        InputValidator.positive_real("dy", dy)
+        InputValidator.positive_real("surface_vertical_cell_size",
+                                     surface_vertical_cell_size)
+        InputValidator.positive_integer("number_surface_cells",
+                                        number_surface_cells)
+        InputValidator.in_list("stretch_grid_flag", stretch_grid_flag,
+                               [0, 1, 2, 3, 4])
+
+    def _generate_vertical_grid(self):
+        """
+        Parses the vertical grid stretching flag and dz_array to generate the
+        vertical grid as a string for the QU_simparams.inp file.
+
+        Also modifies dz_array if stretch_grid_flag is not 1.
+        """
+        if self.stretch_grid_flag == 0:
+            return self._stretch_grid_flag_0()
+        elif self.stretch_grid_flag == 1:
+            return self._stretch_grid_flag_1()
+        elif self.stretch_grid_flag == 3:
+            return self._stretch_grid_flag_3()
+
+        return ""
+
+    def _stretch_grid_flag_0(self):
+        """
+        Generates a uniform vertical grid as a string for the QU_simparams.inp
+        file. Adds the uniform grid to dz_array.
+        """
+        # Create a uniform dz_grid
+        for i in range(self.nz):
+            self.dz_array.append(self.surface_vertical_cell_size)
+
+        # Create the lines for the uniform grid
+        surface_dz_line = f"{float(self.surface_vertical_cell_size)}\t! Surface DZ [m]"
+        number_surface_cells_line = f"{self.number_surface_cells}\t! Number of uniform surface cells"
+
+        return f"{surface_dz_line}\n{number_surface_cells_line}"
+
+    def _stretch_grid_flag_1(self):
+        """
+        Generates a custom vertical grid as a string for the QU_simparams.inp
+        file.
+        """
+        # Verify that dz_array is not empty
+        if not self.dz_array:
+            raise ValueError("dz_array must not be empty if stretch_grid_flag "
+                             "is 1. Please provide a dz_array with nz elements"
+                             " or use a different stretch_grid_flag.")
+
+        # Verify that nz is equal to the length of dz_array
+        if self.nz != len(self.dz_array):
+            raise ValueError(f"nz must be equal to the length of dz_array. "
+                             f"{self.nz} != {len(self.dz_array)}")
+
+        # Verify that the first number_surface_cells_line elements of dz_array
+        # are equal to the surface_vertical_cell_size
+        for dz in self.dz_array[:self.number_surface_cells]:
+            if dz != self.surface_vertical_cell_size:
+                raise ValueError("The first number_surface_cells_line "
+                                 "elements of dz_array must be equal to "
+                                 "surface_vertical_cell_size")
+
+        # Write surface vertical cell size line
+        surface_dz_line = (f"{float(self.surface_vertical_cell_size)}\t! "
+                           f"Surface DZ [m]")
+
+        # Write header line
+        header_line = f"! DZ array [m]"
+
+        # Write dz_array lines
+        dz_array_lines_list = []
+        for dz in self.dz_array:
+            dz_array_lines_list.append(f"{float(dz)}")
+        dz_array_lines = "\n".join(dz_array_lines_list)
+
+        return f"{surface_dz_line}\n{header_line}\n{dz_array_lines}"
+
+    def _stretch_grid_flag_3(self):
+        """
+        Generates a vertical grid for stretch_grid_flag 3 as a string for the
+        QU_simparams.inp file. Stretch grid flag 3 is a stretching with
+        parabolic vertical cell size. Adds the parabolic grid to dz_array.
+        """
+        dz_array = compute_parabolic_stretched_grid(
+            self.surface_vertical_cell_size, self.number_surface_cells,
+            self.nz, 300)
+        print()
