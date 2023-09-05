@@ -7,6 +7,7 @@ from quicfire_tools.inputs import *
 
 # External Imports
 import pytest
+from pydantic import ValidationError
 
 
 class TestGridList:
@@ -26,9 +27,9 @@ class TestGridList:
             Gridlist(n="10", m=10, l=10, dx=1, dy=1, dz=1, aa1=1)
 
         # Pass bad parameters: zero or negative values
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             Gridlist(n=-10, m=10, l=10, dx=0, dy=1, dz=1, aa1=1)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             Gridlist(n=10, m=10, l=10, dx=1, dy=0, dz=1, aa1=1)
 
     def test_to_dict(self):
@@ -134,10 +135,10 @@ class TestQU_Buildings:
         assert qu_buildings.number_of_polygon_nodes == 0
 
         # Pass bad parameters: negative values
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             QU_Buildings(wall_roughness_length=-1, number_of_buildings=0,
                          number_of_polygon_nodes=0)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             QU_Buildings(wall_roughness_length=1, number_of_buildings=-1,
                          number_of_polygon_nodes=0)
 
@@ -220,20 +221,20 @@ class TestQU_Fileoptions:
 
     def test_validate_inputs_value_for_flags(self):
         """Test input validation for value constraints for flags."""
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             QU_Fileoptions(non_mass_conserved_initial_field_flag=4)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             QU_Fileoptions(initial_sensor_velocity_field_flag=3)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             QU_Fileoptions(qu_staggered_velocity_file_flag=4)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             QU_Fileoptions(generate_wind_startup_files_flag=5)
 
     def test_validate_inputs_value_for_output_format(self):
         """Test input validation for value constraints for output_data_file_format_flag."""
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             QU_Fileoptions(output_data_file_format_flag=5)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             QU_Fileoptions(output_data_file_format_flag=-1)
 
     def test_to_dict(self):
@@ -264,3 +265,42 @@ class TestQU_Fileoptions:
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
             qu_fileoptions.to_file("/non_existent_path/QU_buildings.inp")
+
+
+class TestQU_Simparams:
+    @staticmethod
+    def get_test_object():
+        return QU_Simparams(nx=100, ny=100, nz=30, dx=2, dy=2,
+                            surface_vertical_cell_size=1,
+                            number_surface_cells=5)
+
+    def test_stretch_grid_flag_0(self):
+        qu_simparams = self.get_test_object()
+        qu_simparams.stretch_grid_flag = 0
+        vertical_grid_lines = qu_simparams._stretch_grid_flag_0()
+        assert vertical_grid_lines == '1.0\t! Surface DZ [m]\n5	! Number of uniform surface cells'
+
+    def test_stretch_grid_flag_1(self):
+        qu_simparams = self.get_test_object()
+        qu_simparams.stretch_grid_flag = 1
+
+        # Test with no dz_array input
+        with pytest.raises(TypeError):
+            qu_simparams._stretch_grid_flag_1()
+
+        # Test with 19 dz_array inputs
+        qu_simparams.dz_array = [1] * 19
+        with pytest.raises(TypeError):
+            qu_simparams._stretch_grid_flag_1()
+
+        # Test with dz inputs that don't match the surface values
+        qu_simparams.dz_array = [1] * 20
+        qu_simparams.dz_array[0] = 2
+        with pytest.raises(ValueError):
+            qu_simparams._stretch_grid_flag_1()
+
+        # Test valid case
+        qu_simparams.dz_array = [1] * 20
+        vertical_grid_lines = qu_simparams._stretch_grid_flag_1()
+        vertical_grid_list = vertical_grid_lines.split("\n")
+        assert len(vertical_grid_list) == 22
