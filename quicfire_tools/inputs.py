@@ -2,9 +2,11 @@
 QUIC-Fire Tools Simulation Input Module
 """
 from __future__ import annotations
+from xml.sax.xmlreader import InputSource
 
 # Internal Imports
 from utils import compute_parabolic_stretched_grid
+from parameters import SimulationParameters #HOW TO DEAL WITH SIM PARAMS
 
 # Core Imports
 import json
@@ -151,6 +153,20 @@ class InputValidator:
         if value not in valid_values:
             raise ValueError(
                 f"{variable_name} must be one of the following: {valid_values}")
+    
+    @classmethod
+    def negative_one(cls, variable_name, value):
+        cls.integer(variable_name, value)
+        if value < -1 or value == 0:
+            raise ValueError(
+                f"{variable_name} must be -1 or greater than 0")
+    
+    @classmethod
+    def binary_flag(cls, variable_name, value):
+        cls.integer(variable_name,value)
+        if value not in [0,1]:
+            raise ValueError(
+                f"{variable_name} must be either 0 or 1")
 
 
 class Gridlist(InputFile):
@@ -441,3 +457,186 @@ class QU_Simparams(InputFile):
             self.surface_vertical_cell_size, self.number_surface_cells,
             self.nz, 300)
         print()
+
+class QUIC_fire(InputFile):
+    def __init__(self,
+                 nz: int,
+                 output_time: int,
+                 #fuel_flag: int,
+                 #ignition_flag: int,
+                 time_now: int, #WHERE IS THIS CALCULATED
+                 sim_time: int = SimulationParameters.sim_time, #HOW TO DEAL WITH SIM PARAMS
+                 fire_flag: int = 1,
+                 random_seed: int = -1,
+                 fire_time_step: int = 1,
+                 quic_time_step: int = 1,
+                 stretch_grid_flag: int = 0,
+                 dz_array: list[float] = None,
+                 firebrand_flag: int = 0,
+                 auto_kill: int = 1,
+                 # Output flags
+                 eng_to_atm_out: int = 1,
+                 react_rate_out: int = 0,
+                 fuel_dens_out: int = 1,
+                 gridded_wind_out: int = 1,
+                 QU_ffx_inst_out: int = 1,
+                 QU_ffx_avg_out: int = 0,
+                 fuel_moist_out: int = 1,
+                 mass_burnt_out: int = 1,
+                 firebrand_out: int = 0,
+                 emissions_out: int = 0,
+                 radiation_out: int = 0,
+                 intensity_out: int = 0):
+        """
+        Initialize the QU_Simparams class to manage simulation parameters.
+
+        Parameters
+        ----------
+        nz : int
+            Number of fire grid cells in the z-direction.
+        output_time : int
+            After how many time steps to print out:
+                - fire-related files (excluding emissions and radiation)
+                - average emissions and radiation
+            After how many quic updates to print out:
+                - wind-related files
+                - averaged wind-related files
+            Use -1 to provide custom times in file QFire_ListOutputTimes.inp
+        fuel_flag : int
+            UPDATE
+        ignition_flag : int
+            UPDATE
+        time_now : int
+            When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
+        sim_time : int
+            Total simulation time for the fire [s]
+        fire_flag : int
+            Fire flag, 1 = run fire; 0 = no fire
+        random_seed : int
+            Random number generator, -1: use time and date, any other integer > 0 is used as the seed
+        fire_time_step : int
+            time step for the fire simulation [s]
+        quic_time_step : int
+            Number of fire time steps done before updating the quic wind field (integer, >= 1)
+        stretch_grid_flag : int
+            Vertical stretching flag: 0 = uniform dz, 1 = custom
+        dz_array : list[float]
+            custom dz, one dz per line must be specified, from the ground to the top of the domain
+        firebrand_flag : int
+            Firebrand flag, 0 = off; 1 = on
+            Recommended value = 0 ; firebrands are untested for small scale problems
+        auto_kill : int
+            Kill if the fire is out and there are no more ignitions or firebrands (0 = no, 1 = yes)
+        eng_to_atm_out : int
+            Output flag [0, 1]: gridded energy-to-atmosphere (3D fire grid + extra layers)
+        react_rate_out : int
+            Output flag [0, 1]: compressed array reaction rate (fire grid)
+        fuel_dens_out : int
+            Output flag [0, 1]: compressed array fuel density (fire grid)
+        gridded_wind_out : int
+            Output flag [0, 1]: gridded wind (u,v,w,sigma) (3D fire grid)
+        QU_ffx_inst_out : int
+            Output flag [0, 1]: gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
+        QU_ffx_avg_out : int
+            Output flag [0, 1]: gridded QU winds with fire effects, averaged (QUIC-URB grid)
+        fuel_moist_out : int
+            Output flag [0, 1]: compressed array fuel moisture (fire grid)
+        mass_burnt_out : int
+            Output flag [0, 1]: vertically-integrated % mass burnt (fire grid)
+        firebrand_out : int
+            Output flag [0, 1]: firebrand trajectories. Must be 0 when firebrand flag is 0
+        emissions_out : int
+            Output flag [0, 1]: compressed array emissions (fire grid)
+        radiation_out : int
+            Output flag [0, 1]: gridded thermal radiation (fire grid)
+        intensity_out : int
+            Output flag [0, 1]: surface fire intensity at every fire time step
+        """
+        InputValidator.positive_integer("nz", nz)
+        InputValidator.negative_one("output_time", output_time)
+        if output_time == -1:
+            print("CAUTION: User must provide custom times in file QFire_ListOutputTimes.inp")
+        #InputValidator.in_list("fuel_flag", fuel_flag, [1,2,3,4])
+        #InputValidator.in_list("ignition_flag", ignition_flag, [1,2,3,4,5,6,7])
+        InputValidator.positive_integer("time_now", time_now)
+        InputValidator.positive_integer("sim_time", sim_time)
+        InputValidator.binary_flag("fire_flag", fire_flag)
+        InputValidator.negative_one("random_seed", random_seed)
+        InputValidator.positive_integer("fire_time_step", fire_time_step)
+        InputValidator.positive_integer("quic_time_step", quic_time_step)
+        InputValidator.binary_flag("stretch_grid_flag", stretch_grid_flag)
+        InputValidator.binary_flag("firebrand_flag", firebrand_flag)
+        InputValidator.binary_flag("auto_kill", auto_kill)
+        # Output flags
+        InputValidator.binary_flag("eng_to_atm_out", eng_to_atm_out)
+        InputValidator.binary_flag("react_rate_out", react_rate_out)
+        InputValidator.binary_flag("fuel_dens_out", fuel_dens_out)
+        InputValidator.binary_flag("gridded_wind_out", gridded_wind_out)
+        InputValidator.binary_flag("QU_ffx_inst_out", QU_ffx_inst_out)
+        InputValidator.binary_flag("QU_ffx_avg_out", QU_ffx_avg_out)
+        InputValidator.binary_flag("fuel_moist_out", fuel_moist_out)
+        InputValidator.binary_flag("mass_burnt_out", mass_burnt_out)
+        InputValidator.binary_flag("firebrand_out", firebrand_out)
+        if firebrand_out == 1 and firebrand_out == 0:
+            raise ValueError("Firebrand trajectories cannot be output when firebrands are off")
+        InputValidator.binary_flag("emissions_out", emissions_out)
+        InputValidator.binary_flag("radiation_out", radiation_out)
+        InputValidator.binary_flag("intensity_out", intensity_out)
+
+        super().__init__("QUIC_fire.inp")
+        self.nz = nz
+        self.output_time = output_time
+        #self.fuel_flag = fuel_flag
+        #self.ignition_flag = ignition_flag
+        self.time_now = time_now
+        self.sim_time = sim_time
+        self.fire_flag = fire_flag
+        self.random_seed = random_seed
+        self.fire_time_step = fire_time_step
+        self.quic_time_step = quic_time_step
+        self.stretch_grid_flag = stretch_grid_flag
+        self.stretch_grid_input = self._get_custom_stretch_grid()
+        self.dz_array = dz_array if dz_array else []
+        self.firebrand_flag = firebrand_flag
+        self.auto_kill = auto_kill
+        # Output flags
+        self.eng_to_atm_out = eng_to_atm_out
+        self.react_rate_out = react_rate_out
+        self.fuel_dens_out = react_rate_out
+        self.gridded_wind_out = gridded_wind_out
+        self.QU_ffx_inst_out = QU_ffx_inst_out
+        self.QU_ffx_avg_out = QU_ffx_avg_out
+        self.fuel_moist_out = fuel_moist_out
+        self.mass_burnt_out = mass_burnt_out
+        self.emissions_out = emissions_out
+        self.radiation_out = radiation_out
+        self.intensity_out = intensity_out
+
+
+    def _get_custom_stretch_grid(self):
+        """
+        Writes a custom stretch grid to QUIC_fire.inp if provided
+        """
+        if self.stretch_grid_flag == 1:
+            # Verify that dz_array is not empty
+            if not self.dz_array:
+                raise ValueError("dz_array must not be empty if stretch_grid_flag "
+                                "is 1. Please provide a dz_array with nz elements"
+                                " or use a different stretch_grid_flag.")
+
+            # Verify that nz is equal to the length of dz_array
+            if self.nz != len(self.dz_array):
+                raise ValueError(f"nz must be equal to the length of dz_array. "
+                                f"{self.nz} != {len(self.dz_array)}")
+
+            # Write dz_array lines
+            dz_array_lines_list = []
+            for dz in self.dz_array:
+                dz_array_lines_list.append(f"{float(dz)}")
+            dz_array_lines = "\n".join(dz_array_lines_list)
+
+            return f"{dz_array_lines}"
+        else:
+            return self.nz
+        
+        
