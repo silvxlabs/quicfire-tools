@@ -1,0 +1,4 @@
+1	! Number of time increments
+0	! UTC offset [hours]
+! Wind step times [s]
+0
