@@ -8,6 +8,7 @@ from utils import compute_parabolic_stretched_grid
 
 # Core Imports
 import json
+import time
 import importlib.resources
 from pathlib import Path
 from string import Template
@@ -22,17 +23,6 @@ DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("documentation")
 TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("templates")
-
-class SimulationInputs:
-    outputs: list = []
-
-    def to_json(self):
-        for output in outputs:
-            output.to_dict()
-
-    @classmethod
-    def from_json(cls, json):
-        pass
 
 
 class InputFile:
@@ -312,28 +302,109 @@ class QU_Simparams(InputFile):
                  surface_vertical_cell_size: float = 1.,
                  number_surface_cells: int = 5,
                  stretch_grid_flag: int = 3,
-                 dz_array: list[float] = None):
+                 dz_array: list[float] = None,
+                 utc_offset: int = 0,
+                 wind_step_times: list[int] = None,
+                 sor_iter_max: int = 10,
+                 sor_residual_reduction: int = 3,
+                 use_diffusion_flag: int = 0,
+                 number_diffusion_iterations: int = 10,
+                 domain_rotation: float = 0.,
+                 utm_x: float = 0.,
+                 utm_y: float = 0.,
+                 utm_zone_number: int = 1,
+                 utm_zone_letter: int = 1,
+                 quic_cfd_flag: int = 0,
+                 explosive_bldg_flag: int = 0,
+                 bldg_array_flag: int = 0,
+                 ):
         """
         Initialize the QU_Simparams class to manage simulation parameters.
 
         Parameters
         ----------
         nx : int
-            Number of cells in the x-direction.
+            Number of cells in the x-direction [-]. Recommended value: > 100
         ny : int
-            Number of cells in the y-direction.
+            Number of cells in the y-direction [-]. Recommended value: > 100
         nz : int
-            Number of cells in the z-direction.
+            Number of cells in the z-direction [-].
         dx : float
-            Cell size in the x-direction (in meters).
+            Cell size in the x-direction [m]. Recommended value: 2 m
         dy : float
-            Cell size in the y-direction (in meters).
-        dz : float
-            Surface vertical cell size (in meters).
-        stretchgridflag : int
+            Cell size in the y-direction [m]]. Recommended value: 2 m
+        surface_vertical_cell_size : float
+            Surface vertical cell size [m]].
+        stretch_grid_flag : int
             Vertical grid stretching flag, values accepted [0, 1, 2, 3, 4].
+            Recommended value: 3
+        utc_offset : int
+            Hours difference from UTM [h]
+        wind_step_times : list[int]
+            List of times at which the winds are available in Unix Epoch time
+            (integer seconds since 1970/1/1 00:00:00). These are UTC times.
+            Defaults to [int(time.time())] if not provided.
+        sor_iter_max : int
+            Maximum number of iterations of the SOR wind solver.
+            Recommended value: 10
+        sor_residual_reduction : int
+            Residual reduction to assess convergence of the SOR solver
+            (orders of magnitude). Recommended value: 3
+        use_diffusion_flag : int
+            Use diffusion algorithm: 0 = off, 1 = on. Recommended value: 0
+        domain_rotation : float
+            Domain rotation relative to true north (clockwise is positive)
+            [degrees]. Recommended value: 0 deg
+        utm_x : float
+            UTM-x coordinates of the south-west corner of domain [m]
+        utm_y : float
+            UTM-y coordinates of the south-west corner of domain [m]
+        utm_zone_number : int
+            UTM zone number [-]
+        utm_zone_letter : int
+            UTM zone letter (A=1, B=2,..) [-]
+        quic_cfd_flag : int
+            QUIC-CFD flag: 0 = off, 1 = on. Recommended value: 0
+        explosive_bldg_flag : int
+            Explosive building damage flag: 0 = off, 1 = on.
+            Recommended value: 0
+        bldg_array_flag : int
+            Building array flag. 0 = off, 1 = on. Recommended value: 0
         """
-        # self._validate_inputs()
+        # Validate inputs
+        InputValidator.positive_integer("nx", nx)
+        InputValidator.positive_integer("ny", ny)
+        InputValidator.positive_integer("nz", nz)
+        InputValidator.positive_real("dx", dx)
+        InputValidator.positive_real("dy", dy)
+        InputValidator.positive_real("surface_vertical_cell_size",
+                                     surface_vertical_cell_size)
+        InputValidator.positive_integer("number_surface_cells",
+                                        number_surface_cells)
+        InputValidator.in_list("stretch_grid_flag", stretch_grid_flag,
+                               [0, 1, 3])
+        InputValidator.integer("utc_offset", utc_offset)
+        if wind_step_times is not None:
+            for time_value in wind_step_times:
+                InputValidator.integer("wind_step_times", time_value)
+        InputValidator.positive_integer("sor_iter_max", sor_iter_max)
+        InputValidator.positive_integer("sor_residual_reduction",
+                                        sor_residual_reduction)
+        InputValidator.in_list("use_diffusion_flag", use_diffusion_flag,
+                               [0, 1])
+        InputValidator.positive_integer("number_diffusion_iterations",
+                                        number_diffusion_iterations)
+        InputValidator.real_number("domain_rotation", domain_rotation)
+        InputValidator.real_number("utm_x", utm_x)
+        InputValidator.real_number("utm_y", utm_y)
+        InputValidator.positive_integer("utm_zone_number", utm_zone_number)
+        InputValidator.positive_integer("utm_zone_letter", utm_zone_letter)
+        InputValidator.in_list("quic_cfd_flag", quic_cfd_flag, [0, 1])
+        InputValidator.in_list("explosive_bldg_flag", explosive_bldg_flag,
+                               [0, 1])
+        InputValidator.in_list("bldg_array_flag", bldg_array_flag, [0, 1])
+
+        # Initialize the class
         super().__init__("QU_simparams.inp")
         self.nx = nx
         self.ny = ny
@@ -345,21 +416,22 @@ class QU_Simparams(InputFile):
         self.stretch_grid_flag = stretch_grid_flag
         self.dz_array = dz_array if dz_array else []
         self.vertical_grid = self._generate_vertical_grid()
-
-    @staticmethod
-    def _validate_inputs(nx, ny, nz, dx, dy, surface_vertical_cell_size,
-                         number_surface_cells, stretch_grid_flag, dz_array):
-        InputValidator.positive_integer("nx", nx)
-        InputValidator.positive_integer("ny", ny)
-        InputValidator.positive_integer("nz", nz)
-        InputValidator.positive_real("dx", dx)
-        InputValidator.positive_real("dy", dy)
-        InputValidator.positive_real("surface_vertical_cell_size",
-                                     surface_vertical_cell_size)
-        InputValidator.positive_integer("number_surface_cells",
-                                        number_surface_cells)
-        InputValidator.in_list("stretch_grid_flag", stretch_grid_flag,
-                               [0, 1, 2, 3, 4])
+        self.utc_offset = utc_offset
+        self.wind_times = wind_step_times if wind_step_times else [
+            int(time.time())]
+        self.wind_lines = self._generate_wind_time_lines()
+        self.sor_iter_max = sor_iter_max
+        self.sor_residual_reduction = sor_residual_reduction
+        self.use_diffusion_flag = use_diffusion_flag
+        self.number_diffusion_iterations = number_diffusion_iterations
+        self.domain_rotation = domain_rotation
+        self.utm_x = utm_x
+        self.utm_y = utm_y
+        self.utm_zone_number = utm_zone_number
+        self.utm_zone_letter = utm_zone_letter
+        self.quic_cfd_flag = quic_cfd_flag
+        self.explosive_bldg_flag = explosive_bldg_flag
+        self.bldg_array_flag = bldg_array_flag
 
     def _generate_vertical_grid(self):
         """
@@ -374,8 +446,8 @@ class QU_Simparams(InputFile):
             return self._stretch_grid_flag_1()
         elif self.stretch_grid_flag == 3:
             return self._stretch_grid_flag_3()
-
-        return ""
+        else:
+            raise ValueError("stretch_grid_flag must be 0, 1, or 3")
 
     def _stretch_grid_flag_0(self):
         """
@@ -437,7 +509,56 @@ class QU_Simparams(InputFile):
         QU_simparams.inp file. Stretch grid flag 3 is a stretching with
         parabolic vertical cell size. Adds the parabolic grid to dz_array.
         """
-        dz_array = compute_parabolic_stretched_grid(
+        # Write surface vertical cell size line
+        surface_dz_line = (f"{float(self.surface_vertical_cell_size)}\t! "
+                           f"Surface DZ [m]")
+
+        # Write number of surface cells line
+        number_surface_cells_line = (f"{self.number_surface_cells}\t! "
+                                     f"Number of uniform surface cells")
+
+        # Write header line
+        header_line = f"! DZ array [m]"
+
+        # Generate the parabolic grid
+        self.dz_array = compute_parabolic_stretched_grid(
             self.surface_vertical_cell_size, self.number_surface_cells,
             self.nz, 300)
-        print()
+
+        # Write dz_array lines
+        dz_lines = "\n".join([f"{float(dz)}" for dz in self.dz_array])
+
+        return (f"{surface_dz_line}\n{number_surface_cells_line}\n{header_line}"
+                f"\n{dz_lines}")
+
+    def _generate_wind_time_lines(self):
+        """
+        Parses the utc_offset and wind_step_times to generate the wind times
+        as a string for the QU_simparams.inp file.
+        """
+        # Verify that wind_step_times is not empty
+        if not self.wind_times:
+            raise ValueError("wind_step_times must not be empty. Please "
+                             "provide a wind_step_times with num_wind_steps "
+                             "elements or use a different num_wind_steps.")
+
+        # Write number of time increments line
+        number_time_increments_line = (f"{len(self.wind_times)}\t"
+                                       f"! Number of time increments")
+
+        # Write utc_offset line
+        utc_offset_line = f"{self.utc_offset}\t! UTC offset [hours]"
+
+        # Write header line
+        header_line = f"! Wind step times [s]"
+
+        # Write wind_step_times lines
+        wind_step_times_lines_list = []
+        for wind_time in self.wind_times:
+            wind_step_times_lines_list.append(f"{wind_time}")
+        wind_step_times_lines = "\n".join(wind_step_times_lines_list)
+
+        return "\n".join([number_time_increments_line,
+                          utc_offset_line,
+                          header_line,
+                          wind_step_times_lines])
