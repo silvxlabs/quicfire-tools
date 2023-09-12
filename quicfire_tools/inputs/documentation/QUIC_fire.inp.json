@@ -239,6 +239,14 @@
         "variable_name_fortran": "flag%output_quwinds_ave_file",
         "can_be_modified": "Y"
     },
+    "plume_traj_out": {
+        "values_accepted": "[0 2]",
+        "tested_values_range": "0, 2",
+        "description": "Flag to output the plume trajectories: 0 = do not output; 1 = use csv format; 2 = use binary format. File names: plume_trajectory.bin or csv; plume_mergetrajectory.bin or csv. Recommended value = 0; Files will be huge, used for debugging only",
+        "units": "[-]",
+        "variable_name_fortran": "flag%output_plume_traj_file",
+        "can_be_modified": "Y"
+    },
     "fuel_moist_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
