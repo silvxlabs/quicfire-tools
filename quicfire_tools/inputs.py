@@ -17,13 +17,16 @@ from string import Template
 # External Imports
 import numpy as np
 
-# TODO: Multiple wind directions
-# TODO: String for .dat files that exist
+# DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
+    # 'inputs').joinpath("documentation")
+# TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
+    # 'inputs').joinpath("templates")
 
-DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
-    'inputs').joinpath("documentation")
-TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
-    'inputs').joinpath("templates")
+import os
+os.chdir("..")
+OG_PATH = os.getcwd()
+DOCS_PATH = os.path.join(OG_PATH, "quicfire_tools/inputs/documentation")
+TEMPLATES_PATH = os.path.join(OG_PATH,"quicfire_tools/inputs/templates")
 
 class SimulationInputs:
     outputs: list = []
@@ -49,7 +52,7 @@ class InputFile:
 
     def __init__(self, filename):
         self.filename = filename
-        with open(DOCS_PATH / f"{self.filename}.json", "r") as f:
+        with open(DOCS_PATH+"/"+f"{self.filename}.json", "r") as f:
             self.param_info = json.load(f)
 
     def list_parameters(self):
@@ -106,7 +109,7 @@ class InputFile:
         if isinstance(directory, str):
             directory = Path(directory)
 
-        template_file_path = TEMPLATES_PATH / version / f"{self.filename}"
+        template_file_path = TEMPLATES_PATH+"/"+version+"/"+f"{self.filename}"
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
 
@@ -181,7 +184,7 @@ class InputValidator:
     
     @classmethod
     def list_of_positive_ints(cls, variable_name, value):
-        cls.list(value)
+        cls.list(variable_name, value)
         for v in value():
             cls.non_negative_integer("All values of {}".format(variable_name), v)
     
@@ -488,9 +491,9 @@ class QUIC_fire(InputFile):
                  nz: int,
                  output_time: int,
                  time_now: int, #WHERE IS THIS CALCULATED
-                 sim_time: int = SimulationParameters.sim_time, #HOW TO DEAL WITH SIM PARAMS
+                 sim_time: int, #HOW TO DEAL WITH SIM PARAMS
                  fire_flag: int = 1,
-                 random_seed: int = -1,
+                 random_seed: int = 47,
                  fire_time_step: int = 1,
                  quic_time_step: int = 1,
                  stretch_grid_flag: int = 0,
@@ -498,7 +501,7 @@ class QUIC_fire(InputFile):
                  dz_array: list[float] = None,
                  fuel_flag: int = 3,
                  fuel_params: list[float] = None,
-                 ignition_flag: int = 1,
+                 ignition_flag: int = 7,
                  ignition_params: list[int] = None,
                  ignitions_per_cell: int = 2,
                  firebrand_flag: int = 0,
@@ -631,7 +634,7 @@ class QUIC_fire(InputFile):
             InputValidator.list_of_positive_floats("dz_array", dz_array)
         InputValidator.in_list("fuel_flag", fuel_flag, [1,2,3,4])
         if fuel_flag == 1:
-            InputValidator.list_of_positive_floats("fulel_params", fuel_params)
+            InputValidator.list_of_positive_floats("fuel_params", fuel_params)
         InputValidator.in_list("ignition_flag", ignition_flag, [1,2,3,4,5,7])
         if ignition_flag in [1,2,3,4,5]:
             InputValidator.list_of_positive_ints("ignition_params", ignition_params)
@@ -671,7 +674,7 @@ class QUIC_fire(InputFile):
         self.dz_array = dz_array if dz_array else []
         self.fuel_flag = fuel_flag
         self.fuel_params = fuel_params if fuel_params else []
-        self.fuel_density, self.fuel_moisture, self.fuel_height = self._get_fuel_inputs()
+        self.fuel_density, self.fuel_moisture, self.fuel_height = self._get_fuel_inputs() if fuel_flag ==1 else (None,None,None)
         self.ignition_flag = ignition_flag
         self.ignition_params = ignition_params if ignition_params else []
         self.ignition_locations = self._get_ignition_locations()

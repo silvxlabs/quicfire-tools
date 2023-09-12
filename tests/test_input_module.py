@@ -2,8 +2,8 @@
 import sys
 
 # Internal Imports
-sys.path.append("../quicfire_tools")
-from quicfire_tools.inputs import *
+sys.path.append("/Users/ntutland/Documents/Projects/quicfire-tools/quicfire_tools")
+from inputs import *
 
 # External Imports
 import pytest
@@ -304,3 +304,48 @@ class TestQU_Simparams:
         vertical_grid_lines = qu_simparams._stretch_grid_flag_1()
         vertical_grid_list = vertical_grid_lines.split("\n")
         assert len(vertical_grid_list) == 22
+
+class TestQUIC_fire:
+    @staticmethod
+    def get_test_object():
+        return QUIC_fire(nx=100, ny=100, nz=30, output_time=30, time_now = 1694538271, sim_time = 60)
+
+    def test_ignition_flag_1(self):
+        quic_fire = self.get_test_object()
+        quic_fire.ignition_flag = 1
+
+        # Test with no ignition parameters
+        with pytest.raises(TypeError):
+            quic_fire._get_ignition_locations()
+        
+        # Test with correct parameters
+        quic_fire.ignition_params = [20,10,20,80]
+        rectangle_ignition = quic_fire._get_ignition_locations()
+        assert rectangle_ignition == (f"\n20\t! South-west corner in the x-direction (m)"
+                                      f"\n10\t! South-west corner in the y-direction (m)"
+                                      f"\n20\t! Length in the x-direction (m)"
+                                      f"\n80\t! Length in the y-direction (m)")
+        
+    def test_ignition_flag_2(self):
+        quic_fire = self.get_test_object()
+        quic_fire.ignition_flag = 2
+        quic_fire.ignition_params = [20,25,20,15,10,5]
+        rectangle_ignition = quic_fire._get_ignition_locations()
+        assert rectangle_ignition == (f"\n20\t! South-west corner in the x-direction (m)"
+                                      f"\n25\t! South-west corner in the y-direction (m)"
+                                      f"\n20\t! Length in the x-direction (m)"
+                                      f"\n15\t! Length in the y-direction (m)"
+                                      f"\n10\t! Width of the ring in the x-direction (m)"
+                                      f"\n5\t! Width of the ring in the y-direction (m)")
+        
+    def test_ignition_flag_3(self):
+        quic_fire = self.get_test_object()
+        quic_fire.ignition_flag = 3
+        quic_fire.ignition_params = [20,25,20,15,10]
+        rectangle_ignition = quic_fire._get_ignition_locations()
+        assert rectangle_ignition == (f"\n20\t! South-west corner in the x-direction (m)"
+                                      f"\n25\t! South-west corner in the y-direction (m)"
+                                      f"\n20\t! Length in the x-direction (m)"
+                                      f"\n15\t! Length in the y-direction (m)"
+                                      f"\n10\t! Width of the ring (m)")
+
