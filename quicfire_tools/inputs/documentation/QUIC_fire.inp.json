@@ -10,10 +10,11 @@
     "random_seed": {
         "values_accepted": "[-1 +Inf)",
         "tested_values_range": "Any",
-        "description": "accepted: -1 = use time and date to define the random number seed, >0 = use specified value to initialize random number generator. Recommended value any integer > 0",
+        "description": "accepted: -1 = use time and date to define the random number seed, >0 = use specified value to initialize random number generator",
         "units": "[-]",
         "variable_name_in_fortran": "randnum%optionFlag",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "Any integer > 0"
     },
     "time_now": {
         "values_accepted": ">= 0",
@@ -34,26 +35,29 @@
     "fire_time_step": {
         "values_accepted": "> 0",
         "tested_values_range": "1-10",
-        "description": "Time step for the simulation for the fire model. Higher value = less accurate simulation. Recommended value 1 s",
+        "description": "Time step for the simulation for the fire model. Higher value = less accurate simulation",
         "units": "[s]",
         "variable_name_in_fortran": "fcatime%dt_int",
-        "can_be_modified": "N"
+        "can_be_modified": "N",
+        "recommended_value": "1 s"
     },
     "quic_time_step": {
         "values_accepted": ">= 1",
         "tested_values_range": "1-5",
-        "description": "Number of fire time steps done before updating the wind field. Higher value = less accurate simulation (less coupling between winds and fire). Recommended value 1 to 5",
+        "description": "Number of fire time steps done before updating the wind field. Higher value = less accurate simulation (less coupling between winds and fire)",
         "units": "[-]",
         "variable_name_in_fortran": "qutime%firesteps_to_update",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "1 to 5"
     },
     "output_time": {
         "values_accepted": ">= 1 or -1",
         "tested_values_range": "1-100 and -1",
-        "description": "Number of updates of the fire before printing the output files for the fire model (all but emissions and thermal radiation). Higher value = less output. Recommended value 4 or higher. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
+        "description": "Number of updates of the fire before printing the output files for the fire model (all but emissions and thermal radiation). Higher value = less output. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
         "units": "[-]",
         "variable_name_in_fortran": "flag%num_fireca_updates",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "4 or higher."
     },
     "nz": {
         "values_accepted": ">= 1",
@@ -66,18 +70,20 @@
     "stretch_grid_flag": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0",
-        "description": "Vertical spacing model: 0 = constant dz, only one value must follow. Recommended value = 0",
+        "description": "Vertical spacing model: 0 = constant dz, only one value must follow",
         "units": "[-]",
         "variable_name_in_fortran": "stretchflag",
-        "can_be_modified": "N"
+        "can_be_modified": "N",
+        "recommended_value": "0"
     },
     "stretch_grid_input": {
         "values_accepted": "> 0",
         "tested_values_range": "1-10",
-        "description": "Fire model cell size in the vertical direction. If stretchflag == 0: only one entry. If stretchflag == 1: as many entries as the number of cells in the vertical direction (one entry per line). Higher value = less accurate fire and fuel description. Recommended value = 1 m",
+        "description": "Fire model cell size in the vertical direction. If stretchflag == 0: only one entry. If stretchflag == 1: as many entries as the number of cells in the vertical direction (one entry per line). Higher value = less accurate fire and fuel description",
         "units": "[m]",
         "variable_name_in_fortran": "firegrid%dz_array",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "1 m"
     },
     "file_path": {
         "values_accepted": "-",
@@ -98,10 +104,11 @@
     "fuel_file_format": {
         "values_accepted": "[1-2]",
         "tested_values_range": "1-2",
-        "description": "Format of the trees* files: 1 = binary files have stream format (ARA format); 2 = binary files have Fortran headers. Recommended value = 1",
+        "description": "Format of the trees* files: 1 = binary files have stream format (ARA format); 2 = binary files have Fortran headers",
         "units": "[-]",
         "variable_name_fortran": "ft%fuel_file_format",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "1"
     },
     "fire_flag": {
         "values_accepted": "[1-4]",
@@ -114,10 +121,11 @@
     "ignition_flag": {
         "values_accepted": "[1 6]",
         "tested_values_range": "1-6",
-        "description": "Ignition source shape flag: 1 = rectangle; 2 = square ring; 3 = circular ring; 4 = initial ignition locations provided through file QF_Ignitions.inp; 5 = time- and space-dependent ignition locations provided through file QF_IgnitionPattern.inp; 6 = ignite.dat (Firetec file). Recommended value 6",
+        "description": "Ignition source shape flag: 1 = rectangle; 2 = square ring; 3 = circular ring; 4 = initial ignition locations provided through file QF_Ignitions.inp; 5 = time- and space-dependent ignition locations provided through file QF_IgnitionPattern.inp; 6 = ignite.dat (Firetec file); (NOTE: Flag of 7 seems to work better for ignite.dat - NJT)",
         "units": "[-]",
         "variable_name_fortran": "fire_ignition%flag",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "6 (NJT recommendation: 7)"
     },
     "ignition_sw_x": {
         "values_accepted": "[0 Lx]",
@@ -178,18 +186,20 @@
     "ignitions_per_cell": {
         "values_accepted": "> 0",
         "tested_values_range": "10-10000",
-        "description": "Number of ignition per cell of the fire model. Recommended value = 100 – seems to have no effect. (CHANGED RECOMMENDATION PER QF MEETINGS: 2)",
+        "description": "Number of ignition per cell of the fire model",
         "units": "[-]",
         "variable_name_fortran": "fire_ignition%num_ign_percell",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "100 (seems to have no effect). (CHANGED RECOMMENDATION PER QF MEETINGS: 2)"
     },
     "firebrand_flag": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
-        "description": "Flag: 0 = firrebrands are off; 1 = firebrands are on. Recommended value = 0 - firebrands are untested for small scale problems",
+        "description": "Flag: 0 = firrebrands are off; 1 = firebrands are on",
         "units": "[-]",
         "variable_name_fortran": "fb%flag",
-        "can_be_modified": "N"
+        "can_be_modified": "N",
+        "recommended_value": "0 (firebrands are untested for small scale problems)"
     },
     "eng_to_atm_out": {
         "values_accepted": "[0 1]",
@@ -234,18 +244,20 @@
     "QU_wind_avg_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
-        "description": "Flag to output (1) or not (0) the gridded average wind components (u,v,w) for the QUIC-URB grid. File names: qf_windu_aveXXXXX.bin = x-component; qu_windv_aveXXXXX.bin = y-component; qu_windw_aveXXXXX.bin = z-component. Recommended value = 0; Set to 1 only if QUIC-Smoke is run for PM2.5 and CO plume transport and dispersion simulations",
+        "description": "Flag to output (1) or not (0) the gridded average wind components (u,v,w) for the QUIC-URB grid. File names: qf_windu_aveXXXXX.bin = x-component; qu_windv_aveXXXXX.bin = y-component; qu_windw_aveXXXXX.bin = z-component. Set to 1 only if QUIC-Smoke is run for PM2.5 and CO plume transport and dispersion simulations",
         "units": "[-]",
         "variable_name_fortran": "flag%output_quwinds_ave_file",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "0"
     },
     "plume_traj_out": {
         "values_accepted": "[0 2]",
         "tested_values_range": "0, 2",
-        "description": "Flag to output the plume trajectories: 0 = do not output; 1 = use csv format; 2 = use binary format. File names: plume_trajectory.bin or csv; plume_mergetrajectory.bin or csv. Recommended value = 0; Files will be huge, used for debugging only",
+        "description": "Flag to output the plume trajectories: 0 = do not output; 1 = use csv format; 2 = use binary format. File names: plume_trajectory.bin or csv; plume_mergetrajectory.bin or csv",
         "units": "[-]",
         "variable_name_fortran": "flag%output_plume_traj_file",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "0 (Files will be huge, used for debugging only)"
     },
     "fuel_moist_out": {
         "values_accepted": "[0 1]",
@@ -266,10 +278,11 @@
     "firebrand_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
-        "description": "Flag to output (1) or not (0) the firebrands trajectories. File name: firebrabrands_traj.bin. Recommended value = 0",
+        "description": "Flag to output (1) or not (0) the firebrands trajectories. File name: firebrabrands_traj.bin",
         "units": "[-]",
         "variable_name_fortran": "flag%output_firebrands_traj_file",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "0"
     },
     "emissions_out": {
         "values_accepted": "[0 4]",
@@ -282,10 +295,11 @@
     "intensity_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
-        "description": "Flag to output (1) or not (0) the thermal radiation. File names: thermalradiation-XXXXX.bin; thermaldose-XXXXX.bin. Recommended value = 0",
+        "description": "Flag to output (1) or not (0) the thermal radiation. File names: thermalradiation-XXXXX.bin; thermaldose-XXXXX.bin",
         "units": "[-]",
         "variable_name_fortran": "flag%output_thermalrad_file",
-        "can_be_modified": "Y"
+        "can_be_modified": "Y",
+        "recommended_value": "0"
     },
     "auto_kill": {
         "values_accepted": "[0 1]",
