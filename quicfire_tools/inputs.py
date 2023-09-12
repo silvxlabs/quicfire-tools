@@ -134,6 +134,11 @@ class InputValidator:
     def integer(cls, variable_name, value):
         if not isinstance(value, int):
             raise TypeError(f"{variable_name} must be an integer")
+    
+    @classmethod
+    def string(cls, variable_name, value):
+        if not isinstance(value, str):
+            raise TypeError(f"{variable_name} must be a string")
 
     @classmethod
     def positive_integer(cls, variable_name, value):
@@ -489,6 +494,7 @@ class QUIC_fire(InputFile):
                  fire_time_step: int = 1,
                  quic_time_step: int = 1,
                  stretch_grid_flag: int = 0,
+                 file_path: str = "",
                  dz_array: list[float] = None,
                  fuel_flag: int = 3,
                  fuel_params: list[float] = None,
@@ -501,9 +507,9 @@ class QUIC_fire(InputFile):
                  eng_to_atm_out: int = 1,
                  react_rate_out: int = 0,
                  fuel_dens_out: int = 1,
-                 gridded_wind_out: int = 1,
-                 QU_ffx_inst_out: int = 1,
-                 QU_ffx_avg_out: int = 0,
+                 QF_wind_out: int = 1,
+                 QU_wind_inst_out: int = 1,
+                 QU_wind_avg_out: int = 0,
                  fuel_moist_out: int = 1,
                  mass_burnt_out: int = 1,
                  firebrand_out: int = 0,
@@ -543,6 +549,8 @@ class QUIC_fire(InputFile):
             Number of fire time steps done before updating the quic wind field (integer, >= 1)
         stretch_grid_flag : int
             Vertical stretching flag: 0 = uniform dz, 1 = custom
+        file_path : str
+            Path to files defining fuels, ignitions, and topography, with file separator at the end. Defaults to "", indicating files are in the same directory as all other input files
         dz_array : list[float]
             custom dz, one dz per line must be specified, from the ground to the top of the domain
          fuel_flag : int
@@ -580,11 +588,11 @@ class QUIC_fire(InputFile):
             Output flag [0, 1]: compressed array reaction rate (fire grid)
         fuel_dens_out : int
             Output flag [0, 1]: compressed array fuel density (fire grid)
-        gridded_wind_out : int
+        QF_wind_out : int
             Output flag [0, 1]: gridded wind (u,v,w,sigma) (3D fire grid)
-        QU_ffx_inst_out : int
+        QU_wind_inst_out : int
             Output flag [0, 1]: gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
-        QU_ffx_avg_out : int
+        QU_wind_avg_out : int
             Output flag [0, 1]: gridded QU winds with fire effects, averaged (QUIC-URB grid)
         fuel_moist_out : int
             Output flag [0, 1]: compressed array fuel moisture (fire grid)
@@ -593,7 +601,13 @@ class QUIC_fire(InputFile):
         firebrand_out : int
             Output flag [0, 1]: firebrand trajectories. Must be 0 when firebrand flag is 0
         emissions_out : int
-            Output flag [0, 1]: compressed array emissions (fire grid)
+            Output flag [0, 5]: compressed array emissions (fire grid):
+                0 = do not output any emission related variables
+                1 = output emissions files and simulate CO in QUIC-SMOKE
+                2 = output emissions files and simulate PM2.5 in QUIC- SMOKE
+                3 = output emissions files and simulate both CO and PM2.5 in QUIC-SMOKE
+                4 = output emissions files but use library approach in QUIC-SMOKE
+                5 = output emissions files and simulate both water in QUIC-SMOKE
         radiation_out : int
             Output flag [0, 1]: gridded thermal radiation (fire grid)
         intensity_out : int
@@ -612,6 +626,7 @@ class QUIC_fire(InputFile):
         InputValidator.positive_integer("fire_time_step", fire_time_step)
         InputValidator.positive_integer("quic_time_step", quic_time_step)
         InputValidator.binary_flag("stretch_grid_flag", stretch_grid_flag)
+        InputValidator.string("file_path", file_path)
         if stretch_grid_flag == 1:
             InputValidator.list_of_positive_floats("dz_array", dz_array)
         InputValidator.in_list("fuel_flag", fuel_flag, [1,2,3,4])
@@ -627,15 +642,15 @@ class QUIC_fire(InputFile):
         InputValidator.binary_flag("eng_to_atm_out", eng_to_atm_out)
         InputValidator.binary_flag("react_rate_out", react_rate_out)
         InputValidator.binary_flag("fuel_dens_out", fuel_dens_out)
-        InputValidator.binary_flag("gridded_wind_out", gridded_wind_out)
-        InputValidator.binary_flag("QU_ffx_inst_out", QU_ffx_inst_out)
-        InputValidator.binary_flag("QU_ffx_avg_out", QU_ffx_avg_out)
+        InputValidator.binary_flag("QF_wind_out", QF_wind_out)
+        InputValidator.binary_flag("QU_wind_inst_out", QU_wind_inst_out)
+        InputValidator.binary_flag("QU_wind_avg_out", QU_wind_avg_out)
         InputValidator.binary_flag("fuel_moist_out", fuel_moist_out)
         InputValidator.binary_flag("mass_burnt_out", mass_burnt_out)
         InputValidator.binary_flag("firebrand_out", firebrand_out)
         if firebrand_out == 1 and firebrand_out == 0:
             raise ValueError("Firebrand trajectories cannot be output when firebrands are off")
-        InputValidator.binary_flag("emissions_out", emissions_out)
+        InputValidator.in_list("emissions_out", emissions_out, [0,1,2,3,4,5])
         InputValidator.binary_flag("radiation_out", radiation_out)
         InputValidator.binary_flag("intensity_out", intensity_out)
 
@@ -652,6 +667,7 @@ class QUIC_fire(InputFile):
         self.quic_time_step = quic_time_step
         self.stretch_grid_flag = stretch_grid_flag
         self.stretch_grid_input = self._get_custom_stretch_grid()
+        self.file_path = file_path
         self.dz_array = dz_array if dz_array else []
         self.fuel_flag = fuel_flag
         self.fuel_params = fuel_params if fuel_params else []
@@ -666,9 +682,9 @@ class QUIC_fire(InputFile):
         self.eng_to_atm_out = eng_to_atm_out
         self.react_rate_out = react_rate_out
         self.fuel_dens_out = react_rate_out
-        self.gridded_wind_out = gridded_wind_out
-        self.QU_ffx_inst_out = QU_ffx_inst_out
-        self.QU_ffx_avg_out = QU_ffx_avg_out
+        self.QF_wind_out = QF_wind_out
+        self.QU_wind_inst_out = QU_wind_inst_out
+        self.QU_wind_avg_out = QU_wind_avg_out
         self.fuel_moist_out = fuel_moist_out
         self.mass_burnt_out = mass_burnt_out
         self.emissions_out = emissions_out

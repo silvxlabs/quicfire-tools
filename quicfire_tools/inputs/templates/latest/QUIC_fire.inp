@@ -4,7 +4,7 @@ $random_seed				    ! Random number generator: -1: use time and date, any other 
 $timenow		    ! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
 $sim_time			! Total simulation time for the fire [s]
 $fire_time_step		! time step for the fire simulation [s]
-#quic_time_step		! Number of fire time steps done before updating the quic wind field (integer, >= 1)
+$quic_time_step		! Number of fire time steps done before updating the quic wind field (integer, >= 1)
 $output_time		! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
 $output_time		! After how many quic updates to print out wind-related files
 $output_time		! After how many fire time steps to average emissions and radiation
@@ -14,7 +14,7 @@ $nz					! Number of vertical layers of fire grid cells (integer)
 $stretch_grid_flag  ! Vertical stretching flag: 0 = uniform dz, 1 = custom
 $stretch_grid_input ! m, dz
 ! FILE PATH
-""
+$file_path
 1                   ! Fuel types are in separate files
 2                   ! File is stream (1) or headers (2)
 ! FUEL
@@ -29,9 +29,9 @@ $firebrand_flag		! 0 = off, 1 = on
 $eng_to_atm_out		! Output gridded energy-to-atmosphere (3D fire grid + extra layers)
 $react_rate_out		! Output compressed array reaction rate (fire grid)
 $fuel_dens_out		! Output compressed array fuel density (fire grid)
-$gridded_wind_out	! Output gridded wind (u,v,w,sigma) (3D fire grid)
-$QU_ffx_inst_out	! Output gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
-$QU_ffx_avg_out		! Output gridded QU winds with fire effects, averaged (QUIC-URB grid)
+$QF_wind_out	    ! Output gridded wind (u,v,w,sigma) (3D fire grid)
+$QU_wind_inst_out	! Output gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
+$QU_wind_avg_out		! Output gridded QU winds with fire effects, averaged (QUIC-URB grid)
 0					! Output plume trajectories (ONLY FOR DEBUG)
 $fuel_moist_out		! Output compressed array fuel moisture (fire grid)
 $mass_burnt_out		! Output vertically-integrated % mass burnt (fire grid)
