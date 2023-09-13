@@ -1,15 +1,14 @@
-import sys
-
-sys.path.append("../quicfire_tools")
+"""
+Test module for quickfire_tools.outputs
+"""
 from quicfire_tools import outputs
 from quicfire_tools.parameters import SimulationParameters
 
 import zarr
 import pytest
 import numpy as np
-from scipy.io import FortranFile
-
 from pathlib import Path
+from scipy.io import FortranFile
 
 DATA_PATH = Path("data")
 SIMULATION_PATH = DATA_PATH / "crazy-canyon-simulation"
