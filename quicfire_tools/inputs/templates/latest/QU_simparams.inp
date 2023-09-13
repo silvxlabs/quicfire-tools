@@ -5,8 +5,8 @@ $nz ! nz - domain height (Z) grid cells
 $dx ! DX [m]
 $dy ! DY [m]
 $stretch_grid_flag ! Vertical stretching flag (0 = uniform, 1 = custom, 2 = parabolic Z, 3 = parabolic DZ, 4 = exponential)
-$vertical_grid
-$wind_lines
+$vertical_grid_lines
+$wind_time_lines
 2 ! (NOT USED) Rooftop flag (0 = none, 1 = log profile, 2 = vortex)
 3 ! (NOT USED) Upwind cavity flag (0 = none, 1 = Rockle, 2 = MVP, 3 = HMVP)
 4 ! (NOT USED) Street canyon flag (0 = none, 1 = Roeckle, 2 = CPB, 3 = exp. param. PKK, 4 = Roeckle w/ Fackrel)
