@@ -112,6 +112,10 @@ class InputFile(BaseModel, validate_assignment=True):
         with open(output_file_path, "w") as fout:
             fout.write(result)
 
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(**data)
+
 
 class Gridlist(InputFile):
     """
@@ -165,6 +169,20 @@ class RasterOrigin(InputFile):
     utm_x: NonNegativeFloat = 0.
     utm_y: NonNegativeFloat = 0.
 
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        """
+        Initializes a RasterOrigin object from a directory containing a
+        rasterorigin.txt file.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "rasterorigin.txt", "r") as f:
+            lines = f.readlines()
+        utm_x = float(lines[0].split()[0])
+        utm_y = float(lines[1].split()[0])
+        return cls(utm_x=utm_x, utm_y=utm_y)
+
 
 class QU_Buildings(InputFile):
     """
@@ -188,6 +206,23 @@ class QU_Buildings(InputFile):
     wall_roughness_length: PositiveFloat = 0.1
     number_of_buildings: NonNegativeInt = 0
     number_of_polygon_nodes: NonNegativeInt = 0
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        """
+        Initializes a QU_Buildings object from a directory containing a
+        QU_buildings.inp file.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QU_buildings.inp", "r") as f:
+            lines = f.readlines()
+        wall_roughness_length = float(lines[1].split()[0])
+        number_of_buildings = int(lines[2].split()[0])
+        number_of_polygon_nodes = int(lines[3].split()[0])
+        return cls(wall_roughness_length=wall_roughness_length,
+                   number_of_buildings=number_of_buildings,
+                   number_of_polygon_nodes=number_of_polygon_nodes)
 
 
 class QU_Fileoptions(InputFile):
@@ -221,6 +256,27 @@ class QU_Fileoptions(InputFile):
     initial_sensor_velocity_field_flag: Literal[0, 1] = 0
     qu_staggered_velocity_file_flag: Literal[0, 1] = 0
     generate_wind_startup_files_flag: Literal[0, 1] = 0
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        """
+        Initializes a QU_Fileoptions object from a directory containing a
+        QU_fileoptions.inp file.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QU_fileoptions.inp", "r") as f:
+            lines = f.readlines()
+        output_data_file_format_flag = int(lines[1].split()[0])
+        non_mass_conserved_initial_field_flag = int(lines[2].split()[0])
+        initial_sensor_velocity_field_flag = int(lines[3].split()[0])
+        qu_staggered_velocity_file_flag = int(lines[4].split()[0])
+        generate_wind_startup_files_flag = int(lines[5].split()[0])
+        return cls(output_data_file_format_flag=output_data_file_format_flag,
+                   non_mass_conserved_initial_field_flag=non_mass_conserved_initial_field_flag,
+                   initial_sensor_velocity_field_flag=initial_sensor_velocity_field_flag,
+                   qu_staggered_velocity_file_flag=qu_staggered_velocity_file_flag,
+                   generate_wind_startup_files_flag=generate_wind_startup_files_flag)
 
 
 class QU_Simparams(InputFile):
@@ -315,11 +371,15 @@ class QU_Simparams(InputFile):
     quic_cfd_flag: Literal[0, 1] = 0
     explosive_bldg_flag: Literal[0, 1] = 0
     bldg_array_flag: Literal[0, 1] = 0
+    _from_file: bool = False
+    _from_file_dz_array: list[PositiveFloat] = []
 
     @computed_field
     @property
     def dz_array(self) -> list[float]:
-        if self.stretch_grid_flag == 0:
+        if self._from_file:
+            return self._from_file_dz_array
+        elif self.stretch_grid_flag == 0:
             return [self.surface_vertical_cell_size] * self.nz
         elif self.stretch_grid_flag == 1:
             return self.custom_dz_array
@@ -456,6 +516,102 @@ class QU_Simparams(InputFile):
                           header_line,
                           wind_step_times_lines])
 
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        """
+        Initializes a QU_Simparams object from a directory containing a
+        QU_simparams.inp file.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        with open(directory / "QU_simparams.inp", "r") as f:
+            lines = f.readlines()
+
+        # Read QU grid parameters
+        nx = int(lines[1].strip().split("!")[0])
+        ny = int(lines[2].strip().split("!")[0])
+        nz = int(lines[3].strip().split("!")[0])
+        dx = float(lines[4].strip().split("!")[0])
+        dy = float(lines[5].strip().split("!")[0])
+
+        # Read stretch grid flag
+        stretch_grid_flag = int(lines[6].strip().split("!")[0])
+
+        # Read vertical grid lines as function of stretch grid flag
+        _from_file_dz_array = []
+        custom_dz_array = []
+        if stretch_grid_flag == 0:
+            surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
+            number_surface_cells = int(lines[8].strip().split("!")[0])
+            current_line = 9
+        elif stretch_grid_flag == 1:
+            surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
+            number_surface_cells = 5
+            for i in range(9, 9 + nz):
+                custom_dz_array.append(float(lines[i].strip().split("!")[0]))
+            current_line = 9 + nz
+        elif stretch_grid_flag == 3:
+            surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
+            number_surface_cells = int(lines[8].strip().split("!")[0])
+            _header = lines[9].strip().split("!")[0]
+            for i in range(10, 10 + nz):
+                _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
+            current_line = 10 + nz
+        else:
+            raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
+
+        # Read QU wind parameters
+        number_wind_steps = int(lines[current_line].strip().split("!")[0])
+        utc_offset = int(lines[current_line + 1].strip().split("!")[0])
+        _header = lines[current_line + 2].strip().split("!")[0]
+        wind_times = []
+        for i in range(current_line + 3, current_line + 3 + number_wind_steps):
+            wind_times.append(int(lines[i].strip()))
+        current_line = current_line + 3 + number_wind_steps
+
+        # Skip not used parameters
+        current_line += 9
+
+        # Read remaining QU parameters
+        sor_iter_max = int(lines[current_line].strip().split("!")[0])
+        sor_residual_reduction = int(
+            lines[current_line + 1].strip().split("!")[0])
+        use_diffusion_flag = int(lines[current_line + 2].strip().split("!")[0])
+        number_diffusion_iterations = int(
+            lines[current_line + 3].strip().split("!")[0])
+        domain_rotation = float(lines[current_line + 4].strip().split("!")[0])
+        utm_x = float(lines[current_line + 5].strip().split("!")[0])
+        utm_y = float(lines[current_line + 6].strip().split("!")[0])
+        utm_zone_number = int(lines[current_line + 7].strip().split("!")[0])
+        utm_zone_letter = int(lines[current_line + 8].strip().split("!")[0])
+        quic_cfd_flag = int(lines[current_line + 9].strip().split("!")[0])
+        explosive_bldg_flag = int(
+            lines[current_line + 10].strip().split("!")[0])
+        bldg_array_flag = int(lines[current_line + 11].strip().split("!")[0])
+
+        return cls(nx=nx, ny=ny, nz=nz, dx=dx, dy=dy,
+                   surface_vertical_cell_size=surface_vertical_cell_size,
+                   number_surface_cells=number_surface_cells,
+                   stretch_grid_flag=stretch_grid_flag,
+                   custom_dz_array=custom_dz_array,
+                   utc_offset=utc_offset,
+                   wind_times=wind_times,
+                   sor_iter_max=sor_iter_max,
+                   sor_residual_reduction=sor_residual_reduction,
+                   use_diffusion_flag=use_diffusion_flag,
+                   number_diffusion_iterations=number_diffusion_iterations,
+                   domain_rotation=domain_rotation,
+                   utm_x=utm_x,
+                   utm_y=utm_y,
+                   utm_zone_number=utm_zone_number,
+                   utm_zone_letter=utm_zone_letter,
+                   quic_cfd_flag=quic_cfd_flag,
+                   explosive_bldg_flag=explosive_bldg_flag,
+                   bldg_array_flag=bldg_array_flag,
+                   _from_file=True,
+                   _from_file_dz_array=_from_file_dz_array)
+
 
 class QFire_Advanced_User_Inputs(InputFile):
     """
@@ -526,3 +682,43 @@ class QFire_Advanced_User_Inputs(InputFile):
     maximum_firebrand_ignitions: PositiveInt = 100
     minimum_landing_angle: PositiveFloat = Field(0.523598, ge=0, le=np.pi / 2)
     maximum_firebrand_thickness: PositiveFloat = 0.03
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        """
+        Initializes a QFire_Advanced_User_Inputs object from a directory
+        containing a QFire_Advanced_User_Inputs.inp file.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QFire_Advanced_User_Inputs.inp", "r") as f:
+            lines = f.readlines()
+        fraction_cells_launch_firebrands = float(lines[0].split()[0])
+        firebrand_radius_scale_factor = float(lines[1].split()[0])
+        firebrand_trajectory_time_step = int(lines[2].split()[0])
+        firebrand_launch_interval = int(lines[3].split()[0])
+        firebrands_per_deposition = int(lines[4].split()[0])
+        firebrand_area_ratio = float(lines[5].split()[0])
+        minimum_burn_rate_coefficient = float(lines[6].split()[0])
+        max_firebrand_thickness_fraction = float(lines[7].split()[0])
+        firebrand_germination_delay = int(lines[8].split()[0])
+        vertical_velocity_scale_factor = float(lines[9].split()[0])
+        minimum_firebrand_ignitions = int(lines[10].split()[0])
+        maximum_firebrand_ignitions = int(lines[11].split()[0])
+        minimum_landing_angle = float(lines[12].split()[0])
+        maximum_firebrand_thickness = float(lines[13].split()[0])
+        return cls(
+            fraction_cells_launch_firebrands=fraction_cells_launch_firebrands,
+            firebrand_radius_scale_factor=firebrand_radius_scale_factor,
+            firebrand_trajectory_time_step=firebrand_trajectory_time_step,
+            firebrand_launch_interval=firebrand_launch_interval,
+            firebrands_per_deposition=firebrands_per_deposition,
+            firebrand_area_ratio=firebrand_area_ratio,
+            minimum_burn_rate_coefficient=minimum_burn_rate_coefficient,
+            max_firebrand_thickness_fraction=max_firebrand_thickness_fraction,
+            firebrand_germination_delay=firebrand_germination_delay,
+            vertical_velocity_scale_factor=vertical_velocity_scale_factor,
+            minimum_firebrand_ignitions=minimum_firebrand_ignitions,
+            maximum_firebrand_ignitions=maximum_firebrand_ignitions,
+            minimum_landing_angle=minimum_landing_angle,
+            maximum_firebrand_thickness=maximum_firebrand_thickness)

@@ -109,8 +109,16 @@ class TestRasterOrigin:
         """Test the to_dict method of a RasterOrigin object."""
         raster_origin = RasterOrigin(utm_x=500.0, utm_y=1000.0)
         result_dict = raster_origin.to_dict()
-        assert result_dict['utm_x'] == 500.0
-        assert result_dict['utm_y'] == 1000.0
+        assert result_dict['utm_x'] == raster_origin.utm_x
+        assert result_dict['utm_y'] == raster_origin.utm_y
+
+    def test_from_dict(self):
+        """Test the from_dict method of a RasterOrigin object."""
+        raster_origin = RasterOrigin(utm_x=500.0, utm_y=1000.0)
+        result_dict = raster_origin.to_dict()
+        test_object = RasterOrigin.from_dict(result_dict)
+        assert isinstance(test_object, RasterOrigin)
+        assert raster_origin == test_object
 
     def test_to_docs(self):
         raster_origin = RasterOrigin(utm_x=500.0, utm_y=1000.0)
@@ -129,12 +137,20 @@ class TestRasterOrigin:
         # Read the content of the file and check for correctness
         with open("tmp/rasterorigin.txt", 'r') as file:
             lines = file.readlines()
-            assert lines[0].strip() == "500.0"
-            assert lines[1].strip() == "1000.0"
+            assert float(lines[0].strip()) == raster_origin.utm_x
+            assert float(lines[1].strip()) == raster_origin.utm_y
 
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
             raster_origin.to_file("/non_existent_path/rasterorigin.txt")
+
+    def test_from_file(self):
+        """Test initializing a class from a rasterorigin.txt file."""
+        raster_origin = RasterOrigin()
+        raster_origin.to_file("tmp/")
+        test_object = RasterOrigin.from_file("tmp/")
+        assert isinstance(test_object, RasterOrigin)
+        assert raster_origin == test_object
 
 
 class TestQU_Buildings:
@@ -174,13 +190,19 @@ class TestQU_Buildings:
 
     def test_to_dict(self):
         """Test the to_dict method of a QU_Buildings object."""
-        qu_buildings = QU_Buildings(wall_roughness_length=1.0,
-                                    number_of_buildings=0,
-                                    number_of_polygon_nodes=0)
+        qu_buildings = QU_Buildings()
         result_dict = qu_buildings.to_dict()
-        assert result_dict['wall_roughness_length'] == 1.0
-        assert result_dict['number_of_buildings'] == 0
-        assert result_dict['number_of_polygon_nodes'] == 0
+        assert result_dict['wall_roughness_length'] == qu_buildings.wall_roughness_length
+        assert result_dict['number_of_buildings'] == qu_buildings.number_of_buildings
+        assert result_dict['number_of_polygon_nodes'] == qu_buildings.number_of_polygon_nodes\
+
+    def test_from_dict(self):
+        """Test the from_dict method of a QU_Buildings object."""
+        qu_buildings = QU_Buildings()
+        result_dict = qu_buildings.to_dict()
+        test_object = QU_Buildings.from_dict(result_dict)
+        assert isinstance(test_object, QU_Buildings)
+        assert qu_buildings == test_object
 
     def test_to_docs(self):
         qu_buildings = QU_Buildings()
@@ -193,21 +215,27 @@ class TestQU_Buildings:
 
     def test_to_file(self):
         """Test the to_file method of a QU_Buildings object."""
-        qu_buildings = QU_Buildings(wall_roughness_length=0.1,
-                                    number_of_buildings=0,
-                                    number_of_polygon_nodes=0)
+        qu_buildings = QU_Buildings()
         qu_buildings.to_file("tmp/")
 
         # Read the content of the file and check for correctness
         with open("tmp/QU_buildings.inp", 'r') as file:
             lines = file.readlines()
-            assert float(lines[1].strip().split("\t")[0]) == 0.1
-            assert int(lines[2].strip().split("\t")[0]) == 0
-            assert int(lines[3].strip().split("\t")[0]) == 0
+            assert float(lines[1].strip().split("\t")[0]) == qu_buildings.wall_roughness_length
+            assert int(lines[2].strip().split("\t")[0]) == qu_buildings.number_of_buildings
+            assert int(lines[3].strip().split("\t")[0]) == qu_buildings.number_of_polygon_nodes
 
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
             qu_buildings.to_file("/non_existent_path/QU_buildings.inp")
+
+    def test_from_file(self):
+        """Test initializing a class from a QU_buildings.inp file."""
+        qu_buildings = QU_Buildings()
+        qu_buildings.to_file("tmp/")
+        test_object = QU_Buildings.from_file("tmp/")
+        assert isinstance(test_object, QU_Buildings)
+        assert qu_buildings == test_object
 
 
 class TestQU_Fileoptions:
@@ -247,11 +275,19 @@ class TestQU_Fileoptions:
         """Test the to_dict method of a QU_Buildings object."""
         qu_fileoptions = QU_Fileoptions()
         result_dict = qu_fileoptions.to_dict()
-        assert result_dict['output_data_file_format_flag'] == 2
-        assert result_dict['non_mass_conserved_initial_field_flag'] == 0
-        assert result_dict['initial_sensor_velocity_field_flag'] == 0
-        assert result_dict['qu_staggered_velocity_file_flag'] == 0
-        assert result_dict['generate_wind_startup_files_flag'] == 0
+        assert result_dict['output_data_file_format_flag'] == qu_fileoptions.output_data_file_format_flag
+        assert result_dict['non_mass_conserved_initial_field_flag'] == qu_fileoptions.non_mass_conserved_initial_field_flag
+        assert result_dict['initial_sensor_velocity_field_flag'] == qu_fileoptions.initial_sensor_velocity_field_flag
+        assert result_dict['qu_staggered_velocity_file_flag'] == qu_fileoptions.qu_staggered_velocity_file_flag
+        assert result_dict['generate_wind_startup_files_flag'] == qu_fileoptions.generate_wind_startup_files_flag
+
+    def test_from_dict(self):
+        """Test the from_dict method of a QU_Buildings object."""
+        qu_fileoptions = QU_Fileoptions()
+        result_dict = qu_fileoptions.to_dict()
+        test_object = QU_Fileoptions.from_dict(result_dict)
+        assert isinstance(test_object, QU_Fileoptions)
+        assert qu_fileoptions == test_object
 
     def test_to_docs(self):
         qu_fileoptions = QU_Fileoptions()
@@ -277,6 +313,14 @@ class TestQU_Fileoptions:
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
             qu_fileoptions.to_file("/non_existent_path/QU_buildings.inp")
+
+    def test_from_file(self):
+        """Test initializing a class from a QU_fileoptions.inp file."""
+        qu_fileoptions = QU_Fileoptions()
+        qu_fileoptions.to_file("tmp/")
+        test_object = QU_Fileoptions.from_file("tmp/")
+        assert isinstance(test_object, QU_Fileoptions)
+        assert qu_fileoptions == test_object
 
 
 class TestQU_Simparams:
@@ -471,6 +515,18 @@ class TestQU_Simparams:
                    'explosive_bldg_flag'] == qu_simparams.explosive_bldg_flag
         assert result_dict['bldg_array_flag'] == qu_simparams.bldg_array_flag
 
+    def test_from_dict(self):
+        """
+        Test the from_dict method of a QU_Simparams object.
+        """
+        qu_simparams = self.get_test_object()
+        result_dict = qu_simparams.to_dict()
+        test_object = QU_Simparams.from_dict(result_dict)
+        assert isinstance(test_object, QU_Simparams)
+        assert qu_simparams == test_object
+
+
+
     def test_to_docs(self):
         qu_simparams = self.get_test_object()
         result_dict = qu_simparams.to_dict()
@@ -567,6 +623,34 @@ class TestQU_Simparams:
         assert int(lines[i_current + 11].strip().split("!")[
                        0]) == qu_simparams.bldg_array_flag
 
+    def test_from_file(self):
+        """
+        Test initializing a class from a QU_simparams.inp file.
+        """
+        # Test stretch grid flag = 3
+        qu_simparams = self.get_test_object()
+        qu_simparams.to_file("tmp/")
+        test_object = QU_Simparams.from_file("tmp/")
+        assert isinstance(test_object, QU_Simparams)
+        assert qu_simparams == test_object
+
+        # Test stretch grid flag = 0
+        qu_simparams = self.get_test_object()
+        qu_simparams.stretch_grid_flag = 0
+        qu_simparams.to_file("tmp/")
+        test_object = QU_Simparams.from_file("tmp/")
+        assert isinstance(test_object, QU_Simparams)
+        assert qu_simparams == test_object
+
+        # Test stretch grid flag = 1
+        qu_simparams = self.get_test_object()
+        qu_simparams.stretch_grid_flag = 1
+        qu_simparams.custom_dz_array = [1] * qu_simparams.nz
+        qu_simparams.to_file("tmp/")
+        test_object = QU_Simparams.from_file("tmp/")
+        assert isinstance(test_object, QU_Simparams)
+        assert qu_simparams == test_object
+
 
 class TestQFire_Advanced_User_Inputs:
     def test_init(self):
@@ -576,12 +660,15 @@ class TestQFire_Advanced_User_Inputs:
         assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.05
 
         # Test custom initialization
-        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=0.1)
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(
+            fraction_cells_launch_firebrands=0.1)
         assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.1
 
         # Test data type casting
-        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands="0.1")
-        assert isinstance(qfire_advanced_user_inputs.fraction_cells_launch_firebrands, float)
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(
+            fraction_cells_launch_firebrands="0.1")
+        assert isinstance(
+            qfire_advanced_user_inputs.fraction_cells_launch_firebrands, float)
         assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.1
 
         # Pass bad parameters: negative numbers
@@ -598,22 +685,43 @@ class TestQFire_Advanced_User_Inputs:
 
     def test_to_dict(self):
         """Test the to_dict method of a QFire_Advanced_User_Inputs object."""
-        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=0.1)
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
         result_dict = qfire_advanced_user_inputs.to_dict()
-        assert result_dict['fraction_cells_launch_firebrands'] == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
-        assert result_dict['firebrand_radius_scale_factor'] == qfire_advanced_user_inputs.firebrand_radius_scale_factor
-        assert result_dict['firebrand_trajectory_time_step'] == qfire_advanced_user_inputs.firebrand_trajectory_time_step
-        assert result_dict['firebrand_launch_interval'] == qfire_advanced_user_inputs.firebrand_launch_interval
-        assert result_dict['firebrands_per_deposition'] == qfire_advanced_user_inputs.firebrands_per_deposition
-        assert result_dict['firebrand_area_ratio'] == qfire_advanced_user_inputs.firebrand_area_ratio
-        assert result_dict['minimum_burn_rate_coefficient'] == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
-        assert result_dict['max_firebrand_thickness_fraction'] == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
-        assert result_dict['firebrand_germination_delay'] == qfire_advanced_user_inputs.firebrand_germination_delay
-        assert result_dict['vertical_velocity_scale_factor'] == qfire_advanced_user_inputs.vertical_velocity_scale_factor
-        assert result_dict['minimum_firebrand_ignitions'] == qfire_advanced_user_inputs.minimum_firebrand_ignitions
-        assert result_dict['maximum_firebrand_ignitions'] == qfire_advanced_user_inputs.maximum_firebrand_ignitions
-        assert result_dict['minimum_landing_angle'] == qfire_advanced_user_inputs.minimum_landing_angle
-        assert result_dict['maximum_firebrand_thickness'] == qfire_advanced_user_inputs.maximum_firebrand_thickness
+        assert result_dict[
+                   'fraction_cells_launch_firebrands'] == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
+        assert result_dict[
+                   'firebrand_radius_scale_factor'] == qfire_advanced_user_inputs.firebrand_radius_scale_factor
+        assert result_dict[
+                   'firebrand_trajectory_time_step'] == qfire_advanced_user_inputs.firebrand_trajectory_time_step
+        assert result_dict[
+                   'firebrand_launch_interval'] == qfire_advanced_user_inputs.firebrand_launch_interval
+        assert result_dict[
+                   'firebrands_per_deposition'] == qfire_advanced_user_inputs.firebrands_per_deposition
+        assert result_dict[
+                   'firebrand_area_ratio'] == qfire_advanced_user_inputs.firebrand_area_ratio
+        assert result_dict[
+                   'minimum_burn_rate_coefficient'] == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
+        assert result_dict[
+                   'max_firebrand_thickness_fraction'] == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
+        assert result_dict[
+                   'firebrand_germination_delay'] == qfire_advanced_user_inputs.firebrand_germination_delay
+        assert result_dict[
+                   'vertical_velocity_scale_factor'] == qfire_advanced_user_inputs.vertical_velocity_scale_factor
+        assert result_dict[
+                   'minimum_firebrand_ignitions'] == qfire_advanced_user_inputs.minimum_firebrand_ignitions
+        assert result_dict[
+                   'maximum_firebrand_ignitions'] == qfire_advanced_user_inputs.maximum_firebrand_ignitions
+        assert result_dict[
+                   'minimum_landing_angle'] == qfire_advanced_user_inputs.minimum_landing_angle
+        assert result_dict[
+                   'maximum_firebrand_thickness'] == qfire_advanced_user_inputs.maximum_firebrand_thickness
+
+    def test_from_dict(self):
+        """Test class initialization from a dictionary object"""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        result_dict = qfire_advanced_user_inputs.to_dict()
+        test_obj = QFire_Advanced_User_Inputs.from_dict(result_dict)
+        assert test_obj == qfire_advanced_user_inputs
 
     def test_to_docs(self):
         """Test the to_docs method of a QFire_Advanced_User_Inputs object."""
@@ -627,23 +735,52 @@ class TestQFire_Advanced_User_Inputs:
 
     def test_to_file(self):
         """Test the to_file method of a QFire_Advanced_User_Inputs object."""
-        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=0.1)
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(
+            fraction_cells_launch_firebrands=0.1)
         qfire_advanced_user_inputs.to_file("tmp/")
 
         # Read the content of the file and check for correctness
         with open("tmp/QFIRE_advanced_user_inputs.inp", 'r') as file:
             lines = file.readlines()
-            assert float(lines[0].strip().split("!")[0]) == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
-            assert float(lines[1].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_radius_scale_factor
-            assert float(lines[2].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_trajectory_time_step
-            assert float(lines[3].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_launch_interval
-            assert float(lines[4].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrands_per_deposition
-            assert float(lines[5].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_area_ratio
-            assert float(lines[6].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
-            assert float(lines[7].strip().split("!")[0]) == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
-            assert float(lines[8].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_germination_delay
-            assert float(lines[9].strip().split("!")[0]) == qfire_advanced_user_inputs.vertical_velocity_scale_factor
-            assert float(lines[10].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_firebrand_ignitions
-            assert float(lines[11].strip().split("!")[0]) == qfire_advanced_user_inputs.maximum_firebrand_ignitions
-            assert float(lines[12].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_landing_angle
-            assert float(lines[13].strip().split("!")[0]) == qfire_advanced_user_inputs.maximum_firebrand_thickness
+            assert float(lines[0].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
+            assert float(lines[1].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.firebrand_radius_scale_factor
+            assert float(lines[2].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.firebrand_trajectory_time_step
+            assert float(lines[3].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.firebrand_launch_interval
+            assert float(lines[4].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.firebrands_per_deposition
+            assert float(lines[5].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.firebrand_area_ratio
+            assert float(lines[6].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
+            assert float(lines[7].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
+            assert float(lines[8].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.firebrand_germination_delay
+            assert float(lines[9].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.vertical_velocity_scale_factor
+            assert float(lines[10].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.minimum_firebrand_ignitions
+            assert float(lines[11].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.maximum_firebrand_ignitions
+            assert float(lines[12].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.minimum_landing_angle
+            assert float(lines[13].strip().split("!")[
+                             0]) == qfire_advanced_user_inputs.maximum_firebrand_thickness
+
+        # Test writing to a non-existent directory
+        with pytest.raises(FileNotFoundError):
+            qfire_advanced_user_inputs.to_file(
+                "/non_existent_path/QFIRE_advanced_user_inputs.inp")
+
+    def test_from_file(self):
+        """Test initializing a class from a QFIRE_advanced_user_inputs.inp
+        file."""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        qfire_advanced_user_inputs.to_file("tmp/")
+        test_object = QFire_Advanced_User_Inputs.from_file("tmp/")
+        assert isinstance(test_object, QFire_Advanced_User_Inputs)
+        assert qfire_advanced_user_inputs == test_object
