@@ -566,3 +566,84 @@ class TestQU_Simparams:
                        0]) == qu_simparams.explosive_bldg_flag
         assert int(lines[i_current + 11].strip().split("!")[
                        0]) == qu_simparams.bldg_array_flag
+
+
+class TestQFire_Advanced_User_Inputs:
+    def test_init(self):
+        """Test the initialization of a QFire_Advanced_User_Inputs object."""
+        # Test the default initialization
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.05
+
+        # Test custom initialization
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=0.1)
+        assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.1
+
+        # Test data type casting
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands="0.1")
+        assert isinstance(qfire_advanced_user_inputs.fraction_cells_launch_firebrands, float)
+        assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.1
+
+        # Pass bad parameters: negative numbers
+        with pytest.raises(ValidationError):
+            QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=-1)
+
+        # Pass bad parameters: not a fraction
+        with pytest.raises(ValidationError):
+            QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=2)
+
+        # Pass bad parameters: not a valid range for theta
+        with pytest.raises(ValidationError):
+            QFire_Advanced_User_Inputs(minimum_landing_angle=361)
+
+    def test_to_dict(self):
+        """Test the to_dict method of a QFire_Advanced_User_Inputs object."""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=0.1)
+        result_dict = qfire_advanced_user_inputs.to_dict()
+        assert result_dict['fraction_cells_launch_firebrands'] == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
+        assert result_dict['firebrand_radius_scale_factor'] == qfire_advanced_user_inputs.firebrand_radius_scale_factor
+        assert result_dict['firebrand_trajectory_time_step'] == qfire_advanced_user_inputs.firebrand_trajectory_time_step
+        assert result_dict['firebrand_launch_interval'] == qfire_advanced_user_inputs.firebrand_launch_interval
+        assert result_dict['firebrands_per_deposition'] == qfire_advanced_user_inputs.firebrands_per_deposition
+        assert result_dict['firebrand_area_ratio'] == qfire_advanced_user_inputs.firebrand_area_ratio
+        assert result_dict['minimum_burn_rate_coefficient'] == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
+        assert result_dict['max_firebrand_thickness_fraction'] == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
+        assert result_dict['firebrand_germination_delay'] == qfire_advanced_user_inputs.firebrand_germination_delay
+        assert result_dict['vertical_velocity_scale_factor'] == qfire_advanced_user_inputs.vertical_velocity_scale_factor
+        assert result_dict['minimum_firebrand_ignitions'] == qfire_advanced_user_inputs.minimum_firebrand_ignitions
+        assert result_dict['maximum_firebrand_ignitions'] == qfire_advanced_user_inputs.maximum_firebrand_ignitions
+        assert result_dict['minimum_landing_angle'] == qfire_advanced_user_inputs.minimum_landing_angle
+        assert result_dict['maximum_firebrand_thickness'] == qfire_advanced_user_inputs.maximum_firebrand_thickness
+
+    def test_to_docs(self):
+        """Test the to_docs method of a QFire_Advanced_User_Inputs object."""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        result_dict = qfire_advanced_user_inputs.to_dict()
+        result_docs = qfire_advanced_user_inputs.get_documentation()
+        for key in result_dict:
+            assert key in result_docs
+        for key in result_docs:
+            assert key in result_dict
+
+    def test_to_file(self):
+        """Test the to_file method of a QFire_Advanced_User_Inputs object."""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=0.1)
+        qfire_advanced_user_inputs.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QFIRE_advanced_user_inputs.inp", 'r') as file:
+            lines = file.readlines()
+            assert float(lines[0].strip().split("!")[0]) == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
+            assert float(lines[1].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_radius_scale_factor
+            assert float(lines[2].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_trajectory_time_step
+            assert float(lines[3].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_launch_interval
+            assert float(lines[4].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrands_per_deposition
+            assert float(lines[5].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_area_ratio
+            assert float(lines[6].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
+            assert float(lines[7].strip().split("!")[0]) == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
+            assert float(lines[8].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_germination_delay
+            assert float(lines[9].strip().split("!")[0]) == qfire_advanced_user_inputs.vertical_velocity_scale_factor
+            assert float(lines[10].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_firebrand_ignitions
+            assert float(lines[11].strip().split("!")[0]) == qfire_advanced_user_inputs.maximum_firebrand_ignitions
+            assert float(lines[12].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_landing_angle
+            assert float(lines[13].strip().split("!")[0]) == qfire_advanced_user_inputs.maximum_firebrand_thickness
