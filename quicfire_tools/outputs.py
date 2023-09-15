@@ -94,6 +94,16 @@ THERMAL_RADIATION_OUTPUTS = {
                        "collocated with fuel (for health effects).",
         "units": "kW/m^2",
     },
+    "surfEnergy": {
+        "file_format": "gridded",
+        "number_dimensions": 2,
+        "grid": "fire",
+        "delimiter": None,
+        "extension": ".bin",
+        "description": "The output show total energy consumed by each surface cell "
+                       "on a per second interval.",
+        "units": "kW/m^2",
+    },
 }
 WIND_OUTPUTS = {
     "windu": {
@@ -412,20 +422,65 @@ class SimulationOutputs:
 
         # Write each output to the zarr file
         for output_name, output in self.outputs.items():
-            # Create a zarr dataset for the output
-            shape = (len(output.times), *output.shape)
-            chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
-            zarr_file.create_dataset(
-                output_name,
-                shape=shape,
-                chunks=chunks,
-                dtype=float)
+            #TESTING
+            if output_name == "surfEnergy":
+                # Create a zarr dataset for the output
+                n_times = len(output.times)
+                shape = (n_times, *output.shape)
+                if output_name != "surfEnergy":
+                    chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
+                else:
+                    if len(output.shape) == 3:
+                        ny, nx, nz = output.shape
+                    else:
+                        ny, nx = output.shape
+                        nz = None
+                    elem_per_chunk = 1000000 #Try to force 1000000 elements per chunk
+                    y_chunk = elem_per_chunk//n_times
+                    x_chunk = 1 #Initiate with 1
+                    #If true change y_chunk and x_chunk to get close to elem_per_chunk
+                    if y_chunk > ny: 
+                        y_chunk = ny
+                        x_chunk = elem_per_chunk//(n_times*y_chunk)
+                    if x_chunk > nx: 
+                        x_chunk = nx
+                    if nz:
+                        temp_dividend =  elem_per_chunk//(n_times*y_chunk*x_chunk)
+                        if temp_dividend>2 and temp_dividend<nz:
+                            z_chunk = int(temp_dividend)
+                        else:
+                            z_chunk = 1
+                        chunks = [n_times, y_chunk, x_chunk, z_chunk]
+                    else:
+                        chunks = [n_times, y_chunk, x_chunk]
 
-            # Write each timestep to the output's zarr dataset
-            for time_step in range(len(output.times)):
-                data = self.to_numpy(output_name, time_step)
-                zarr_file[output_name][time_step, ...] = data
+                zarr_file.create_dataset(
+                    output_name,
+                    shape=shape,
+                    chunks=chunks,
+                    dtype=float)
 
+                # Write each timestep to the output's zarr dataset
+                if output_name != "surfEnergy":
+                    for time_step in range(len(output.times)):
+                        data = self.to_numpy(output_name, time_step)
+                        zarr_file[output_name][time_step, ...] = data
+                else:
+                    import time
+                    start_time = time.time()
+                    data = self.to_numpy(output)
+                    end_time = time.time()
+                    elapsed_time = end_time - start_time
+                    print(f"Data to numpy: {elapsed_time:.2f} seconds")
+                    start_time = time.time()
+                    zarr_file[output_name][...] = data
+                    end_time = time.time()
+                    elapsed_time = end_time - start_time
+                    print(f"Numpy to zarr: {elapsed_time:.2f} seconds")
+                if len(shape)==3:
+                    zarr_file[output_name].attrs['_ARRAY_DIMENSIONS'] = ['time', 'y', 'x']
+                else: zarr_file[output_name].attrs['_ARRAY_DIMENSIONS'] = ['time', 'y', 'x','z']
+        zarr.convenience.consolidate_metadata(fpath)
         return zarr_file
 
 

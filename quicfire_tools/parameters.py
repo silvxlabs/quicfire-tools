@@ -1,5 +1,6 @@
 # External Imports
-from pydantic import BaseModel, Field, field_validator
+#from pydantic import BaseModel, Field, field_validator #v 1.10.8 doesn't have the field_validator
+from pydantic import BaseModel, Field 
 
 
 class SimulationParameters(BaseModel):

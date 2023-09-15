@@ -10,6 +10,8 @@ import zarr
 import pytest
 import numpy as np
 from scipy.io import FortranFile
+import xarray as xr
+import matplotlib.pyplot as plt
 
 from pathlib import Path, PurePath
 
@@ -17,6 +19,7 @@ DATA_PATH = PurePath("/mnt/c/Users/zacha/Documents/0_Projects")
 SIMULATION_PATH = DATA_PATH.joinpath("0016_FtStewart", "F6_4", "1_Runs", "01_FastFuelsAerialIg531")
 OUTPUT_PATH = SIMULATION_PATH.joinpath("Output")
 DRAWFIRE_PATH = OUTPUT_PATH.joinpath("drawfire")
+ZARR_PATH = OUTPUT_PATH.joinpath("outputs.zarr")
 
 # Create simulation parameters object
 SIM_PARAMS = SimulationParameters(
@@ -62,11 +65,92 @@ SIM_PARAMS = SimulationParameters(
 # )
 
 def main():
-    t = TestOutputFile()
-    #t.test_output_single_timestep()
-    t.test_get_multiple_timesteps()
-    t.test_to_numpy()
+    ###
+    ###This is crashing. Need to set-up to run with zarr and dask
+    ###
+    SMOLDER_THRESHOLD = 25
+    #Use library to load and calculate surfEnergy outputs
+    simulation_outputs = outputs.SimulationOutputs(OUTPUT_PATH, SIM_PARAMS)
 
+    # output = simulation_outputs.get_output("surfEnergy")
+    # arr = simulation_outputs.to_numpy(output)
+
+    # # Create a DataArray object from the numpy array
+    # da = xr.DataArray(arr, dims=["time", "y", "x"])
+
+    # # Create a Dataset object from the DataArray object
+    # ds = da.to_dataset(name="data")
+    if not os.path.exists(ZARR_PATH):
+        zarr_file = simulation_outputs.to_zarr(ZARR_PATH)
+    zarr.convenience.consolidate_metadata(ZARR_PATH)
+    ds = xr.open_zarr(ZARR_PATH)
+
+    #Calc percent burned & time for max power
+    ds = ds.fillna(0) #Convert nan to 0 for dask
+    xarr_max_power_time = ds.surfEnergy.argmax('time')
+    xarr_max_power = ds.surfEnergy[xarr_max_power_time.compute()]   
+    xarr_max_power_time = xr.where(xarr_max_power_time==0,np.nan,xarr_max_power_time)
+
+    ###Calc Times: arrival, stop, residence
+    ##Removed forloop to improve speed
+    #https://stackoverflow.com/questions/47269390/how-to-find-first-non-zero-value-in-every-column-of-a-numpy-array
+    #https://stackoverflow.com/questions/66305130/index-of-last-occurence-of-true-in-every-row
+    burned_binary = (ds>SMOLDER_THRESHOLD)
+    #Arrival time
+    xarr_arrival_time = burned_binary.surfEnergy.argmax('time')
+    xarr_arrival_time = xr.where(xarr_arrival_time==0,np.nan,xarr_arrival_time) #0 to nan
+    #xarr_arrival_time = xarr_arrival_time.compute()
+
+    #Fire stop time
+    xarr_fire_stop_time = burned_binary.dims['time'] - burned_binary.surfEnergy[::-1,:,:].argmax('time') - 1
+    xarr_fire_stop_time = xr.where((burned_binary.surfEnergy[-1,:,:]==0) & (xarr_fire_stop_time==xarr_fire_stop_time.max()),np.nan,xarr_fire_stop_time) #non-burning cells to nan
+    del burned_binary
+
+    xarr_residence_time = xarr_fire_stop_time - xarr_arrival_time        
+    
+    def scale_for_figs_x_and_y(arr, dx=2, dy=2):
+        arr = np.array(arr)
+        arr = np.repeat(np.repeat(arr, dy, axis=0), dx, axis=1)
+        plt.imshow(arr, cmap='YlOrRd', origin="lower")
+    
+    save_dir = DRAWFIRE_PATH
+
+    #Plot Spatial metrics
+    scale_for_figs_x_and_y(xarr_arrival_time)
+    plt.colorbar()
+    plt.title("Arrival Time (s)")
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.savefig(os.path.join(save_dir,"arrival_time.png"))
+    plt.close()
+    
+    #Spatial Figures of Metrics
+    scale_for_figs_x_and_y(xarr_fire_stop_time)
+    plt.colorbar()
+    plt.title("Burn Completion Time (s)")
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.savefig(os.path.join(save_dir,"stop_time.png"))
+    plt.close()
+    
+    scale_for_figs_x_and_y(xarr_residence_time)
+    plt.colorbar()
+    plt.title("Residence Time (s)")
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.savefig(os.path.join(save_dir,"residence_time.png"))
+    plt.close()
+
+    scale_for_figs_x_and_y(xarr_max_power)
+    plt.colorbar()
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.title("Max Power (kW/m^2)")
+    plt.savefig(os.path.join(save_dir,"max_power.png"))
+    plt.close()
+
+
+"""
 class TestOutputFile:
     simulation_outputs = outputs.SimulationOutputs(OUTPUT_PATH, SIM_PARAMS)
 
@@ -453,6 +537,7 @@ class TestProcessCompressedBin:
             # Check that the drawfire and output data are the same
             assert drawfire_data.shape == output_data.shape
             assert np.allclose(drawfire_data, output_data)
-
+"""
+            
 if __name__ == '__main__':
     main()

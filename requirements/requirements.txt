@@ -1,3 +1,5 @@
 numpy
 pydantic
 zarr
+pytest
+xarray
