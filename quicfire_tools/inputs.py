@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Literal
 from string import Template
 
-
 # External Imports
 import numpy as np
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
@@ -22,7 +21,6 @@ from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
 
 # TODO: Multiple wind directions
 # TODO: String for .dat files that exist
-# Save:         BaseModel.__setattr__(self, 'dz_array', dz_array_np.tolist())
 
 DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("documentation")
@@ -241,7 +239,7 @@ class QU_Simparams(InputFile):
     dx : float
         Cell size in the x-direction [m]. Recommended value: 2 m
     dy : float
-        Cell size in the y-direction [m]]. Recommended value: 2 m
+        Cell size in the y-direction [m]. Recommended value: 2 m
     surface_vertical_cell_size : float
         Surface vertical cell size [m].
     number_surface_cells : int
@@ -283,7 +281,7 @@ class QU_Simparams(InputFile):
     utm_zone_number : int
         UTM zone number [-]. Default is 1.
     utm_zone_letter : int
-        UTM zone letter (A=1, B=2,..) [-]. Default is 1.
+        UTM zone letter (A=1, B=2, ...) [-]. Default is 1.
     quic_cfd_flag : int
         QUIC-CFD flag: 0 = off, 1 = on. Recommended value: 0. Default is 0.
     explosive_bldg_flag : int
@@ -357,8 +355,10 @@ class QU_Simparams(InputFile):
         file. Adds the uniform grid to dz_array.
         """
         # Create the lines for the uniform grid
-        surface_dz_line = f"{float(self.surface_vertical_cell_size)}\t! Surface DZ [m]"
-        number_surface_cells_line = f"{self.number_surface_cells}\t! Number of uniform surface cells"
+        surface_dz_line = (f"{float(self.surface_vertical_cell_size)}\t"
+                           f"! Surface DZ [m]")
+        number_surface_cells_line = (f"{self.number_surface_cells}\t"
+                                     f"! Number of uniform surface cells")
 
         return f"{surface_dz_line}\n{number_surface_cells_line}"
 
@@ -455,3 +455,74 @@ class QU_Simparams(InputFile):
                           utc_offset_line,
                           header_line,
                           wind_step_times_lines])
+
+
+class QFire_Advanced_User_Inputs(InputFile):
+    """
+    Class representing the QFire_Advanced_User_Inputs.inp input file. This file
+    contains advanced parameters related to firebrands.
+
+    Attributes
+    ----------
+    fraction_cells_launch_firebrands : PositiveFloat
+        Fraction of cells that could launch firebrand tracers from which
+        firebrand tracers will actually be launched [-]. Higher value = more
+        firebrand tracers. Recommended value: 0.05
+    firebrand_radius_scale_factor : PositiveFloat
+        Multiplicative factor used to relate the length scale of the mixing
+        (firebrand distribution entrainment length scale) to the initial size
+        of the distribution [-]. Higher value = higher growth rate or RT
+        (firebrand distribution) with flight time. Recommended value: 40
+    firebrand_trajectory_time_step : PositiveInt
+        Time step used to determine the firebrand tracer trajectory [s].
+        Higher value = less accurate trajectory. Recommended value: 1 s
+    firebrand_launch_interval : PositiveInt
+        Time interval between launching of firebrand tracers [s]. Higher value =
+        less firebrand tracers launched. Recommended value: 10 s
+    firebrands_per_deposition : PositiveInt
+        Number of firebrand tracers that one firebrand tracer launched
+        represents [-]. Recommended value: 500
+    firebrand_area_ratio : PositiveFloat
+        Multiplicative factor used to relate the cell area and fraction of cells
+        from which tracers are launched to initial area represented by one
+        firebrand [-].
+    minimum_burn_rate_coefficient : PositiveFloat
+        Multiplicative factor relating the minimum mass-loss rate that a
+        firebrand tracer needs to have to justify continuing to track its
+        trajectory to the energy associated with a new ignition [-].
+    max_firebrand_thickness_fraction : PositiveFloat
+        Multiplicative factor relating the thickness of launched firebrand
+        tracer to maximum loftable firebrand thickness [-].
+    firebrand_germination_delay : PositiveInt
+        Time after a firebrand has landed at which a fire is started [s]
+    vertical_velocity_scale_factor : PositiveFloat
+        Maximum value of the multiplicative factor of the vertical velocity
+        experienced by a firebrand = 1/(fraction of the QUIC-URB on fire) [-]
+    minimum_firebrand_ignitions : PositiveInt
+        Minimum number of ignitions to be sampled in a position where a
+        firebrand lands [-]
+    maximum_firebrand_ignitions : PositiveInt
+        Maximum number of ignitions sampled at positions distributed within RT
+        around where a firebrand tracer lands [-]
+    minimum_landing_angle : PositiveFloat
+        Minimum value considered for the angle between the trajectory of the
+        firebrand when it hits the ground and horizontal [rad]
+    maximum_firebrand_thickness : PositiveFloat
+        Maximum firebrand's thickness [m]
+    """
+    filename: str = Field("QFire_Advanced_User_Inputs.inp",
+                          allow_mutation=False)
+    fraction_cells_launch_firebrands: PositiveFloat = Field(0.05, ge=0, lt=1)
+    firebrand_radius_scale_factor: PositiveFloat = Field(40., ge=1)
+    firebrand_trajectory_time_step: PositiveInt = 1
+    firebrand_launch_interval: PositiveInt = 10
+    firebrands_per_deposition: PositiveInt = 500
+    firebrand_area_ratio: PositiveFloat = 20.0
+    minimum_burn_rate_coefficient: PositiveFloat = 50.0
+    max_firebrand_thickness_fraction: PositiveFloat = 0.75
+    firebrand_germination_delay: PositiveInt = 180
+    vertical_velocity_scale_factor: PositiveFloat = 5.0
+    minimum_firebrand_ignitions: PositiveInt = 50
+    maximum_firebrand_ignitions: PositiveInt = 100
+    minimum_landing_angle: PositiveFloat = Field(0.523598, ge=0, le=np.pi / 2)
+    maximum_firebrand_thickness: PositiveFloat = 0.03
