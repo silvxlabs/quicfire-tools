@@ -731,7 +731,9 @@ class QFire_Advanced_User_Inputs(InputFile):
 
 class QUIC_fire(InputFile):
     """
-    Initialize the QU_Simparams class to manage simulation parameters.
+    Class representing the QUIC_fire.inp input file. This file
+    contains the parameters relating to the fire simulation and
+    outputs.
 
     Parameters
     ----------
