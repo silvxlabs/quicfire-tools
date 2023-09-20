@@ -15,30 +15,36 @@ import matplotlib.pyplot as plt
 
 from pathlib import Path, PurePath
 
-DATA_PATH = PurePath("/mnt/c/Users/zacha/Documents/0_Projects")
-SIMULATION_PATH = DATA_PATH.joinpath("0016_FtStewart", "F6_4", "1_Runs", "01_FastFuelsAerialIg531")
+DATA_PATH = PurePath("/mnt/c/Users/zacha/Documents/0_Code/quicfire-tools/tests/data")
+SIMULATION_PATH = DATA_PATH.joinpath("test_run_eng")
 OUTPUT_PATH = SIMULATION_PATH.joinpath("Output")
-DRAWFIRE_PATH = OUTPUT_PATH.joinpath("drawfire")
+DRAWFIRE_PATH = SIMULATION_PATH.joinpath("drawfire")
 ZARR_PATH = OUTPUT_PATH.joinpath("outputs.zarr")
 
 # Create simulation parameters object
 SIM_PARAMS = SimulationParameters(
-    nx=968,
-    ny=1978,
-    nz=40,
+    nx=400,
+    ny=200,
+    nz=1,
     dx=2,
     dy=2,
     dz=1,
-    wind_speed=6.5,
+    wind_speed=6,
     wind_direction=270,
-    sim_time=4067,
+    sim_time=600,
     auto_kill=0,
     num_cpus=8,
-    fuel_flag=5,
-    ignition_flag=7,
+    fuel_flag=4,
+    ignition_flag=1,
     output_time=100,
     topo_flag=0,
 )
+
+# DATA_PATH = PurePath("/mnt/c/Users/zacha/Documents/0_Projects")
+# SIMULATION_PATH = DATA_PATH.joinpath("0016_FtStewart", "F6_4", "1_Runs", "01_FastFuelsAerialIg531")
+# OUTPUT_PATH = SIMULATION_PATH.joinpath("Output")
+# DRAWFIRE_PATH = OUTPUT_PATH.joinpath("drawfire")
+# ZARR_PATH = OUTPUT_PATH.joinpath("outputs.zarr")
 
 # DATA_PATH = Path("data")
 # SIMULATION_PATH = DATA_PATH / "crazy-canyon-simulation"
@@ -65,9 +71,10 @@ SIM_PARAMS = SimulationParameters(
 # )
 
 def main():
-    ###
-    ###This is crashing. Need to set-up to run with zarr and dask
-    ###
+    #Setup drawfire folder:
+    if not os.path.exists(DRAWFIRE_PATH):
+        os.makedirs(DRAWFIRE_PATH)
+    save_dir = DRAWFIRE_PATH
     SMOLDER_THRESHOLD = 25
     #Use library to load and calculate surfEnergy outputs
     simulation_outputs = outputs.SimulationOutputs(OUTPUT_PATH, SIM_PARAMS)
@@ -99,21 +106,34 @@ def main():
     #Arrival time
     xarr_arrival_time = burned_binary.surfEnergy.argmax('time')
     xarr_arrival_time = xr.where(xarr_arrival_time==0,np.nan,xarr_arrival_time) #0 to nan
-    #xarr_arrival_time = xarr_arrival_time.compute()
+    xarr_arrival_time = xarr_arrival_time.compute()
 
     #Fire stop time
     xarr_fire_stop_time = burned_binary.dims['time'] - burned_binary.surfEnergy[::-1,:,:].argmax('time') - 1
     xarr_fire_stop_time = xr.where((burned_binary.surfEnergy[-1,:,:]==0) & (xarr_fire_stop_time==xarr_fire_stop_time.max()),np.nan,xarr_fire_stop_time) #non-burning cells to nan
+    xarr_fire_stop_time = xarr_fire_stop_time.compute()
     del burned_binary
 
     xarr_residence_time = xarr_fire_stop_time - xarr_arrival_time        
     
+    #Graph power overtime
+    def build_power_graph(power, x_cell, y_cell, save_dir=save_dir):
+        plt.plot(range(len(power)), power)
+        plt.xlabel('Time (s)')
+        plt.ylabel('Power (kW/m^2)')
+        plt.title('Power From Survace Cell x={}, y={}'.format(x_cell,y_cell))
+        plt.savefig(os.path.join(save_dir, 'SufaceCellx-{}_y-{}.png'.format(x_cell,y_cell)))
+        plt.close()
+    x_cell, y_cell = (200, 100)
+    start_t = int(xarr_arrival_time[y_cell, x_cell])
+    stop_t = int(xarr_fire_stop_time[y_cell, x_cell])
+    cell_power = ds.surfEnergy[start_t:stop_t,y_cell,x_cell]
+    build_power_graph(cell_power, x_cell, y_cell)
+    #Build Figures
     def scale_for_figs_x_and_y(arr, dx=2, dy=2):
         arr = np.array(arr)
         arr = np.repeat(np.repeat(arr, dy, axis=0), dx, axis=1)
         plt.imshow(arr, cmap='YlOrRd', origin="lower")
-    
-    save_dir = DRAWFIRE_PATH
 
     #Plot Spatial metrics
     scale_for_figs_x_and_y(xarr_arrival_time)
