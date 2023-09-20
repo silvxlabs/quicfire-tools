@@ -5,7 +5,6 @@
     "tested_values_range": "[0, 1]",
     "description": "Flag to convert QUIC-URB buildings to fuel. 0 = do not convert, 1 = convert.",
     "units": "[-]",
-    "variable_name_fortran": "flag%bld_to_fuel",
     "can_be_modified": "N",
     "recommended_value": "0"
   },
@@ -15,7 +14,6 @@
     "tested_values_range": "0.5",
     "description": "Thin fuel density within buildings if no fuel is specified and buildings are converted to fuel. Higher value = more fuel.",
     "units": "[kg/m^3]",
-    "variable_name_fortran": "canopy%BLDG_FUEL_DENS",
     "can_be_modified": "N",
     "recommended_value": "0.5"
   },
@@ -25,7 +23,6 @@
     "tested_values_range": "1-2",
     "description": "Attenuation coefficient within buildings if buildings are converted to fuel. Higher value = more drag.",
     "units": "[-]",
-    "variable_name_fortran": "canopy%BLDG_ATTEN_COEFF",
     "can_be_modified": "N",
     "recommended_value": "2"
   },
@@ -35,7 +32,6 @@
     "tested_values_range": "0.01-0.1",
     "description": "Surface roughness within buildings if buildings are converted to fuel. Higher value = lower wind speed.",
     "units": "[m]",
-    "variable_name_fortran": "canopy%BLDG_CANOPY_Z0",
     "can_be_modified": "N",
     "recommended_value": "0.01 m"
   },
@@ -45,7 +41,6 @@
     "tested_values_range": "[0, 1]",
     "description": "Flag to convert fuel to canopy for winds. 0 = do not convert, 1 = convert.",
     "units": "[-]",
-    "variable_name_fortran": "flag%fuel_to_canopy",
     "can_be_modified": "N",
     "recommended_value": "1"
   },
@@ -55,7 +50,6 @@
     "tested_values_range": "[0, 1]",
     "description": "Flag to update canopy winds when fuel is consumed. 0 = do not update, 1 = update.",
     "units": "[-]",
-    "variable_name_fortran": "canopy%UPDATE_WINDS",
     "can_be_modified": "N",
     "recommended_value": "1"
   },
@@ -65,7 +59,6 @@
     "tested_values_range": "1-2",
     "description": "Attenuation coefficient within fuel for the Cionco wind profile. Higher value = more drag.",
     "units": "[-]",
-    "variable_name_fortran": "canopy%FUEL_ATTEN_COEFF",
     "can_be_modified": "Y",
     "recommended_value": "1"
   },
@@ -75,7 +68,6 @@
     "tested_values_range": "0.01-0.1",
     "description": "Surface roughness within fuel. Higher value = lower wind speed.",
     "units": "[m]",
-    "variable_name_fortran": "canopy%FUEL_CANOPY_Z0",
     "can_be_modified": "N",
     "recommended_value": "0.1 m"
   }
