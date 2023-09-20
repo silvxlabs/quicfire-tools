@@ -1,0 +1,74 @@
+{
+  "convert_buildings_to_fuel_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Flag to convert QUIC-URB buildings to fuel. 0 = do not convert, 1 = convert.",
+    "units": "[-]",
+    "can_be_modified": "N",
+    "recommended_value": "0"
+  },
+  "building_fuel_density": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.5",
+    "description": "Thin fuel density within buildings if no fuel is specified and buildings are converted to fuel. Higher value = more fuel.",
+    "units": "[kg/m^3]",
+    "can_be_modified": "N",
+    "recommended_value": "0.5"
+  },
+  "building_attenuation_coefficient": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "1-2",
+    "description": "Attenuation coefficient within buildings if buildings are converted to fuel. Higher value = more drag.",
+    "units": "[-]",
+    "can_be_modified": "N",
+    "recommended_value": "2"
+  },
+  "building_surface_roughness": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.01-0.1",
+    "description": "Surface roughness within buildings if buildings are converted to fuel. Higher value = lower wind speed.",
+    "units": "[m]",
+    "can_be_modified": "N",
+    "recommended_value": "0.01 m"
+  },
+  "convert_fuel_to_canopy_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Flag to convert fuel to canopy for winds. 0 = do not convert, 1 = convert.",
+    "units": "[-]",
+    "can_be_modified": "N",
+    "recommended_value": "1"
+  },
+  "update_canopy_winds_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Flag to update canopy winds when fuel is consumed. 0 = do not update, 1 = update.",
+    "units": "[-]",
+    "can_be_modified": "N",
+    "recommended_value": "1"
+  },
+  "fuel_attenuation_coefficient": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "1-2",
+    "description": "Attenuation coefficient within fuel for the Cionco wind profile. Higher value = more drag.",
+    "units": "[-]",
+    "can_be_modified": "Y",
+    "recommended_value": "1"
+  },
+  "fuel_surface_roughness": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.01-0.1",
+    "description": "Surface roughness within fuel. Higher value = lower wind speed.",
+    "units": "[m]",
+    "can_be_modified": "N",
+    "recommended_value": "0.1 m"
+  }
+}
