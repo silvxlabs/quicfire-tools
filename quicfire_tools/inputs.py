@@ -833,11 +833,11 @@ class QUIC_fire(InputFile):
     nx: PositiveInt
     ny: PositiveInt
     nz: PositiveInt
-    output_time: PositiveInt # OR NEGATIVE ONE
+    output_time: int = Field(-1, ge=1)
     time_now: PositiveInt
     sim_time: PositiveInt
     fire_flag: Literal[0, 1] = 1
-    random_seed: PositiveInt = 47 # OR NEGATIVE ONE
+    random_seed: int = Field(-1, ge=1, default = 47)
     fire_time_step: PositiveInt = 1
     quic_time_step: PositiveInt = 1,
     stretch_grid_flag: Literal[0, 1] = 0,
