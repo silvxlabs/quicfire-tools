@@ -38,14 +38,17 @@ class InputFile(BaseModel, validate_assignment=True):
     2) Provide a method to write the input file to a specified directory.
     """
     filename: str
+    _param_info: dict = None
 
     @property
     def param_info(self):
         """
         Return a dictionary of parameter information for the input file.
         """
-        with open(DOCS_PATH / f"{self.filename}.json", "r") as f:
-            return json.load(f)
+        if self._param_info is None:  # open the file if it hasn't been read in
+            with open(DOCS_PATH / f"{self.filename}.json", "r") as f:
+                self._param_info = json.load(f)
+        return self._param_info
 
     def list_parameters(self):
         """List all parameters in the input file."""
@@ -682,6 +685,7 @@ class QFire_Advanced_User_Inputs(InputFile):
     maximum_firebrand_ignitions: PositiveInt = 100
     minimum_landing_angle: PositiveFloat = Field(0.523598, ge=0, le=np.pi / 2)
     maximum_firebrand_thickness: PositiveFloat = 0.03
+    seed: int = Field(-1, ge=1)
 
     @classmethod
     def from_file(cls, directory: str | Path):
