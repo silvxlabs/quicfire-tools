@@ -726,3 +726,76 @@ class QFire_Advanced_User_Inputs(InputFile):
             maximum_firebrand_ignitions=maximum_firebrand_ignitions,
             minimum_landing_angle=minimum_landing_angle,
             maximum_firebrand_thickness=maximum_firebrand_thickness)
+
+
+class QFire_Bldg_Advanced_User_Inputs(InputFile):
+    """
+    Class representing the QFire_Bldg_Advanced_User_Inputs.inp input file. This
+    file contains advanced parameters related to buildings and fuel.
+
+    Attributes
+    ----------
+    convert_buildings_to_fuel_flag : int
+        Flag to convert QUIC-URB buildings to fuel. 0 = do not convert,
+        1 = convert. Recommended value: 0.
+    building_fuel_density : PositiveFloat
+        Thin fuel density within buildings if no fuel is specified and buildings
+        are converted to fuel. Higher value = more fuel. Recommended value: 0.5.
+        Units: [kg/m^3]
+    building_attenuation_coefficient : PositiveFloat
+        Attenuation coefficient within buildings if buildings are converted to
+        fuel. Higher value = more drag. Recommended value: 2.
+    building_surface_roughness : PositiveFloat
+        Surface roughness within buildings if buildings are converted to fuel.
+        Higher value = lower wind speed. Recommended value: 0.01 m. Units: [m]
+    convert_fuel_to_canopy_flag : int
+        Flag to convert fuel to canopy for winds. 0 = do not convert,
+        1 = convert. Recommended value: 1.
+    update_canopy_winds_flag : int
+        Flag to update canopy winds when fuel is consumed. 0 = do not update,
+        1 = update. Recommended value: 1.
+    fuel_attenuation_coefficient : PositiveFloat
+        Attenuation coefficient within fuel for the wind profile. Higher
+        value = more drag. Recommended value: 1.
+    fuel_surface_roughness : PositiveFloat
+        Surface roughness within fuel. Higher value = lower wind speed.
+        Recommended value: 0.1 m. Units: [m]
+        """
+    filename: str = Field("QFire_Bldg_Advanced_User_Inputs.inp",
+                          allow_mutation=False)
+    convert_buildings_to_fuel_flag: Literal[0, 1] = 0
+    building_fuel_density: PositiveFloat = Field(0.5, ge=0)
+    building_attenuation_coefficient: PositiveFloat = Field(2.0, ge=0)
+    building_surface_roughness: PositiveFloat = Field(0.01, ge=0)
+    convert_fuel_to_canopy_flag: Literal[0, 1] = 1
+    update_canopy_winds_flag: Literal[0, 1] = 1
+    fuel_attenuation_coefficient: PositiveFloat = Field(1.0, ge=0)
+    fuel_surface_roughness: PositiveFloat = Field(0.1, ge=0)
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        """
+        Initializes a QFire_Bldg_Advanced_User_Inputs object from a directory
+        containing a QFire_Bldg_Advanced_User_Inputs.inp file.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QFire_Bldg_Advanced_User_Inputs.inp", "r") as f:
+            lines = f.readlines()
+        convert_buildings_to_fuel_flag = int(lines[0].split()[0])
+        building_fuel_density = float(lines[1].split()[0])
+        building_attenuation_coefficient = float(lines[2].split()[0])
+        building_surface_roughness = float(lines[3].split()[0])
+        convert_fuel_to_canopy_flag = int(lines[4].split()[0])
+        update_canopy_winds_flag = int(lines[5].split()[0])
+        fuel_attenuation_coefficient = float(lines[6].split()[0])
+        fuel_surface_roughness = float(lines[7].split()[0])
+        return cls(
+            convert_buildings_to_fuel_flag=convert_buildings_to_fuel_flag,
+            building_fuel_density=building_fuel_density,
+            building_attenuation_coefficient=building_attenuation_coefficient,
+            building_surface_roughness=building_surface_roughness,
+            convert_fuel_to_canopy_flag=convert_fuel_to_canopy_flag,
+            update_canopy_winds_flag=update_canopy_winds_flag,
+            fuel_attenuation_coefficient=fuel_attenuation_coefficient,
+            fuel_surface_roughness=fuel_surface_roughness)
