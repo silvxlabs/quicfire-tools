@@ -1,3 +1,7 @@
+"""
+Utility functions for quicfire-tools.
+"""
+
 import numpy as np
 
 
@@ -33,37 +37,6 @@ def compute_parabolic_stretched_grid(dz_surf: float, n_surf_cell: int,
     a specified number of cells with uniform spacing at the surface, followed by cells with spacings determined
     by a parabolic formula until the total domain height is achieved.
     """
-    # dzmax_high = domain_height - dz_surf * n_surf_cell
-    # dzmax_low = 0
-    # zmax_temp = n_tot_cells * dz_surf
-    # dz = np.ones(n_tot_cells, ) * dz_surf
-    #
-    # while abs(1. - zmax_temp / domain_height) > 0.001:
-    #     dzmax = 0.5 * (dzmax_low + dzmax_high)
-    #
-    #     c1 = (dzmax - dz_surf) / float((n_tot_cells - n_surf_cell) ** 2)
-    #     c2 = -2. * c1 * n_surf_cell
-    #     c3 = dz_surf + c1 * n_surf_cell ** 2
-    #
-    #     dz = np.zeros(n_tot_cells, )
-    #     for k in range(0, n_surf_cell):
-    #         dz[k] = dz_surf
-    #     for k in range(n_surf_cell, n_tot_cells):
-    #         kreal = float(k)
-    #         dz[k] = (c1 * kreal ** 2) + (c2 * kreal) + c3
-    #
-    #     zmax_temp = np.sum(dz)
-    #     if zmax_temp > domain_height:
-    #         dzmax_high = dzmax
-    #     elif zmax_temp < domain_height:
-    #         dzmax_low = dzmax
-    #     else:
-    #         break
-    #
-    # diff = domain_height - np.sum(dz)
-    # dz[-1] += diff
-    #
-    # return dz
     dzmax_high = domain_height - dz_surf * n_surf_cell
     dzmax_low = 0
 
