@@ -559,7 +559,8 @@ class QU_Simparams(InputFile):
             number_surface_cells = int(lines[8].strip().split("!")[0])
             _header = lines[9].strip().split("!")[0]
             for i in range(10, 10 + nz):
-                _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
+                _from_file_dz_array.append(
+                    float(lines[i].strip().split("!")[0]))
             current_line = 10 + nz
         else:
             raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
@@ -799,3 +800,53 @@ class QFire_Bldg_Advanced_User_Inputs(InputFile):
             update_canopy_winds_flag=update_canopy_winds_flag,
             fuel_attenuation_coefficient=fuel_attenuation_coefficient,
             fuel_surface_roughness=fuel_surface_roughness)
+
+
+class QFire_Plume_Advanced_User_Inputs(InputFile):
+    """
+    Class representing the QFire_Plume_Advanced_User_Inputs.inp input file.
+    This file contains advanced parameters related to modeling buoyant plumes.
+
+    Attributes
+    ----------
+    max_plumes_per_timestep : PositiveInt
+        Maximum number of plumes allowed at each time step. Higher values slow
+        down the simulation. Default value: 150,000. Recommended range:
+        50,000 - 500,000.
+    min_plume_updraft_velocity : PositiveFloat
+        Minimum plume updraft velocity [m/s]. If plume velocity drops below this
+        value, the plume is removed. Higher values reduce number of plumes.
+        Default value: 0.1 m/s.
+    max_plume_updraft_velocity : PositiveFloat
+        Maximum allowed plume updraft velocity [m/s]. Default value: 100 m/s.
+    min_velocity_ratio : PositiveFloat
+        Minimum ratio between plume updraft velocity and wind speed. If ratio
+        drops below this value, plume is removed. Higher values reduce plumes.
+        Default value: 0.1.
+    brunt_vaisala_freq_squared : PositiveFloat
+        Inverse of the Brunt-Vaisala frequency squared [1/s^2], a measure of
+        atmospheric stability. Default value: 0 1/s^2.
+    creeping_flag : Literal[0, 1]
+        Flag to enable (1) or disable (0) fire spread by creeping.
+        Default value: 1.
+
+
+    """
+    filename: str = Field("QFire_Plume_Advanced_User_Inputs.inp",
+                          allow_mutation=False)
+    max_plumes_per_timestep: PositiveInt = Field(150000, gt=0)
+    min_plume_updraft_velocity: PositiveFloat = Field(0.1, gt=0)
+    max_plume_updraft_velocity: PositiveFloat = Field(100., gt=0)
+    min_velocity_ratio: PositiveFloat = Field(0.1, gt=0)
+    brunt_vaisala_freq_squared: PositiveFloat = Field(0., ge=0)
+    creeping_flag: Literal[0, 1] = 1
+    adaptive_timestep_flag: Literal[0, 1] = 0
+    plume_timestep: PositiveFloat = Field(1., gt=0)
+    sor_option_flag: Literal[0, 1] = 1
+    sor_alpha_plume_center: PositiveFloat = Field(10., gt=0)
+    sor_alpha_plume_edge: PositiveFloat = Field(1., gt=0)
+    max_plume_merging_angle: PositiveFloat = Field(30., gt=0, le=180)
+    max_plume_overlap_fraction: PositiveFloat = Field(0.7, gt=0, le=1)
+    plume_to_grid_updrafts_flag: Literal[0, 1] = 1
+    max_points_along_plume_edge: PositiveInt = Field(10, ge=1, le=100)
+    plume_to_grid_intersection_flag: Literal[0, 1] = 1
