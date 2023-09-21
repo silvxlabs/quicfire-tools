@@ -28,6 +28,84 @@ TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("templates")
 
 
+class SimulationInputs:
+    _required_inputs = []
+
+    def __init__(self, input_files: list):
+        # Initialize a dictionary of input files
+        self._inputs = {i.name: i for i in input_files}
+
+        # Validate that all required input files are present
+        for required_input in self._required_inputs:
+            if required_input not in input_files:
+                raise ValueError(f"Missing required input file: "
+                                 f"{required_input}")
+
+    def list_inputs(self) -> list[str]:
+        return list(self._inputs.keys())
+
+    def get_input(self, input_name: str) -> InputFile:
+        return self._inputs[input_name]
+
+    @classmethod
+    def basic_simulation(cls, nx: int, ny: int, fire_nz: int, quic_nz: int,
+                         quic_height: float, dx: float, dy: float, dz: float,
+                         wind_speed: float, wind_direction: float,
+                         simulation_time: int, output_time: int):
+        """
+        Creates a SimulationInputs object with the minimum required inputs to
+        build a QUIC-Fire input file deck and run a simulation.
+
+        Parameters
+        ----------
+        nx
+        ny
+        fire_nz
+        quic_nz
+        quic_height
+        dx
+        dy
+        dz
+        wind_speed
+        wind_direction
+        simulation_time
+        output_time
+
+        Returns
+        -------
+        SimulationInputs
+            Class containing the minimum required inputs to build a QUIC-Fire
+            input file deck and run a simulation.
+        """
+        # Initialize default input files
+        raster_origin = RasterOrigin()
+        qu_bldgs = QU_Buildings()
+        qu_fileoptions = QU_Fileoptions()
+        qfire_adv_user_input = QFire_Advanced_User_Inputs()
+        qfire_bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+
+        # Initialize input files with required parameters
+        qu_simparams = QU_Simparams(nx=nx, ny=ny, nz=quic_nz, dx=dx, dy=dy,
+                                    quic_domain_height=quic_height)
+        gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=dz,
+                            aa1=1.0)
+
+        input_files = [raster_origin, qu_bldgs, qu_fileoptions,
+                       qfire_adv_user_input, qfire_bldg_inputs, qu_simparams,
+                       gridlist]
+
+        return cls(input_files)
+
+    @classmethod
+    def from_directory(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        input_files = []
+        for input_file in cls._required_inputs:
+            input_files.append(input_file.from_file(directory))
+        return cls(input_files)
+
+
 class InputFile(BaseModel, validate_assignment=True):
     """
     Base class representing an input file.
@@ -37,8 +115,13 @@ class InputFile(BaseModel, validate_assignment=True):
     1) Return documentation for each parameter in the input file.
     2) Provide a method to write the input file to a specified directory.
     """
-    filename: str
+    name: str
+    _extension: str
     _param_info: dict = None
+
+    @property
+    def _filename(self):
+        return f"{self.name}{self._extension}"
 
     @property
     def param_info(self):
@@ -46,7 +129,7 @@ class InputFile(BaseModel, validate_assignment=True):
         Return a dictionary of parameter information for the input file.
         """
         if self._param_info is None:  # open the file if it hasn't been read in
-            with open(DOCS_PATH / f"{self.filename}.json", "r") as f:
+            with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
                 self._param_info = json.load(f)
         return self._param_info
 
@@ -89,7 +172,8 @@ class InputFile(BaseModel, validate_assignment=True):
         """
         # return {attr: value for attr, value in self.__dict__.items()
         #         if not attr.startswith('_')}
-        return self.model_dump(exclude={"filename", "param_info"})
+        return self.model_dump(exclude={"name", "_extension", "_filename",
+                                        "param_info"})
 
     def to_file(self, directory: Path, version: str = "latest"):
         """
@@ -105,13 +189,13 @@ class InputFile(BaseModel, validate_assignment=True):
         if isinstance(directory, str):
             directory = Path(directory)
 
-        template_file_path = TEMPLATES_PATH / version / f"{self.filename}"
+        template_file_path = TEMPLATES_PATH / version / f"{self._filename}"
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
 
         result = src.substitute(self.to_dict())
 
-        output_file_path = directory / self.filename
+        output_file_path = directory / self._filename
         with open(output_file_path, "w") as fout:
             fout.write(result)
 
@@ -127,7 +211,7 @@ class Gridlist(InputFile):
 
     Attributes
     ----------
-    filename : str
+    _filename : str
         Name of the file to write to. Default is "gridlist.txt".
     n : int
         Number of cells in the x-direction [-]
@@ -144,7 +228,8 @@ class Gridlist(InputFile):
     aa1 : float
         Stretching factor for the vertical grid spacing [-]
     """
-    filename: str = Field("gridlist", allow_mutation=False)
+    name: str = Field("gridlist", frozen=True)
+    _extension: str = ""
     n: PositiveInt
     m: PositiveInt
     l: PositiveInt
@@ -161,14 +246,13 @@ class RasterOrigin(InputFile):
 
     Attributes
     ----------
-    filename : str
-        Name of the file to write to. Default is "rasterorigin.txt".
     utm_x : float
         UTM-x coordinates of the south-west corner of domain [m]
     utm_y : float
         UTM-y coordinates of the south-west corner of domain [m]
     """
-    filename: str = Field("rasterorigin.txt", allow_mutation=False)
+    name: str = Field("rasterorigin", frozen=True)
+    _extension: str = ".txt"
     utm_x: NonNegativeFloat = 0.
     utm_y: NonNegativeFloat = 0.
 
@@ -195,8 +279,6 @@ class QU_Buildings(InputFile):
 
     Attributes
     ----------
-    filename : str
-        Name of the file to write to. Default is "QU_buildings.inp".
     wall_roughness_length : float
         Wall roughness length [m]. Must be greater than 0. Default is 0.1.
     number_of_buildings : int
@@ -205,7 +287,8 @@ class QU_Buildings(InputFile):
         Number of polygon building nodes [-]. Default is 0. Not currently used
         in QUIC-Fire.
     """
-    filename: str = Field("QU_buildings.inp", allow_mutation=False)
+    name: str = Field("QU_buildings", frozen=True)
+    _extension: str = ".inp"
     wall_roughness_length: PositiveFloat = 0.1
     number_of_buildings: NonNegativeInt = 0
     number_of_polygon_nodes: NonNegativeInt = 0
@@ -235,8 +318,6 @@ class QU_Fileoptions(InputFile):
 
     Attributes
     ----------
-    filename : str
-        Name of the file to write to. Default is "QU_fileoptions.inp".
     output_data_file_format_flag : int
         Output data file format flag. Values accepted are [1, 2, 3].
         Recommended value 2. 1 - binary, 2 - ASCII, 3 - both.
@@ -253,7 +334,8 @@ class QU_Fileoptions(InputFile):
         Generate wind startup files for ensemble simulations. Values accepted
         are [0, 1]. Recommended value 0. 0 - off, 1 - on.
     """
-    filename: str = Field("QU_fileoptions.inp", allow_mutation=False)
+    name: str = Field("QU_fileoptions", frozen=True)
+    _extension: str = ".inp"
     output_data_file_format_flag: Literal[1, 2, 3] = 2
     non_mass_conserved_initial_field_flag: Literal[0, 1] = 0
     initial_sensor_velocity_field_flag: Literal[0, 1] = 0
@@ -287,8 +369,6 @@ class QU_Simparams(InputFile):
     Class representing the QU_simparams.inp file. This file contains the
     simulation parameters for the QUIC-Fire simulation.
 
-    filename : str
-        Name of the file to write to. Default is "QU_simparams.inp".
     nx : int
         Number of cells in the x-direction [-]. Recommended value: > 100
     ny : int
@@ -299,6 +379,8 @@ class QU_Simparams(InputFile):
         Cell size in the x-direction [m]. Recommended value: 2 m
     dy : float
         Cell size in the y-direction [m]. Recommended value: 2 m
+    quic_domain_height : float
+        QUIC domain height [m]. Recommended value: 300 m
     surface_vertical_cell_size : float
         Surface vertical cell size [m].
     number_surface_cells : int
@@ -350,12 +432,14 @@ class QU_Simparams(InputFile):
         Building array flag. 0 = off, 1 = on. Recommended value: 0. Default is
         0.
     """
-    filename: str = Field("QU_simparams.inp", allow_mutation=False)
+    name: str = Field("QU_simparams", frozen=True)
+    _extension: str = ".inp"
     nx: PositiveInt
     ny: PositiveInt
     nz: PositiveInt
     dx: PositiveFloat
     dy: PositiveFloat
+    quic_domain_height: PositiveFloat
     surface_vertical_cell_size: PositiveFloat = 1.
     number_surface_cells: PositiveInt = 5
     stretch_grid_flag: Literal[0, 1, 3] = 3
@@ -389,7 +473,7 @@ class QU_Simparams(InputFile):
         elif self.stretch_grid_flag == 3:
             return compute_parabolic_stretched_grid(
                 self.surface_vertical_cell_size, self.number_surface_cells,
-                self.nz, 300).tolist()
+                self.nz, self.quic_domain_height).tolist()
 
     @computed_field
     @property
@@ -559,7 +643,8 @@ class QU_Simparams(InputFile):
             number_surface_cells = int(lines[8].strip().split("!")[0])
             _header = lines[9].strip().split("!")[0]
             for i in range(10, 10 + nz):
-                _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
+                _from_file_dz_array.append(
+                    float(lines[i].strip().split("!")[0]))
             current_line = 10 + nz
         else:
             raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
@@ -669,8 +754,8 @@ class QFire_Advanced_User_Inputs(InputFile):
     maximum_firebrand_thickness : PositiveFloat
         Maximum firebrand's thickness [m]
     """
-    filename: str = Field("QFire_Advanced_User_Inputs.inp",
-                          allow_mutation=False)
+    name: str = Field("QFire_Advanced_User_Inputs", frozen=True)
+    _extension: str = ".inp"
     fraction_cells_launch_firebrands: PositiveFloat = Field(0.05, ge=0, lt=1)
     firebrand_radius_scale_factor: PositiveFloat = Field(40., ge=1)
     firebrand_trajectory_time_step: PositiveInt = 1
@@ -685,7 +770,6 @@ class QFire_Advanced_User_Inputs(InputFile):
     maximum_firebrand_ignitions: PositiveInt = 100
     minimum_landing_angle: PositiveFloat = Field(0.523598, ge=0, le=np.pi / 2)
     maximum_firebrand_thickness: PositiveFloat = 0.03
-    seed: int = Field(-1, ge=1)
 
     @classmethod
     def from_file(cls, directory: str | Path):
@@ -761,8 +845,8 @@ class QFire_Bldg_Advanced_User_Inputs(InputFile):
         Surface roughness within fuel. Higher value = lower wind speed.
         Recommended value: 0.1 m. Units: [m]
         """
-    filename: str = Field("QFire_Bldg_Advanced_User_Inputs.inp",
-                          allow_mutation=False)
+    name: str = Field("QFire_Bldg_Advanced_User_Inputs", frozen=True)
+    _extension: str = ".inp"
     convert_buildings_to_fuel_flag: Literal[0, 1] = 0
     building_fuel_density: PositiveFloat = Field(0.5, ge=0)
     building_attenuation_coefficient: PositiveFloat = Field(2.0, ge=0)
