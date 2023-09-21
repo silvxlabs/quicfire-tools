@@ -110,7 +110,7 @@
         "can_be_modified": "Y",
         "recommended_value": "1"
     },
-    "fire_flag": {
+    "fuel_flag": {
         "values_accepted": "[1-4]",
         "tested_values_range": "1-4",
         "description": "Flag for fuel density, moisture, and height: 1 = density/moisture/height is uniform over the domain and provided with the next line input; 2 = density/moisture/height is provided through QF_FuelDensity.inp/QF_FuelMoisture.inp/QF_FuelHeight.inp; 3 = density/moisture/height is provided through Firetec file (treesrhof.dat/treesmoist.dat/treesdepth.dat) matching QUIC-Fire grid; 4 = density/moisture/height is provided through Firetec files for an arbitrary grid. The files gridlist and rasterorigin.txt must also be provided",
@@ -292,12 +292,21 @@
         "variable_name_fortran": "flag%output_emissions_file",
         "can_be_modified": "Y"
     },
-    "intensity_out": {
+    "radiation_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
         "description": "Flag to output (1) or not (0) the thermal radiation. File names: thermalradiation-XXXXX.bin; thermaldose-XXXXX.bin",
         "units": "[-]",
         "variable_name_fortran": "flag%output_thermalrad_file",
+        "can_be_modified": "Y",
+        "recommended_value": "0"
+    },
+    "intensity_out": { 
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) surface fire intensity at every fire time step",
+        "units": "[-]",
+        "variable_name_fortran": "unknown - this variable is not in the documentation - NJT",
         "can_be_modified": "Y",
         "recommended_value": "0"
     },
