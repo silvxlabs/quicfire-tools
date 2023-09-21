@@ -1,9 +1,10 @@
-$random_seed				    ! Random number generator: -1: use time and date, any other integer > 0 is used as the seed
+$ fire_flag         ! Fire flag: 1 = run fire; 0 = no fire 
+$random_seed        ! Random number generator: -1: use time and date, any other integer > 0 is used as the seed
 ! FIRE TIMES
 $time_now		    ! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
 $sim_time			! Total simulation time for the fire [s]
 $fire_time_step		! time step for the fire simulation [s]
-#quic_time_step		! Number of fire time steps done before updating the quic wind field (integer, >= 1)
+$quic_time_step		! Number of fire time steps done before updating the quic wind field (integer, >= 1)
 $output_time		! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
 $output_time		! After how many quic updates to print out wind-related files
 $output_time		! After how many fire time steps to average emissions and radiation

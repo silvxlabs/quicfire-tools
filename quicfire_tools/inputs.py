@@ -767,6 +767,8 @@ class QUIC_fire(InputFile):
         Vertical stretching flag: 0 = uniform dz, 1 = custom
     file_path : str
         Path to files defining fuels, ignitions, and topography, with file separator at the end. Defaults to "", indicating files are in the same directory as all other input files
+    dz : int
+        Cell size in the z-direction [m] of the fire grid. Recommended value: 1 m
     dz_array : list[float]
         custom dz, one dz per line must be specified, from the ground to the top of the domain
         fuel_flag : int
@@ -840,28 +842,29 @@ class QUIC_fire(InputFile):
     random_seed: int = Field(-1, ge=1, default = 47)
     fire_time_step: PositiveInt = 1
     quic_time_step: PositiveInt = 1,
-    stretch_grid_flag: Literal[0, 1] = 0,
-    file_path: str = "",
-    dz_array: list[PositiveFloat] = [],
-    fuel_flag: Literal[1,2,3,4] = 3,
-    fuel_params: list[PositiveFloat] = [],
-    ignition_flag: Literal[1,2,3,4,5,6,7] = 7,
-    ignition_params: list[PositiveInt] = [],
-    ignitions_per_cell: PositiveInt = 2,
-    firebrand_flag: Literal[0, 1] = 0,
-    auto_kill: Literal[0, 1] = 1,
+    stretch_grid_flag: Literal[0, 1] = 0
+    dz: PositiveInt = 1
+    dz_array: list[PositiveFloat] = []
+    file_path: str = ""
+    fuel_flag: Literal[1,2,3,4] = 3
+    fuel_params: list[PositiveFloat] = []
+    ignition_flag: Literal[1,2,3,4,5,6,7] = 7
+    ignition_params: list[PositiveInt] = []
+    ignitions_per_cell: PositiveInt = 2
+    firebrand_flag: Literal[0, 1] = 0
+    auto_kill: Literal[0, 1] = 1
     # Output flags
-    eng_to_atm_out: Literal[0, 1] = 1,
-    react_rate_out: Literal[0, 1] = 0,
-    fuel_dens_out: Literal[0, 1] = 1,
-    QF_wind_out: Literal[0, 1] = 1,
-    QU_wind_inst_out: Literal[0, 1] = 1,
-    QU_wind_avg_out: Literal[0, 1] = 0,
-    fuel_moist_out: Literal[0, 1] = 1,
-    mass_burnt_out: Literal[0, 1] = 1,
-    firebrand_out: Literal[0, 1] = 0,
-    emissions_out: Literal[0, 1] = 0,
-    radiation_out: Literal[0, 1] = 0,
+    eng_to_atm_out: Literal[0, 1] = 1
+    react_rate_out: Literal[0, 1] = 0
+    fuel_dens_out: Literal[0, 1] = 1
+    QF_wind_out: Literal[0, 1] = 1
+    QU_wind_inst_out: Literal[0, 1] = 1
+    QU_wind_avg_out: Literal[0, 1] = 0
+    fuel_moist_out: Literal[0, 1] = 1
+    mass_burnt_out: Literal[0, 1] = 1
+    firebrand_out: Literal[0, 1] = 0
+    emissions_out: Literal[0, 1] = 0
+    radiation_out: Literal[0, 1] = 0
     intensity_out: Literal[0, 1] = 0
 
     @computed_field
@@ -890,7 +893,7 @@ class QUIC_fire(InputFile):
 
             return f"{dz_array_lines}"
         else:
-            return self.nz
+            return self.dz
 
     @computed_field
     @property
@@ -1015,87 +1018,121 @@ class QUIC_fire(InputFile):
             lines = f.readlines()
         
         # Read fire flag and random seed
-        fire_flag = int(lines[1].strip().split("!")[0])
-        random_seed = int(lines[2].strip().split("!")[0])
+        fire_flag = int(lines[0].strip().split("!")[0])
+        random_seed = int(lines[1].strip().split("!")[0])
 
         # Read fire times
-        time_now = int(lines[4].strip().split("!")[0])
-        sim_time = int(lines[5].strip().split("!")[0])
+        time_now = int(lines[3].strip().split("!")[0])
+        sim_time = int(lines[4].strip().split("!")[0])
+        output_time = int(lines[5].strip().split("!")[0])
+        for i in range(6,9):
+            val = int(lines[i].strip().split("!")[0])
+            var = int(lines[i].split("!")[1])
+            if val != output_time:
+                print("Output time step value in '{}' different from fire-related files. Using value of {} from fire-related files".format(var,val))
         
-
-        # Read stretch grid flag
-        stretch_grid_flag = int(lines[6].strip().split("!")[0])
-
-        # Read vertical grid lines as function of stretch grid flag
-        _from_file_dz_array = []
-        custom_dz_array = []
+        # Read fire grid parameters
+        nz = int(lines[10].strip().split("!")[0])
+        stretch_grid_flag = int(lines[11].strip().split("!")[0])
+        dz_array = []
         if stretch_grid_flag == 0:
-            surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
-            number_surface_cells = int(lines[8].strip().split("!")[0])
-            current_line = 9
-        elif stretch_grid_flag == 1:
-            surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
-            number_surface_cells = 5
-            for i in range(9, 9 + nz):
-                custom_dz_array.append(float(lines[i].strip().split("!")[0]))
-            current_line = 9 + nz
-        elif stretch_grid_flag == 3:
-            surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
-            number_surface_cells = int(lines[8].strip().split("!")[0])
-            _header = lines[9].strip().split("!")[0]
-            for i in range(10, 10 + nz):
-                _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
-            current_line = 10 + nz
+            dz = int(lines[12].strip().split("!")[0])
+            current_line = 13
         else:
-            raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
+            for i in range(12, 12+len(nz)):
+                try:
+                    float(lines[i].strip())
+                except ValueError:
+                    print("QUIC_fire.inp: dz input value is not a float. Does the number of dz inputs match nz?")              
+                dz_array.append(float(lines[i].strip()))
+            current_line = 13+len(nz)
 
-        # Read QU wind parameters
-        number_wind_steps = int(lines[current_line].strip().split("!")[0])
-        utc_offset = int(lines[current_line + 1].strip().split("!")[0])
-        _header = lines[current_line + 2].strip().split("!")[0]
-        wind_times = []
-        for i in range(current_line + 3, current_line + 3 + number_wind_steps):
-            wind_times.append(int(lines[i].strip()))
-        current_line = current_line + 3 + number_wind_steps
+        # Read file path
+        # current_line = ! FILE PATH
+        current_line += 1 #header
+        file_path = str(lines[current_line].strip().split("!")[0])
+        current_line += 3 # skip 2 unused lines
 
-        # Skip not used parameters
-        current_line += 9
+        #Read fuel inputs
+        # current_line = ! FUEL
+        current_line += 1 #header
+        fuel_flag = int(lines[current_line].strip().split("!")[0])
+        fuel_params = []
+        if fuel_flag == 1:
+            fuel_params.append(float(lines[current_line + 1].strip()))
+            moisture_flag = int(lines[current_line + 2].strip().split("!")[0])
+            fuel_params.append(float(lines[current_line + 3].strip()))
+            height_flag = int(lines[current_line + 4].strip().split("!")[0])
+            fuel_params.append(float(lines[current_line + 5].strip()))
+            current_line += 6
+        else:
+            current_line += 2
+        if moisture_flag != fuel_flag or height_flag != fuel_flag:
+                raise ValueError("QUIC_fire.inp: Fuel moisture and fue height flags must match fuel density flag")        
+        
+        # Read ignition inputs
+        # current_line = ! IGNITION LOCATIONS
+        current_line += 1 #header
+        ignition_flag = int(lines[current_line].strip().split("!")[0])
+        add_lines = {1:4,2:6,3:5,4:0,5:0,6:0,7:0}
+        add = add_lines.get(ignition_flag)
+        ignition_params = []
+        current_line +=1
+        for i in range(current_line, current_line + add):
+            ignition_params.append(int(lines[i].strip().split("!")[0]))
+        current_line += add
+        ignitions_per_cell = int(lines[current_line].strip().split("!")[0])
+        current_line += 1
 
-        # Read remaining QU parameters
-        sor_iter_max = int(lines[current_line].strip().split("!")[0])
-        sor_residual_reduction = int(
-            lines[current_line + 1].strip().split("!")[0])
-        use_diffusion_flag = int(lines[current_line + 2].strip().split("!")[0])
-        number_diffusion_iterations = int(
-            lines[current_line + 3].strip().split("!")[0])
-        domain_rotation = float(lines[current_line + 4].strip().split("!")[0])
-        utm_x = float(lines[current_line + 5].strip().split("!")[0])
-        utm_y = float(lines[current_line + 6].strip().split("!")[0])
-        utm_zone_number = int(lines[current_line + 7].strip().split("!")[0])
-        utm_zone_letter = int(lines[current_line + 8].strip().split("!")[0])
-        quic_cfd_flag = int(lines[current_line + 9].strip().split("!")[0])
-        explosive_bldg_flag = int(
-            lines[current_line + 10].strip().split("!")[0])
-        bldg_array_flag = int(lines[current_line + 11].strip().split("!")[0])
+        # Read firebrands
+        # current_line = ! FIREBRANDS
+        current_line += 1 #header
+        firebrand_flag = int(lines[current_line].strip().split("!")[0])
+        current_line +=1
 
-        return cls(nx=nx, ny=ny, nz=nz, dx=dx, dy=dy,
-                   surface_vertical_cell_size=surface_vertical_cell_size,
-                   number_surface_cells=number_surface_cells,
-                   stretch_grid_flag=stretch_grid_flag,
-                   custom_dz_array=custom_dz_array,
-                   utc_offset=utc_offset,
-                   wind_times=wind_times,
-                   sor_iter_max=sor_iter_max,
-                   sor_residual_reduction=sor_residual_reduction,
-                   use_diffusion_flag=use_diffusion_flag,
-                   number_diffusion_iterations=number_diffusion_iterations,
-                   domain_rotation=domain_rotation,
-                   utm_x=utm_x,
-                   utm_y=utm_y,
-                   utm_zone_number=utm_zone_number,
-                   utm_zone_letter=utm_zone_letter,
-                   quic_cfd_flag=quic_cfd_flag,
-                   explosive_bldg_flag=explosive_bldg_flag,
-                   bldg_array_flag=bldg_array_flag,
-                   _from_file=True,
-                   _from_file_dz_array=_from_file_dz_array)
+        # Read output flags
+        # current_line = !OUTPUT_FILES
+        eng_to_atm_out = int(lines[current_line + 1].strip().split("!")[0])
+        react_rate_out = int(lines[current_line + 2].strip().split("!")[0])
+        fuel_dens_out = int(lines[current_line + 3].strip().split("!")[0])
+        QF_wind_out = int(lines[current_line + 4].strip().split("!")[0])
+        QU_wind_inst_out = int(lines[current_line + 5].strip().split("!")[0])
+        QU_wind_avg_out = int(lines[current_line + 6].strip().split("!")[0])
+        #! Output plume trajectories
+        fuel_moist_out = int(lines[current_line + 8].strip().split("!")[0])
+        mass_burnt_out = int(lines[current_line + 9].strip().split("!")[0])
+        firebrand_out = int(lines[current_line + 10].strip().split("!")[0])
+        emissions_out = int(lines[current_line + 11].strip().split("!")[0])
+        radiation_out = int(lines[current_line + 12].strip().split("!")[0])
+        intensity_out = int(lines[current_line + 13].strip().split("!")[0])
+        #! AUTOKILL
+        auto_kill = int(lines[current_line + 15].strip().split("!")[0])
+        
+        return cls(fire_flag = fire_flag,
+                   random_seed = random_seed,
+                   time_now = time_now,
+                   sim_time = sim_time,
+                   nz = nz,
+                   stretch_grid_flag = stretch_grid_flag,
+                   dz = dz,
+                   dz_array = dz_array,
+                   file_path = file_path,
+                   fuel_flag = fuel_flag,
+                   fuel_params = fuel_params,
+                   ignition_flag = ignition_flag,
+                   ignition_params = ignition_params,
+                   ignitions_per_cell = ignitions_per_cell,
+                   firebrand_flag = firebrand_flag,
+                   eng_to_atm_out = eng_to_atm_out,
+                   react_rate_out = react_rate_out,
+                   fuel_dens_out = fuel_dens_out,
+                   QF_wind_out = QF_wind_out,
+                   QU_wind_inst_out = QU_wind_inst_out,
+                   QU_wind_avg_out = QU_wind_avg_out,
+                   fuel_moist_out = fuel_moist_out,
+                   mass_burnt_out = mass_burnt_out,
+                   firebrand_out = firebrand_out,
+                   emissions_out = emissions_out,
+                   radiation_out = radiation_out,
+                   intensity_out = intensity_out,
+                   auto_kill = auto_kill)
