@@ -1,6 +1,8 @@
 """
 Test module for the inputs module of the quicfire_tools package.
 """
+import sys
+sys.path.insert(0, "/Users/ntutland/Documents/Projects/quicfire-tools")
 from quicfire_tools.inputs import *
 
 import pytest
@@ -425,3 +427,66 @@ class TestQU_Simparams:
         test_object = QFire_Advanced_User_Inputs.from_file("tmp/")
         assert isinstance(test_object, QFire_Advanced_User_Inputs)
         assert qfire_advanced_user_inputs == test_object
+
+class TestQUIC_fire:
+    @staticmethod
+    def get_test_object():
+        return QUIC_fire(nx=100, ny=100, nz=26,
+                         sim_time = 60, time_now = 1695311421,
+                         output_time = 30)
+    
+    def test_init(self):
+        # Test default initialization
+        quic_fire = self.get_test_object()
+        assert quic_fire.nx == 100
+        assert quic_fire.ny == 100
+        assert quic_fire.nz == 26
+        assert quic_fire.sim_time == 60
+
+        # Test changing the default values
+        quic_fire.nx = 150
+        assert quic_fire.nx == 150
+
+        # Test data type casting
+        quic_fire = QUIC_fire(nx="100", ny=100, nz=26,
+                              sim_time = 60, time_now = 1695311421,
+                              output_time = 30)
+        assert isinstance(quic_fire.nx, int)
+        assert quic_fire.nx == 100
+        
+        # Test stretch grid input
+        assert quic_fire.stretch_grid_flag == 0
+        assert quic_fire.stretch_grid_input == 1
+        assert quic_fire.dz == 1
+        quic_fire.nz = 5
+        quic_fire.dz_array = [1,2,3,4,5]
+        quic_fire.stretch_grid_flag = 1
+        assert quic_fire.stretch_grid_input == "1\n2\n3\n4\n5"
+
+        # Test invalid dz array
+        with pytest.raises(ValueError):
+            QUIC_fire(nx=100, ny=100, nz=26,
+                      sim_time = 60, time_now = 1695311421,
+                      output_time = 30,
+                      stretch_grid_flag = 1,
+                      dz_array = [1,2,3,4,5])
+        
+        # Test fuel inputs
+        quic_fire = QUIC_fire(nx=100, ny=100, nz=26,
+                              sim_time = 60, time_now = 1695311421,
+                              output_time = 30)
+        assert quic_fire.fuel_density == ""
+        assert quic_fire.fuel_moisture == ""
+        assert quic_fire.fuel_height == ""
+        quic_fire.fuel_params = [0.5,1,0.75]
+        quic_fire.fuel_flag = 1,
+                              
+        assert quic_fire.fuel_density == "\n0.5"
+        assert quic_fire.fuel_moisture == "\n1"
+        assert quic_fire.fuel_height == (f"\n{self.fuel_flag}\t! fuel height flag: 1 = uniform; "
+                                         f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
+                                         f" files for quic grid, 4 = Firetech files for "
+                                         f"different grid (need interpolation)" 
+                                         f"\n0.75")
+
+        
