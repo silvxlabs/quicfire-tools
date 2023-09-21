@@ -1,14 +1,14 @@
 $ fire_flag         ! Fire flag: 1 = run fire; 0 = no fire 
-$random_seed        ! Random number generator: -1: use time and date, any other integer > 0 is used as the seed
+$random_seed               ! Random number generator: -1: use time and date, any other integer > 0 is used as the seed
 ! FIRE TIMES
 $time_now		    ! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
 $sim_time			! Total simulation time for the fire [s]
 $fire_time_step		! time step for the fire simulation [s]
 $quic_time_step		! Number of fire time steps done before updating the quic wind field (integer, >= 1)
-$output_time		! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
-$output_time		! After how many quic updates to print out wind-related files
-$output_time		! After how many fire time steps to average emissions and radiation
-$output_time		! After how many quic updates to print out averaged wind-related files
+$out_time_fire	    ! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
+$out_time_wind      ! After how many quic updates to print out wind-related files
+$out_time_emis_rad	! After how many fire time steps to average emissions and radiation
+$out_time_wind_avg  ! After how many quic updates to print out averaged wind-related files
 ! FIRE GRID
 $nz					! Number of vertical layers of fire grid cells (integer)
 $stretch_grid_flag  ! Vertical stretching flag: 0 = uniform dz, 1 = custom

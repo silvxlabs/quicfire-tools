@@ -5,8 +5,7 @@ from __future__ import annotations
 from xml.sax.xmlreader import InputSource
 
 # Internal Imports
-from utils import compute_parabolic_stretched_grid
-from parameters import SimulationParameters #HOW TO DEAL WITH SIM PARAMS
+from quicfire_tools.utils import compute_parabolic_stretched_grid
 
 # Core Imports
 import json
@@ -18,13 +17,10 @@ from string import Template
 
 # External Imports
 import numpy as np
+from typing import Union
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
                       PositiveFloat, NonNegativeFloat, computed_field)
 
-# DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
-    # 'inputs').joinpath("documentation")
-# TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
-    # 'inputs').joinpath("templates")
 
 DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("documentation")
@@ -107,7 +103,7 @@ class InputFile(BaseModel, validate_assignment=True):
         if isinstance(directory, str):
             directory = Path(directory)
 
-        template_file_path = TEMPLATES_PATH+"/"+version+"/"+f"{self.filename}"
+        template_file_path = TEMPLATES_PATH / version / f"{self.filename}"
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
 
@@ -728,6 +724,75 @@ class QFire_Advanced_User_Inputs(InputFile):
             minimum_landing_angle=minimum_landing_angle,
             maximum_firebrand_thickness=maximum_firebrand_thickness)
 
+class RectangleIgnition(InputFile):
+    """
+    Class with parameters for writing rectangle ignitions to QUIC_fire.inp
+
+    Parameters
+    ----------
+    xmin : int
+        Southwest corner in the x-direction (m)
+    ymin : int
+        Southwest corner in the y-direction(m)
+    xlen : int
+        Length in the x-direction (m)
+    ylen : int 
+        Length in the y-direction (m) 
+    """
+    xmin: PositiveInt
+    ymin: PositiveInt
+    xlen: PositiveInt
+    ylen: PositiveInt
+
+class SquareRingIgnition(InputFile):
+    """
+    Class with parameters for writing square ring ignitions to QUIC_fire.inp
+
+    Parameters
+    ----------
+    xmin : int
+        Southwest corner in the x-direction (m)
+    ymin : int
+        Southwest corner in the y-direction(m)
+    xlen : int
+        Length in the x-direction (m)
+    ylen : int 
+        Length in the y-direction (m) 
+    xwidth : int
+        Width of the ring in the x-direction (m)
+    ywidth : int
+        Width of the ring in the y-direction (m)
+    """
+    xmin: PositiveInt
+    ymin: PositiveInt
+    xlen: PositiveInt
+    ylen: PositiveInt
+    xwidth: PositiveInt
+    ywidth: PositiveInt
+
+class CircularRingIgnition(InputFile):
+    """
+    Class with parameters for writing square ring ignitions to QUIC_fire.inp
+
+    Parameters
+    ----------
+    xmin : int
+        Southwest corner in the x-direction (m)
+    ymin : int
+        Southwest corner in the y-direction(m)
+    xlen : int
+        Length in the x-direction (m)
+    ylen : int 
+        Length in the y-direction (m) 
+    width : int
+        Width of the ring (m)
+    """
+    xmin: PositiveInt
+    ymin: PositiveInt
+    xlen: PositiveInt
+    ylen: PositiveInt
+    width: PositiveInt
+
 
 class QUIC_fire(InputFile):
     """
@@ -743,14 +808,14 @@ class QUIC_fire(InputFile):
         Number of cells in the y-direction.
     nz : int
         Number of fire grid cells in the z-direction.
-    output_time : int
-        After how many time steps to print out:
-            - fire-related files (excluding emissions and radiation)
-            - average emissions and radiation
-        After how many quic updates to print out:
-            - wind-related files
-            - averaged wind-related files
-        Use -1 to provide custom times in file QFire_ListOutputTimes.inp
+    out_time_fire : int
+        After how many fire time steps to print out fire-related files (excluding emissions and radiation)
+    out_time_wind : int
+        After how many quic updates to print out wind-related files
+    out_time_emis_rad : int
+        After how many fire time steps to print out average emissions and radiation
+    out_time_wind_avg : int
+        After how many quic updates to print out averaged wind-related files
     time_now : int
         When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
     sim_time : int
@@ -835,11 +900,14 @@ class QUIC_fire(InputFile):
     nx: PositiveInt
     ny: PositiveInt
     nz: PositiveInt
-    output_time: int = Field(-1, ge=1)
     time_now: PositiveInt
     sim_time: PositiveInt
+    out_time_fire: PositiveInt
+    out_time_wind: PositiveInt
+    out_time_emis_rad: PositiveInt
+    out_time_wind_avg: PositiveInt
     fire_flag: Literal[0, 1] = 1
-    random_seed: int = Field(-1, ge=1, default = 47)
+    random_seed: int = Field(-1, ge=1)
     fire_time_step: PositiveInt = 1
     quic_time_step: PositiveInt = 1,
     stretch_grid_flag: Literal[0, 1] = 0
@@ -849,7 +917,7 @@ class QUIC_fire(InputFile):
     fuel_flag: Literal[1,2,3,4] = 3
     fuel_params: list[PositiveFloat] = []
     ignition_flag: Literal[1,2,3,4,5,6,7] = 7
-    ignition_params: list[PositiveInt] = []
+    ignition_params: Union[RectangleIgnition,SquareRingIgnition,CircularRingIgnition]
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
@@ -866,10 +934,11 @@ class QUIC_fire(InputFile):
     emissions_out: Literal[0, 1] = 0
     radiation_out: Literal[0, 1] = 0
     intensity_out: Literal[0, 1] = 0
+        
 
     @computed_field
     @property
-    def stretch_grid_input(self):
+    def stretch_grid_input(self) -> str:
         """
         Writes a custom stretch grid to QUIC_fire.inp, if provided.
         """
@@ -893,11 +962,11 @@ class QUIC_fire(InputFile):
 
             return f"{dz_array_lines}"
         else:
-            return self.dz
+            return str(self.dz)
 
     @computed_field
     @property
-    def ignition_locations(self):
+    def ignition_locations(self) -> str:
         if self.ignition_flag == 1:
             self._get_ignitions_rect()
         elif self.ignition_flag == 2:
@@ -914,27 +983,29 @@ class QUIC_fire(InputFile):
     
     @computed_field
     @property
-    def fuel_density(self):
-        return self._get_fuel_inputs[0]
+    def fuel_density(self) -> str:
+        return self._get_fuel_inputs()[0]
     
     @computed_field
     @property
-    def fuel_moisture(self):
-        return self._get_fuel_inputs[1]
+    def fuel_moisture(self) -> str:
+        return self._get_fuel_inputs()[1]
     
     @computed_field
     @property
-    def fuel_height(self):
-        return self._get_fuel_inputs[2]
+    def fuel_height(self) -> str:
+        return self._get_fuel_inputs()[2]
+    
 
     def _get_fuel_inputs(self):
         """
         Writes custom fuel inputs to QUIC_fire.inp, if provided.
         """
-        if len(self.fuel_params) != 3:
-                raise ValueError("fuel_params must have length of 3")
+        
         # Uniform fuel properties
         if self.fuel_flag == 1:
+            if len(self.fuel_params) != 3:
+                raise ValueError("fuel_params must have length of 3")
             fuel_density = f"\n{str(self.fuel_params[0])}"
             fuel_moisture = f"\n{str(self.fuel_params[1])}"
             fuel_height = (f"\n{self.fuel_flag}\t! fuel height flag: 1 = uniform; "
@@ -952,58 +1023,52 @@ class QUIC_fire(InputFile):
         return fuel_density, fuel_moisture, fuel_height
     
     def _get_ignitions_rect(self):
-        if len(self.ignition_params) != 4:
-            raise ValueError("ignition_params must have length of 4 when ignition_flag = 1 (rectangle ignition)")
-        x_sw = self.ignition_params[0]
-        y_sw = self.ignition_params[1]
-        x_len = self.ignition_params[2]
-        y_len = self.ignition_params[3]
+        xmin = self.ignition_params.xmin
+        ymin = self.ignition_params.ymin
+        xlen = self.ignition_params.xlen
+        ylen = self.ignition_params.ylen
 
-        if x_sw+x_len > self.nx*2 or y_sw+y_len > self.ny*2:
+        if xmin + xlen > self.nx * 2 or ymin + ylen > self.ny * 2:
             raise ValueError("Ignitions outside burn domain")
         
-        return (f"\n{str(x_sw)}\t! South-west corner in the x-direction (m)"
-                f"\n{str(y_sw)}\t! South-west corner in the y-direction (m)"
-                f"\n{str(x_len)}\t! Length in the x-direction (m)"
-                f"\n{str(y_len)}\t! Length in the y-direction (m)")
+        return (f"\n{str(xmin)}\t! South-west corner in the x-direction (m)"
+                f"\n{str(ymin)}\t! South-west corner in the y-direction (m)"
+                f"\n{str(xlen)}\t! Length in the x-direction (m)"
+                f"\n{str(ylen)}\t! Length in the y-direction (m)")
         
     def _get_ignitions_sq_ring(self):
-        if len(self.ignition_params) != 6:
-            raise ValueError("ignition_params must have length of 6 when ignition_flag = 2 (square ring ignition)")
-        x_sw = self.ignition_params[0]
-        y_sw = self.ignition_params[1]
-        x_len = self.ignition_params[2]
-        y_len = self.ignition_params[3]
-        x_wid = self.ignition_params[4]
-        y_wid = self.ignition_params[5]
+        xmin = self.ignition_params.xmin
+        ymin = self.ignition_params.ymin
+        xlen = self.ignition_params.xlen
+        ylen = self.ignition_params.ylen
+        xwidth = self.ignition_params.xwidth
+        ywidth = self.ignition_params.ywidth
     
-        if x_sw+x_len > self.nx*2 or y_sw+y_len > self.ny*2:
-                raise ValueError("Ignitions outside burn domain")
+        if xmin + xlen > self.nx * 2 or ymin + ylen > self.ny * 2:
+            raise ValueError("Ignitions outside burn domain")
         
-        return (f"\n{str(x_sw)}\t! South-west corner in the x-direction (m)"
-                f"\n{str(y_sw)}\t! South-west corner in the y-direction (m)"
-                f"\n{str(x_len)}\t! Length in the x-direction (m)"
-                f"\n{str(y_len)}\t! Length in the y-direction (m)"
-                f"\n{str(x_wid)}\t! Width of the ring in the x-direction (m)"
-                f"\n{str(y_wid)}\t! Width of the ring in the y-direction (m)")
+        return (f"\n{str(xmin)}\t! South-west corner in the x-direction (m)"
+                f"\n{str(ymin)}\t! South-west corner in the y-direction (m)"
+                f"\n{str(xlen)}\t! Length in the x-direction (m)"
+                f"\n{str(ylen)}\t! Length in the y-direction (m)"
+                f"\n{str(xwidth)}\t! Width of the ring in the x-direction (m)"
+                f"\n{str(ywidth)}\t! Width of the ring in the y-direction (m)")
     
     def _get_ignitions_cir_ring(self):
-        if len(self.ignition_params) != 5:
-            raise ValueError("ignition_params must have length of 5 when ignition_flag = 3 (circular ring ignition)")
-        x_sw = self.ignition_params[0]
-        y_sw = self.ignition_params[1]
-        x_len = self.ignition_params[2]
-        y_len = self.ignition_params[3]
-        wid = self.ignition_params[4]
-    
-        if x_sw+x_len > self.nx*2 or y_sw+y_len > self.ny*2:
-                raise ValueError("Ignitions outside burn domain")
+        xmin = self.ignition_params.xmin
+        ymin = self.ignition_params.ymin
+        xlen = self.ignition_params.xlen
+        ylen = self.ignition_params.ylen
+        width = self.ignition_params.width
+
+        if xmin + xlen > self.nx * 2 or ymin + ylen > self.ny * 2:
+            raise ValueError("Ignitions outside burn domain")
         
-        return (f"\n{str(x_sw)}\t! South-west corner in the x-direction (m)"
-                f"\n{str(y_sw)}\t! South-west corner in the y-direction (m)"
-                f"\n{str(x_len)}\t! Length in the x-direction (m)"
-                f"\n{str(y_len)}\t! Length in the y-direction (m)"
-                f"\n{str(wid)}\t! Width of the ring (m)")
+        return (f"\n{str(xmin)}\t! South-west corner in the x-direction (m)"
+                f"\n{str(ymin)}\t! South-west corner in the y-direction (m)"
+                f"\n{str(xlen)}\t! Length in the x-direction (m)"
+                f"\n{str(ylen)}\t! Length in the y-direction (m)"
+                f"\n{str(width)}\t! Width of the ring (m)")
     
     @classmethod
     def from_file(cls, directory: str | Path):
@@ -1024,12 +1089,10 @@ class QUIC_fire(InputFile):
         # Read fire times
         time_now = int(lines[3].strip().split("!")[0])
         sim_time = int(lines[4].strip().split("!")[0])
-        output_time = int(lines[5].strip().split("!")[0])
-        for i in range(6,9):
-            val = int(lines[i].strip().split("!")[0])
-            var = int(lines[i].split("!")[1])
-            if val != output_time:
-                print("Output time step value in '{}' different from fire-related files. Using value of {} from fire-related files".format(var,val))
+        out_time_fire = int(lines[5].strip().split("!")[0])
+        out_time_wind = int(lines[6].strip().split("!")[0])
+        out_time_emis_rad = int(lines[6].strip().split("!")[0])
+        out_time_wind_avg = int(lines[8].strip().split("!")[0])
         
         # Read fire grid parameters
         nz = int(lines[10].strip().split("!")[0])
@@ -1083,6 +1146,7 @@ class QUIC_fire(InputFile):
         current_line += add
         ignitions_per_cell = int(lines[current_line].strip().split("!")[0])
         current_line += 1
+        # TODO: read ignition parameters into the proper class
 
         # Read firebrands
         # current_line = ! FIREBRANDS
