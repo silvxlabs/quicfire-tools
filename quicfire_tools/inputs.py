@@ -47,8 +47,19 @@ class SimulationInputs:
     def get_input(self, input_name: str) -> InputFile:
         return self._inputs[input_name]
 
+    def write_inputs(self, directory: str | Path, version: str = "latest"):
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        if not directory.exists():
+            raise NotADirectoryError(f"{directory} does not exist")
+
+        for input_name in self.list_inputs():
+            input_file = self.get_input(input_name)
+            input_file.to_file(directory, version=version)
+
     @classmethod
-    def basic_simulation(cls, nx: int, ny: int, fire_nz: int, quic_nz: int,
+    def setup_simulation(cls, nx: int, ny: int, fire_nz: int, quic_nz: int,
                          quic_height: float, dx: float, dy: float, dz: float,
                          wind_speed: float, wind_direction: float,
                          simulation_time: int, output_time: int):

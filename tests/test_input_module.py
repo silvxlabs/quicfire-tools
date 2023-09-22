@@ -881,27 +881,36 @@ class Test_QFire_Bldg_Advanced_User_Inputs:
 
 class TestSimulationInputs:
     def test_basic_inputs(self):
-        sim_inputs = SimulationInputs.basic_simulation(
-            nx=100, ny=100, fire_nz=40, quic_nz=26, quic_height=180, dx=2, dy=2,
-            dz=1, wind_speed=2.7, wind_direction=270, simulation_time=600,
-            output_time=60
-        )
+        sim_inputs = SimulationInputs.setup_simulation(nx=100, ny=100,
+                                                       fire_nz=40, quic_nz=26,
+                                                       quic_height=180, dx=2,
+                                                       dy=2, dz=1,
+                                                       wind_speed=2.7,
+                                                       wind_direction=270,
+                                                       simulation_time=600,
+                                                       output_time=60)
         assert isinstance(sim_inputs, SimulationInputs)
 
     def test_list_inputs(self):
-        sim_inputs = SimulationInputs.basic_simulation(
-            nx=100, ny=100, fire_nz=40, quic_nz=26, quic_height=180, dx=2, dy=2,
-            dz=1, wind_speed=2.7, wind_direction=270, simulation_time=600,
-            output_time=60
-        )
+        sim_inputs = SimulationInputs.setup_simulation(nx=100, ny=100,
+                                                       fire_nz=40, quic_nz=26,
+                                                       quic_height=180, dx=2,
+                                                       dy=2, dz=1,
+                                                       wind_speed=2.7,
+                                                       wind_direction=270,
+                                                       simulation_time=600,
+                                                       output_time=60)
         inputs = sim_inputs.list_inputs()
         assert "rasterorigin" in inputs
 
     def test_get_input(self):
-        sim_inputs = SimulationInputs.basic_simulation(
-            nx=100, ny=100, fire_nz=40, quic_nz=26, quic_height=180, dx=2, dy=2,
-            dz=1, wind_speed=2.7, wind_direction=270, simulation_time=600,
-            output_time=60
-        )
+        sim_inputs = SimulationInputs.setup_simulation(nx=100, ny=100,
+                                                       fire_nz=40, quic_nz=26,
+                                                       quic_height=180, dx=2,
+                                                       dy=2, dz=1,
+                                                       wind_speed=2.7,
+                                                       wind_direction=270,
+                                                       simulation_time=600,
+                                                       output_time=60)
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
