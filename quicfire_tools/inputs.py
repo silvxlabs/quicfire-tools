@@ -829,8 +829,35 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
     creeping_flag : Literal[0, 1]
         Flag to enable (1) or disable (0) fire spread by creeping.
         Default value: 1.
-
-
+    adaptive_timestep_flag : Literal[0, 1]
+        Enable (1) or disable (0) adaptive time stepping. Adaptive time stepping
+        improves accuracy but increases simulation time. Default value: 0.
+    plume_timestep : PositiveFloat
+        Time step [s] used to compute buoyant plume trajectories. Higher values
+        reduce accuracy. Default value: 1s.
+    sor_option_flag : Literal[0, 1]
+        SOR solver option. 0 = standard SOR, 1 = memory SOR. Default value: 1.
+    sor_alpha_plume_center : PositiveFloat
+        SOR alpha value at plume centerline. Higher values reduce influence of
+        plumes on winds. Default value: 10.
+    sor_alpha_plume_edge : PositiveFloat
+        SOR alpha value at plume edge. Higher values reduce influence of plumes
+        on winds. Default value: 1.
+        max_plume_merging_angle : PositiveFloat
+        Maximum angle [degrees] between plumes to determine merging eligibility.
+        Higher values increase plume merging. Default value: 30 degrees.
+    max_plume_overlap_fraction : PositiveFloat
+        Maximum fraction of smaller plume trajectory overlapped by larger plume
+        to be considered for merging. Higher values increase merging.
+    plume_to_grid_updrafts_flag : Literal[0, 1]
+        Method to map plume updrafts to grid. 0 = new method, 1 = old method.
+        New method improves accuracy. Default value: 1.
+    max_points_along_plume_edge : PositiveInt
+        Maximum points to sample along grid cell edge for new plume-to-grid
+        method. Default value: 10.
+    plume_to_grid_intersection_flag : Literal[0, 1]
+        Scheme to sum plume-to-grid updrafts when multiple plumes intersect a
+        grid cell. 0 = cube method, 1 = max value method. Default value: 1.
     """
     filename: str = Field("QFire_Plume_Advanced_User_Inputs.inp",
                           allow_mutation=False)
