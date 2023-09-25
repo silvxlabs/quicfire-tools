@@ -222,8 +222,6 @@ class Gridlist(InputFile):
 
     Attributes
     ----------
-    _filename : str
-        Name of the file to write to. Default is "gridlist.txt".
     n : int
         Number of cells in the x-direction [-]
     m : int
@@ -277,9 +275,8 @@ class RasterOrigin(InputFile):
             directory = Path(directory)
         with open(directory / "rasterorigin.txt", "r") as f:
             lines = f.readlines()
-        utm_x = float(lines[0].split()[0])
-        utm_y = float(lines[1].split()[0])
-        return cls(utm_x=utm_x, utm_y=utm_y)
+        return cls(utm_x=float(lines[0].split()[0]),
+                   utm_y=float(lines[1].split()[0]))
 
 
 class QU_Buildings(InputFile):
@@ -314,12 +311,9 @@ class QU_Buildings(InputFile):
             directory = Path(directory)
         with open(directory / "QU_buildings.inp", "r") as f:
             lines = f.readlines()
-        wall_roughness_length = float(lines[1].split()[0])
-        number_of_buildings = int(lines[2].split()[0])
-        number_of_polygon_nodes = int(lines[3].split()[0])
-        return cls(wall_roughness_length=wall_roughness_length,
-                   number_of_buildings=number_of_buildings,
-                   number_of_polygon_nodes=number_of_polygon_nodes)
+        return cls(wall_roughness_length=float(lines[1].split()[0]),
+                   number_of_buildings=int(lines[2].split()[0]),
+                   number_of_polygon_nodes=int(lines[3].split()[0]))
 
 
 class QU_Fileoptions(InputFile):
@@ -363,16 +357,11 @@ class QU_Fileoptions(InputFile):
             directory = Path(directory)
         with open(directory / "QU_fileoptions.inp", "r") as f:
             lines = f.readlines()
-        output_data_file_format_flag = int(lines[1].split()[0])
-        non_mass_conserved_initial_field_flag = int(lines[2].split()[0])
-        initial_sensor_velocity_field_flag = int(lines[3].split()[0])
-        qu_staggered_velocity_file_flag = int(lines[4].split()[0])
-        generate_wind_startup_files_flag = int(lines[5].split()[0])
-        return cls(output_data_file_format_flag=output_data_file_format_flag,
-                   non_mass_conserved_initial_field_flag=non_mass_conserved_initial_field_flag,
-                   initial_sensor_velocity_field_flag=initial_sensor_velocity_field_flag,
-                   qu_staggered_velocity_file_flag=qu_staggered_velocity_file_flag,
-                   generate_wind_startup_files_flag=generate_wind_startup_files_flag)
+        return cls(output_data_file_format_flag=int(lines[1].split()[0]),
+                   non_mass_conserved_initial_field_flag=int(lines[2].split()[0]),
+                   initial_sensor_velocity_field_flag=int(lines[3].split()[0]),
+                   qu_staggered_velocity_file_flag=int(lines[4].split()[0]),
+                   generate_wind_startup_files_flag=int(lines[5].split()[0]))
 
 
 class QU_Simparams(InputFile):
@@ -792,35 +781,22 @@ class QFire_Advanced_User_Inputs(InputFile):
             directory = Path(directory)
         with open(directory / "QFire_Advanced_User_Inputs.inp", "r") as f:
             lines = f.readlines()
-        fraction_cells_launch_firebrands = float(lines[0].split()[0])
-        firebrand_radius_scale_factor = float(lines[1].split()[0])
-        firebrand_trajectory_time_step = int(lines[2].split()[0])
-        firebrand_launch_interval = int(lines[3].split()[0])
-        firebrands_per_deposition = int(lines[4].split()[0])
-        firebrand_area_ratio = float(lines[5].split()[0])
-        minimum_burn_rate_coefficient = float(lines[6].split()[0])
-        max_firebrand_thickness_fraction = float(lines[7].split()[0])
-        firebrand_germination_delay = int(lines[8].split()[0])
-        vertical_velocity_scale_factor = float(lines[9].split()[0])
-        minimum_firebrand_ignitions = int(lines[10].split()[0])
-        maximum_firebrand_ignitions = int(lines[11].split()[0])
-        minimum_landing_angle = float(lines[12].split()[0])
-        maximum_firebrand_thickness = float(lines[13].split()[0])
         return cls(
-            fraction_cells_launch_firebrands=fraction_cells_launch_firebrands,
-            firebrand_radius_scale_factor=firebrand_radius_scale_factor,
-            firebrand_trajectory_time_step=firebrand_trajectory_time_step,
-            firebrand_launch_interval=firebrand_launch_interval,
-            firebrands_per_deposition=firebrands_per_deposition,
-            firebrand_area_ratio=firebrand_area_ratio,
-            minimum_burn_rate_coefficient=minimum_burn_rate_coefficient,
-            max_firebrand_thickness_fraction=max_firebrand_thickness_fraction,
-            firebrand_germination_delay=firebrand_germination_delay,
-            vertical_velocity_scale_factor=vertical_velocity_scale_factor,
-            minimum_firebrand_ignitions=minimum_firebrand_ignitions,
-            maximum_firebrand_ignitions=maximum_firebrand_ignitions,
-            minimum_landing_angle=minimum_landing_angle,
-            maximum_firebrand_thickness=maximum_firebrand_thickness)
+            fraction_cells_launch_firebrands=float(lines[0].split()[0]),
+            firebrand_radius_scale_factor=float(lines[1].split()[0]),
+            firebrand_trajectory_time_step=int(lines[2].split()[0]),
+            firebrand_launch_interval=int(lines[3].split()[0]),
+            firebrands_per_deposition=int(lines[4].split()[0]),
+            firebrand_area_ratio=float(lines[5].split()[0]),
+            minimum_burn_rate_coefficient=float(lines[6].split()[0]),
+            max_firebrand_thickness_fraction=float(lines[7].split()[0]),
+            firebrand_germination_delay=int(lines[8].split()[0]),
+            vertical_velocity_scale_factor=float(lines[9].split()[0]),
+            minimum_firebrand_ignitions=int(lines[10].split()[0]),
+            maximum_firebrand_ignitions=int(lines[11].split()[0]),
+            minimum_landing_angle=float(lines[12].split()[0]),
+            maximum_firebrand_thickness=float(lines[13].split()[0]),
+        )
 
 
 class QFire_Bldg_Advanced_User_Inputs(InputFile):
@@ -877,23 +853,17 @@ class QFire_Bldg_Advanced_User_Inputs(InputFile):
             directory = Path(directory)
         with open(directory / "QFire_Bldg_Advanced_User_Inputs.inp", "r") as f:
             lines = f.readlines()
-        convert_buildings_to_fuel_flag = int(lines[0].split()[0])
-        building_fuel_density = float(lines[1].split()[0])
-        building_attenuation_coefficient = float(lines[2].split()[0])
-        building_surface_roughness = float(lines[3].split()[0])
-        convert_fuel_to_canopy_flag = int(lines[4].split()[0])
-        update_canopy_winds_flag = int(lines[5].split()[0])
-        fuel_attenuation_coefficient = float(lines[6].split()[0])
-        fuel_surface_roughness = float(lines[7].split()[0])
         return cls(
-            convert_buildings_to_fuel_flag=convert_buildings_to_fuel_flag,
-            building_fuel_density=building_fuel_density,
-            building_attenuation_coefficient=building_attenuation_coefficient,
-            building_surface_roughness=building_surface_roughness,
-            convert_fuel_to_canopy_flag=convert_fuel_to_canopy_flag,
-            update_canopy_winds_flag=update_canopy_winds_flag,
-            fuel_attenuation_coefficient=fuel_attenuation_coefficient,
-            fuel_surface_roughness=fuel_surface_roughness)
+            convert_buildings_to_fuel_flag=int(lines[0].split()[0]),
+            building_fuel_density=float(lines[1].split()[0]),
+            building_attenuation_coefficient=float(lines[2].split()[0]),
+            building_surface_roughness=float(lines[3].split()[0]),
+            convert_fuel_to_canopy_flag=int(lines[4].split()[0]),
+            update_canopy_winds_flag=int(lines[5].split()[0]),
+            fuel_attenuation_coefficient=float(lines[6].split()[0]),
+            fuel_surface_roughness=float(lines[7].split()[0]),
+        )
+
 
 class QFire_Plume_Advanced_User_Inputs(InputFile):
     """
@@ -916,7 +886,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
         Minimum ratio between plume updraft velocity and wind speed. If ratio
         drops below this value, plume is removed. Higher values reduce plumes.
         Default value: 0.1.
-    brunt_vaisala_freq_squared : PositiveFloat
+    brunt_vaisala_freq_squared : NonNegativeFloat
         Inverse of the Brunt-Vaisala frequency squared [1/s^2], a measure of
         atmospheric stability. Default value: 0 1/s^2.
     creeping_flag : Literal[0, 1]
@@ -944,7 +914,8 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
         to be considered for merging. Higher values increase merging.
     plume_to_grid_updrafts_flag : Literal[0, 1]
         Method to map plume updrafts to grid. 0 = new method, 1 = old method.
-        New method improves accuracy. Default value: 1.
+        New method improves accuracy. Default value: 1. New method takes longer,
+        but is needed if smoke is simulated afterwards.
     max_points_along_plume_edge : PositiveInt
         Maximum points to sample along grid cell edge for new plume-to-grid
         method. Default value: 10.
@@ -952,13 +923,13 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
         Scheme to sum plume-to-grid updrafts when multiple plumes intersect a
         grid cell. 0 = cube method, 1 = max value method. Default value: 1.
     """
-    filename: str = Field("QFire_Plume_Advanced_User_Inputs.inp",
-                          allow_mutation=False)
+    name: str = Field("QFire_Plume_Advanced_User_Inputs", frozen=True)
+    _extension: str = ".inp"
     max_plumes_per_timestep: PositiveInt = Field(150000, gt=0)
     min_plume_updraft_velocity: PositiveFloat = Field(0.1, gt=0)
     max_plume_updraft_velocity: PositiveFloat = Field(100., gt=0)
     min_velocity_ratio: PositiveFloat = Field(0.1, gt=0)
-    brunt_vaisala_freq_squared: PositiveFloat = Field(0., ge=0)
+    brunt_vaisala_freq_squared: NonNegativeFloat = Field(0., ge=0)
     creeping_flag: Literal[0, 1] = 1
     adaptive_timestep_flag: Literal[0, 1] = 0
     plume_timestep: PositiveFloat = Field(1., gt=0)
@@ -970,3 +941,30 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
     plume_to_grid_updrafts_flag: Literal[0, 1] = 1
     max_points_along_plume_edge: PositiveInt = Field(10, ge=1, le=100)
     plume_to_grid_intersection_flag: Literal[0, 1] = 1
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        with open(directory / "QFire_Plume_Advanced_User_Inputs.inp", "r") as f:
+            lines = f.readlines()
+
+        return cls(
+            max_plumes_per_timestep=int(lines[0].split()[0]),
+            min_plume_updraft_velocity=float(lines[1].split()[0]),
+            max_plume_updraft_velocity=float(lines[2].split()[0]),
+            min_velocity_ratio=float(lines[3].split()[0]),
+            brunt_vaisala_freq_squared=float(lines[4].split()[0]),
+            creeping_flag=int(lines[5].split()[0]),
+            adaptive_timestep_flag=int(lines[6].split()[0]),
+            plume_timestep=float(lines[7].split()[0]),
+            sor_option_flag=int(lines[8].split()[0]),
+            sor_alpha_plume_center=float(lines[9].split()[0]),
+            sor_alpha_plume_edge=float(lines[10].split()[0]),
+            max_plume_merging_angle=float(lines[11].split()[0]),
+            max_plume_overlap_fraction=float(lines[12].split()[0]),
+            plume_to_grid_updrafts_flag=int(lines[13].split()[0]),
+            max_points_along_plume_edge=int(lines[14].split()[0]),
+            plume_to_grid_intersection_flag=int(lines[15].split()[0]),
+        )
