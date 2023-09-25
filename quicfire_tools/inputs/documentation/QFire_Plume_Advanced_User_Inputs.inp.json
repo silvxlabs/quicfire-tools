@@ -1,0 +1,132 @@
+{
+  "max_plumes_per_timestep": {
+    "data_type": "INT",
+    "values_accepted": "> 0",
+    "tested_values_range": "[50k, 500k]",
+    "description": "Maximum number of plumes at each time step. Higher value = slower simulation.",
+    "units": "[-]",
+    "can_be_modified": "Y",
+    "recommended_value": "150,000"
+  },
+  "min_plume_updraft_velocity": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.1-0.5",
+    "description": "Minimum plume updraft velocity. If a plume updraft is below this value, the plume is removed from the simulation. Higher value = less plumes, faster simulation.",
+    "units": "[m/s]",
+    "can_be_modified": "Y",
+    "recommended_value": "0.1 m/s"
+  },
+  "max_plume_updraft_velocity": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "200",
+    "description": "Maximum updraft velocity. Recommended value: 100 m/s.",
+    "units": "[m/s]",
+    "can_be_modified": "Y"
+  },
+  "min_velocity_ratio": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.05-0.1",
+    "description": "Minimum ratio between the plume updraft velocity and the wind speed. If below, the plume is removed from the simulation, unless its updraft is 0.5 m/s or higher. Higher value = less plumes, faster simulation. Recommended value: 0.1.",
+    "units": "[-]",
+    "can_be_modified": "N"
+  },
+  "brunt_vaisala_freq_squared": {
+    "data_type": "REAL",
+    "values_accepted": ">= 0",
+    "tested_values_range": "0",
+    "description": "Inverse of the Brunt-Vaisala frequency squared (measure of atmospheric stability). Recommended value: 0 1/s2.",
+    "units": "[1/s2]",
+    "can_be_modified": "Y"
+  },
+  "creeping_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Flag: 0 = do not spread fire by creeping, 1 = spread fire by creeping. Recommended value: 1.",
+    "units": "[-]",
+    "can_be_modified": "N"
+  },
+  "adaptive_timestep_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Time step flag: 0 = constant time step, 1 = adaptive time step. Adaptive time step = more accurate plume trajectory, longer simulation time. Recommended value: 0.",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "plume_timestep": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "1-10",
+    "description": "Time step used to compute the buoyant plume trajectory. Higher value = less accurate plume trajectory. Recommended value: 1 s.",
+    "units": "[s]",
+    "can_be_modified": "Y"
+  },
+  "sor_option_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "SOR solver option: 0 = standard SOR, 1 = memory SOR. Recommended value: 1.",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "sor_alpha_plume_center": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "1-10",
+    "description": "SOR alpha! value (plume centerline). Higher value = w-component in the cells affected by the plumes is modified less by the SOR solver. Recommended value: 10.",
+    "units": "[-]",
+    "can_be_modified": "N"
+  },
+  "sor_alpha_plume_edge": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "1-10",
+    "description": "SOR alpha! value (plume periphery). Higher value = w-component in the cells affected by the plumes is modified less by the SOR solver. Recommended value: 1.",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "max_plume_merging_angle": {
+    "data_type": "REAL",
+    "values_accepted": "(0, 180]",
+    "tested_values_range": "30-60",
+    "description": "Maximum angle between plumes to determine if they can be merged. Higher value = more plumes merged. Recommended value: 30 deg.",
+    "units": "[deg]",
+    "can_be_modified": "N"
+  },
+  "max_plume_overlap_fraction": {
+    "data_type": "REAL",
+    "values_accepted": "(0, 1]",
+    "tested_values_range": "0.7-1",
+    "description": "Maximum fraction of a plume P trajectory length used to determine if a plume Q overlaps enough to be merged. Higher value = more plumes merged. Recommended value: 0.7.",
+    "units": "[deg]",
+    "can_be_modified": "N"
+  },
+  "plume_to_grid_updrafts_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Method to compute the plume-to-grid updrafts. 0 = new method, needed if smoke is simulated afterwards. Takes longer. 1 = old method. Recommended value: 1.",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "max_points_along_plume_edge": {
+    "data_type": "INT",
+    "values_accepted": "[1, 100]",
+    "tested_values_range": "[2-10]",
+    "description": "How many points to sample along the QU cells edges for the new method (line above). Recommended value: 10.",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "plume_to_grid_intersection_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Scheme to compute the plume-to-grid updrafts when more than one plume intersects with a QU cell. 0 = use the cube method. 1 = use the max value. Recommended value: 1.",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  }
+}
