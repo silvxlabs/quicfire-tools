@@ -51,7 +51,7 @@
     "values_accepted": "> 0",
     "tested_values_range": "0.5-5",
     "description": "Surface vertical cell size",
-    "units": "[m]",
+    "units": "[m]"
   },
   "number_surface_cells": {
     "data_type": "INT",
