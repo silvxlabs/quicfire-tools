@@ -894,3 +894,79 @@ class QFire_Bldg_Advanced_User_Inputs(InputFile):
             update_canopy_winds_flag=update_canopy_winds_flag,
             fuel_attenuation_coefficient=fuel_attenuation_coefficient,
             fuel_surface_roughness=fuel_surface_roughness)
+
+class QFire_Plume_Advanced_User_Inputs(InputFile):
+    """
+    Class representing the QFire_Plume_Advanced_User_Inputs.inp input file.
+    This file contains advanced parameters related to modeling buoyant plumes.
+
+    Attributes
+    ----------
+    max_plumes_per_timestep : PositiveInt
+        Maximum number of plumes allowed at each time step. Higher values slow
+        down the simulation. Default value: 150,000. Recommended range:
+        50,000 - 500,000.
+    min_plume_updraft_velocity : PositiveFloat
+        Minimum plume updraft velocity [m/s]. If plume velocity drops below this
+        value, the plume is removed. Higher values reduce number of plumes.
+        Default value: 0.1 m/s.
+    max_plume_updraft_velocity : PositiveFloat
+        Maximum allowed plume updraft velocity [m/s]. Default value: 100 m/s.
+    min_velocity_ratio : PositiveFloat
+        Minimum ratio between plume updraft velocity and wind speed. If ratio
+        drops below this value, plume is removed. Higher values reduce plumes.
+        Default value: 0.1.
+    brunt_vaisala_freq_squared : PositiveFloat
+        Inverse of the Brunt-Vaisala frequency squared [1/s^2], a measure of
+        atmospheric stability. Default value: 0 1/s^2.
+    creeping_flag : Literal[0, 1]
+        Flag to enable (1) or disable (0) fire spread by creeping.
+        Default value: 1.
+    adaptive_timestep_flag : Literal[0, 1]
+        Enable (1) or disable (0) adaptive time stepping. Adaptive time stepping
+        improves accuracy but increases simulation time. Default value: 0.
+    plume_timestep : PositiveFloat
+        Time step [s] used to compute buoyant plume trajectories. Higher values
+        reduce accuracy. Default value: 1s.
+    sor_option_flag : Literal[0, 1]
+        SOR solver option. 0 = standard SOR, 1 = memory SOR. Default value: 1.
+    sor_alpha_plume_center : PositiveFloat
+        SOR alpha value at plume centerline. Higher values reduce influence of
+        plumes on winds. Default value: 10.
+    sor_alpha_plume_edge : PositiveFloat
+        SOR alpha value at plume edge. Higher values reduce influence of plumes
+        on winds. Default value: 1.
+        max_plume_merging_angle : PositiveFloat
+        Maximum angle [degrees] between plumes to determine merging eligibility.
+        Higher values increase plume merging. Default value: 30 degrees.
+    max_plume_overlap_fraction : PositiveFloat
+        Maximum fraction of smaller plume trajectory overlapped by larger plume
+        to be considered for merging. Higher values increase merging.
+    plume_to_grid_updrafts_flag : Literal[0, 1]
+        Method to map plume updrafts to grid. 0 = new method, 1 = old method.
+        New method improves accuracy. Default value: 1.
+    max_points_along_plume_edge : PositiveInt
+        Maximum points to sample along grid cell edge for new plume-to-grid
+        method. Default value: 10.
+    plume_to_grid_intersection_flag : Literal[0, 1]
+        Scheme to sum plume-to-grid updrafts when multiple plumes intersect a
+        grid cell. 0 = cube method, 1 = max value method. Default value: 1.
+    """
+    filename: str = Field("QFire_Plume_Advanced_User_Inputs.inp",
+                          allow_mutation=False)
+    max_plumes_per_timestep: PositiveInt = Field(150000, gt=0)
+    min_plume_updraft_velocity: PositiveFloat = Field(0.1, gt=0)
+    max_plume_updraft_velocity: PositiveFloat = Field(100., gt=0)
+    min_velocity_ratio: PositiveFloat = Field(0.1, gt=0)
+    brunt_vaisala_freq_squared: PositiveFloat = Field(0., ge=0)
+    creeping_flag: Literal[0, 1] = 1
+    adaptive_timestep_flag: Literal[0, 1] = 0
+    plume_timestep: PositiveFloat = Field(1., gt=0)
+    sor_option_flag: Literal[0, 1] = 1
+    sor_alpha_plume_center: PositiveFloat = Field(10., gt=0)
+    sor_alpha_plume_edge: PositiveFloat = Field(1., gt=0)
+    max_plume_merging_angle: PositiveFloat = Field(30., gt=0, le=180)
+    max_plume_overlap_fraction: PositiveFloat = Field(0.7, gt=0, le=1)
+    plume_to_grid_updrafts_flag: Literal[0, 1] = 1
+    max_points_along_plume_edge: PositiveInt = Field(10, ge=1, le=100)
+    plume_to_grid_intersection_flag: Literal[0, 1] = 1

@@ -5,7 +5,7 @@
 0.					! 1/s2, brunt vaisala frequency squared
 1					! N/A creeping flag: 0 = off, 1 = on
 0					! Flag time step (0 = constant, 1 = adaptive)
-1              ! s, flag = 0: plumes time step plume, flag = 1: minimum plumes time step
+1              ! s, time step used to compute the buoyant plume trajectory
 1              ! sor option (0 = reset lambda at each call, 1 = keep)
 10             ! alpha 2 - plume centerline
 2              ! alpha 2 - plume edges

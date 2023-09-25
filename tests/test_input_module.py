@@ -4,8 +4,11 @@ Test module for the inputs module of the quicfire_tools package.
 from quicfire_tools.inputs import *
 
 import pytest
+from pathlib import Path
 from pydantic import ValidationError
 
+# Create a tmp/ directory to store the temporary test files
+Path("tmp/").mkdir(exist_ok=True)
 
 class TestGridList:
     def test_init(self):
