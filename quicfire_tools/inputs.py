@@ -222,8 +222,6 @@ class Gridlist(InputFile):
 
     Attributes
     ----------
-    _filename : str
-        Name of the file to write to. Default is "gridlist.txt".
     n : int
         Number of cells in the x-direction [-]
     m : int
@@ -895,6 +893,7 @@ class QFire_Bldg_Advanced_User_Inputs(InputFile):
             fuel_attenuation_coefficient=fuel_attenuation_coefficient,
             fuel_surface_roughness=fuel_surface_roughness)
 
+
 class QFire_Plume_Advanced_User_Inputs(InputFile):
     """
     Class representing the QFire_Plume_Advanced_User_Inputs.inp input file.
@@ -952,8 +951,8 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
         Scheme to sum plume-to-grid updrafts when multiple plumes intersect a
         grid cell. 0 = cube method, 1 = max value method. Default value: 1.
     """
-    filename: str = Field("QFire_Plume_Advanced_User_Inputs.inp",
-                          allow_mutation=False)
+    name: str = Field("QFire_Plume_Advanced_User_Inputs", frozen=True)
+    _extension: str = ".inp"
     max_plumes_per_timestep: PositiveInt = Field(150000, gt=0)
     min_plume_updraft_velocity: PositiveFloat = Field(0.1, gt=0)
     max_plume_updraft_velocity: PositiveFloat = Field(100., gt=0)
