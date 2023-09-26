@@ -9,66 +9,64 @@ from quicfire_tools.parameters import SimulationParameters
 import zarr
 import pytest
 import numpy as np
+import pandas as pd
 from scipy.io import FortranFile
 import xarray as xr
 import matplotlib.pyplot as plt
+import pickle
+import random
 
 from pathlib import Path, PurePath
 
-DATA_PATH = PurePath("/mnt/c/Users/zacha/Documents/0_Code/quicfire-tools/tests/data")
-SIMULATION_PATH = DATA_PATH.joinpath("test_run_eng")
+# DATA_PATH = PurePath("/mnt/c/Users/zacha/Documents/0_Code/quicfire-tools/tests/data")
+# SIMULATION_PATH = DATA_PATH.joinpath("test_run_eng")
+# OUTPUT_PATH = SIMULATION_PATH.joinpath("Output")
+# DRAWFIRE_PATH = SIMULATION_PATH.joinpath("drawfire")
+# ZARR_PATH = OUTPUT_PATH.joinpath("outputs.zarr")
+
+# # Create simulation parameters object
+# SIM_PARAMS = SimulationParameters(
+#     nx=400,
+#     ny=200,
+#     nz=1,
+#     dx=2,
+#     dy=2,
+#     dz=1,
+#     wind_speed=6,
+#     wind_direction=270,
+#     sim_time=600,
+#     auto_kill=0,
+#     num_cpus=8,
+#     fuel_flag=4,
+#     ignition_flag=1,
+#     output_time=100,
+#     topo_flag=0,
+# )
+
+DATA_PATH = PurePath("/mnt/c/Users/zacha/Documents/0_Projects")
+SIMULATION_PATH = DATA_PATH.joinpath("0016_FtStewart", "F6_4", "1_Runs", "01_FastFuelsAerialIg531")
 OUTPUT_PATH = SIMULATION_PATH.joinpath("Output")
 DRAWFIRE_PATH = SIMULATION_PATH.joinpath("drawfire")
 ZARR_PATH = OUTPUT_PATH.joinpath("outputs.zarr")
 
 # Create simulation parameters object
 SIM_PARAMS = SimulationParameters(
-    nx=400,
-    ny=200,
-    nz=1,
+    nx=968,
+    ny=1978,
+    nz=40,
     dx=2,
     dy=2,
     dz=1,
-    wind_speed=6,
+    wind_speed=6.5,
     wind_direction=270,
-    sim_time=600,
+    sim_time=4067,
     auto_kill=0,
     num_cpus=8,
-    fuel_flag=4,
-    ignition_flag=1,
+    fuel_flag=5,
+    ignition_flag=7,
     output_time=100,
     topo_flag=0,
 )
-
-# DATA_PATH = PurePath("/mnt/c/Users/zacha/Documents/0_Projects")
-# SIMULATION_PATH = DATA_PATH.joinpath("0016_FtStewart", "F6_4", "1_Runs", "01_FastFuelsAerialIg531")
-# OUTPUT_PATH = SIMULATION_PATH.joinpath("Output")
-# DRAWFIRE_PATH = OUTPUT_PATH.joinpath("drawfire")
-# ZARR_PATH = OUTPUT_PATH.joinpath("outputs.zarr")
-
-# DATA_PATH = Path("data")
-# SIMULATION_PATH = DATA_PATH / "crazy-canyon-simulation"
-# OUTPUT_PATH = SIMULATION_PATH / "Output"
-# DRAWFIRE_PATH = OUTPUT_PATH / "drawfire"
-
-# # Create simulation parameters object
-# SIM_PARAMS = SimulationParameters(
-#     nx=100,
-#     ny=100,
-#     nz=56,
-#     dx=1,
-#     dy=1,
-#     dz=1,
-#     wind_speed=6.5,
-#     wind_direction=270,
-#     sim_time=600,
-#     auto_kill=0,
-#     num_cpus=4,
-#     fuel_flag=4,
-#     ignition_flag=1,
-#     output_time=100,
-#     topo_flag=0,
-# )
 
 def main():
     #Setup drawfire folder:
@@ -116,19 +114,81 @@ def main():
 
     xarr_residence_time = xarr_fire_stop_time - xarr_arrival_time        
     
+    #Sample burning cells
+    def find_cells_that_burned(xarr_residence_time, SIM_PARAMS, n=1, time_len=15):
+        """
+        xarr_residence_time: residence times
+        SIM_PARAMS: class of simulation parameters
+        n: # of cells to sample
+        time_len: length of time to consider cell burned for sample
+        """
+        PICKLE_PATH = os.path.join(save_dir, 'cell_that_burned.pkl')
+        if not os.path.exists(PICKLE_PATH):
+            nx = SIM_PARAMS.nx
+            ny = SIM_PARAMS.ny
+            burned_cells = []
+            print('Starting while loop')
+            while len(burned_cells) < n:
+                temp_x = int(nx*random.random())
+                temp_y = int(ny*random.random())
+                temp_tup = (temp_x, temp_y)
+                if xarr_residence_time[temp_y, temp_x]>0:
+                    if temp_tup not in burned_cells:
+                        burned_cells.append(temp_tup)
+            with open(PICKLE_PATH, 'wb') as f:
+                pickle.dump(burned_cells,f)
+            print('While loop complete.')
+        else: #reload previous list
+            with open(PICKLE_PATH, 'rb') as f:
+                burned_cells = pickle.load(f)
+        return burned_cells 
+    
     #Graph power overtime
     def build_power_graph(power, x_cell, y_cell, save_dir=save_dir):
+        x_cell_m = x_cell * 2
+        y_cell_m = y_cell * 2
         plt.plot(range(len(power)), power)
         plt.xlabel('Time (s)')
         plt.ylabel('Power (kW/m^2)')
-        plt.title('Power From Survace Cell x={}, y={}'.format(x_cell,y_cell))
-        plt.savefig(os.path.join(save_dir, 'SufaceCellx-{}_y-{}.png'.format(x_cell,y_cell)))
+        plt.title('Power From Surface Cell x={}m, y={}m'.format(x_cell_m,y_cell_m))
+        plt.savefig(os.path.join(save_dir, "Cell_Figures", 'SufaceCellx-{}_y-{}.png'.format(x_cell_m,y_cell_m)))
         plt.close()
-    x_cell, y_cell = (200, 100)
-    start_t = int(xarr_arrival_time[y_cell, x_cell])
-    stop_t = int(xarr_fire_stop_time[y_cell, x_cell])
-    cell_power = ds.surfEnergy[start_t:stop_t,y_cell,x_cell]
-    build_power_graph(cell_power, x_cell, y_cell)
+
+    CF_PATH = os.path.join(save_dir, "Cell_Figures")
+    if not os.path.exists(CF_PATH):
+        os.makedirs(CF_PATH)
+    burned_cells = find_cells_that_burned(xarr_residence_time, SIM_PARAMS, n=100)
+    power_metrics = {'max_power':[],'total_eng':[]}
+    import time
+    strt_time = time.time()
+    for i, bc in enumerate(burned_cells):
+        print(i)
+        print(time.time()-strt_time)
+        x_cell, y_cell = bc
+        start_t = int(xarr_arrival_time[y_cell, x_cell])
+        stop_t = int(xarr_fire_stop_time[y_cell, x_cell])
+        cell_power = ds.surfEnergy[start_t:stop_t,y_cell,x_cell]
+        build_power_graph(cell_power, x_cell, y_cell)
+        power_metrics["max_power"].append(float(xarr_max_power[y_cell, x_cell]))
+        power_metrics["total_eng"].append(float(cell_power.sum()))
+        np.savetxt(os.path.join(save_dir, "Cell_Figures",'SufaceCellx-{}_y-{}.csv'.format(x_cell*2,y_cell*2)), cell_power, delimiter=",")
+    df = pd.DataFrame(power_metrics)
+    df.to_csv(os.path.join(save_dir,'power_metrics.csv'))
+
+    plt.hist(df['max_power'])
+    plt.title('Maximum Power for Selected Cells')
+    plt.xlabel('Max Power kW/m^2')
+    plt.ylabel('Frequency')
+    plt.savefig(os.path.join(save_dir,'max_power_hist.png'))
+    plt.close()
+
+    plt.hist(df['total_eng'])
+    plt.title('Total Energy for Selected Cells')
+    plt.xlabel('Total Energy kJ/m^2')
+    plt.ylabel('Frequency')
+    plt.savefig(os.path.join(save_dir,'total_eng_hist.png'))
+    plt.close()
+
     #Build Figures
     def scale_for_figs_x_and_y(arr, dx=2, dy=2):
         arr = np.array(arr)
@@ -160,6 +220,7 @@ def main():
     plt.ylabel("Y (m)")
     plt.savefig(os.path.join(save_dir,"residence_time.png"))
     plt.close()
+    np.savetxt(os.path.join(save_dir,'ResidenceTimes.csv'), xarr_residence_time, delimiter=",")
 
     scale_for_figs_x_and_y(xarr_max_power)
     plt.colorbar()
@@ -168,7 +229,7 @@ def main():
     plt.title("Max Power (kW/m^2)")
     plt.savefig(os.path.join(save_dir,"max_power.png"))
     plt.close()
-
+    np.savetxt(os.path.join(save_dir,'MaxPower.csv'), xarr_max_power, delimiter=",")
 
 """
 class TestOutputFile:
