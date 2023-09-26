@@ -95,6 +95,16 @@ THERMAL_RADIATION_OUTPUTS = {
                        "collocated with fuel (for health effects).",
         "units": "kW/m^2",
     },
+    "surfEnergy": {
+        "file_format": "gridded",
+        "number_dimensions": 2,
+        "grid": "fire",
+        "delimiter": None,
+        "extension": ".bin",
+        "description": "The output show total energy consumed by each surface cell "
+                       "on a per second interval.",
+        "units": "kW/m^2",
+    },
 }
 WIND_OUTPUTS = {
     "windu": {
