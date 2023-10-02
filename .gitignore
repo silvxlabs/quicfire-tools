@@ -140,3 +140,7 @@ tests/tmp/
 
 # macOS
 .DS_Store
+
+# data
+*.zarr
+*.bin
