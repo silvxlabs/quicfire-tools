@@ -14,6 +14,7 @@ import importlib.resources
 from pathlib import Path
 from typing import Literal
 from string import Template
+from enum import Enum
 
 # External Imports
 import numpy as np
@@ -844,20 +845,8 @@ class QUIC_fire(InputFile):
         1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)
     fuel_params : list[float]
         List of fuel parameters for a uniform grid (fuel_flag = 1) in the order [density, moisture, height]. All must be real numbers 0-1
-    ignition_flag : int
-        1 = rectangle, 2 = square ring, 3 = circular ring, 4 = file (QF_Ignitions.inp), 5 = time-dependent ignitions (QF_IgnitionPattern.inp), 7 = ignite.dat (firetech)
-    ignition_params: list[int]
-        List of ignitions parameters to define locations for rectangle, square ring, and circular ring ignitions.
-        For all ignition patterns, the following four parameters must be provided in order:
-            - Southwest corner in the x-direction (m)
-            - Southwest corner in the y-direction(m)
-            - Length in the x-direction (m)
-            - Length in the y-direction (m)             
-        Additional paramters only for square ring pattern (ignition_flag = 2):
-            - Width of the ring in the x-direction (m)
-            - Width of the ring in the y-direction (m)
-        Additional paramters only for circular ring pattern (ignition_flag = 3):
-            - Width of the ring (m)
+    ignition_type: IgnitionType
+        Ignitions shape or source. Provided as an instance of IgnitionType class with one of ['rectangle','square_ring','circular_ring','ignite_dat_file'].
     ignitions_per_cell: int
         Number of ignition per cell of the fire model. Recommended max value of 100
     firebrand_flag : int
@@ -916,8 +905,7 @@ class QUIC_fire(InputFile):
     file_path: str = ""
     fuel_flag: Literal[1,2,3,4] = 3
     fuel_params: list[PositiveFloat] = []
-    ignition_flag: Literal[1,2,3,4,5,6,7] = 7
-    ignition_params: Union[RectangleIgnition,SquareRingIgnition,CircularRingIgnition]
+    ignition_type: IgnitionType
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
@@ -963,23 +951,10 @@ class QUIC_fire(InputFile):
             return f"{dz_array_lines}"
         else:
             return str(self.dz)
-
-    @computed_field
-    @property
-    def ignition_locations(self) -> str:
-        if self.ignition_flag == 1:
-            self._get_ignitions_rect()
-        elif self.ignition_flag == 2:
-            self._get_ignitions_sq_ring()
-        elif self.ignition_flag == 3:
-            self._get_ignitions_cir_ring()
-
-        if self.ignition_flag == 4:
-            print("CAUTION: User must provide ignition locations in QF_Ignitions.inp when ignition_flag = 4")
-        if self.ignition_flag == 5:
-            print("CAUTION: User must provide time- and space-dependent ignition locations in QF_IgnitionPattern.inp when ignition_flag = 5")
         
-        return ""
+    @property
+    def ignition_lines(self):
+        return str(self.ignition_type)
     
     @computed_field
     @property
@@ -1021,54 +996,7 @@ class QUIC_fire(InputFile):
             print("CAUTION: User must provide fuel inputs in QF_FuelDensity.inp, QF_FuelMoisture.inp, and QF_FuelHeight.inp when fuel_flag = 2")
 
         return fuel_density, fuel_moisture, fuel_height
-    
-    def _get_ignitions_rect(self):
-        xmin = self.ignition_params.xmin
-        ymin = self.ignition_params.ymin
-        xlen = self.ignition_params.xlen
-        ylen = self.ignition_params.ylen
 
-        if xmin + xlen > self.nx * 2 or ymin + ylen > self.ny * 2:
-            raise ValueError("Ignitions outside burn domain")
-        
-        return (f"\n{str(xmin)}\t! South-west corner in the x-direction (m)"
-                f"\n{str(ymin)}\t! South-west corner in the y-direction (m)"
-                f"\n{str(xlen)}\t! Length in the x-direction (m)"
-                f"\n{str(ylen)}\t! Length in the y-direction (m)")
-        
-    def _get_ignitions_sq_ring(self):
-        xmin = self.ignition_params.xmin
-        ymin = self.ignition_params.ymin
-        xlen = self.ignition_params.xlen
-        ylen = self.ignition_params.ylen
-        xwidth = self.ignition_params.xwidth
-        ywidth = self.ignition_params.ywidth
-    
-        if xmin + xlen > self.nx * 2 or ymin + ylen > self.ny * 2:
-            raise ValueError("Ignitions outside burn domain")
-        
-        return (f"\n{str(xmin)}\t! South-west corner in the x-direction (m)"
-                f"\n{str(ymin)}\t! South-west corner in the y-direction (m)"
-                f"\n{str(xlen)}\t! Length in the x-direction (m)"
-                f"\n{str(ylen)}\t! Length in the y-direction (m)"
-                f"\n{str(xwidth)}\t! Width of the ring in the x-direction (m)"
-                f"\n{str(ywidth)}\t! Width of the ring in the y-direction (m)")
-    
-    def _get_ignitions_cir_ring(self):
-        xmin = self.ignition_params.xmin
-        ymin = self.ignition_params.ymin
-        xlen = self.ignition_params.xlen
-        ylen = self.ignition_params.ylen
-        width = self.ignition_params.width
-
-        if xmin + xlen > self.nx * 2 or ymin + ylen > self.ny * 2:
-            raise ValueError("Ignitions outside burn domain")
-        
-        return (f"\n{str(xmin)}\t! South-west corner in the x-direction (m)"
-                f"\n{str(ymin)}\t! South-west corner in the y-direction (m)"
-                f"\n{str(xlen)}\t! Length in the x-direction (m)"
-                f"\n{str(ylen)}\t! Length in the y-direction (m)"
-                f"\n{str(width)}\t! Width of the ring (m)")
     
     @classmethod
     def from_file(cls, directory: str | Path):
@@ -1200,3 +1128,97 @@ class QUIC_fire(InputFile):
                    radiation_out = radiation_out,
                    intensity_out = intensity_out,
                    auto_kill = auto_kill)
+
+
+class IgnitionSources(Enum):
+    rectangle = 1
+    square_ring = 2
+    circular_ring = 3
+    ignite_dat_file = 6
+
+
+class IgnitionType(BaseModel):
+    ignition_flag: IgnitionSources
+
+    def __str__(self):
+        return (f"{self.ignition_flag.value}\t! 1 = rectangle, "
+                f"2 = square ring, 3 = circular ring, "
+                f"4 = file (QF_Ignitions.inp), "
+                f"5 = time-dependent ignitions (QF_IgnitionPattern.inp), "
+                f"6 = ignite.dat (firetech)")
+
+
+class LineFire(IgnitionType):
+    xmin: float
+    ymin: float
+    x_length: float
+    y_length: float
+    number_ignitions: int
+
+    def __str__(self):
+        flag_line = super().__str__()
+        locations = (f"{self.xmin}\t! South-west corner in the x-direction\n"
+                     f"{self.ymin}\t! South-west corner in the y-direction\n"
+                     f"{self.x_length}\t! Length in the x-direction\n"
+                     f"{self.y_length}\t! Length in the y-direction\n"
+                     f"{self.number_ignitions}! Number of ignitions per cell\n")
+        return flag_line + locations
+
+
+class SquareRingFire(IgnitionType):
+    xmin: float
+    ymin: float
+    x_length: float
+    y_length: float
+    x_width: float
+    y_width: float
+    number_ignitions: int
+
+    def __str__(self):
+        flag_line = super().__str__()
+        locations = (f"{self.xmin}\t! South-west corner in the x-direction\n"
+                     f"{self.ymin}\t! South-west corner in the y-direction\n"
+                     f"{self.x_length}\t! Length in the x-direction\n"
+                     f"{self.y_length}\t! Length in the y-direction\n"
+                     f"{self.x_width}\t! Width in the x-direction\n"
+                     f"{self.y_width}\t! Width in the y-direction\n"
+                     f"{self.number_ignitions}! Number of ignitions per cell\n")
+        return flag_line + locations
+
+
+class CircularRingFire(IgnitionType):
+    xmin: float
+    ymin: float
+    x_length: float
+    y_length: float
+    ring_width: float
+    number_ignitions: int
+
+    def __str__(self):
+        flag_line = super().__str__()
+        locations = (f"{self.xmin}\t! South-west corner in the x-direction\n"
+                     f"{self.ymin}\t! South-west corner in the y-direction\n"
+                     f"{self.x_length}\t! Length in the x-direction\n"
+                     f"{self.y_length}\t! Length in the y-direction\n"
+                     f"{self.ring_width}\t! Width of the ring\n"
+                     f"{self.number_ignitions}! Number of ignitions per cell\n")
+        return flag_line + locations
+
+
+class IgniteDatFile(IgnitionType):
+    filename: str
+    number_ignitions: int
+
+    def __str__(self):
+        flag_line = super().__str__()
+        number_ignitions = (f"{self.number_ignitions}\t"
+                            f"! Number of ignitions per cell\n")
+        return flag_line + number_ignitions
+
+
+class QUICFire(BaseModel):
+    ignition_type: IgnitionType
+
+    @property
+    def ignition_lines(self):
+        return str(self.ignition_type)
