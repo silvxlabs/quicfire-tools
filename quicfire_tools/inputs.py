@@ -725,75 +725,6 @@ class QFire_Advanced_User_Inputs(InputFile):
             minimum_landing_angle=minimum_landing_angle,
             maximum_firebrand_thickness=maximum_firebrand_thickness)
 
-class RectangleIgnition(InputFile):
-    """
-    Class with parameters for writing rectangle ignitions to QUIC_fire.inp
-
-    Parameters
-    ----------
-    xmin : int
-        Southwest corner in the x-direction (m)
-    ymin : int
-        Southwest corner in the y-direction(m)
-    xlen : int
-        Length in the x-direction (m)
-    ylen : int 
-        Length in the y-direction (m) 
-    """
-    xmin: PositiveInt
-    ymin: PositiveInt
-    xlen: PositiveInt
-    ylen: PositiveInt
-
-class SquareRingIgnition(InputFile):
-    """
-    Class with parameters for writing square ring ignitions to QUIC_fire.inp
-
-    Parameters
-    ----------
-    xmin : int
-        Southwest corner in the x-direction (m)
-    ymin : int
-        Southwest corner in the y-direction(m)
-    xlen : int
-        Length in the x-direction (m)
-    ylen : int 
-        Length in the y-direction (m) 
-    xwidth : int
-        Width of the ring in the x-direction (m)
-    ywidth : int
-        Width of the ring in the y-direction (m)
-    """
-    xmin: PositiveInt
-    ymin: PositiveInt
-    xlen: PositiveInt
-    ylen: PositiveInt
-    xwidth: PositiveInt
-    ywidth: PositiveInt
-
-class CircularRingIgnition(InputFile):
-    """
-    Class with parameters for writing square ring ignitions to QUIC_fire.inp
-
-    Parameters
-    ----------
-    xmin : int
-        Southwest corner in the x-direction (m)
-    ymin : int
-        Southwest corner in the y-direction(m)
-    xlen : int
-        Length in the x-direction (m)
-    ylen : int 
-        Length in the y-direction (m) 
-    width : int
-        Width of the ring (m)
-    """
-    xmin: PositiveInt
-    ymin: PositiveInt
-    xlen: PositiveInt
-    ylen: PositiveInt
-    width: PositiveInt
-
 
 class QUIC_fire(InputFile):
     """
@@ -845,8 +776,8 @@ class QUIC_fire(InputFile):
         1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)
     fuel_params : list[float]
         List of fuel parameters for a uniform grid (fuel_flag = 1) in the order [density, moisture, height]. All must be real numbers 0-1
-    ignition_type: IgnitionType
-        Ignitions shape or source. Provided as an instance of IgnitionType class with one of ['rectangle','square_ring','circular_ring','ignite_dat_file'].
+    ignition_info: IgnitionType
+        Ignitions shape or source. @anthony
     ignitions_per_cell: int
         Number of ignition per cell of the fire model. Recommended max value of 100
     firebrand_flag : int
@@ -895,6 +826,7 @@ class QUIC_fire(InputFile):
     out_time_wind: PositiveInt
     out_time_emis_rad: PositiveInt
     out_time_wind_avg: PositiveInt
+    ignition_info: IgnitionType
     fire_flag: Literal[0, 1] = 1
     random_seed: int = Field(-1, ge=1)
     fire_time_step: PositiveInt = 1
@@ -905,7 +837,6 @@ class QUIC_fire(InputFile):
     file_path: str = ""
     fuel_flag: Literal[1,2,3,4] = 3
     fuel_params: list[PositiveFloat] = []
-    ignition_type: IgnitionType
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
@@ -1071,10 +1002,20 @@ class QUIC_fire(InputFile):
         current_line +=1
         for i in range(current_line, current_line + add):
             ignition_params.append(int(lines[i].strip().split("!")[0]))
+        if ignition_flag == 1:
+            x_min, y_min, x_length, y_length = ignition_params
+            ignition_info = LineIgnition(ignition_flag, x_min, y_min, x_length, y_length)
+        elif ignition_flag == 2:
+            x_min, y_min, x_length, y_length, x_width, y_width = ignition_params
+            ignition_info = SquareRingIgnition(ignition_flag, x_min, y_min, x_length, y_length, x_width, y_width)
+        elif ignition_flag == 3:
+            x_min, y_min, x_length, y_length, ring_width = ignition_params
+            ignition_info = CircularRingIgnition(ignition_flag, x_min, y_min, x_length, y_length, ring_width)
+        elif ignition_flag == 6:
+            ignition_info = IgniteDatFile(ignition_flag)
         current_line += add
         ignitions_per_cell = int(lines[current_line].strip().split("!")[0])
         current_line += 1
-        # TODO: read ignition parameters into the proper class
 
         # Read firebrands
         # current_line = ! FIREBRANDS
@@ -1111,8 +1052,7 @@ class QUIC_fire(InputFile):
                    file_path = file_path,
                    fuel_flag = fuel_flag,
                    fuel_params = fuel_params,
-                   ignition_flag = ignition_flag,
-                   ignition_params = ignition_params,
+                   ignition_info = ignition_info,
                    ignitions_per_cell = ignitions_per_cell,
                    firebrand_flag = firebrand_flag,
                    eng_to_atm_out = eng_to_atm_out,
@@ -1148,31 +1088,28 @@ class IgnitionType(BaseModel):
                 f"6 = ignite.dat (firetech)")
 
 
-class LineFire(IgnitionType):
-    xmin: float
-    ymin: float
+class LineIgnition(IgnitionType):
+    x_min: float
+    y_min: float
     x_length: float
     y_length: float
-    number_ignitions: int
 
     def __str__(self):
         flag_line = super().__str__()
         locations = (f"{self.xmin}\t! South-west corner in the x-direction\n"
                      f"{self.ymin}\t! South-west corner in the y-direction\n"
                      f"{self.x_length}\t! Length in the x-direction\n"
-                     f"{self.y_length}\t! Length in the y-direction\n"
-                     f"{self.number_ignitions}! Number of ignitions per cell\n")
+                     f"{self.y_length}\t! Length in the y-direction\n")
         return flag_line + locations
 
 
-class SquareRingFire(IgnitionType):
-    xmin: float
-    ymin: float
+class SquareRingIgnition(IgnitionType):
+    x_min: float
+    y_min: float
     x_length: float
     y_length: float
     x_width: float
     y_width: float
-    number_ignitions: int
 
     def __str__(self):
         flag_line = super().__str__()
@@ -1181,18 +1118,16 @@ class SquareRingFire(IgnitionType):
                      f"{self.x_length}\t! Length in the x-direction\n"
                      f"{self.y_length}\t! Length in the y-direction\n"
                      f"{self.x_width}\t! Width in the x-direction\n"
-                     f"{self.y_width}\t! Width in the y-direction\n"
-                     f"{self.number_ignitions}! Number of ignitions per cell\n")
+                     f"{self.y_width}\t! Width in the y-direction\n")
         return flag_line + locations
 
 
-class CircularRingFire(IgnitionType):
-    xmin: float
-    ymin: float
+class CircularRingIgnition(IgnitionType):
+    x_min: float
+    y_min: float
     x_length: float
     y_length: float
     ring_width: float
-    number_ignitions: int
 
     def __str__(self):
         flag_line = super().__str__()
@@ -1200,25 +1135,13 @@ class CircularRingFire(IgnitionType):
                      f"{self.ymin}\t! South-west corner in the y-direction\n"
                      f"{self.x_length}\t! Length in the x-direction\n"
                      f"{self.y_length}\t! Length in the y-direction\n"
-                     f"{self.ring_width}\t! Width of the ring\n"
-                     f"{self.number_ignitions}! Number of ignitions per cell\n")
+                     f"{self.ring_width}\t! Width of the ring\n")
         return flag_line + locations
 
 
 class IgniteDatFile(IgnitionType):
     filename: str
-    number_ignitions: int
 
     def __str__(self):
         flag_line = super().__str__()
-        number_ignitions = (f"{self.number_ignitions}\t"
-                            f"! Number of ignitions per cell\n")
-        return flag_line + number_ignitions
-
-
-class QUICFire(BaseModel):
-    ignition_type: IgnitionType
-
-    @property
-    def ignition_lines(self):
-        return str(self.ignition_type)
+        return flag_line
