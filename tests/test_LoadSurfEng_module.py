@@ -73,8 +73,8 @@ def main():
     intermediate = 'temp.zarr'
     #zarr_file.create_group('surfEnergy_time')
     target = 'new.zarr'
-    #(arr_dims['time'], int(arr_dims['y']/4), int(arr_dims['x']))
-    rechunked = rechunk(source, target_chunks=arr_dims, 
+    target_chunks = {'time':arr_dims['time'], 'y':int(arr_dims['y']/4), 'x':int(arr_dims['x'])}
+    rechunked = rechunk(source, target_chunks=target_chunks, 
                         target_store=target,
                         max_mem=256000,
                         temp_store=intermediate)
