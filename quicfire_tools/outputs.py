@@ -455,11 +455,14 @@ class SimulationOutputs:
 
         return dask_array
 
+    ###Method 1:
+    ###ZCC Old zarr format: output.zarr is a group containing data sets named with output name
     def to_zarr(self, outputs:str | list[str] = 'all', over_write:bool=False):
         """Write the data to a zarr file."""
 
         # Create or open the zarr file
         ZARR_PATH = str(self.output_directory.joinpath("outputs.zarr"))
+        self.zarr_path = ZARR_PATH
         zarr_file = zarr.open(ZARR_PATH, mode="a")
 
         # Write each output to the zarr file
@@ -484,7 +487,7 @@ class SimulationOutputs:
                     if not over_write:                        
                         output_to_zarr = False
                         print("A dataset for {} already exists in the zarr file.\n".format(output_name),
-                              "Set over_write flag to True if you would like to rebuild the zarr.")
+                            "Set over_write flag to True if you would like to rebuild the zarr.")
                     else:
                         del zarr_file[output_name]
                 output.zarr_path = SUB_ZARR_PATH
@@ -493,10 +496,8 @@ class SimulationOutputs:
                 # Create a zarr dataset for the output
                 shape = (len(output.times), *output.shape)
                 chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
-                sub_file = zarr_file.create_group(output_name)
-                DATA_NAME = 'data'
-                sub_file.create_dataset(
-                    DATA_NAME,
+                zarr_file.create_dataset(
+                    output_name,
                     shape=shape,
                     chunks=chunks,
                     dtype=float)
@@ -504,8 +505,8 @@ class SimulationOutputs:
                 # Write each timestep to the output's zarr dataset
                 for time_step in range(len(output.times)):
                     data = self.to_numpy(output_name, time_step)
-                    sub_file[DATA_NAME][time_step, ...] = data
-                sub_file[DATA_NAME].attrs['_ARRAY_DIMENSIONS'] = output._ARRAY_DIMENSIONS
+                    zarr_file[output_name][time_step, ...] = data
+                zarr_file[output_name].attrs['_ARRAY_DIMENSIONS'] = output._ARRAY_DIMENSIONS
                 zarr.convenience.consolidate_metadata(SUB_ZARR_PATH) #Xarray throws a warning if this isn't run
         
         if len(outputs)>0 and type(outputs)==list: #Throw warning if user input incorrect outputs
@@ -513,7 +514,16 @@ class SimulationOutputs:
             print("Check if binary files exist or misspellings.")
         return zarr_file
 
-    # def unchunk_zarr_time(self, outputs:str | list[str] = 'all', over_write:bool=False):
+    ###Method 2
+    ###ZCC Current zarr format: output.zarr is a group containing groups named with output name
+    # def to_zarr(self, outputs:str | list[str] = 'all', over_write:bool=False):
+    #     """Write the data to a zarr file."""
+
+    #     # Create or open the zarr file
+    #     ZARR_PATH = str(self.output_directory.joinpath("outputs.zarr"))
+    #     self.zarr_path = ZARR_PATH
+    #     zarr_file = zarr.open(ZARR_PATH, mode="a")
+
     #     # Write each output to the zarr file
     #     for output_name, output in self.outputs.items():
     #         output_to_zarr = False #Initial conditional var
@@ -560,10 +570,11 @@ class SimulationOutputs:
     #             sub_file[DATA_NAME].attrs['_ARRAY_DIMENSIONS'] = output._ARRAY_DIMENSIONS
     #             zarr.convenience.consolidate_metadata(SUB_ZARR_PATH) #Xarray throws a warning if this isn't run
         
-    #     if len(outputs)>0: #Throw warning if user input incorrect outputs
-    #         print("The following outputs where not added to the zarr file {}".format(outputs))
+    #     if len(outputs)>0 and type(outputs)==list: #Throw warning if user input incorrect outputs
+    #         print("The following outputs where not added to the zarr file: {}".format(outputs))
     #         print("Check if binary files exist or misspellings.")
     #     return zarr_file
+
 def _process_compressed_bin(filename, dim_yxz, *args) -> ndarray:
     """
     Converts the contents of a sparse .bin file to a dense NumPy array.
