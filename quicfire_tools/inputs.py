@@ -2,7 +2,6 @@
 QUIC-Fire Tools Simulation Input Module
 """
 from __future__ import annotations
-from xml.sax.xmlreader import InputSource
 
 # Internal Imports
 from quicfire_tools.utils import compute_parabolic_stretched_grid
@@ -18,7 +17,6 @@ from enum import Enum
 
 # External Imports
 import numpy as np
-from typing import Union
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
                       PositiveFloat, NonNegativeFloat, computed_field)
 
@@ -727,6 +725,7 @@ class QFire_Advanced_User_Inputs(InputFile):
 
 
 class QUIC_fire(InputFile):
+    #TODO: Update docstring for ignition_info, output_times
     """
     Class representing the QUIC_fire.inp input file. This file
     contains the parameters relating to the fire simulation and
@@ -740,14 +739,8 @@ class QUIC_fire(InputFile):
         Number of cells in the y-direction.
     nz : int
         Number of fire grid cells in the z-direction.
-    out_time_fire : int
-        After how many fire time steps to print out fire-related files (excluding emissions and radiation)
-    out_time_wind : int
-        After how many quic updates to print out wind-related files
-    out_time_emis_rad : int
-        After how many fire time steps to print out average emissions and radiation
-    out_time_wind_avg : int
-        After how many quic updates to print out averaged wind-related files
+    output_times: int | OutputTimes
+        @anthony
     time_now : int
         When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
     sim_time : int
@@ -822,10 +815,7 @@ class QUIC_fire(InputFile):
     nz: PositiveInt
     time_now: PositiveInt
     sim_time: PositiveInt
-    out_time_fire: PositiveInt
-    out_time_wind: PositiveInt
-    out_time_emis_rad: PositiveInt
-    out_time_wind_avg: PositiveInt
+    output_times: PositiveInt | OutputTimes
     ignition_info: IgnitionType
     fire_flag: Literal[0, 1] = 1
     random_seed: int = Field(-1, ge=1)
@@ -882,10 +872,20 @@ class QUIC_fire(InputFile):
             return f"{dz_array_lines}"
         else:
             return str(self.dz)
-        
+    
+
+    @computed_field
+    @property
+    def out_time_lines(self):
+        if isinstance(self.output_times, int):
+            self.output_times = OutputTimes(self.output_times, self.output_times, self.output_times, self.output_times)
+        return str(self.output_times)
+    
+
+    @computed_field
     @property
     def ignition_lines(self):
-        return str(self.ignition_type)
+        return str(self.ignition_info)
     
     @computed_field
     @property
@@ -952,6 +952,7 @@ class QUIC_fire(InputFile):
         out_time_wind = int(lines[6].strip().split("!")[0])
         out_time_emis_rad = int(lines[6].strip().split("!")[0])
         out_time_wind_avg = int(lines[8].strip().split("!")[0])
+        output_times = OutputTimes(out_time_fire, out_time_wind, out_time_emis_rad, out_time_wind_avg)
         
         # Read fire grid parameters
         nz = int(lines[10].strip().split("!")[0])
@@ -1045,6 +1046,7 @@ class QUIC_fire(InputFile):
                    random_seed = random_seed,
                    time_now = time_now,
                    sim_time = sim_time,
+                   output_times = output_times,
                    nz = nz,
                    stretch_grid_flag = stretch_grid_flag,
                    dz = dz,
@@ -1096,8 +1098,8 @@ class LineIgnition(IgnitionType):
 
     def __str__(self):
         flag_line = super().__str__()
-        locations = (f"{self.xmin}\t! South-west corner in the x-direction\n"
-                     f"{self.ymin}\t! South-west corner in the y-direction\n"
+        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
+                     f"{self.y_min}\t! South-west corner in the y-direction\n"
                      f"{self.x_length}\t! Length in the x-direction\n"
                      f"{self.y_length}\t! Length in the y-direction\n")
         return flag_line + locations
@@ -1113,8 +1115,8 @@ class SquareRingIgnition(IgnitionType):
 
     def __str__(self):
         flag_line = super().__str__()
-        locations = (f"{self.xmin}\t! South-west corner in the x-direction\n"
-                     f"{self.ymin}\t! South-west corner in the y-direction\n"
+        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
+                     f"{self.y_min}\t! South-west corner in the y-direction\n"
                      f"{self.x_length}\t! Length in the x-direction\n"
                      f"{self.y_length}\t! Length in the y-direction\n"
                      f"{self.x_width}\t! Width in the x-direction\n"
@@ -1131,8 +1133,8 @@ class CircularRingIgnition(IgnitionType):
 
     def __str__(self):
         flag_line = super().__str__()
-        locations = (f"{self.xmin}\t! South-west corner in the x-direction\n"
-                     f"{self.ymin}\t! South-west corner in the y-direction\n"
+        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
+                     f"{self.y_min}\t! South-west corner in the y-direction\n"
                      f"{self.x_length}\t! Length in the x-direction\n"
                      f"{self.y_length}\t! Length in the y-direction\n"
                      f"{self.ring_width}\t! Width of the ring\n")
@@ -1145,3 +1147,18 @@ class IgniteDatFile(IgnitionType):
     def __str__(self):
         flag_line = super().__str__()
         return flag_line
+
+
+class OutputTimes(BaseModel):
+    out_time_fire: PositiveInt
+    out_time_wind: PositiveInt
+    out_time_emis_rad: PositiveInt
+    out_time_wind_avg: PositiveInt
+
+    def __str__(self):
+        lines = (f"{self.out_time_fire}\t! After how many fire time steps to print out fire-related files (excluding emissions and radiation)\n"
+                 f"{self.out_time_wind}\t! After how many quic updates to print out wind-related files\n"
+                 f"{self.out_time_emis_rad}\t! After how many fire time steps to average emissions and radiation\n"
+                 f"{self.out_time_wind_avg}\t! After how many quic updates to print out averaged wind-related files\n")
+        return lines
+
