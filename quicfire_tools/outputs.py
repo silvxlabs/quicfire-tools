@@ -447,7 +447,7 @@ class SimulationOutputs:
                 shape=shape,
                 chunks=chunks,
                 dtype=float)
-            zarr_dataset.attrs['_ARRAY_DIMENSIONS'] = ["time", "ny", "nx", "nz"]
+            zarr_dataset.attrs['_ARRAY_DIMENSIONS'] = ["time", "y", "x", "z"]
 
             # Write each timestep to the output's zarr dataset
             for time_step in range(len(output.times)):

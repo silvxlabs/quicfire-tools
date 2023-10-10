@@ -130,8 +130,8 @@ dmypy.json
 
 # IDE
 *.code-workspace
-.vscode/*
-.idea/*
+.vscode
+.idea
 
 # Development
 dev/
