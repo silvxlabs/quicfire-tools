@@ -16,6 +16,7 @@ import numpy as np
 import dask.array as da
 from numpy import ndarray
 import os
+from shutil import rmtree
 
 FUELS_OUTPUTS = {
     "fire-energy_to_atmos": {
@@ -455,64 +456,63 @@ class SimulationOutputs:
 
         return dask_array
 
-    ###Method 1:
-    ###ZCC Old zarr format: output.zarr is a group containing data sets named with output name
-    def to_zarr(self, outputs:str | list[str] = 'all', over_write:bool=False):
-        """Write the data to a zarr file."""
+    # ###Method 1:
+    # ###ZCC Old zarr format: output.zarr is a group containing data sets named with output name
+    # def to_zarr(self, outputs:str | list[str] = 'all', over_write:bool=False):
+    #     """Write the data to a zarr file."""
 
-        # Create or open the zarr file
-        ZARR_PATH = str(self.output_directory.joinpath("outputs.zarr"))
-        self.zarr_path = ZARR_PATH
-        zarr_file = zarr.open(ZARR_PATH, mode="a")
+    #     # Create or open the zarr file
+    #     ZARR_PATH = str(self.output_directory.joinpath("outputs.zarr"))
+    #     self.zarr_path = ZARR_PATH
+    #     zarr_file = zarr.open(ZARR_PATH, mode="a")
 
-        # Write each output to the zarr file
-        for output_name, output in self.outputs.items():
-            output_to_zarr = False #Initial conditional var
-            SUB_ZARR_PATH = os.path.join(ZARR_PATH,output_name)
+    #     # Write each output to the zarr file
+    #     for output_name, output in self.outputs.items():
+    #         output_to_zarr = False #Initial conditional var
+    #         SUB_ZARR_PATH = os.path.join(ZARR_PATH,output_name)
             
-            #Check output_name in outputs
-            if outputs == 'all':
-                output_to_zarr = True
-            elif type(outputs)==str: #If user inputs single output convert to str
-                outputs = [outputs]
-            elif output_name in outputs:
-                output_to_zarr = True
-                outputs.remove(output_name)
-            else:
-                continue
+            # #Check output_name in outputs
+            # if outputs == 'all':
+            #     output_to_zarr = True
+            # else:
+            #     if type(outputs)==str: #If user inputs single output convert to str
+            #         outputs = [outputs]
+            #     if output_name in outputs:
+            #         output_to_zarr = True
+            #         outputs.remove(output_name)
 
-            if output_to_zarr:
-                #Check output_name already in zarr
-                if os.path.exists(SUB_ZARR_PATH):                 
-                    if not over_write:                        
-                        output_to_zarr = False
-                        print("A dataset for {} already exists in the zarr file.\n".format(output_name),
-                            "Set over_write flag to True if you would like to rebuild the zarr.")
-                    else:
-                        del zarr_file[output_name]
-                output.zarr_path = SUB_ZARR_PATH
+    #         if output_to_zarr:
+    #             #Check output_name already in zarr
+    #             if os.path.exists(SUB_ZARR_PATH):                 
+    #                 if not over_write:                        
+    #                     output_to_zarr = False
+    #                     print("A dataset for {} already exists in the zarr file.\n".format(output_name),
+    #                         "Set over_write flag to True if you would like to rebuild the zarr.")
+    #                 else:
+    #                     del zarr_file[output_name]
+    #             output.zarr_path = SUB_ZARR_PATH
 
-            if output_to_zarr:
-                # Create a zarr dataset for the output
-                shape = (len(output.times), *output.shape)
-                chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
-                zarr_file.create_dataset(
-                    output_name,
-                    shape=shape,
-                    chunks=chunks,
-                    dtype=float)
+    #         if output_to_zarr:
+    #             # Create a zarr dataset for the output
+    #             shape = (len(output.times), *output.shape)
+    #             chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
+    #             zarr_file.create_dataset(
+    #                 output_name,
+    #                 shape=shape,
+    #                 chunks=chunks,
+    #                 dtype=float)
 
-                # Write each timestep to the output's zarr dataset
-                for time_step in range(len(output.times)):
-                    data = self.to_numpy(output_name, time_step)
-                    zarr_file[output_name][time_step, ...] = data
-                zarr_file[output_name].attrs['_ARRAY_DIMENSIONS'] = output._ARRAY_DIMENSIONS
-                zarr.convenience.consolidate_metadata(SUB_ZARR_PATH) #Xarray throws a warning if this isn't run
+    #             # Write each timestep to the output's zarr dataset
+    #             for time_step in range(len(output.times)):
+    #                 data = self.to_numpy(output_name, time_step)
+    #                 zarr_file[output_name][time_step, ...] = data
+    #             zarr_file[output_name].attrs['_ARRAY_DIMENSIONS'] = output._ARRAY_DIMENSIONS
+    #             zarr.convenience.consolidate_metadata(SUB_ZARR_PATH) #Xarray throws a warning if this isn't run
         
-        if len(outputs)>0 and type(outputs)==list: #Throw warning if user input incorrect outputs
-            print("The following outputs where not added to the zarr file: {}".format(outputs))
-            print("Check if binary files exist or misspellings.")
-        return zarr_file
+    #     if len(outputs)>0 and type(outputs)==list: #Throw warning if user input incorrect outputs
+    #         print("The following outputs where not added to the zarr file: {}".format(outputs))
+    #         print("Check if binary files exist or misspellings.")
+    #     return zarr_file
 
     ###Method 2
     ###ZCC Current zarr format: output.zarr is a group containing groups named with output name
@@ -529,16 +529,15 @@ class SimulationOutputs:
     #         output_to_zarr = False #Initial conditional var
     #         SUB_ZARR_PATH = os.path.join(ZARR_PATH,output_name)
             
-    #         #Check output_name in outputs
-    #         if outputs == 'all':
-    #             output_to_zarr = True
-    #         elif type(outputs)==str: #If user inputs single output convert to str
-    #             outputs = [outputs]
-    #         elif output_name in outputs:
-    #             output_to_zarr = True
-    #             outputs.remove(output_name)
-    #         else:
-    #             continue
+            # #Check output_name in outputs
+            # if outputs == 'all':
+            #     output_to_zarr = True
+            # else:
+            #     if type(outputs)==str: #If user inputs single output convert to str
+            #         outputs = [outputs]
+            #     if output_name in outputs:
+            #         output_to_zarr = True
+            #         outputs.remove(output_name)
 
     #         if output_to_zarr:
     #             #Check output_name already in zarr
@@ -574,6 +573,90 @@ class SimulationOutputs:
     #         print("The following outputs where not added to the zarr file: {}".format(outputs))
     #         print("Check if binary files exist or misspellings.")
     #     return zarr_file
+
+    ###Method 3:
+    ###Try for rechunk: output.zarr is a group containing data sets named with output name
+    def to_zarr(self, outputs:str | list[str] = 'all', over_write:bool=False):
+        """Write the data to a zarr file."""
+
+        # Create or open the zarr file
+        ZARR_PATH = str(self.output_directory.joinpath("zarr_outputs"))
+        if not os.path.exists(ZARR_PATH):
+            os.makedirs(ZARR_PATH)            
+        self.zarr_path = ZARR_PATH
+        #zarr_file = zarr.open(ZARR_PATH, mode="a")
+
+        # Write each output to the zarr file
+        for output_name, output in self.outputs.items():
+            output_to_zarr = False #Initial conditional var
+            SUB_ZARR_PATH = os.path.join(ZARR_PATH,output_name+'.zarr')
+            
+            #Check output_name in outputs
+            if outputs == 'all':
+                output_to_zarr = True
+            else:
+                if type(outputs)==str: #If user inputs single output convert to str
+                    outputs = [outputs]
+                if output_name in outputs:
+                    output_to_zarr = True
+                    outputs.remove(output_name)
+
+            if output_to_zarr:
+                #Check output_name already in zarr
+                if os.path.exists(SUB_ZARR_PATH):                 
+                    if not over_write:                        
+                        output_to_zarr = False
+                        print("A dataset for {} already exists in the zarr file.\n".format(output_name),
+                            "Set over_write flag to True if you would like to rebuild the zarr.")
+                    else:
+                        rmtree(SUB_ZARR_PATH)
+                output.zarr_path = SUB_ZARR_PATH
+
+            if output_to_zarr:
+                zarr_file = zarr.open(SUB_ZARR_PATH, mode="a")
+
+                ##Standard Meta Data NOT REQUIRED. https://unidata.github.io/python-training/workshop/XArray/xarray-and-cf/
+                # zarr_file.attrs['Conventions'] = 'CF-1.7'
+                # zarr_file.attrs['title'] = 'Forecast model run'
+                # zarr_file.attrs['nc.institution'] = 'Unidata'
+                # zarr_file.attrs['source'] = 'WRF-1.5'
+                # zarr_file.attrs['history'] = str(datetime.utcnow()) + ' Python'
+                # zarr_file.attrs['references'] = ''
+                # zarr_file.attrs['comment'] = ''
+
+                # Create a zarr dataset for the output
+                shape = (len(output.times), *output.shape)
+                chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
+                #Output to zarr dataset
+                DATA_NAME = 'data'
+                zarr_file.create_dataset(
+                    DATA_NAME,
+                    shape=shape,
+                    chunks=chunks,
+                    dtype=float)
+
+                # Write each timestep to the output's zarr dataset
+                for time_step in range(len(output.times)):
+                    data = self.to_numpy(output_name, time_step)
+                    zarr_file[DATA_NAME][time_step, ...] = data
+                zarr_file[DATA_NAME].attrs['_ARRAY_DIMENSIONS'] = output._ARRAY_DIMENSIONS
+                zarr_file[DATA_NAME].attrs['standard_name'] = output_name
+
+                #Time to zarr data set
+                DATA_NAME = 'time'
+                zarr_file.create_dataset(
+                    DATA_NAME,
+                    shape=len(output.times),
+                    dtype=int)
+                zarr_file[DATA_NAME] = output.times
+                zarr_file[DATA_NAME].attrs['_ARRAY_DIMENSIONS'] = [DATA_NAME]
+
+                #Consolidate metadata for xarray
+                zarr.convenience.consolidate_metadata(SUB_ZARR_PATH) 
+        if len(outputs)>0 and type(outputs)==list: #Throw warning if user input incorrect outputs
+            print("The following outputs where not added to the zarr file: {}".format(outputs))
+            print("Check if binary files exist or misspellings.")
+        return 
 
 def _process_compressed_bin(filename, dim_yxz, *args) -> ndarray:
     """

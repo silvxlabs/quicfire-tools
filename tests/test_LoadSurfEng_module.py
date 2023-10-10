@@ -58,21 +58,10 @@ def main():
     import xarray as xr
     #Use library to load and calculate surfEnergy outputs
     simulation_outputs = outputs.SimulationOutputs(OUTPUT_PATH, SIM_PARAMS)
-    ###Method 1 & 2: This will work 
-    zarr_file = simulation_outputs.to_zarr()
-    ###Method 1: AttributeError: 'Array' object has no attribute 'arrays'
-    ###Method 2: This will work create a dataset with a data array named 'data'
+    ###Testing Method 3: 
+    simulation_outputs.to_zarr('windu', over_write=True)
+    simulation_outputs.to_zarr()
     ds = xr.open_zarr(simulation_outputs.get_output('surfEnergy').zarr_path)
-    ###Method 1: ValueError: conflicting sizes for dimension 'time': length 1 on 'groundfuelheight' and length 7 on {'time': 'fire-energy_to_atmos', 'y': 'fire-energy_to_atmos', 'x': 'fire-energy_to_atmos', 'z': 'fire-energy_to_atmos'}
-    ###Method 2: This will create an empty dataset
-    ds = xr.open_zarr(simulation_outputs.zarr_path)
-
-    ###Testing rechunking:
-    """
-    #Use library to load and calculate surfEnergy outputs
-    simulation_outputs = outputs.SimulationOutputs(OUTPUT_PATH, SIM_PARAMS)
-
-    zarr_file = simulation_outputs.to_zarr()
     
     output = simulation_outputs.get_output('surfEnergy')
     temp_arr_dims = (len(output.times),)+output.shape
@@ -82,11 +71,11 @@ def main():
     import time
     start_t = time.time()
     from rechunker import rechunk
-    source = zarr_file['surfEnergy']
+    source = output.zarr_path
 
     intermediate = 'temp.zarr'
     #zarr_file.create_group('surfEnergy_time')
-    target = 'new.zarr'
+    target = os.path.join(simulation_outputs,'surfEnergy_time.zarr')
     target_chunks = {'time':arr_dims['time'], 'y':int(arr_dims['y']/4), 'x':int(arr_dims['x'])}
     rechunked = rechunk(source, target_chunks=target_chunks, 
                         target_store=target,
@@ -100,7 +89,7 @@ def main():
     # calculate_metrics.surfeng_metrics(simulation_outputs)
     # end_t = time.time()
     # print('Runtime = {}'.format(end_t-start_t))
-"""
+
 """
 class TestOutputFile:
     simulation_outputs = outputs.SimulationOutputs(OUTPUT_PATH, SIM_PARAMS)
