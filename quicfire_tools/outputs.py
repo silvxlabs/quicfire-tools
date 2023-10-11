@@ -313,7 +313,7 @@ class SimulationOutputs:
 
     def _get_output_shape(self, name, attrs) -> tuple:
         if attrs["number_dimensions"] == 2:
-            return self.params.ny, self.params.nx
+            return self.params.ny, self.params.nx, 1
         # elif attrs["number_dimensions"] == 3 and name == "fire-energy_to_atmos":
         #     _process_vertical_grid(self.output_directory / "grid.bin", self.params.nx, self.params.ny)
         elif attrs["number_dimensions"] == 3 and attrs["grid"] == "fire":
@@ -423,21 +423,31 @@ class SimulationOutputs:
 
         return dask_array
 
-    def to_zarr(self, fpath: Path):
+    def to_zarr(self, fpath: Path, outputs: str | list[str] = None):
         """Write the data to a zarr file."""
         # Create the zarr file
         zarr_file = zarr.open(str(fpath), mode="w")
 
+        # Get a list of outputs to write to the zarr file
+        if outputs is None:
+            outputs = self.list_available_outputs()
+        elif isinstance(outputs, str):
+            outputs = [outputs]
+
         # Write each output to the zarr file
-        for output_name, output in self.outputs.items():
+        for output_name in outputs:
+            # Get the output object and verify it exists
+            output = self.get_output(output_name)
+
             # Create a zarr dataset for the output
             shape = (len(output.times), *output.shape)
             chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
-            zarr_file.create_dataset(
+            zarr_dataset = zarr_file.create_dataset(
                 output_name,
                 shape=shape,
                 chunks=chunks,
                 dtype=float)
+            zarr_dataset.attrs['_ARRAY_DIMENSIONS'] = ["time", "y", "x", "z"]
 
             # Write each timestep to the output's zarr dataset
             for time_step in range(len(output.times)):
