@@ -766,8 +766,8 @@ class QUIC_fire(InputFile):
             - moisture
             - height
         1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)
-    fuel_params : list[float]
-        List of fuel parameters for a uniform grid (fuel_flag = 1) in the order [density, moisture, height]. All must be real numbers 0-1
+    fuel_params : FuelParams
+        FuelParams class with named fuel parameters for a uniform grid. Defaults to None unless fuel_flag = 1
     ignition_info: IgnitionType
         Ignitions shape or source. @anthony
     ignitions_per_cell: int
@@ -825,7 +825,7 @@ class QUIC_fire(InputFile):
     dz_array: list[PositiveFloat] = []
     file_path: str = ""
     fuel_flag: Literal[1,2,3,4] = 3
-    fuel_params: list[PositiveFloat] = []
+    fuel_params: FuelParams = None
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
@@ -886,19 +886,24 @@ class QUIC_fire(InputFile):
     
     @computed_field
     @property
-    def fuel_density(self) -> str:
-        return self._get_fuel_inputs()[0]
-    
-    @computed_field
-    @property
-    def fuel_moisture(self) -> str:
-        return self._get_fuel_inputs()[1]
-    
-    @computed_field
-    @property
-    def fuel_height(self) -> str:
-        return self._get_fuel_inputs()[2]
-    
+    def fuel_lines(self) -> str:
+        flag_line = (f" 1 = uniform; "
+                     f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
+                     f" files for quic grid, 4 = Firetech files for "
+                     f"different grid (need interpolation)\n")
+        fuel_density_flag_line = f"{self.fuel_flag}\t! fuel density flag:" + flag_line
+        fuel_moist_flag_line = f"{self.fuel_flag}\t! fuel moisture flag:" + flag_line
+        fuel_height_flag_line = f"{self.fuel_flag}\t! fuel height flag:" + flag_line
+        if self.fuel_flag == 1:
+            try:
+                fuel_dens_line = f"{self.fuel_params.fuel_density}\n"
+                fuel_moist_line = f"{self.fuel_params.fuel_moisture}\n"
+                fuel_height_line = f"{self.fuel_params.fuel_height}\n"
+            except IndexError:
+                raise ValueError("fuel_params: FuelInputs class must have values for fuel_density, fuel_moisture, and fuel_height")
+            return fuel_density_flag_line + fuel_dens_line + fuel_moist_flag_line + fuel_moist_line + fuel_height_flag_line + fuel_height_line
+        return fuel_density_flag_line + fuel_moist_flag_line
+
 
     def _get_fuel_inputs(self):
         """
@@ -1159,57 +1164,7 @@ class OutputTimes(BaseModel):
                  f"{self.out_time_wind_avg}\t! After how many quic updates to print out averaged wind-related files\n")
         return lines
 
-#TODO: Talk with Anthony about how to modify fuel methods below
-class FuelSources(Enum):
-    uniform = 1
-    qf_fueldensity_inp = 2
-    firetec_quic = 3
-    firetec = 4
-
-
-class FuelDensity(BaseModel):
-    fuel_flag: FuelSources
-    fuel_density: float
-
-    def __str__(self):
-        flag_string = (f"{self.fuel_flag}\t! fuel density flag: 1 = uniform; "
-                       "2 = provided thru QF_FuelDensity.inp, "
-                       "3 = Firetech files for quic grid, "
-                       "4 = Firetech files for different grid (need interpolation)\n")
-        value_string = f"{self.fuel_density}\n"
-        density_string = flag_string + value_string if value_string else flag_string
-        return density_string
-
-class FuelMoisture(BaseModel):
-    fuel_flag: FuelSources
-    fuel_moisture: float
-
-    def __str__(self):
-        flag_string = (f"{self.fuel_flag}\t! fuel density flag: 1 = uniform; "
-                       "2 = provided thru QF_FuelDensity.inp, "
-                       "3 = Firetech files for quic grid, "
-                       "4 = Firetech files for different grid (need interpolation)\n")
-        value_string = f"{self.fuel_moisture}\n"
-        moisture_string = flag_string + value_string if value_string else flag_string
-        return moisture_string
-
-class FuelHeight(BaseModel):
-    fuel_flag: FuelSources
-    fuel_height: float
-
-    def __str__(self):
-        flag_string = (f"{self.fuel_flag}\t! fuel density flag: 1 = uniform; "
-                       "2 = provided thru QF_FuelDensity.inp, "
-                       "3 = Firetech files for quic grid, "
-                       "4 = Firetech files for different grid (need interpolation)\n")
-        value_string = f"{self.fuel_height}\n"
-        height_string = flag_string + value_string if value_string else flag_string
-        return height_string
-
-class FuelInputs(BaseModel):
-    fuel_density = FuelDensity
-    fuel_moisture = FuelMoisture
-    fuel_height = FuelHeight
-
-    def __str__(self):
-        return self.fuel_density + self.fuel_moisture + self.fuel_height
+class FuelParams(BaseModel):
+    fuel_density: PositiveFloat
+    fuel_moisture: PositiveFloat
+    fuel_height: PositiveFloat

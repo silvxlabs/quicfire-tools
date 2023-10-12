@@ -15,8 +15,7 @@ $stretch_grid_input ! m, dz
 1                   ! Fuel types are in separate files
 2                   ! File is stream (1) or headers (2)
 ! FUEL
-$fuel_flag		    ! fuel density flag: 1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)    $fuel_density
-$fuel_flag		    ! fuel moisture flag: 1 = uniform; 2 = provided thru QF_FuelMoisture.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)  $fuel_moisture $fuel_height_flag
+$fuel_lines
 ! IGNITION LOCATIONS
 $ignition_lines
 $ignitions_per_cell ! number of ignitions
