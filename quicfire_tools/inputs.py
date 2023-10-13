@@ -982,13 +982,13 @@ class QUIC_fire(InputFile):
         # current_line = ! FUEL
         current_line += 1 #header
         fuel_flag = int(lines[current_line].strip().split("!")[0])
-        fuel_params = []
         if fuel_flag == 1:
-            fuel_params.append(float(lines[current_line + 1].strip()))
+            fuel_density = float(lines[current_line + 1].strip())
             moisture_flag = int(lines[current_line + 2].strip().split("!")[0])
-            fuel_params.append(float(lines[current_line + 3].strip()))
+            fuel_moisture = float(lines[current_line + 3].strip())
             height_flag = int(lines[current_line + 4].strip().split("!")[0])
-            fuel_params.append(float(lines[current_line + 5].strip()))
+            fuel_height = float(lines[current_line + 5].strip())
+            fuel_params = FuelParams(fuel_density, fuel_moisture, fuel_height)
             current_line += 6
         else:
             current_line += 2
@@ -1007,7 +1007,7 @@ class QUIC_fire(InputFile):
             ignition_params.append(int(lines[i].strip().split("!")[0]))
         if ignition_flag == 1:
             x_min, y_min, x_length, y_length = ignition_params
-            ignition_info = LineIgnition(ignition_flag, x_min, y_min, x_length, y_length)
+            ignition_info = RectangleIgnition(ignition_flag, x_min, y_min, x_length, y_length)
         elif ignition_flag == 2:
             x_min, y_min, x_length, y_length, x_width, y_width = ignition_params
             ignition_info = SquareRingIgnition(ignition_flag, x_min, y_min, x_length, y_length, x_width, y_width)
