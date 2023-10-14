@@ -17,6 +17,7 @@ from enum import Enum
 
 # External Imports
 import numpy as np
+import random
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
                       PositiveFloat, NonNegativeFloat, computed_field)
 
@@ -115,6 +116,104 @@ class InputFile(BaseModel, validate_assignment=True):
     def from_dict(cls, data: dict):
         return cls(**data)
 
+class IgnitionSources(Enum):
+    rectangle = 1
+    square_ring = 2
+    circular_ring = 3
+    ignite_dat_file = 6
+
+
+class IgnitionType(BaseModel):
+    ignition_flag: IgnitionSources
+
+    def __str__(self):
+        return (f"{self.ignition_flag.value}\t! 1 = rectangle, "
+                f"2 = square ring, 3 = circular ring, "
+                f"4 = file (QF_Ignitions.inp), "
+                f"5 = time-dependent ignitions (QF_IgnitionPattern.inp), "
+                f"6 = ignite.dat (firetech)")
+
+
+class RectangleIgnition(IgnitionType):
+    ignition_flag: IgnitionSources = 1
+    x_min: float
+    y_min: float
+    x_length: float
+    y_length: float
+
+    def __str__(self):
+        flag_line = super().__str__()
+        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
+                     f"{self.y_min}\t! South-west corner in the y-direction\n"
+                     f"{self.x_length}\t! Length in the x-direction\n"
+                     f"{self.y_length}\t! Length in the y-direction")
+        return flag_line + locations
+
+
+class SquareRingIgnition(IgnitionType):
+    ignition_flag: IgnitionSources = 2
+    x_min: float
+    y_min: float
+    x_length: float
+    y_length: float
+    x_width: float
+    y_width: float
+
+    def __str__(self):
+        flag_line = super().__str__()
+        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
+                     f"{self.y_min}\t! South-west corner in the y-direction\n"
+                     f"{self.x_length}\t! Length in the x-direction\n"
+                     f"{self.y_length}\t! Length in the y-direction\n"
+                     f"{self.x_width}\t! Width in the x-direction\n"
+                     f"{self.y_width}\t! Width in the y-direction")
+        return flag_line + locations
+
+
+class CircularRingIgnition(IgnitionType):
+    ignition_flag: IgnitionSources = 3
+    x_min: float
+    y_min: float
+    x_length: float
+    y_length: float
+    ring_width: float
+
+    def __str__(self):
+        flag_line = super().__str__()
+        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
+                     f"{self.y_min}\t! South-west corner in the y-direction\n"
+                     f"{self.x_length}\t! Length in the x-direction\n"
+                     f"{self.y_length}\t! Length in the y-direction\n"
+                     f"{self.ring_width}\t! Width of the ring")
+        return flag_line + locations
+
+
+class IgniteDatFile(IgnitionType):
+    ignition_flag: IgnitionSources = 6
+    filename: str
+
+    def __str__(self):
+        flag_line = super().__str__()
+        return flag_line
+
+
+class OutputTimes(BaseModel):
+    out_time_fire: PositiveInt
+    out_time_wind: PositiveInt
+    out_time_emis_rad: PositiveInt
+    out_time_wind_avg: PositiveInt
+
+    def __str__(self):
+        lines = (f"{self.out_time_fire}\t! After how many fire time steps to print out fire-related files (excluding emissions and radiation)\n"
+                 f"{self.out_time_wind}\t! After how many quic updates to print out wind-related files\n"
+                 f"{self.out_time_emis_rad}\t! After how many fire time steps to average emissions and radiation\n"
+                 f"{self.out_time_wind_avg}\t! After how many quic updates to print out averaged wind-related files")
+        return lines
+
+class FuelParams(BaseModel):
+    fuel_density: PositiveFloat
+    fuel_moisture: PositiveFloat
+    fuel_height: PositiveFloat
 
 class Gridlist(InputFile):
     """
@@ -724,7 +823,6 @@ class QFire_Advanced_User_Inputs(InputFile):
 
 
 class QUIC_fire(InputFile):
-    #TODO: Update docstring for ignition_info, output_times
     """
     Class representing the QUIC_fire.inp input file. This file
     contains the parameters relating to the fire simulation and
@@ -732,10 +830,6 @@ class QUIC_fire(InputFile):
 
     Parameters
     ----------
-    nx : int
-        Number of cells in the x-direction.
-    ny : int
-        Number of cells in the y-direction.
     nz : int
         Number of fire grid cells in the z-direction.
     output_times: int | OutputTimes
@@ -768,7 +862,7 @@ class QUIC_fire(InputFile):
         1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)
     fuel_params : FuelParams
         FuelParams class with named fuel parameters for a uniform grid. Defaults to None unless fuel_flag = 1
-    ignition_info: IgnitionType
+    ignition_type: IgnitionType
         Ignitions shape or source. @anthony
     ignitions_per_cell: int
         Number of ignition per cell of the fire model. Recommended max value of 100
@@ -809,23 +903,21 @@ class QUIC_fire(InputFile):
         Output flag [0, 1]: surface fire intensity at every fire time step
     """
     filename: str = Field("QUIC_fire.inp", allow_mutation=False)
-    nx: PositiveInt
-    ny: PositiveInt
     nz: PositiveInt
     time_now: PositiveInt
     sim_time: PositiveInt
     output_times: PositiveInt | OutputTimes
-    ignition_info: IgnitionType
+    ignition_type: IgnitionType = IgnitionType(ignition_flag = 6)
     fire_flag: Literal[0, 1] = 1
-    random_seed: int = Field(-1, ge=1)
+    random_seed: PositiveInt = random.randrange(1000)
     fire_time_step: PositiveInt = 1
-    quic_time_step: PositiveInt = 1,
+    quic_time_step: PositiveInt = 1
     stretch_grid_flag: Literal[0, 1] = 0
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
-    file_path: str = ""
+    file_path: str = '""'
     fuel_flag: Literal[1,2,3,4] = 3
-    fuel_params: FuelParams = None
+    fuel_params: FuelParams | None = None
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
@@ -839,7 +931,7 @@ class QUIC_fire(InputFile):
     fuel_moist_out: Literal[0, 1] = 1
     mass_burnt_out: Literal[0, 1] = 1
     firebrand_out: Literal[0, 1] = 0
-    emissions_out: Literal[0, 1] = 0
+    emissions_out: Literal[0,1,2,3,4,5] = 0
     radiation_out: Literal[0, 1] = 0
     intensity_out: Literal[0, 1] = 0
         
@@ -868,21 +960,24 @@ class QUIC_fire(InputFile):
                 dz_array_lines_list.append(f"{float(dz)}")
             dz_array_lines = "\n".join(dz_array_lines_list)
 
-            return f"{dz_array_lines}"
+            return f"{dz_array_lines}\n"
         else:
             return str(self.dz)
     
     @computed_field
     @property
-    def out_time_lines(self):
+    def out_time_lines(self) -> str:
         if isinstance(self.output_times, int):
-            self.output_times = OutputTimes(self.output_times, self.output_times, self.output_times, self.output_times)
+            self.output_times = OutputTimes(out_time_fire = self.output_times, 
+                                            out_time_wind = self.output_times, 
+                                            out_time_emis_rad = self.output_times, 
+                                            out_time_wind_avg = self.output_times)
         return str(self.output_times)
     
     @computed_field
     @property
-    def ignition_lines(self):
-        return str(self.ignition_info)
+    def ignition_lines(self) -> str:
+        return str(self.ignition_type)
     
     @computed_field
     @property
@@ -890,47 +985,21 @@ class QUIC_fire(InputFile):
         flag_line = (f" 1 = uniform; "
                      f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
                      f" files for quic grid, 4 = Firetech files for "
-                     f"different grid (need interpolation)\n")
+                     f"different grid (need interpolation)")
         fuel_density_flag_line = f"{self.fuel_flag}\t! fuel density flag:" + flag_line
-        fuel_moist_flag_line = f"{self.fuel_flag}\t! fuel moisture flag:" + flag_line
-        fuel_height_flag_line = f"{self.fuel_flag}\t! fuel height flag:" + flag_line
+        fuel_moist_flag_line = f"\n{self.fuel_flag}\t! fuel moisture flag:" + flag_line
+        fuel_height_flag_line = f"\n{self.fuel_flag}\t! fuel height flag:" + flag_line
         if self.fuel_flag == 1:
             try:
-                fuel_dens_line = f"{self.fuel_params.fuel_density}\n"
-                fuel_moist_line = f"{self.fuel_params.fuel_moisture}\n"
-                fuel_height_line = f"{self.fuel_params.fuel_height}\n"
+                fuel_dens_line = f"\n{self.fuel_params.fuel_density}"
+                fuel_moist_line = f"\n{self.fuel_params.fuel_moisture}"
+                fuel_height_line = f"\n{self.fuel_params.fuel_height}"
             except IndexError:
                 raise ValueError("fuel_params: FuelInputs class must have values for fuel_density, fuel_moisture, and fuel_height")
             return fuel_density_flag_line + fuel_dens_line + fuel_moist_flag_line + fuel_moist_line + fuel_height_flag_line + fuel_height_line
         return fuel_density_flag_line + fuel_moist_flag_line
 
 
-    def _get_fuel_inputs(self):
-        """
-        Writes custom fuel inputs to QUIC_fire.inp, if provided.
-        """
-        
-        # Uniform fuel properties
-        if self.fuel_flag == 1:
-            if len(self.fuel_params) != 3:
-                raise ValueError("fuel_params must have length of 3")
-            fuel_density = f"\n{str(self.fuel_params[0])}"
-            fuel_moisture = f"\n{str(self.fuel_params[1])}"
-            fuel_height = (f"\n{self.fuel_flag}\t! fuel height flag: 1 = uniform; "
-                           f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-                           f" files for quic grid, 4 = Firetech files for "
-                           f"different grid (need interpolation)"
-                           f"\n{str(self.fuel_params[2])}")
-        # Custom fuel .dat files (fuel flags 3 or 4)
-        else:
-            fuel_density, fuel_moisture, fuel_height = "", "", ""
-        
-        if self.fuel_flag == 2:
-            print("CAUTION: User must provide fuel inputs in QF_FuelDensity.inp, QF_FuelMoisture.inp, and QF_FuelHeight.inp when fuel_flag = 2")
-
-        return fuel_density, fuel_moisture, fuel_height
-
-    
     @classmethod
     def from_file(cls, directory: str | Path):
         """
@@ -946,36 +1015,45 @@ class QUIC_fire(InputFile):
         # Read fire flag and random seed
         fire_flag = int(lines[0].strip().split("!")[0])
         random_seed = int(lines[1].strip().split("!")[0])
+        
+        if random_seed == -1:
+            random_seed = random.randrange(10000)
+            print("Generated new random seed: {}".format(random_seed))
 
         # Read fire times
         time_now = int(lines[3].strip().split("!")[0])
         sim_time = int(lines[4].strip().split("!")[0])
-        out_time_fire = int(lines[5].strip().split("!")[0])
-        out_time_wind = int(lines[6].strip().split("!")[0])
-        out_time_emis_rad = int(lines[6].strip().split("!")[0])
-        out_time_wind_avg = int(lines[8].strip().split("!")[0])
-        output_times = OutputTimes(out_time_fire, out_time_wind, out_time_emis_rad, out_time_wind_avg)
+        fire_time_step = int(lines[5].strip().split("!")[0])
+        quic_time_step = int(lines[6].strip().split("!")[0])
+        out_time_fire = int(lines[7].strip().split("!")[0])
+        out_time_wind = int(lines[8].strip().split("!")[0])
+        out_time_emis_rad = int(lines[9].strip().split("!")[0])
+        out_time_wind_avg = int(lines[10].strip().split("!")[0])
+        output_times = OutputTimes(out_time_fire = out_time_fire, 
+                                   out_time_wind = out_time_wind, 
+                                   out_time_emis_rad = out_time_emis_rad, 
+                                   out_time_wind_avg = out_time_wind_avg)
         
         # Read fire grid parameters
-        nz = int(lines[10].strip().split("!")[0])
-        stretch_grid_flag = int(lines[11].strip().split("!")[0])
+        nz = int(lines[12].strip().split("!")[0])
+        stretch_grid_flag = int(lines[13].strip().split("!")[0])
         dz_array = []
         if stretch_grid_flag == 0:
-            dz = int(lines[12].strip().split("!")[0])
-            current_line = 13
+            dz = int(lines[14].strip().split("!")[0])
+            current_line = 15
         else:
-            for i in range(12, 12+len(nz)):
+            for i in range(14, 14+len(nz)):
                 try:
                     float(lines[i].strip())
                 except ValueError:
                     print("QUIC_fire.inp: dz input value is not a float. Does the number of dz inputs match nz?")              
                 dz_array.append(float(lines[i].strip()))
-            current_line = 13+len(nz)
+            current_line = 15+len(nz)
 
         # Read file path
         # current_line = ! FILE PATH
         current_line += 1 #header
-        file_path = str(lines[current_line].strip().split("!")[0])
+        file_path = str(lines[current_line].strip())
         current_line += 3 # skip 2 unused lines
 
         #Read fuel inputs
@@ -989,11 +1067,12 @@ class QUIC_fire(InputFile):
             height_flag = int(lines[current_line + 4].strip().split("!")[0])
             fuel_height = float(lines[current_line + 5].strip())
             fuel_params = FuelParams(fuel_density, fuel_moisture, fuel_height)
+            if moisture_flag != fuel_flag or height_flag != fuel_flag:
+                raise ValueError("QUIC_fire.inp: Fuel moisture and fue height flags must match fuel density flag")   
             current_line += 6
         else:
-            current_line += 2
-        if moisture_flag != fuel_flag or height_flag != fuel_flag:
-                raise ValueError("QUIC_fire.inp: Fuel moisture and fue height flags must match fuel density flag")        
+            fuel_params = None
+            current_line += 2     
         
         # Read ignition inputs
         # current_line = ! IGNITION LOCATIONS
@@ -1007,15 +1086,15 @@ class QUIC_fire(InputFile):
             ignition_params.append(int(lines[i].strip().split("!")[0]))
         if ignition_flag == 1:
             x_min, y_min, x_length, y_length = ignition_params
-            ignition_info = RectangleIgnition(ignition_flag, x_min, y_min, x_length, y_length)
+            ignition_type = RectangleIgnition(x_min, y_min, x_length, y_length)
         elif ignition_flag == 2:
             x_min, y_min, x_length, y_length, x_width, y_width = ignition_params
-            ignition_info = SquareRingIgnition(ignition_flag, x_min, y_min, x_length, y_length, x_width, y_width)
+            ignition_type = SquareRingIgnition(x_min, y_min, x_length, y_length, x_width, y_width)
         elif ignition_flag == 3:
             x_min, y_min, x_length, y_length, ring_width = ignition_params
-            ignition_info = CircularRingIgnition(ignition_flag, x_min, y_min, x_length, y_length, ring_width)
+            ignition_type = CircularRingIgnition(x_min, y_min, x_length, y_length, ring_width)
         elif ignition_flag == 6:
-            ignition_info = IgniteDatFile(ignition_flag)
+            ignition_type = IgnitionType(ignition_flag=6)
         current_line += add
         ignitions_per_cell = int(lines[current_line].strip().split("!")[0])
         current_line += 1
@@ -1048,6 +1127,8 @@ class QUIC_fire(InputFile):
                    random_seed = random_seed,
                    time_now = time_now,
                    sim_time = sim_time,
+                   fire_time_step = fire_time_step,
+                   quic_time_step = quic_time_step,
                    output_times = output_times,
                    nz = nz,
                    stretch_grid_flag = stretch_grid_flag,
@@ -1056,7 +1137,7 @@ class QUIC_fire(InputFile):
                    file_path = file_path,
                    fuel_flag = fuel_flag,
                    fuel_params = fuel_params,
-                   ignition_info = ignition_info,
+                   ignition_type = ignition_type,
                    ignitions_per_cell = ignitions_per_cell,
                    firebrand_flag = firebrand_flag,
                    eng_to_atm_out = eng_to_atm_out,
@@ -1074,97 +1155,3 @@ class QUIC_fire(InputFile):
                    auto_kill = auto_kill)
 
 
-class IgnitionSources(Enum):
-    rectangle = 1
-    square_ring = 2
-    circular_ring = 3
-    ignite_dat_file = 6
-
-
-class IgnitionType(BaseModel):
-    ignition_flag: IgnitionSources
-
-    def __str__(self):
-        return (f"{self.ignition_flag.value}\t! 1 = rectangle, "
-                f"2 = square ring, 3 = circular ring, "
-                f"4 = file (QF_Ignitions.inp), "
-                f"5 = time-dependent ignitions (QF_IgnitionPattern.inp), "
-                f"6 = ignite.dat (firetech)")
-
-
-class RectangleIgnition(IgnitionType):
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
-
-    def __str__(self):
-        flag_line = super().__str__()
-        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
-                     f"{self.y_min}\t! South-west corner in the y-direction\n"
-                     f"{self.x_length}\t! Length in the x-direction\n"
-                     f"{self.y_length}\t! Length in the y-direction\n")
-        return flag_line + locations
-
-
-class SquareRingIgnition(IgnitionType):
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
-    x_width: float
-    y_width: float
-
-    def __str__(self):
-        flag_line = super().__str__()
-        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
-                     f"{self.y_min}\t! South-west corner in the y-direction\n"
-                     f"{self.x_length}\t! Length in the x-direction\n"
-                     f"{self.y_length}\t! Length in the y-direction\n"
-                     f"{self.x_width}\t! Width in the x-direction\n"
-                     f"{self.y_width}\t! Width in the y-direction\n")
-        return flag_line + locations
-
-
-class CircularRingIgnition(IgnitionType):
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
-    ring_width: float
-
-    def __str__(self):
-        flag_line = super().__str__()
-        locations = (f"{self.x_min}\t! South-west corner in the x-direction\n"
-                     f"{self.y_min}\t! South-west corner in the y-direction\n"
-                     f"{self.x_length}\t! Length in the x-direction\n"
-                     f"{self.y_length}\t! Length in the y-direction\n"
-                     f"{self.ring_width}\t! Width of the ring\n")
-        return flag_line + locations
-
-
-class IgniteDatFile(IgnitionType):
-    filename: str
-
-    def __str__(self):
-        flag_line = super().__str__()
-        return flag_line
-
-
-class OutputTimes(BaseModel):
-    out_time_fire: PositiveInt
-    out_time_wind: PositiveInt
-    out_time_emis_rad: PositiveInt
-    out_time_wind_avg: PositiveInt
-
-    def __str__(self):
-        lines = (f"{self.out_time_fire}\t! After how many fire time steps to print out fire-related files (excluding emissions and radiation)\n"
-                 f"{self.out_time_wind}\t! After how many quic updates to print out wind-related files\n"
-                 f"{self.out_time_emis_rad}\t! After how many fire time steps to average emissions and radiation\n"
-                 f"{self.out_time_wind_avg}\t! After how many quic updates to print out averaged wind-related files\n")
-        return lines
-
-class FuelParams(BaseModel):
-    fuel_density: PositiveFloat
-    fuel_moisture: PositiveFloat
-    fuel_height: PositiveFloat
