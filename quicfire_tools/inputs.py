@@ -7,7 +7,7 @@ from __future__ import annotations
 from utils import compute_parabolic_stretched_grid
 from quicfire_tools.topography import (TopoSources, TopoType, 
                                        GaussianHillTopo, HillPassTopo, SlopeMesaTopo,
-                                       CanyonTopo,nHalfCircleTopo, SinusoidTopo, CosHillTopo)
+                                       CanyonTopo, HalfCircleTopo, SinusoidTopo, CosHillTopo)
 
 # Core Imports
 import json
@@ -1027,3 +1027,61 @@ class QU_TopoInputs(InputFile):
     @property
     def topo_lines(self) -> str:
         return str(self.topo_type)
+    
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QU_TopoInputs.inp", "r") as f:
+            lines = f.readlines()
+        
+        # Line 0 is Header
+        filename = str(lines[1].strip())
+        # Get topo lines
+        topo_flag = int(lines[2].strip().split("1")[0])
+        add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
+        add = add_dict.get(topo_flag)
+        topo_params = []
+        for i in range(2,2+add):
+            topo_params.append(int(lines[i].strip().split("!")[0]))
+        if topo_flag == 1:
+            x_hilltop, y_hilltop, elevation_max, elevation_std = topo_params
+            topo_type = GaussianHillTopo(x_hilltop, y_hilltop, elevation_max, elevation_std)
+        elif topo_flag == 2:
+            max_height, location_param = topo_params
+            topo_type = HillPassTopo(max_height, location_param)
+        elif topo_flag == 3:
+            slope_axis, slope_value, flat_fraction = topo_params
+            topo_type = SlopeMesaTopo(slope_axis, slope_value, flat_fraction)
+        elif topo_flag == 4:
+            x_start, y_center, slope_value, canyon_std, vertical_offset = topo_params
+            topo_type = CanyonTopo(x_start, y_center, slope_value, canyon_std, vertical_offset)
+        elif topo_flag == 6:
+            x_location, y_location, radius = topo_params
+            topo_type = HalfCircleTopo(x_location, y_location, radius)
+        elif topo_flag == 7:
+            period, amplitude = topo_params
+            topo_type = SinusoidTopo(period, amplitude)
+        elif topo_flag == 0:
+            aspect, height = topo_params
+            topo_type = CosHillTopo(aspect, height)
+        else:
+            topo_type = TopoType(topo_flag = topo_flag)
+        current_line = 3 + add
+        # Smoothing and SOR
+        smoothing_method = int(lines[current_line].strip().split("!")[0])
+        smoothing_passes = int(lines[current_line+1].strip().split("!")[0])
+        sor_iterations = int(lines[current_line+2].strip().split("!")[0])
+        sor_cycles = int(lines[current_line+3].strip().split("!")[0])
+        sor_relax = float(lines[current_line+4].strip().split("!")[0])
+
+        return cls(
+            filename = filename,
+            topo_type = topo_type,
+            smoothing_method = smoothing_method,
+            smoothing_passes = smoothing_passes,
+            sor_iterations = sor_iterations,
+            sor_cycles = sor_cycles,
+            sor_relax = sor_relax
+        )
+

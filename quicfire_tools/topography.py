@@ -44,7 +44,7 @@ class GaussianHillTopo(TopoType):
 
 class HillPassTopo(TopoType):
     max_height: PositiveInt
-    location_parameter: PositiveFloat
+    location_param: PositiveFloat
 
 class SlopeMesaTopo(TopoType):
     slope_axis: Literal[0,1]
