@@ -13,11 +13,13 @@ import importlib.resources
 from pathlib import Path
 from typing import Literal
 from string import Template
+from enum import Enum
 
 # External Imports
 import numpy as np
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
-                      PositiveFloat, NonNegativeFloat, computed_field)
+                      PositiveFloat, NonNegativeFloat, computed_field,
+                      field_validator, ValidationInfo)
 
 # TODO: Multiple wind directions
 # TODO: String for .dat files that exist
@@ -213,6 +215,68 @@ class InputFile(BaseModel, validate_assignment=True):
     @classmethod
     def from_dict(cls, data: dict):
         return cls(**data)
+
+class TopoSources(Enum):
+    flat = 0
+    gaussian_hill = 1
+    hill_pass = 2
+    slope_mesa = 3
+    canyon = 4
+    custom = 5
+    half_circle = 6
+    sinusoid = 7
+    cos_hill = 8
+    QP_elevation_bin = 9
+    terrainOutput_txt = 10
+    terrain_dat = 11
+
+class TopoType(BaseModel):
+    topo_flag: TopoSources = 11
+
+    def __str__(self):
+        return (f"{self.topo_flag.value}\t\t! N/A, "
+                f"topo flag: 0 = flat, 1 = Gaussian hill, "
+                f"2 = hill pass, 3 = slope mesa, 4 = canyon, "
+                f"5 = custom, 6 = half circle, 7 = sinusoid, "
+                f"8 = cos hill, 9 = QP_elevation.inp, "
+                f"10 = terrainOutput.txt (ARA), "
+                f"11 = terrain.dat (firetec)")
+    
+class GaussianHillTopo(TopoType):
+    topo_flag: TopoSources = 1
+    x_hilltop: PositiveInt
+    y_hilltop: PositiveInt
+    elevation_max: PositiveInt
+    elevation_std: PositiveFloat
+
+class HillPassTopo(TopoType):
+    max_height: PositiveInt
+    location_parameter: PositiveFloat
+
+class SlopeMesaTopo(TopoType):
+    slope_axis: Literal[0,1]
+    slope_value: PositiveFloat
+    flat_fraction: Field(ge=0, le=1)
+
+class CanyonTopo(TopoType):
+    x_start: PositiveInt
+    y_center: PositiveInt
+    slope_value: PositiveFloat
+    canyon_std: PositiveFloat
+    vertical_offset: PositiveFloat
+
+class HalfCircleTopo(TopoType):
+    x_location: PositiveInt
+    y_location: PositiveInt
+    radius: PositiveFloat
+
+class SinusoidTopo(TopoType):
+    period: PositiveFloat
+    amplitude: PositiveFloat
+
+class CosHillTopo(TopoType):
+    aspect: PositiveFloat
+    height: PositiveInt
 
 
 class Gridlist(InputFile):
@@ -1004,10 +1068,18 @@ class QU_TopoInputs(InputFile):
         SOR overrelaxation coefficient. Only used if there is topo.
     """
     filename: str = "topo.dat" #this doesn't seem to do anything, as 5.2.3 always expects the custom topo file to be called ftelevation.dat
-    topo_flag: Literal[0,1,2,3,4,5,6,7,8,9,10,11] = 11 #or default to flat?
+    topo_flag: TopoType = TopoType(topo_flag = 11) #or default to flat?
     smoothing_method: Literal[0,1,2] = 2 #change to zero if default topo_flag is 0
-    smoothing_passes: PositiveInt = 500 #restrict to range(500)
-    sor_iterations: PositiveInt = 200 #restrict to range(500)
+    smoothing_passes: PositiveInt = Field(le = 500, default = 500)
+    sor_iterations: PositiveInt = Field(le = 500, default = 200)
     sor_cycles: Literal[0,1,2,3,4] = 4
-    sor_relax: PositiveFloat = 0.9 #restrict to range(2)
+    sor_relax: PositiveFloat = Field(le = 2, default = 0.9)
     slopeflow_flag: Literal[0, 1] = 0
+
+    @field_validator('smoothing_method')
+    @classmethod
+    def validate_smoothing(cls, v: int, info: ValidationInfo) -> int:
+        if info.data['topo_flag'] in [9,10,11]:
+            if v == 0: raise ValueError(f"A smoothing method must be applied when ising custom topography")
+        return v
+
