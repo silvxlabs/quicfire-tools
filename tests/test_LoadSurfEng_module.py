@@ -90,11 +90,13 @@ def main():
     zarr.convenience.consolidate_metadata(ZARR_PATH)
     ds = xr.open_zarr(ZARR_PATH)
 
-    #Calc percent burned & time for max power
+    #Calc time for max power
     ds = ds.fillna(0) #Convert nan to 0 for dask
     xarr_max_power_time = ds.surfEnergy.argmax('time')
     xarr_max_power = ds.surfEnergy[xarr_max_power_time.compute()]   
-    xarr_max_power_time = xr.where(xarr_max_power_time==0,np.nan,xarr_max_power_time)
+
+    #Calc Total Energy
+    xarr_total_energy = ds.surfEnergy.sum(dim='time')
 
     ###Calc Times: arrival, stop, residence
     ##Removed forloop to improve speed
@@ -144,56 +146,76 @@ def main():
         return burned_cells 
     
     #Graph power overtime
-    def build_power_graph(power, x_cell, y_cell, save_dir=save_dir):
+    def build_power_graph(power, x_cell, y_cell, roll_avg, save_dir=save_dir):
         x_cell_m = x_cell * 2
         y_cell_m = y_cell * 2
         plt.plot(range(len(power)), power)
         plt.xlabel('Time (s)')
         plt.ylabel('Power (kW/m^2)')
-        plt.title('Power From Surface Cell x={}m, y={}m'.format(x_cell_m,y_cell_m))
-        plt.savefig(os.path.join(save_dir, "Cell_Figures", 'SufaceCellx-{}_y-{}.png'.format(x_cell_m,y_cell_m)))
+        plt.title('Power From Surface Cell\nx={}m, y={}m, Rolling Avg={}'.format(x_cell_m,y_cell_m,roll_avg))
+        plt.savefig(os.path.join(save_dir, 'SufaceCellx-{}_y-{}_RollingAvg={}.png'.format(x_cell_m,y_cell_m,roll_avg)))
         plt.close()
 
     CF_PATH = os.path.join(save_dir, "Cell_Figures")
     if not os.path.exists(CF_PATH):
         os.makedirs(CF_PATH)
-    burned_cells = find_cells_that_burned(xarr_residence_time, SIM_PARAMS, n=100)
-    power_metrics = {'max_power':[],'total_eng':[]}
-    import time
-    strt_time = time.time()
-    for i, bc in enumerate(burned_cells):
-        print(i)
-        print(time.time()-strt_time)
-        x_cell, y_cell = bc
-        start_t = int(xarr_arrival_time[y_cell, x_cell])
-        stop_t = int(xarr_fire_stop_time[y_cell, x_cell])
-        cell_power = ds.surfEnergy[start_t:stop_t,y_cell,x_cell]
-        build_power_graph(cell_power, x_cell, y_cell)
-        power_metrics["max_power"].append(float(xarr_max_power[y_cell, x_cell]))
-        power_metrics["total_eng"].append(float(cell_power.sum()))
-        np.savetxt(os.path.join(save_dir, "Cell_Figures",'SufaceCellx-{}_y-{}.csv'.format(x_cell*2,y_cell*2)), cell_power, delimiter=",")
-    df = pd.DataFrame(power_metrics)
-    df.to_csv(os.path.join(save_dir,'power_metrics.csv'))
+    # burned_cells = find_cells_that_burned(xarr_residence_time, SIM_PARAMS, n=100)
+    # power_metrics = {'max_power':[],'total_eng':[]}
+    # import time
+    # strt_time = time.time()
+    # for i, bc in enumerate(burned_cells):
+    #     print(i)
+    #     print(time.time()-strt_time)
+    #     x_cell, y_cell = bc
+    #     start_t = int(xarr_arrival_time[y_cell, x_cell])
+    #     stop_t = int(xarr_fire_stop_time[y_cell, x_cell])
+    #     cell_power = ds.surfEnergy[start_t:stop_t,y_cell,x_cell]
+    #     cell_power = cell_power.to_numpy()
+    #     df = pd.DataFrame({"cell_power_1":cell_power})
+    #     roll_vals = [1, 5, 10, 15, 20]
+    #     roll_names = ["cell_power_1", "cell_power_5", "cell_power_10", "cell_power_15", "cell_power_20"]
+    #     for i in range(len(roll_vals)):
+    #         rn = roll_names[i]
+    #         rv = roll_vals[i]
+    #         if i == 0:
+    #             cp = cell_power
+    #         else:
+    #             df[rn]=df[roll_names[0]].rolling(rv, min_periods=1).mean()
+    #             cp = np.array(df[rn])
+    #         temp_sav_dir = os.path.join(CF_PATH, rn)
+    #         if not os.path.exists(temp_sav_dir):
+    #             os.makedirs(temp_sav_dir)
+    #         build_power_graph(cp, x_cell, y_cell, rv, temp_sav_dir)
+    #     power_metrics["max_power"].append(float(xarr_max_power[y_cell, x_cell]))
+    #     power_metrics["total_eng"].append(float(cell_power.sum()))
+    #     np.savetxt(os.path.join(temp_sav_dir,'SufaceCellx-{}_y-{}.csv'.format(x_cell*2,y_cell*2)), cell_power, delimiter=",")
+    # df = pd.DataFrame(power_metrics)
+    # df.to_csv(os.path.join(save_dir,'power_metrics.csv'))
 
-    plt.hist(df['max_power'])
-    plt.title('Maximum Power for Selected Cells')
-    plt.xlabel('Max Power kW/m^2')
-    plt.ylabel('Frequency')
-    plt.savefig(os.path.join(save_dir,'max_power_hist.png'))
-    plt.close()
+    # plt.hist(df['max_power'])
+    # plt.title('Maximum Power for Selected Cells')
+    # plt.xlabel('Max Power kW/m^2')
+    # plt.ylabel('Frequency')
+    # plt.savefig(os.path.join(CF_PATH,'max_power_hist_select_cells.png'))
+    # plt.close()
 
-    plt.hist(df['total_eng'])
-    plt.title('Total Energy for Selected Cells')
-    plt.xlabel('Total Energy kJ/m^2')
-    plt.ylabel('Frequency')
-    plt.savefig(os.path.join(save_dir,'total_eng_hist.png'))
-    plt.close()
+    # plt.hist(df['total_eng'])
+    # plt.title('Total Energy for Selected Cells')
+    # plt.xlabel('Total Energy kJ/m^2')
+    # plt.ylabel('Frequency')
+    # plt.savefig(os.path.join(CF_PATH,'total_eng_hist_select_cells.png'))
+    # plt.close()
 
     #Build Figures
     def scale_for_figs_x_and_y(arr, dx=2, dy=2):
         arr = np.array(arr)
         arr = np.repeat(np.repeat(arr, dy, axis=0), dx, axis=1)
         plt.imshow(arr, cmap='YlOrRd', origin="lower")
+
+    def build_hist_remove_zeros(arr):
+        arr = np.array(arr)
+        arr = arr[arr>0]
+        plt.hist(arr)
 
     #Plot Spatial metrics
     scale_for_figs_x_and_y(xarr_arrival_time)
@@ -220,7 +242,28 @@ def main():
     plt.ylabel("Y (m)")
     plt.savefig(os.path.join(save_dir,"residence_time.png"))
     plt.close()
+    build_hist_remove_zeros(xarr_residence_time)
+    plt.title('Residence Time Histogram')
+    plt.xlabel('Residence Time (s)')
+    plt.ylabel('Frequency')
+    plt.savefig(os.path.join(CF_PATH,'residence_time_hist.png'))
+    plt.close()
     np.savetxt(os.path.join(save_dir,'ResidenceTimes.csv'), xarr_residence_time, delimiter=",")
+
+    scale_for_figs_x_and_y(xarr_total_energy)
+    plt.colorbar()
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.title("Total Energy (kJ/m^2)")
+    plt.savefig(os.path.join(save_dir,"total_energy.png"))
+    plt.close()
+    build_hist_remove_zeros(xarr_total_energy)
+    plt.title('Total Energy Histogram')
+    plt.xlabel('Total Energy (kJ/m^2)')
+    plt.ylabel('Frequency')
+    plt.savefig(os.path.join(CF_PATH,'total_energy_hist.png'))
+    plt.close()
+    np.savetxt(os.path.join(save_dir,'MaxPower.csv'), xarr_max_power, delimiter=",")
 
     scale_for_figs_x_and_y(xarr_max_power)
     plt.colorbar()
@@ -228,6 +271,12 @@ def main():
     plt.ylabel("Y (m)")
     plt.title("Max Power (kW/m^2)")
     plt.savefig(os.path.join(save_dir,"max_power.png"))
+    plt.close()
+    build_hist_remove_zeros(xarr_max_power)
+    plt.title('Max Power Histogram')
+    plt.xlabel('Max Power (kW/m^2)')
+    plt.ylabel('Frequency')
+    plt.savefig(os.path.join(CF_PATH,'max_power_hist.png'))
     plt.close()
     np.savetxt(os.path.join(save_dir,'MaxPower.csv'), xarr_max_power, delimiter=",")
 
