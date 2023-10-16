@@ -968,3 +968,46 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             max_points_along_plume_edge=int(lines[14].split()[0]),
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
+
+class QU_TopoInputs(InputFile):
+    """
+    Class representing the QU_TopoInputs.inp input file. This file
+    contains advanced inputs pertaining to topography.
+
+    filename : str
+        Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp
+    topo_flag : int
+        0 = no terrain file provided, QUIC-Fire is run with flat terrain
+        1 = Gaussian hill
+        2 = hill pass
+        3 = slope mesa
+        4 = canyon
+        5 = custom
+        6 = half circle
+        7 = sinusoid
+        8 = cos hill
+        9 = terrain is provided via QP_elevation.bin (see Section 2.7)
+        10 = terrain is provided via terrainOutput.txt
+        11 = terrain.dat (firetec)
+    smoothing_method : int
+        0 = none (default for idealized topo)
+        1 = Blur
+        2 = David Robinson’s method based on second derivative
+    smoothing_passes : int
+        Number of smoothing passes. Real terrain MUST be smoothed
+    sor_iterations : int
+        Number of SOR iteration to define background winds before starting the fire
+    sor_cycles : int
+        Number of times the SOR solver initial fields is reset to define 
+        background winds before starting the fire
+    sor_relax : float
+        SOR overrelaxation coefficient. Only used if there is topo.
+    """
+    filename: str = "topo.dat" #this doesn't seem to do anything, as 5.2.3 always expects the custom topo file to be called ftelevation.dat
+    topo_flag: Literal[0,1,2,3,4,5,6,7,8,9,10,11] = 11 #or default to flat?
+    smoothing_method: Literal[0,1,2] = 2 #change to zero if default topo_flag is 0
+    smoothing_passes: PositiveInt = 500 #restrict to range(500)
+    sor_iterations: PositiveInt = 200 #restrict to range(500)
+    sor_cycles: Literal[0,1,2,3,4] = 4
+    sor_relax: PositiveFloat = 0.9 #restrict to range(2)
+    slopeflow_flag: Literal[0, 1] = 0
