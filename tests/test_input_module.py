@@ -183,9 +183,12 @@ class TestQU_Buildings:
         """Test the to_dict method of a QU_Buildings object."""
         qu_buildings = QU_Buildings()
         result_dict = qu_buildings.to_dict()
-        assert result_dict['wall_roughness_length'] == qu_buildings.wall_roughness_length
-        assert result_dict['number_of_buildings'] == qu_buildings.number_of_buildings
-        assert result_dict['number_of_polygon_nodes'] == qu_buildings.number_of_polygon_nodes\
+        assert result_dict[
+                   'wall_roughness_length'] == qu_buildings.wall_roughness_length
+        assert result_dict[
+                   'number_of_buildings'] == qu_buildings.number_of_buildings
+        assert result_dict[
+                   'number_of_polygon_nodes'] == qu_buildings.number_of_polygon_nodes
 
     def test_from_dict(self):
         """Test the from_dict method of a QU_Buildings object."""
@@ -212,9 +215,12 @@ class TestQU_Buildings:
         # Read the content of the file and check for correctness
         with open("tmp/QU_buildings.inp", 'r') as file:
             lines = file.readlines()
-            assert float(lines[1].strip().split("\t")[0]) == qu_buildings.wall_roughness_length
-            assert int(lines[2].strip().split("\t")[0]) == qu_buildings.number_of_buildings
-            assert int(lines[3].strip().split("\t")[0]) == qu_buildings.number_of_polygon_nodes
+            assert float(lines[1].strip().split("\t")[
+                             0]) == qu_buildings.wall_roughness_length
+            assert int(lines[2].strip().split("\t")[
+                           0]) == qu_buildings.number_of_buildings
+            assert int(lines[3].strip().split("\t")[
+                           0]) == qu_buildings.number_of_polygon_nodes
 
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
@@ -266,11 +272,16 @@ class TestQU_Fileoptions:
         """Test the to_dict method of a QU_Buildings object."""
         qu_fileoptions = QU_Fileoptions()
         result_dict = qu_fileoptions.to_dict()
-        assert result_dict['output_data_file_format_flag'] == qu_fileoptions.output_data_file_format_flag
-        assert result_dict['non_mass_conserved_initial_field_flag'] == qu_fileoptions.non_mass_conserved_initial_field_flag
-        assert result_dict['initial_sensor_velocity_field_flag'] == qu_fileoptions.initial_sensor_velocity_field_flag
-        assert result_dict['qu_staggered_velocity_file_flag'] == qu_fileoptions.qu_staggered_velocity_file_flag
-        assert result_dict['generate_wind_startup_files_flag'] == qu_fileoptions.generate_wind_startup_files_flag
+        assert result_dict[
+                   'output_data_file_format_flag'] == qu_fileoptions.output_data_file_format_flag
+        assert result_dict[
+                   'non_mass_conserved_initial_field_flag'] == qu_fileoptions.non_mass_conserved_initial_field_flag
+        assert result_dict[
+                   'initial_sensor_velocity_field_flag'] == qu_fileoptions.initial_sensor_velocity_field_flag
+        assert result_dict[
+                   'qu_staggered_velocity_file_flag'] == qu_fileoptions.qu_staggered_velocity_file_flag
+        assert result_dict[
+                   'generate_wind_startup_files_flag'] == qu_fileoptions.generate_wind_startup_files_flag
 
     def test_from_dict(self):
         """Test the from_dict method of a QU_Buildings object."""
@@ -426,30 +437,31 @@ class TestQU_Simparams:
         assert isinstance(test_object, QFire_Advanced_User_Inputs)
         assert qfire_advanced_user_inputs == test_object
 
+
 class TestQUIC_fire:
     @staticmethod
     def get_test_object():
         return QUIC_fire(nz=26,
-                         sim_time = 60, time_now = 1695311421,
-                         output_times = 30)
+                         sim_time=60, time_now=1695311421,
+                         output_times=30)
 
     @staticmethod
     def get_test_object2():
         return QUIC_fire(nz=26,
-                         sim_time = 60, time_now = 1695311421,
-                         output_times = OutputTimes(out_time_fire = 30,
-                                                    out_time_wind = 60,
-                                                    out_time_emis_rad = 90,
-                                                    out_time_wind_avg = 120),
-                         ignition_type = RectangleIgnition(x_min = 20,
-                                                           y_min = 20,
-                                                           x_length = 10,
-                                                           y_length = 160),
-                         fuel_flag = 1,
-                         fuel_params = FuelParams(fuel_density = 0.5,
-                                                  fuel_moisture = 1,
-                                                  fuel_height = 0.75),
-                         emissions_out = 3)
+                         sim_time=60, time_now=1695311421,
+                         output_times=OutputTimes(out_time_fire=30,
+                                                  out_time_wind=60,
+                                                  out_time_emis_rad=90,
+                                                  out_time_wind_avg=120),
+                         ignition_type=RectangleIgnition(x_min=20,
+                                                         y_min=20,
+                                                         x_length=10,
+                                                         y_length=160),
+                         fuel_flag=1,
+                         fuel_params=FuelParams(fuel_density=0.5,
+                                                fuel_moisture=1,
+                                                fuel_height=0.75),
+                         emissions_out=3)
 
     def test_init(self):
         # Test default initialization
@@ -463,8 +475,8 @@ class TestQUIC_fire:
 
         # Test data type casting
         quic_fire = QUIC_fire(nz="26",
-                              sim_time = 60, time_now = 1695311421,
-                              output_times = 30)
+                              sim_time=60, time_now=1695311421,
+                              output_times=30)
         assert isinstance(quic_fire.nz, int)
         assert quic_fire.nz == 26
 
@@ -473,43 +485,45 @@ class TestQUIC_fire:
         assert quic_fire.stretch_grid_input == "1"
         assert quic_fire.dz == 1
         quic_fire.nz = 5
-        quic_fire.dz_array = [1,2,3,4,5]
+        quic_fire.dz_array = [1, 2, 3, 4, 5]
         quic_fire.stretch_grid_flag = 1
         assert quic_fire.stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
 
         # Test invalid dz array
         quic_fire = QUIC_fire(nz=26,
-                      sim_time = 60, time_now = 1695311421,
-                      output_times = 30,
-                      stretch_grid_flag = 1,
-                      dz_array = [1,2,3,4,5])
+                              sim_time=60, time_now=1695311421,
+                              output_times=30,
+                              stretch_grid_flag=1,
+                              dz_array=[1, 2, 3, 4, 5])
         with pytest.raises(ValueError):
             assert quic_fire.stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
 
         # Test fuel inputs
         quic_fire = QUIC_fire(nz=26,
-                              sim_time = 60, time_now = 1695311421,
-                              output_times = 30)
+                              sim_time=60, time_now=1695311421,
+                              output_times=30)
         assert quic_fire.fuel_params is None
         quic_fire.fuel_flag = 1
-        quic_fire.fuel_params = FuelParams(fuel_density = 0.5,
-                                           fuel_moisture = 1,
-                                           fuel_height = 0.75)
-        assert quic_fire.fuel_lines ==(f"{quic_fire.fuel_flag}\t! fuel density flag: 1 = uniform; "
-                                         f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-                                         f" files for quic grid, 4 = Firetech files for "
-                                         f"different grid (need interpolation)" 
-                                         f"\n0.5"
-                                         f"\n{quic_fire.fuel_flag}\t! fuel moisture flag: 1 = uniform; "
-                                         f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-                                         f" files for quic grid, 4 = Firetech files for "
-                                         f"different grid (need interpolation)" 
-                                         f"\n1.0"
-                                         f"\n{quic_fire.fuel_flag}\t! fuel height flag: 1 = uniform; "
-                                         f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-                                         f" files for quic grid, 4 = Firetech files for "
-                                         f"different grid (need interpolation)" 
-                                         f"\n0.75")
+        quic_fire.fuel_params = FuelParams(fuel_density=0.5,
+                                           fuel_moisture=1,
+                                           fuel_height=0.75)
+        assert quic_fire.fuel_lines == (
+            f"{quic_fire.fuel_flag}\t! fuel density flag: 1 = uniform; "
+            f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
+            f" files for quic grid, 4 = Firetech files for "
+            f"different grid (need interpolation)"
+            f"\n0.5"
+            f"\n{quic_fire.fuel_flag}\t! fuel moisture flag: 1 = uniform; "
+            f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
+            f" files for quic grid, 4 = Firetech files for "
+            f"different grid (need interpolation)"
+            f"\n1.0"
+            f"\n{quic_fire.fuel_flag}\t! fuel height flag: 1 = uniform; "
+            f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
+            f" files for quic grid, 4 = Firetech files for "
+            f"different grid (need interpolation)"
+            f"\n0.75")
+
     def test_from_file(self):
         """Test initializing a class from a QFIRE_advanced_user_inputs.inp
         file."""
