@@ -1,6 +1,6 @@
 Specify file name for custom topo (full path)
 $filename
-$topo_flag          ! N/A, topo flag: 0 = flat, 1 = Gaussian hill, 2 = hill pass, 3 = slope mesa, 4 = canyon, 5 = custom, 6 = half circle, 7 = sinusoid, 8 = cos hill, 9 = QP_elevation.inp, 10 = terrainOutput.txt (ARA), 11 = terrain.dat (firetec)
+$topo_lines
 $smoothing_method   ! N/A, smoothing method (0 = none (default for idealized terrain), 1 = blur, 2 = David's)
 $smoothing_passes   ! N/A, number of smoothing passes
 $sor_iterations     ! N/A, number of initial SOR iterations (only if fire is run)
