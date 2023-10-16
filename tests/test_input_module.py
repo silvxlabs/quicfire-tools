@@ -1,10 +1,15 @@
 """
 Test module for the inputs module of the quicfire_tools package.
 """
-from quicfire_tools.inputs import *
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+
+from quicfire_tools.inputs import *
+
+# Create a tmp/ directory to store the temporary test files
+Path("tmp/").mkdir(exist_ok=True)
 
 
 class TestGridList:
@@ -44,6 +49,15 @@ class TestGridList:
         assert result_dict['dy'] == 1
         assert result_dict['dz'] == 1
         assert '_validate_inputs' not in result_dict
+
+    def test_to_docs(self):
+        gridlist = Gridlist(n=10, m=10, l=10, dx=1, dy=1, dz=1, aa1=1)
+        result_dict = gridlist.to_dict()
+        result_docs = gridlist.get_documentation()
+        for key in result_dict:
+            assert key in result_docs
+        for key in result_docs:
+            assert key in result_dict
 
     def test_to_file(self):
         """Test the write_file method of a Gridlist object."""
@@ -183,12 +197,9 @@ class TestQU_Buildings:
         """Test the to_dict method of a QU_Buildings object."""
         qu_buildings = QU_Buildings()
         result_dict = qu_buildings.to_dict()
-        assert result_dict[
-                   'wall_roughness_length'] == qu_buildings.wall_roughness_length
-        assert result_dict[
-                   'number_of_buildings'] == qu_buildings.number_of_buildings
-        assert result_dict[
-                   'number_of_polygon_nodes'] == qu_buildings.number_of_polygon_nodes
+        assert result_dict['wall_roughness_length'] == qu_buildings.wall_roughness_length
+        assert result_dict['number_of_buildings'] == qu_buildings.number_of_buildings
+        assert result_dict['number_of_polygon_nodes'] == qu_buildings.number_of_polygon_nodes
 
     def test_from_dict(self):
         """Test the from_dict method of a QU_Buildings object."""
@@ -215,12 +226,9 @@ class TestQU_Buildings:
         # Read the content of the file and check for correctness
         with open("tmp/QU_buildings.inp", 'r') as file:
             lines = file.readlines()
-            assert float(lines[1].strip().split("\t")[
-                             0]) == qu_buildings.wall_roughness_length
-            assert int(lines[2].strip().split("\t")[
-                           0]) == qu_buildings.number_of_buildings
-            assert int(lines[3].strip().split("\t")[
-                           0]) == qu_buildings.number_of_polygon_nodes
+            assert float(lines[1].strip().split("\t")[0]) == qu_buildings.wall_roughness_length
+            assert int(lines[2].strip().split("\t")[0]) == qu_buildings.number_of_buildings
+            assert int(lines[3].strip().split("\t")[0]) == qu_buildings.number_of_polygon_nodes
 
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
@@ -272,16 +280,12 @@ class TestQU_Fileoptions:
         """Test the to_dict method of a QU_Buildings object."""
         qu_fileoptions = QU_Fileoptions()
         result_dict = qu_fileoptions.to_dict()
-        assert result_dict[
-                   'output_data_file_format_flag'] == qu_fileoptions.output_data_file_format_flag
+        assert result_dict['output_data_file_format_flag'] == qu_fileoptions.output_data_file_format_flag
         assert result_dict[
                    'non_mass_conserved_initial_field_flag'] == qu_fileoptions.non_mass_conserved_initial_field_flag
-        assert result_dict[
-                   'initial_sensor_velocity_field_flag'] == qu_fileoptions.initial_sensor_velocity_field_flag
-        assert result_dict[
-                   'qu_staggered_velocity_file_flag'] == qu_fileoptions.qu_staggered_velocity_file_flag
-        assert result_dict[
-                   'generate_wind_startup_files_flag'] == qu_fileoptions.generate_wind_startup_files_flag
+        assert result_dict['initial_sensor_velocity_field_flag'] == qu_fileoptions.initial_sensor_velocity_field_flag
+        assert result_dict['qu_staggered_velocity_file_flag'] == qu_fileoptions.qu_staggered_velocity_file_flag
+        assert result_dict['generate_wind_startup_files_flag'] == qu_fileoptions.generate_wind_startup_files_flag
 
     def test_from_dict(self):
         """Test the from_dict method of a QU_Buildings object."""
@@ -328,10 +332,8 @@ class TestQU_Fileoptions:
 class TestQU_Simparams:
     @staticmethod
     def get_test_object():
-        return QU_Simparams(nx=100, ny=100, nz=26, dx=2, dy=2,
-                            surface_vertical_cell_size=1,
-                            number_surface_cells=5,
-                            )
+        return QU_Simparams(nx=100, ny=100, nz=26, dx=2., dy=2,
+                            quic_domain_height=250)
 
     def test_init(self):
         # Test default initialization
@@ -359,17 +361,13 @@ class TestQU_Simparams:
 
         # Test data type casting
         qu_simparams = QU_Simparams(nx="100", ny=100, nz=26, dx=2, dy=2,
-                                    surface_vertical_cell_size=1,
-                                    number_surface_cells=5)
+                                    quic_domain_height=5)
         assert isinstance(qu_simparams.nx, int)
         assert qu_simparams.nx == 100
 
         # Test with custom dz_array
         qu_simparams = QU_Simparams(nx=100, ny=100, nz=26, dx=2, dy=2,
-                                    surface_vertical_cell_size=1,
-                                    number_surface_cells=5,
-                                    custom_dz_array=[1] * 26,
-                                    stretch_grid_flag=0)
+                                    custom_dz_array=[1] * 26, quic_domain_height=250)
         assert qu_simparams.dz_array == [
             qu_simparams.surface_vertical_cell_size] * 26
 
@@ -425,8 +423,342 @@ class TestQU_Simparams:
         # Test valid case
         qu_simparams.custom_dz_array = [1] * qu_simparams.nz
         vertical_grid_lines = qu_simparams._stretch_grid_flag_1()
-        vertical_grid_list = vertical_grid_lines.split("\n")
-        assert len(vertical_grid_list) == 22
+        with open("data/test-templates/stretchgrid_1.txt") as f:
+            expected_lines = f.readlines()
+        assert vertical_grid_lines == "".join(expected_lines)
+
+    def test_stretch_grid_flag_3(self):
+        qu_simparams = self.get_test_object()
+        vertical_grid_lines = qu_simparams._stretch_grid_flag_3()
+        with open("data/test-templates/stretchgrid_3.txt") as f:
+            expected_lines = f.readlines()
+        assert vertical_grid_lines == "".join(expected_lines)
+
+    def test_generate_vertical_grid(self):
+        qu_simparams = self.get_test_object()
+
+        # Test stretch_grid_flag = 0
+        qu_simparams.stretch_grid_flag = 0
+        with open("data/test-templates/stretchgrid_0.txt") as f:
+            expected_lines = f.readlines()
+        assert qu_simparams.vertical_grid_lines == "".join(expected_lines)
+
+        # Test stretch_grid_flag = 1
+        qu_simparams.stretch_grid_flag = 1
+        qu_simparams.custom_dz_array = [1] * qu_simparams.nz
+        with open("data/test-templates/stretchgrid_1.txt") as f:
+            expected_lines = f.readlines()
+        assert qu_simparams.vertical_grid_lines == "".join(expected_lines)
+
+        # Test stretch_grid_flag = 3
+        qu_simparams.stretch_grid_flag = 3
+        with open("data/test-templates/stretchgrid_3.txt") as f:
+            expected_lines = f.readlines()
+        assert qu_simparams.vertical_grid_lines == "".join(expected_lines)
+
+    def test_generate_wind_times(self):
+        # Test valid wind_step_times
+        qu_simparams = self.get_test_object()
+        qu_simparams.wind_times = [0]
+        wind_times_lines = qu_simparams._generate_wind_time_lines()
+        with open("data/test-templates/wind_times.txt") as f:
+            expected_lines = f.readlines()
+        assert wind_times_lines == "".join(expected_lines)
+
+        # Test invalid wind_step_times
+        qu_simparams.wind_times = []
+        with pytest.raises(ValueError):
+            qu_simparams._generate_wind_time_lines()
+
+    def test_to_dict(self):
+        """
+        Test the to_dict method of a QU_Simparams object.
+        """
+        qu_simparams = self.get_test_object()
+        result_dict = qu_simparams.to_dict()
+
+        # Test the passed parameters
+        assert result_dict['nx'] == qu_simparams.nx
+        assert result_dict['ny'] == qu_simparams.ny
+        assert result_dict['nz'] == qu_simparams.nz
+        assert result_dict['dx'] == qu_simparams.dx
+        assert result_dict['dy'] == qu_simparams.dy
+        assert result_dict[
+                   'surface_vertical_cell_size'] == qu_simparams.surface_vertical_cell_size
+        assert result_dict[
+                   'number_surface_cells'] == qu_simparams.number_surface_cells
+
+        # Test the default parameters
+        assert result_dict[
+                   'surface_vertical_cell_size'] == qu_simparams.surface_vertical_cell_size
+        assert result_dict[
+                   'number_surface_cells'] == qu_simparams.number_surface_cells
+        assert result_dict[
+                   'stretch_grid_flag'] == qu_simparams.stretch_grid_flag
+        assert result_dict['dz_array'] == qu_simparams.dz_array
+        assert result_dict['utc_offset'] == qu_simparams.utc_offset
+        assert result_dict['wind_times'] == qu_simparams.wind_times
+        assert result_dict['sor_iter_max'] == qu_simparams.sor_iter_max
+        assert result_dict[
+                   'sor_residual_reduction'] == qu_simparams.sor_residual_reduction
+        assert result_dict[
+                   'use_diffusion_flag'] == qu_simparams.use_diffusion_flag
+        assert result_dict[
+                   'number_diffusion_iterations'] == qu_simparams.number_diffusion_iterations
+        assert result_dict['domain_rotation'] == qu_simparams.domain_rotation
+        assert result_dict['utm_x'] == qu_simparams.utm_x
+        assert result_dict['utm_y'] == qu_simparams.utm_y
+        assert result_dict['utm_zone_number'] == qu_simparams.utm_zone_number
+        assert result_dict['utm_zone_letter'] == qu_simparams.utm_zone_letter
+        assert result_dict['quic_cfd_flag'] == qu_simparams.quic_cfd_flag
+        assert result_dict[
+                   'explosive_bldg_flag'] == qu_simparams.explosive_bldg_flag
+        assert result_dict['bldg_array_flag'] == qu_simparams.bldg_array_flag
+
+    def test_from_dict(self):
+        """
+        Test the from_dict method of a QU_Simparams object.
+        """
+        qu_simparams = self.get_test_object()
+        result_dict = qu_simparams.to_dict()
+        test_object = QU_Simparams.from_dict(result_dict)
+        assert isinstance(test_object, QU_Simparams)
+        assert qu_simparams == test_object
+
+    def test_to_docs(self):
+        qu_simparams = self.get_test_object()
+        result_dict = qu_simparams.to_dict()
+        result_docs = qu_simparams.get_documentation()
+        for key in result_dict:
+            if key in ["vertical_grid_lines", "wind_time_lines",
+                       "custom_dz_array"]:
+                continue
+            assert key in result_docs
+        for key in result_docs:
+            assert key in result_dict
+
+    def test_to_file(self):
+        """
+        Test the to_file method of a QU_Simparams object.
+        """
+        qu_simparams = self.get_test_object()
+        qu_simparams.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QU_simparams.inp", 'r') as file:
+            lines = file.readlines()
+
+        # Check nx, ny, nz, dx, dy
+        assert int(lines[1].strip().split("!")[0]) == qu_simparams.nx
+        assert int(lines[2].strip().split("!")[0]) == qu_simparams.ny
+        assert int(lines[3].strip().split("!")[0]) == qu_simparams.nz
+        assert float(lines[4].strip().split("!")[0]) == qu_simparams.dx
+        assert float(lines[5].strip().split("!")[0]) == qu_simparams.dy
+
+        # Check stretch_grid_flag, surface_vertical_cell_size,
+        # number_surface_cells
+        assert int(
+            lines[6].strip().split("!")[0]) == qu_simparams.stretch_grid_flag
+        assert float(lines[7].strip().split("!")[
+                         0]) == qu_simparams.surface_vertical_cell_size
+        assert int(
+            lines[8].strip().split("!")[0]) == qu_simparams.number_surface_cells
+
+        # Check dz_array
+        assert lines[9] == "! DZ array [m]\n"
+        for i in range(qu_simparams.nz):
+            index = i + 10
+            dz = qu_simparams.dz_array[i]
+            assert float(lines[index].strip()) == dz
+
+        # Update lines index
+        i_current = 10 + qu_simparams.nz
+
+        # Check number of time increments, utc_offset
+        assert int(lines[i_current].strip().split("!")[0]) == len(
+            qu_simparams.wind_times)
+        assert int(lines[i_current + 1].strip().split("!")[
+                       0]) == qu_simparams.utc_offset
+
+        # Check wind_step_times
+        assert lines[i_current + 2] == "! Wind step times [s]\n"
+        for i in range(len(qu_simparams.wind_times)):
+            index = i_current + 3 + i
+            wind_time = qu_simparams.wind_times[i]
+            assert int(lines[index].strip()) == wind_time
+
+        # Update lines index
+        i_current = i_current + 3 + len(qu_simparams.wind_times)
+        i_current += 9  # Skip not used lines
+
+        # Check sor_iter_max, sor_residual_reduction
+        assert int(
+            lines[i_current].strip().split("!")[0]) == qu_simparams.sor_iter_max
+        assert int(lines[i_current + 1].strip().split("!")[
+                       0]) == qu_simparams.sor_residual_reduction
+
+        # Check use_diffusion_flag, number_diffusion_iterations, domain_rotation
+        # utm_x, utm_y, utm_zone_number, utm_zone_letter, quic_cfd_flag,
+        # explosive_bldg_flag, bldg_array_flag
+        assert int(lines[i_current + 2].strip().split("!")[
+                       0]) == qu_simparams.use_diffusion_flag
+        assert int(lines[i_current + 3].strip().split("!")[
+                       0]) == qu_simparams.number_diffusion_iterations
+        assert float(lines[i_current + 4].strip().split("!")[
+                         0]) == qu_simparams.domain_rotation
+        assert float(
+            lines[i_current + 5].strip().split("!")[0]) == qu_simparams.utm_x
+        assert float(
+            lines[i_current + 6].strip().split("!")[0]) == qu_simparams.utm_y
+        assert int(lines[i_current + 7].strip().split("!")[
+                       0]) == qu_simparams.utm_zone_number
+        assert int(lines[i_current + 8].strip().split("!")[
+                       0]) == qu_simparams.utm_zone_letter
+        assert int(lines[i_current + 9].strip().split("!")[
+                       0]) == qu_simparams.quic_cfd_flag
+        assert int(lines[i_current + 10].strip().split("!")[
+                       0]) == qu_simparams.explosive_bldg_flag
+        assert int(lines[i_current + 11].strip().split("!")[
+                       0]) == qu_simparams.bldg_array_flag
+
+    def test_from_file(self):
+        """
+        Test initializing a class from a QU_simparams.inp file.
+        """
+        # Test stretch grid flag = 3
+        qu_simparams = self.get_test_object()
+        qu_simparams.to_file("tmp/")
+        test_object = QU_Simparams.from_file("tmp/")
+        assert isinstance(test_object, QU_Simparams)
+        assert qu_simparams == test_object
+
+        # Test stretch grid flag = 0
+        qu_simparams = self.get_test_object()
+        qu_simparams.stretch_grid_flag = 0
+        qu_simparams.to_file("tmp/")
+        test_object = QU_Simparams.from_file("tmp/")
+        assert isinstance(test_object, QU_Simparams)
+        assert qu_simparams == test_object
+
+        # Test stretch grid flag = 1
+        qu_simparams = self.get_test_object()
+        qu_simparams.stretch_grid_flag = 1
+        qu_simparams.custom_dz_array = [1] * qu_simparams.nz
+        qu_simparams.to_file("tmp/")
+        test_object = QU_Simparams.from_file("tmp/")
+        assert isinstance(test_object, QU_Simparams)
+        assert qu_simparams == test_object
+
+
+class TestQFire_Advanced_User_Inputs:
+    def test_init(self):
+        """Test the initialization of a QFire_Advanced_User_Inputs object."""
+        # Test the default initialization
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.05
+
+        # Test custom initialization
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(
+            fraction_cells_launch_firebrands=0.1)
+        assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.1
+
+        # Test data type casting
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(
+            fraction_cells_launch_firebrands="0.1")
+        assert isinstance(
+            qfire_advanced_user_inputs.fraction_cells_launch_firebrands, float)
+        assert qfire_advanced_user_inputs.fraction_cells_launch_firebrands == 0.1
+
+        # Pass bad parameters: negative numbers
+        with pytest.raises(ValidationError):
+            QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=-1)
+
+        # Pass bad parameters: not a fraction
+        with pytest.raises(ValidationError):
+            QFire_Advanced_User_Inputs(fraction_cells_launch_firebrands=2)
+
+        # Pass bad parameters: not a valid range for theta
+        with pytest.raises(ValidationError):
+            QFire_Advanced_User_Inputs(minimum_landing_angle=361)
+
+    def test_to_dict(self):
+        """Test the to_dict method of a QFire_Advanced_User_Inputs object."""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        result_dict = qfire_advanced_user_inputs.to_dict()
+        assert result_dict[
+                   'fraction_cells_launch_firebrands'] == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
+        assert result_dict[
+                   'firebrand_radius_scale_factor'] == qfire_advanced_user_inputs.firebrand_radius_scale_factor
+        assert result_dict[
+                   'firebrand_trajectory_time_step'] == qfire_advanced_user_inputs.firebrand_trajectory_time_step
+        assert result_dict[
+                   'firebrand_launch_interval'] == qfire_advanced_user_inputs.firebrand_launch_interval
+        assert result_dict[
+                   'firebrands_per_deposition'] == qfire_advanced_user_inputs.firebrands_per_deposition
+        assert result_dict[
+                   'firebrand_area_ratio'] == qfire_advanced_user_inputs.firebrand_area_ratio
+        assert result_dict[
+                   'minimum_burn_rate_coefficient'] == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
+        assert result_dict[
+                   'max_firebrand_thickness_fraction'] == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
+        assert result_dict[
+                   'firebrand_germination_delay'] == qfire_advanced_user_inputs.firebrand_germination_delay
+        assert result_dict[
+                   'vertical_velocity_scale_factor'] == qfire_advanced_user_inputs.vertical_velocity_scale_factor
+        assert result_dict[
+                   'minimum_firebrand_ignitions'] == qfire_advanced_user_inputs.minimum_firebrand_ignitions
+        assert result_dict[
+                   'maximum_firebrand_ignitions'] == qfire_advanced_user_inputs.maximum_firebrand_ignitions
+        assert result_dict[
+                   'minimum_landing_angle'] == qfire_advanced_user_inputs.minimum_landing_angle
+        assert result_dict[
+                   'maximum_firebrand_thickness'] == qfire_advanced_user_inputs.maximum_firebrand_thickness
+
+    def test_from_dict(self):
+        """Test class initialization from a dictionary object"""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        result_dict = qfire_advanced_user_inputs.to_dict()
+        test_obj = QFire_Advanced_User_Inputs.from_dict(result_dict)
+        assert test_obj == qfire_advanced_user_inputs
+
+    def test_to_docs(self):
+        """Test the to_docs method of a QFire_Advanced_User_Inputs object."""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        result_dict = qfire_advanced_user_inputs.to_dict()
+        result_docs = qfire_advanced_user_inputs.get_documentation()
+        for key in result_dict:
+            assert key in result_docs
+        for key in result_docs:
+            assert key in result_dict
+
+    def test_to_file(self):
+        """Test the to_file method of a QFire_Advanced_User_Inputs object."""
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(
+            fraction_cells_launch_firebrands=0.1)
+        qfire_advanced_user_inputs.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QFIRE_advanced_user_inputs.inp", 'r') as file:
+            lines = file.readlines()
+            assert float(lines[0].strip().split("!")[0]) == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
+            assert float(lines[1].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_radius_scale_factor
+            assert float(lines[2].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_trajectory_time_step
+            assert float(lines[3].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_launch_interval
+            assert float(lines[4].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrands_per_deposition
+            assert float(lines[5].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_area_ratio
+            assert float(lines[6].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
+            assert float(lines[7].strip().split("!")[0]) == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
+            assert float(lines[8].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_germination_delay
+            assert float(lines[9].strip().split("!")[0]) == qfire_advanced_user_inputs.vertical_velocity_scale_factor
+            assert float(lines[10].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_firebrand_ignitions
+            assert float(lines[11].strip().split("!")[0]) == qfire_advanced_user_inputs.maximum_firebrand_ignitions
+            assert float(lines[12].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_landing_angle
+            assert float(lines[13].strip().split("!")[0]) == qfire_advanced_user_inputs.maximum_firebrand_thickness
+
+        # Test writing to a non-existent directory
+        with pytest.raises(FileNotFoundError):
+            qfire_advanced_user_inputs.to_file(
+                "/non_existent_path/QFIRE_advanced_user_inputs.inp")
 
     def test_from_file(self):
         """Test initializing a class from a QFIRE_advanced_user_inputs.inp
@@ -438,97 +770,4 @@ class TestQU_Simparams:
         assert qfire_advanced_user_inputs == test_object
 
 
-class TestQUIC_fire:
-    @staticmethod
-    def get_test_object():
-        return QUIC_fire(nz=26,
-                         sim_time=60, time_now=1695311421,
-                         output_times=30)
 
-    @staticmethod
-    def get_test_object2():
-        return QUIC_fire(nz=26,
-                         sim_time=60, time_now=1695311421,
-                         output_times=OutputTimes(out_time_fire=30,
-                                                  out_time_wind=60,
-                                                  out_time_emis_rad=90,
-                                                  out_time_wind_avg=120),
-                         ignition_type=RectangleIgnition(x_min=20,
-                                                         y_min=20,
-                                                         x_length=10,
-                                                         y_length=160),
-                         fuel_flag=1,
-                         fuel_params=FuelParams(fuel_density=0.5,
-                                                fuel_moisture=1,
-                                                fuel_height=0.75),
-                         emissions_out=3)
-
-    def test_init(self):
-        # Test default initialization
-        quic_fire = self.get_test_object()
-        assert quic_fire.nz == 26
-        assert quic_fire.sim_time == 60
-
-        # Test changing the default values
-        quic_fire.nz = 27
-        assert quic_fire.nz == 27
-
-        # Test data type casting
-        quic_fire = QUIC_fire(nz="26",
-                              sim_time=60, time_now=1695311421,
-                              output_times=30)
-        assert isinstance(quic_fire.nz, int)
-        assert quic_fire.nz == 26
-
-        # Test stretch grid input
-        assert quic_fire.stretch_grid_flag == 0
-        assert quic_fire.stretch_grid_input == "1"
-        assert quic_fire.dz == 1
-        quic_fire.nz = 5
-        quic_fire.dz_array = [1, 2, 3, 4, 5]
-        quic_fire.stretch_grid_flag = 1
-        assert quic_fire.stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
-
-        # Test invalid dz array
-        quic_fire = QUIC_fire(nz=26,
-                              sim_time=60, time_now=1695311421,
-                              output_times=30,
-                              stretch_grid_flag=1,
-                              dz_array=[1, 2, 3, 4, 5])
-        with pytest.raises(ValueError):
-            assert quic_fire.stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
-
-        # Test fuel inputs
-        quic_fire = QUIC_fire(nz=26,
-                              sim_time=60, time_now=1695311421,
-                              output_times=30)
-        assert quic_fire.fuel_params is None
-        quic_fire.fuel_flag = 1
-        quic_fire.fuel_params = FuelParams(fuel_density=0.5,
-                                           fuel_moisture=1,
-                                           fuel_height=0.75)
-        assert quic_fire.fuel_lines == (
-            f"{quic_fire.fuel_flag}\t! fuel density flag: 1 = uniform; "
-            f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-            f" files for quic grid, 4 = Firetech files for "
-            f"different grid (need interpolation)"
-            f"\n0.5"
-            f"\n{quic_fire.fuel_flag}\t! fuel moisture flag: 1 = uniform; "
-            f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-            f" files for quic grid, 4 = Firetech files for "
-            f"different grid (need interpolation)"
-            f"\n1.0"
-            f"\n{quic_fire.fuel_flag}\t! fuel height flag: 1 = uniform; "
-            f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-            f" files for quic grid, 4 = Firetech files for "
-            f"different grid (need interpolation)"
-            f"\n0.75")
-
-    def test_from_file(self):
-        """Test initializing a class from a QFIRE_advanced_user_inputs.inp
-        file."""
-        quic_fire = self.get_test_object()
-        # quic_fire.to_file("tmp/")
-        test_object = QUIC_fire.from_file("tmp/")
-        assert isinstance(test_object, QUIC_fire)
-        # assert quic_fire == test_object
