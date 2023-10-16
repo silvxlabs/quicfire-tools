@@ -980,7 +980,8 @@ class QU_TopoInputs(InputFile):
 
     filename : str
         Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp
-    topo_flag : int
+    topo_type : TopoType
+        Topography type specified as a TopoType class from topography.py
         0 = no terrain file provided, QUIC-Fire is run with flat terrain
         1 = Gaussian hill
         2 = hill pass
@@ -1008,8 +1009,8 @@ class QU_TopoInputs(InputFile):
         SOR overrelaxation coefficient. Only used if there is topo.
     """
     filename: str = "topo.dat"
-    topo_type: TopoType = TopoType(topo_flag = 5) #or default to flat?
-    smoothing_method: Literal[0,1,2] = 2 #change to zero if default topo_flag is 0
+    topo_type: TopoType = TopoType(topo_flag = 0)
+    smoothing_method: Literal[0,1,2] = 0
     smoothing_passes: PositiveInt = Field(le = 500, default = 500)
     sor_iterations: PositiveInt = Field(le = 500, default = 200)
     sor_cycles: Literal[0,1,2,3,4] = 4
