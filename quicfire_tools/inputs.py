@@ -968,3 +968,30 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             max_points_along_plume_edge=int(lines[14].split()[0]),
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
+class RuntimeAdvancedUserInputs(InputFile):
+    """
+    Class representing the Runtime_Advanced_User_Inputs.inp input file.
+    This file contains advanced parameters related to computer memory usage.
+
+    Attributes
+    ----------
+    num_cpus : PositiveInt
+        Maximum number of CPU to use. Do not exceed 8. Use 1 for ensemble simulations.
+    use_acw : Literal[0,1]
+        Use Adaptive Computation Window (0=Disabled 1=Enabled)
+    """
+    num_cpus: PositiveInt = Field(le=8, default = 8)
+    use_acw: Literal[0,1] = 0
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        with open(directory / "Runtime_Advanced_User_Inputs.inp", "r") as f:
+            lines = f.readlines()
+        
+        return cls(
+            num_cpus = int(lines[0].strip().split("!")[0]),
+            use_acw = int(lines[1].strip().split("!")[0])
+        )
