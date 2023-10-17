@@ -980,6 +980,8 @@ class RuntimeAdvancedUserInputs(InputFile):
     use_acw : Literal[0,1]
         Use Adaptive Computation Window (0=Disabled 1=Enabled)
     """
+    name: str = "Runtime_Advanced_User_Inputs"
+    _extension: str = ".inp"
     num_cpus: PositiveInt = Field(le=8, default = 8)
     use_acw: Literal[0,1] = 0
 
