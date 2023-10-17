@@ -4,8 +4,8 @@ QUIC-Fire Tools Simulation Input Module
 from __future__ import annotations
 
 # Internal Imports
-from utils import compute_parabolic_stretched_grid
-from quicfire_tools.topography import (TopoSources, TopoType, 
+from quicfire_tools.utils import compute_parabolic_stretched_grid
+from quicfire_tools.topography import (TopoType, 
                                        GaussianHillTopo, HillPassTopo, SlopeMesaTopo,
                                        CanyonTopo, HalfCircleTopo, SinusoidTopo, CosHillTopo)
 
@@ -1015,12 +1015,11 @@ class QU_TopoInputs(InputFile):
     sor_iterations: PositiveInt = Field(le = 500, default = 200)
     sor_cycles: Literal[0,1,2,3,4] = 4
     sor_relax: PositiveFloat = Field(le = 2, default = 0.9)
-    slopeflow_flag: Literal[0, 1] = 0
 
     @field_validator('smoothing_method')
     @classmethod
     def validate_smoothing(cls, v: int, info: ValidationInfo) -> int:
-        if info.data['topo_flag'] in [5,9,10,11]:
+        if info.data['topo_type'].topo_flag in [5,9,10,11]:
             if v == 0: raise ValueError(f"QU_TopoInputs: a smoothing method must be applied when using custom topography")
         return v
     

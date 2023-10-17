@@ -7,7 +7,8 @@ from __future__ import annotations
 from enum import Enum
 
 # External Imports
-from pydantic import BaseModel, PositiveInt, PositiveFloat, Literal, Field
+from typing import Literal
+from pydantic import BaseModel, PositiveInt, PositiveFloat, Field
 
 class TopoSources(Enum):
     flat = 0
@@ -24,7 +25,7 @@ class TopoSources(Enum):
     terrain_dat = 11
 
 class TopoType(BaseModel):
-    topo_flag: TopoSources = 5
+    topo_flag: TopoSources
 
     def __str__(self):
         return (f"{self.topo_flag.value}\t\t! N/A, "
@@ -33,7 +34,7 @@ class TopoType(BaseModel):
                 f"5 = custom, 6 = half circle, 7 = sinusoid, "
                 f"8 = cos hill, 9 = QP_elevation.inp, "
                 f"10 = terrainOutput.txt (ARA), "
-                f"11 = terrain.dat (firetec)")
+                f"11 = terrain.dat (firetec)\n")
     
 class GaussianHillTopo(TopoType):
     topo_flag: TopoSources = 1
@@ -49,7 +50,7 @@ class HillPassTopo(TopoType):
 class SlopeMesaTopo(TopoType):
     slope_axis: Literal[0,1]
     slope_value: PositiveFloat
-    flat_fraction: Field(ge=0, le=1)
+    flat_fraction: float = Field(ge=0, le=1)
 
 class CanyonTopo(TopoType):
     x_start: PositiveInt
