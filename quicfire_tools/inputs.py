@@ -778,9 +778,13 @@ class QUIC_fire(InputFile):
         for quic grid, 4 = Firetech files for different grid
         (need interpolation)
     fuel_density : PositiveFloat
-
+        Fuel density (kg/m3)
+    fuel_moisture : PositiveFloat
+        Fuel moisture = mass of water/mass of dry fuel
+    fuel_height : PositiveFloat
+        Fuel height of surface layer (m)
     ignition_type: IgnitionType
-        Ignitions shape or source. @anthony
+        Ignitions shape or source. See ignitions module.
     ignitions_per_cell: int
         Number of ignition per cell of the fire model. Recommended max value
         of 100

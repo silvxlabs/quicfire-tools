@@ -44,13 +44,35 @@
         "can_be_modified": "Y",
         "recommended_value": "1 to 5"
     },
-    "output_times": {
+    "out_time_fire": {
         "values_accepted": ">= 1 or -1",
         "tested_values_range": "1-100 and -1",
         "description": "Number of updates of the fire before printing the output files for the fire model (all but emissions and thermal radiation). Higher value = less output. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
         "units": "[-]",
         "can_be_modified": "Y",
         "recommended_value": "4 or higher."
+    },
+    "out_time_wind": {
+        "values_accepted": ">= 1 or -1",
+        "tested_values_range": "1-100 and -1",
+        "description": "Number of updates of the wind field before printing the output files for the instantaneous QUIC-URB winds. Higher value = less output. Recommended value 2 or higher. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "2 or higher."
+    },
+    "out_time_emis_rad": {
+        "values_accepted": ">= 1 or -1",
+        "tested_values_range": "1-100 and -1",
+        "description": "Number of updates of the fire before printing the output files for the emissions and thermal radiation. Higher value = less output. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "out_time_wind_avg": {
+        "values_accepted": ">= 1 or -1",
+        "tested_values_range": "1-100 and -1",
+        "description": "Number of updates of the wind field before printing the output files for the average QUIC- URB winds (needed for smoke calculations). Higher value = less output. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
+        "units": "[-]",
+        "can_be_modified": "Y"
     },
     "nz": {
         "values_accepted": ">= 1",
@@ -104,10 +126,24 @@
         "units": "[-]",
         "can_be_modified": "Y"
     },
-    "fuel_params": {
-        "values_accepted": "positive integers",
-        "tested_values_range": "Any",
-        "description": "Instance of FuelParams class with fuel_density, fuel_moisture, and fuel_heignt. Only necessary if fuel_flag = 1, else None",
+    "fuel_density": {
+        "values_accepted": "> 0",
+        "tested_values_range": "0.2-3",
+        "description": "Fuel density",
+        "units": "[kg/m**3]",
+        "can_be_modified": "Y"
+    },
+    "fuel_moisture": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0-1",
+        "description": "Fuel moisture = mass of water/mass of dry fuel",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "fuel_height": {
+        "values_accepted": "> 0",
+        "tested_values_range": "0.7-3.0",
+        "description": "Fuel height",
         "units": "[m]",
         "can_be_modified": "Y"
     },
@@ -119,49 +155,49 @@
         "can_be_modified": "Y",
         "recommended_value": "6 (NJT recommendation: 7)"
     },
-    "ignition_params.xmin": {
+    "ignition_type.xmin": {
         "values_accepted": "[0 Lx]",
         "tested_values_range": "Any",
         "description": "South-west corner in the x-direction",
         "units": "[m]",
         "can_be_modified": "Y"
     },
-    "ignition_params.ymin": {
+    "ignition_type.ymin": {
         "values_accepted": "[0 Lx]",
         "tested_values_range": "Any",
         "description": "South-west corner in the y-direction",
         "units": "[m]",
         "can_be_modified": "Y"
     },
-    "ignition_params.xlen": {
+    "ignition_type.xlen": {
         "values_accepted": "> 0",
         "tested_values_range": "Any",
         "description": "Length in the x-direction",
         "units": "[m]",
         "can_be_modified": "Y"
     },
-    "ignition_params.ylen": {
+    "ignition_type.ylen": {
         "values_accepted": "> 0",
         "tested_values_range": "Any",
         "description": "Length in the y-direction",
         "units": "[m]",
         "can_be_modified": "Y"
     },
-    "ignition_params.xwidth": {
+    "ignition_type.xwidth": {
         "values_accepted": "> 0",
         "tested_values_range": "Any",
         "description": "Width of the ring in the x-direction. For square ring ignitions (ignition flag = 2) only",
         "units": "[m]",
         "can_be_modified": "Y"
     },
-    "ignition_params.ywidth": {
+    "ignition_type.ywidth": {
         "values_accepted": "> 0",
         "tested_values_range": "Any",
         "description": "Width of the ring in the y-direction. For square ring ignitions (ignition flag = 2) only",
         "units": "[m]",
         "can_be_modified": "Y"
     },
-    "ignition_params.width": {
+    "ignition_type.width": {
         "values_accepted": "> 0",
         "tested_values_range": "Any",
         "description": "Width of the ring. For circular ring ignitions (ignition flag = 3) only",
