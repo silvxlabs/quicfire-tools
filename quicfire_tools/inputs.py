@@ -1012,7 +1012,7 @@ class QU_TopoInputs(InputFile):
     _extension: str = ".inp"
     filename: str = "topo.dat"
     topo_type: TopoType = TopoType(topo_flag = 0)
-    smoothing_method: Literal[0,1,2] = 0
+    smoothing_method: Literal[0,1,2] = 2
     smoothing_passes: PositiveInt = Field(le = 500, default = 500)
     sor_iterations: PositiveInt = Field(le = 500, default = 200)
     sor_cycles: Literal[0,1,2,3,4] = 4
