@@ -1014,14 +1014,15 @@ class TestSimulationInputs:
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
 
+
 class TestQUmovingcoords:
     def get_test_object(self):
         return QU_movingcoords()
-    
+
     def test_init(self):
         qu_moving = self.get_test_object()
         assert isinstance(qu_moving, QU_movingcoords)
-    
+
     def test_from_file(self):
         qu_moving = self.get_test_object()
         qu_moving.to_file("tmp/")

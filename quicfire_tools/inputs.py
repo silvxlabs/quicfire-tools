@@ -969,6 +969,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
 
+
 class QU_movingcoords(InputFile):
     """
     Class representing the QU_movingcoords.inp input file.
@@ -984,7 +985,7 @@ class QU_movingcoords(InputFile):
 
         with open(directory / "QU_movingcoords.inp", "r") as f:
             lines = f.readlines()
-        
+
         if int(lines[1].strip().split("!")[0]) == 1:
             print("WARNING: QU_movingcoords.inp: Moving coordinates flag == 1 not supported.")
         
