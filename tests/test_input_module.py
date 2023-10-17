@@ -1172,3 +1172,18 @@ class TestRuntimeAdvancedUserInputs:
         raui.to_file("tmp/")
         test_object = RuntimeAdvancedUserInputs.from_file("tmp/")
         assert raui == test_object
+
+        
+class TestQUmovingcoords:
+    def get_test_object(self):
+        return QU_movingcoords()
+
+    def test_init(self):
+        qu_moving = self.get_test_object()
+        assert isinstance(qu_moving, QU_movingcoords)
+
+    def test_from_file(self):
+        qu_moving = self.get_test_object()
+        qu_moving.to_file("tmp/")
+        test_object = QU_movingcoords.from_file("tmp/")
+        assert qu_moving == test_object
