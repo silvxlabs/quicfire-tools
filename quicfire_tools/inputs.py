@@ -760,44 +760,56 @@ class QUIC_fire(InputFile):
     output_times: int | OutputTimes
         @anthony
     time_now : int
-        When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
+        When the fire is ignited in Unix Epoch time (integer seconds since
+        1970/1/1 00:00:00). Must be greater or equal to the time of the first
+        wind
     sim_time : int
         Total simulation time for the fire [s]
     fire_flag : int
         Fire flag, 1 = run fire; 0 = no fire
     random_seed : int
-        Random number generator, -1: use time and date, any other integer > 0 is used as the seed
+        Random number generator, -1: use time and date, any other integer > 0
+        is used as the seed
     fire_time_step : int
         time step for the fire simulation [s]
     quic_time_step : int
-        Number of fire time steps done before updating the quic wind field (integer, >= 1)
+        Number of fire time steps done before updating the quic wind field
+        (integer, >= 1)
     stretch_grid_flag : int
         Vertical stretching flag: 0 = uniform dz, 1 = custom
     file_path : str
-        Path to files defining fuels, ignitions, and topography, with file separator at the end. Defaults to "", indicating files are in the same directory as all other input files
+        Path to files defining fuels, ignitions, and topography, with file
+        separator at the end. Defaults to "", indicating files are in the same directory as all other input files
     dz : int
-        Cell size in the z-direction [m] of the fire grid. Recommended value: 1 m
+        Cell size in the z-direction [m] of the fire grid. Recommended value: 1m
     dz_array : list[float]
-        custom dz, one dz per line must be specified, from the ground to the top of the domain
+        custom dz, one dz per line must be specified, from the ground to the
+        top of the domain
     fuel_flag : int
         Flag for fuel inputs:
             - density
             - moisture
             - height
-        1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation)
+        1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files
+        for quic grid, 4 = Firetech files for different grid
+        (need interpolation)
     fuel_params : FuelParams
-        FuelParams class with named fuel parameters for a uniform grid. Defaults to None unless fuel_flag = 1
+        FuelParams class with named fuel parameters for a uniform grid.
+        Defaults to None unless fuel_flag = 1
     ignition_type: IgnitionType
         Ignitions shape or source. @anthony
     ignitions_per_cell: int
-        Number of ignition per cell of the fire model. Recommended max value of 100
+        Number of ignition per cell of the fire model. Recommended max value
+        of 100
     firebrand_flag : int
-        Firebrand flag, 0 = off; 1 = on
-        Recommended value = 0 ; firebrands are untested for small scale problems
+        Firebrand flag, 0 = off; 1 = on. Recommended value = 0 ; firebrands
+        are untested for small scale problems
     auto_kill : int
-        Kill if the fire is out and there are no more ignitions or firebrands (0 = no, 1 = yes)
+        Kill if the fire is out and there are no more ignitions or firebrands
+        (0 = no, 1 = yes)
     eng_to_atm_out : int
-        Output flag [0, 1]: gridded energy-to-atmosphere (3D fire grid + extra layers)
+        Output flag [0, 1]: gridded energy-to-atmosphere
+        (3D fire grid + extra layers)
     react_rate_out : int
         Output flag [0, 1]: compressed array reaction rate (fire grid)
     fuel_dens_out : int
@@ -805,21 +817,25 @@ class QUIC_fire(InputFile):
     QF_wind_out : int
         Output flag [0, 1]: gridded wind (u,v,w,sigma) (3D fire grid)
     QU_wind_inst_out : int
-        Output flag [0, 1]: gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
+        Output flag [0, 1]: gridded QU winds with fire effects, instantaneous
+        (QUIC-URB grid)
     QU_wind_avg_out : int
-        Output flag [0, 1]: gridded QU winds with fire effects, averaged (QUIC-URB grid)
+        Output flag [0, 1]: gridded QU winds with fire effects, averaged
+        (QUIC-URB grid)
     fuel_moist_out : int
         Output flag [0, 1]: compressed array fuel moisture (fire grid)
     mass_burnt_out : int
         Output flag [0, 1]: vertically-integrated % mass burnt (fire grid)
     firebrand_out : int
-        Output flag [0, 1]: firebrand trajectories. Must be 0 when firebrand flag is 0
+        Output flag [0, 1]: firebrand trajectories. Must be 0 when firebrand
+        flag is 0
     emissions_out : int
         Output flag [0, 5]: compressed array emissions (fire grid):
             0 = do not output any emission related variables
             1 = output emissions files and simulate CO in QUIC-SMOKE
             2 = output emissions files and simulate PM2.5 in QUIC- SMOKE
-            3 = output emissions files and simulate both CO and PM2.5 in QUIC-SMOKE
+            3 = output emissions files and simulate both CO and PM2.5 in
+                QUIC-SMOKE
             4 = output emissions files but use library approach in QUIC-SMOKE
             5 = output emissions files and simulate both water in QUIC-SMOKE
     radiation_out : int
