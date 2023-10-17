@@ -1015,24 +1015,25 @@ class TestSimulationInputs:
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
 
+
 class TestSensor1:
     def get_test_object(self):
-        return Sensor1(time_now = 1697555154,
-                       wind_speed = 5,
-                       wind_direction = 270)
-    
+        return Sensor1(time_now=1697555154,
+                       wind_speed=5,
+                       wind_direction=270)
+
     def test_init(self):
         sensor1 = self.get_test_object()
         assert isinstance(sensor1, Sensor1)
         assert sensor1.wind_speed == 5.0
         assert sensor1.wind_direction == 270
         assert sensor1.sensor_height == 6.1
-    
+
     def test_error(self):
         sensor1 = self.get_test_object()
         with pytest.raises(ValidationError):
             sensor1.wind_direction = 360
-    
+
     def test_from_file(self):
         sensor1 = self.get_test_object()
         sensor1.to_file("tmp/")
