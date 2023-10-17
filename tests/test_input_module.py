@@ -800,8 +800,7 @@ class TestQUIC_fire:
     @staticmethod
     def get_test_object():
         return QUIC_fire(nz=26,
-                         sim_time=60, time_now=1695311421,
-                         output_times=30)
+                         sim_time=60, time_now=1695311421)
 
     def test_init(self):
         # Test default initialization
@@ -815,8 +814,7 @@ class TestQUIC_fire:
 
         # Test data type casting
         quic_fire = QUIC_fire(nz="26",
-                              sim_time=60, time_now=1695311421,
-                              output_times=30)
+                              sim_time=60, time_now=1695311421)
         assert isinstance(quic_fire.nz, int)
         assert quic_fire.nz == 26
 
@@ -832,7 +830,6 @@ class TestQUIC_fire:
         # Test invalid dz array
         quic_fire = QUIC_fire(nz=26,
                               sim_time=60, time_now=1695311421,
-                              output_times=30,
                               stretch_grid_flag=1,
                               dz_array=[1, 2, 3, 4, 5])
         with pytest.raises(ValueError):
@@ -845,8 +842,7 @@ class TestQUIC_fire:
 
         # Test fuel inputs
         quic_fire = QUIC_fire(nz=26,
-                              sim_time=60, time_now=1695311421,
-                              output_times=30)
+                              sim_time=60, time_now=1695311421)
         assert quic_fire.fuel_params is None
         quic_fire.fuel_flag = 1
         quic_fire.fuel_params = FuelParams(fuel_density=0.5,
@@ -883,6 +879,10 @@ class TestQUIC_fire:
         assert result_dict['random_seed'] == quic_fire.random_seed
         assert result_dict['fire_time_step'] == quic_fire.fire_time_step
         assert result_dict['quic_time_step'] == quic_fire.quic_time_step
+        assert result_dict['out_time_fire'] == quic_fire.out_time_fire
+        assert result_dict['out_time_wind'] == quic_fire.out_time_wind
+        assert result_dict['out_time_emis_rad'] == quic_fire.out_time_emis_rad
+        assert result_dict['out_time_wind_avg'] == quic_fire.out_time_wind_avg
         assert result_dict['stretch_grid_flag'] == quic_fire.stretch_grid_flag
         assert result_dict['dz'] == quic_fire.dz
         assert result_dict['dz_array'] == quic_fire.dz_array
@@ -907,7 +907,6 @@ class TestQUIC_fire:
 
         # Computed fields
         assert result_dict['stretch_grid_input'] == quic_fire.stretch_grid_input
-        assert result_dict['out_time_lines'] == quic_fire.out_time_lines
         assert result_dict['ignition_lines'] == quic_fire.ignition_lines
         assert result_dict['fuel_lines'] == quic_fire.fuel_lines
 

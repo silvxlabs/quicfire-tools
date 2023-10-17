@@ -5,7 +5,10 @@ $time_now		    ! When the fire is ignited in Unix Epoch time (integer seconds si
 $sim_time			! Total simulation time for the fire [s]
 $fire_time_step		! time step for the fire simulation [s]
 $quic_time_step		! Number of fire time steps done before updating the quic wind field (integer, >= 1)
-$out_time_lines
+$out_time_fire      ! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
+$out_time_wind      ! After how many quic updates to print out wind-related files
+$out_time_emis_rad  ! After how many fire time steps to average emissions and radiation
+$out_time_wind_avg  ! After how many quic updates to print out averaged wind-related files
 ! FIRE GRID
 $nz					! Number of vertical layers of fire grid cells (integer)
 $stretch_grid_flag  ! Vertical stretching flag: 0 = uniform dz, 1 = custom

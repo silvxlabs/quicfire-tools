@@ -117,21 +117,6 @@ class InputFile(BaseModel, validate_assignment=True):
         return cls(**data)
 
 
-class OutputTimes(BaseModel):
-    out_time_fire: PositiveInt
-    out_time_wind: PositiveInt
-    out_time_emis_rad: PositiveInt
-    out_time_wind_avg: PositiveInt
-
-    def __str__(self):
-        lines = (
-            f"{self.out_time_fire}\t! After how many fire time steps to print out fire-related files (excluding emissions and radiation)\n"
-            f"{self.out_time_wind}\t! After how many quic updates to print out wind-related files\n"
-            f"{self.out_time_emis_rad}\t! After how many fire time steps to average emissions and radiation\n"
-            f"{self.out_time_wind_avg}\t! After how many quic updates to print out averaged wind-related files")
-        return lines
-
-
 class FuelParams(BaseModel):
     fuel_density: PositiveFloat
     fuel_moisture: PositiveFloat
@@ -846,7 +831,10 @@ class QUIC_fire(InputFile):
     nz: PositiveInt
     time_now: PositiveInt
     sim_time: PositiveInt
-    output_times: PositiveInt | OutputTimes
+    out_time_fire: PositiveInt = 30
+    out_time_wind: PositiveInt = 30
+    out_time_emis_rad: PositiveInt = 30
+    out_time_wind_avg: PositiveInt = 30
     ignition_type: IgnitionType = IgnitionType(ignition_flag=6)
     fire_flag: Literal[0, 1] = 1
     random_seed: int = Field(ge=-1, default = -1)
@@ -911,16 +899,6 @@ class QUIC_fire(InputFile):
 
     @computed_field
     @property
-    def out_time_lines(self) -> str:
-        if isinstance(self.output_times, int):
-            self.output_times = OutputTimes(out_time_fire=self.output_times,
-                                            out_time_wind=self.output_times,
-                                            out_time_emis_rad=self.output_times,
-                                            out_time_wind_avg=self.output_times)
-        return str(self.output_times)
-
-    @computed_field
-    @property
     def ignition_lines(self) -> str:
         return str(self.ignition_type)
 
@@ -970,10 +948,6 @@ class QUIC_fire(InputFile):
         out_time_wind = int(lines[8].strip().split("!")[0])
         out_time_emis_rad = int(lines[9].strip().split("!")[0])
         out_time_wind_avg = int(lines[10].strip().split("!")[0])
-        output_times = OutputTimes(out_time_fire=out_time_fire,
-                                   out_time_wind=out_time_wind,
-                                   out_time_emis_rad=out_time_emis_rad,
-                                   out_time_wind_avg=out_time_wind_avg)
 
         # Read fire grid parameters
         nz = int(lines[12].strip().split("!")[0])
@@ -1070,7 +1044,10 @@ class QUIC_fire(InputFile):
                    sim_time=sim_time,
                    fire_time_step=fire_time_step,
                    quic_time_step=quic_time_step,
-                   output_times=output_times,
+                   out_time_fire = out_time_fire,
+                   out_time_wind = out_time_wind,
+                   out_time_emis_rad = out_time_emis_rad,
+                   out_time_wind_avg = out_time_wind_avg,
                    nz=nz,
                    stretch_grid_flag=stretch_grid_flag,
                    dz=dz,
