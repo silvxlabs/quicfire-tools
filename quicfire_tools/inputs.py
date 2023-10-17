@@ -19,7 +19,6 @@ from string import Template
 
 # External Imports
 import numpy as np
-import random
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
                       PositiveFloat, NonNegativeFloat, computed_field)
 
@@ -850,7 +849,7 @@ class QUIC_fire(InputFile):
     output_times: PositiveInt | OutputTimes
     ignition_type: IgnitionType = IgnitionType(ignition_flag=6)
     fire_flag: Literal[0, 1] = 1
-    random_seed: PositiveInt = random.randrange(1000)
+    random_seed: int = Field(ge=-1)
     fire_time_step: PositiveInt = 1
     quic_time_step: PositiveInt = 1
     stretch_grid_flag: Literal[0, 1] = 0
@@ -875,6 +874,12 @@ class QUIC_fire(InputFile):
     emissions_out: Literal[0, 1, 2, 3, 4, 5] = 0
     radiation_out: Literal[0, 1] = 0
     intensity_out: Literal[0, 1] = 0
+
+    @field_validator('random_seed')
+    @classmethod
+    def validate_smoothing(cls, v: int) -> int:
+        if v == 0: raise ValueError(f"QUIC_fire.inp: random_seed must be not be 0")
+        return v
 
     @computed_field
     @property
@@ -956,10 +961,6 @@ class QUIC_fire(InputFile):
         # Read fire flag and random seed
         fire_flag = int(lines[0].strip().split("!")[0])
         random_seed = int(lines[1].strip().split("!")[0])
-
-        if random_seed == -1:
-            random_seed = random.randrange(10000)
-            print("Generated new random seed: {}".format(random_seed))
 
         # Read fire times
         time_now = int(lines[3].strip().split("!")[0])
