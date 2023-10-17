@@ -987,7 +987,9 @@ class QUIC_fire(InputFile):
                     "QUIC_fire.inp: Fuel moisture and fue height flags must match fuel density flag")
             current_line += 6
         else:
-            fuel_params = None
+            fuel_density = None
+            fuel_moisture = None
+            fuel_height = None
             current_line += 2
 
             # Read ignition inputs
