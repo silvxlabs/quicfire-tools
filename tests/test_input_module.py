@@ -1046,12 +1046,6 @@ class TestQUTopoInputs:
         assert topoinputs.smoothing_method == 1
         assert topoinputs.sor_relax == 1.78
     
-    def test_smoothing_error(self):
-        topoinputs = self.get_default_test_object()
-        topoinputs.topo_type = TopoType(topo_flag = 5)
-        with pytest.raises(ValueError):
-            topoinputs.to_file("tmp/")
-    
     def test_from_file(self):
         topoinputs = self.get_default_test_object()
         topoinputs.to_file("tmp/")

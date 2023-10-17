@@ -1017,13 +1017,6 @@ class QU_TopoInputs(InputFile):
     sor_iterations: PositiveInt = Field(le = 500, default = 200)
     sor_cycles: Literal[0,1,2,3,4] = 4
     sor_relax: PositiveFloat = Field(le = 2, default = 0.9)
-
-    @field_validator('smoothing_method')
-    @classmethod
-    def validate_smoothing(cls, v: int, info: ValidationInfo) -> int:
-        if info.data['topo_type'].topo_flag.value in [5,9,10,11]:
-            if v == 0: raise ValueError(f"QU_TopoInputs: a smoothing method must be applied when using custom topography")
-        return v
     
     @computed_field
     @property
