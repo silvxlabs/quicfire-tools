@@ -988,4 +988,4 @@ class QU_movingcoords(InputFile):
         if int(lines[1].strip().split("!")[0]) == 1:
             print("WARNING: QU_movingcoords.inp: Moving coordinates flag == 1 not supported.")
         
-        return cls
+        return cls()
