@@ -855,7 +855,6 @@ class QUIC_fire(InputFile):
     stretch_grid_flag: Literal[0, 1] = 0
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
-    file_path: str = '""'
     fuel_flag: Literal[1, 2, 3, 4] = 3
     fuel_params: FuelParams | None = None
     ignitions_per_cell: PositiveInt = 2
@@ -993,11 +992,7 @@ class QUIC_fire(InputFile):
                 dz_array.append(float(lines[i].strip()))
             current_line = 15 + len(nz)
 
-        # Read file path
-        # current_line = ! FILE PATH
-        current_line += 1  # header
-        file_path = str(lines[current_line].strip())
-        current_line += 3  # skip 2 unused lines
+        current_line += 4  # skip unused lines
 
         # Read fuel inputs
         # current_line = ! FUEL
@@ -1080,7 +1075,6 @@ class QUIC_fire(InputFile):
                    stretch_grid_flag=stretch_grid_flag,
                    dz=dz,
                    dz_array=dz_array,
-                   file_path=file_path,
                    fuel_flag=fuel_flag,
                    fuel_params=fuel_params,
                    ignition_type=ignition_type,
