@@ -1014,16 +1014,17 @@ class TestSimulationInputs:
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
 
+
 class TestRuntimeAdvancedUserInputs:
     def get_test_object(self):
         return RuntimeAdvancedUserInputs()
-    
+
     def test_init(self):
         raui = self.get_test_object()
         assert isinstance(raui, RuntimeAdvancedUserInputs)
         assert raui.num_cpus == 8
         assert raui.use_acw == 0
-    
+
     def test_from_file(self):
         raui = self.get_test_object()
         raui.to_file("tmp/")
