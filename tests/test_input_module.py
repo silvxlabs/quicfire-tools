@@ -864,11 +864,58 @@ class TestQUIC_fire:
             f"different grid (need interpolation)"
             f"\n0.75")
 
+    def test_to_dict(self):
+        """Test the to_dict method of a QUIC_fire object."""
+        quic_fire = self.get_test_object()
+        result_dict = quic_fire.to_dict()
+
+        assert result_dict['nz'] == quic_fire.nz
+        # TODO: revisit this one
+        # assert result_dict["output_times"] == quic_fire.output_times
+        assert result_dict['time_now'] == quic_fire.time_now
+        assert result_dict['sim_time'] == quic_fire.sim_time
+        assert result_dict['fire_flag'] == quic_fire.fire_flag
+        assert result_dict['random_seed'] == quic_fire.random_seed
+        assert result_dict['fire_time_step'] == quic_fire.fire_time_step
+        assert result_dict['quic_time_step'] == quic_fire.quic_time_step
+        assert result_dict['stretch_grid_flag'] == quic_fire.stretch_grid_flag
+        assert result_dict['dz'] == quic_fire.dz
+        assert result_dict['dz_array'] == quic_fire.dz_array
+        assert result_dict['file_path'] == quic_fire.file_path
+        assert result_dict['fuel_flag'] == quic_fire.fuel_flag
+        assert result_dict['fuel_params'] == quic_fire.fuel_params
+        assert result_dict['fuel_lines'] == quic_fire.fuel_lines
+        assert result_dict['ignitions_per_cell'] == quic_fire.ignitions_per_cell
+        assert result_dict['firebrand_flag'] == quic_fire.firebrand_flag
+        assert result_dict['auto_kill'] == quic_fire.auto_kill
+        assert result_dict['eng_to_atm_out'] == quic_fire.eng_to_atm_out
+        assert result_dict['react_rate_out'] == quic_fire.react_rate_out
+        assert result_dict['fuel_dens_out'] == quic_fire.fuel_dens_out
+        assert result_dict['QF_wind_out'] == quic_fire.QF_wind_out
+        assert result_dict['QU_wind_inst_out'] == quic_fire.QU_wind_inst_out
+        assert result_dict['QU_wind_avg_out'] == quic_fire.QU_wind_avg_out
+        assert result_dict['fuel_moist_out'] == quic_fire.fuel_moist_out
+        assert result_dict['mass_burnt_out'] == quic_fire.mass_burnt_out
+        assert result_dict['firebrand_out'] == quic_fire.firebrand_out
+        assert result_dict['emissions_out'] == quic_fire.emissions_out
+        assert result_dict['radiation_out'] == quic_fire.radiation_out
+        assert result_dict['intensity_out'] == quic_fire.intensity_out
+
+        # Computed fields
+        assert result_dict['stretch_grid_input'] == quic_fire.stretch_grid_input
+        assert result_dict['out_time_lines'] == quic_fire.out_time_lines
+        assert result_dict['ignition_lines'] == quic_fire.ignition_lines
+        assert result_dict['fuel_lines'] == quic_fire.fuel_lines
+
+    # TODO: Add test for from_dict
+    # TODO: Add test for to_docs
+    # TODO: Add test for to_file
+
     def test_from_file(self):
         """Test initializing a class from a QFIRE_advanced_user_inputs.inp
         file."""
         quic_fire = self.get_test_object()
-        # quic_fire.to_file("tmp/")
+        quic_fire.to_file("tmp/")
         test_object = QUIC_fire.from_file("tmp/")
         assert isinstance(test_object, QUIC_fire)
-        # assert quic_fire == test_object
+        assert quic_fire == test_object
