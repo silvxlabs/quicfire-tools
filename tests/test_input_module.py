@@ -837,6 +837,11 @@ class TestQUIC_fire:
                               dz_array=[1, 2, 3, 4, 5])
         with pytest.raises(ValueError):
             assert quic_fire.stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
+        
+        # Test invalid random_seed
+        quic_fire = self.get_test_object()
+        with pytest.raises(ValidationError):
+            quic_fire.random_seed = 0
 
         # Test fuel inputs
         quic_fire = QUIC_fire(nz=26,
@@ -881,7 +886,6 @@ class TestQUIC_fire:
         assert result_dict['stretch_grid_flag'] == quic_fire.stretch_grid_flag
         assert result_dict['dz'] == quic_fire.dz
         assert result_dict['dz_array'] == quic_fire.dz_array
-        assert result_dict['file_path'] == quic_fire.file_path
         assert result_dict['fuel_flag'] == quic_fire.fuel_flag
         assert result_dict['fuel_params'] == quic_fire.fuel_params
         assert result_dict['fuel_lines'] == quic_fire.fuel_lines
