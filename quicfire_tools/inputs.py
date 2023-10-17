@@ -987,6 +987,8 @@ class Sensor1(InputFile):
     wind_direction : NonNegativeInt < 360
         Wind direction (degrees). Use 0° for North
     """
+    name: str = "sensor1"
+    _extension: str = ".inp"
     time_now: PositiveInt
     sensor_height: PositiveFloat = 6.1 #20ft
     wind_speed: PositiveFloat
@@ -994,7 +996,7 @@ class Sensor1(InputFile):
 
     @computed_field
     @property
-    def wind_lines(self):
+    def wind_lines(self) -> str:
         """
         This is meant to support wind shifts in the future.
         This computed field could be altered to reproduce the lines below
