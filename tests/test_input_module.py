@@ -843,11 +843,12 @@ class TestQUIC_fire:
         # Test fuel inputs
         quic_fire = QUIC_fire(nz=26,
                               sim_time=60, time_now=1695311421)
-        assert quic_fire.fuel_params is None
+        assert quic_fire.fuel_density is None
+        
         quic_fire.fuel_flag = 1
-        quic_fire.fuel_params = FuelParams(fuel_density=0.5,
-                                           fuel_moisture=1,
-                                           fuel_height=0.75)
+        quic_fire.fuel_density=0.5
+        quic_fire.fuel_moisture=1
+        quic_fire.fuel_height=0.75
         assert quic_fire.fuel_lines == (
             f"{quic_fire.fuel_flag}\t! fuel density flag: 1 = uniform; "
             f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
@@ -887,7 +888,9 @@ class TestQUIC_fire:
         assert result_dict['dz'] == quic_fire.dz
         assert result_dict['dz_array'] == quic_fire.dz_array
         assert result_dict['fuel_flag'] == quic_fire.fuel_flag
-        assert result_dict['fuel_params'] == quic_fire.fuel_params
+        assert result_dict['fuel_density'] == quic_fire.fuel_density
+        assert result_dict['fuel_moisture'] == quic_fire.fuel_moisture
+        assert result_dict['fuel_height'] == quic_fire.fuel_height
         assert result_dict['fuel_lines'] == quic_fire.fuel_lines
         assert result_dict['ignitions_per_cell'] == quic_fire.ignitions_per_cell
         assert result_dict['firebrand_flag'] == quic_fire.firebrand_flag
@@ -915,7 +918,7 @@ class TestQUIC_fire:
     # TODO: Add test for to_file
 
     def test_from_file(self):
-        """Test initializing a class from a QFIRE_advanced_user_inputs.inp
+        """Test initializing a class from a QUIC_fire.inp
         file."""
         quic_fire = self.get_test_object()
         quic_fire.to_file("tmp/")

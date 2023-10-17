@@ -117,12 +117,6 @@ class InputFile(BaseModel, validate_assignment=True):
         return cls(**data)
 
 
-class FuelParams(BaseModel):
-    fuel_density: PositiveFloat
-    fuel_moisture: PositiveFloat
-    fuel_height: PositiveFloat
-
-
 class Gridlist(InputFile):
     """
     Class representing the gridlist.txt file. This file contains the grid
@@ -741,14 +735,20 @@ class QUIC_fire(InputFile):
     ----------
     nz : int
         Number of fire grid cells in the z-direction.
-    output_times: int | OutputTimes
-        @anthony
     time_now : int
         When the fire is ignited in Unix Epoch time (integer seconds since
         1970/1/1 00:00:00). Must be greater or equal to the time of the first
         wind
     sim_time : int
         Total simulation time for the fire [s]
+    out_time_fire : PositiveInt
+        After how many fire time steps to print out fire-related files (excluding emissions and radiation)
+    out_time_wind : PositiveInt
+        After how many quic updates to print out wind-related files
+    out_time_emis_rad : PositiveInt
+        After how many fire time steps to average emissions and radiation
+    out_time_wind_avg : PositiveInt
+        After how many quic updates to print out averaged wind-related files
     fire_flag : int
         Fire flag, 1 = run fire; 0 = no fire
     random_seed : int
@@ -777,9 +777,8 @@ class QUIC_fire(InputFile):
         1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files
         for quic grid, 4 = Firetech files for different grid
         (need interpolation)
-    fuel_params : FuelParams
-        FuelParams class with named fuel parameters for a uniform grid.
-        Defaults to None unless fuel_flag = 1
+    fuel_density : PositiveFloat
+
     ignition_type: IgnitionType
         Ignitions shape or source. @anthony
     ignitions_per_cell: int
@@ -844,7 +843,9 @@ class QUIC_fire(InputFile):
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
     fuel_flag: Literal[1, 2, 3, 4] = 3
-    fuel_params: FuelParams | None = None
+    fuel_density: PositiveFloat | None = None
+    fuel_moisture: PositiveFloat | None = None
+    fuel_height: PositiveFloat | None = None
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
@@ -864,7 +865,7 @@ class QUIC_fire(InputFile):
 
     @field_validator('random_seed')
     @classmethod
-    def validate_smoothing(cls, v: int) -> int:
+    def validate_random_seed(cls, v: int) -> int:
         if v == 0: raise ValueError(f"QUIC_fire.inp: random_seed must be not be 0")
         return v
 
@@ -914,12 +915,15 @@ class QUIC_fire(InputFile):
         fuel_height_flag_line = f"\n{self.fuel_flag}\t! fuel height flag:" + flag_line
         if self.fuel_flag == 1:
             try:
-                fuel_dens_line = f"\n{self.fuel_params.fuel_density}"
-                fuel_moist_line = f"\n{self.fuel_params.fuel_moisture}"
-                fuel_height_line = f"\n{self.fuel_params.fuel_height}"
-            except IndexError:
+                assert self.fuel_density is not None
+                assert self.fuel_moisture is not None
+                assert self.fuel_height is not None
+            except AssertionError:
                 raise ValueError(
                     "fuel_params: FuelInputs class must have values for fuel_density, fuel_moisture, and fuel_height")
+            fuel_dens_line = f"\n{self.fuel_density}"
+            fuel_moist_line = f"\n{self.fuel_moisture}"
+            fuel_height_line = f"\n{self.fuel_height}"
             return fuel_density_flag_line + fuel_dens_line + fuel_moist_flag_line + fuel_moist_line + fuel_height_flag_line + fuel_height_line
         return fuel_density_flag_line + fuel_moist_flag_line
 
@@ -978,7 +982,6 @@ class QUIC_fire(InputFile):
             fuel_moisture = float(lines[current_line + 3].strip())
             height_flag = int(lines[current_line + 4].strip().split("!")[0])
             fuel_height = float(lines[current_line + 5].strip())
-            fuel_params = FuelParams(fuel_density, fuel_moisture, fuel_height)
             if moisture_flag != fuel_flag or height_flag != fuel_flag:
                 raise ValueError(
                     "QUIC_fire.inp: Fuel moisture and fue height flags must match fuel density flag")
@@ -1053,7 +1056,9 @@ class QUIC_fire(InputFile):
                    dz=dz,
                    dz_array=dz_array,
                    fuel_flag=fuel_flag,
-                   fuel_params=fuel_params,
+                   fuel_density = fuel_density,
+                   fuel_moisture = fuel_moisture,
+                   fuel_height = fuel_height,
                    ignition_type=ignition_type,
                    ignitions_per_cell=ignitions_per_cell,
                    firebrand_flag=firebrand_flag,
