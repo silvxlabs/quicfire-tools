@@ -969,6 +969,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
 
+
 class QP_buildout(InputFile):
     """
     Class representing the QU_buildout.inp input file.

@@ -1014,6 +1014,7 @@ class TestSimulationInputs:
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
 
+
 class TestQUbuildout:
     def get_test_object(self):
         return QP_buildout()
