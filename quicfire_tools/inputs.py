@@ -1328,8 +1328,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
 
-
-
+      
 class RuntimeAdvancedUserInputs(InputFile):
     """
     Class representing the Runtime_Advanced_User_Inputs.inp input file.
@@ -1380,5 +1379,29 @@ class QU_movingcoords(InputFile):
 
         if int(lines[1].strip().split("!")[0]) == 1:
             print("WARNING: QU_movingcoords.inp: Moving coordinates flag == 1 not supported.")
+        
+        return cls()
+  
+  
+  class QP_buildout(InputFile):
+    """
+    Class representing the QU_buildout.inp input file.
+    This is a QUIC legacy file that is not modified for QUIC-Fire use.
+    """
+    name: str = "QP_buildout"
+    _extension: str = ".inp"
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        with open(directory / "QP_buildout.inp", "r") as f:
+            lines = f.readlines()
+        
+        if int(lines[0].strip().split("!")[0]) == 1:
+            print("WARNING: QP_buildout.inp: number of buildings will be set to 0.")
+        if int(lines[1].strip().split("!")[0]) == 1:
+            print("WARNING: QP_buildout.inp: number of vegetative canopies will be set to 0.")
         
         return cls()
