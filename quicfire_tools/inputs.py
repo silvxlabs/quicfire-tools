@@ -1008,3 +1008,16 @@ class Sensor1(InputFile):
                 f"0. ! 1/L (default = 0)\n"
                 f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
                 f"{self.sensor_height} {self.wind_speed} {self.wind_direction}")
+    
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "sensor1.inp", "r") as f:
+            lines = f.readlines()
+        return cls(
+            time_now = int(lines[6].strip().split("!")[0]),
+            sensor_height = int(lines[11].split(" ")[0]),
+            wind_speed = int(lines[11].split(" ")[1]),
+            wind_direction = int(lines[11].split(" ")[2])
+        )
