@@ -1013,3 +1013,17 @@ class TestSimulationInputs:
         sim_inputs = self.get_basic_test_object()
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
+
+class TestQUbuildout:
+    def get_test_object(self):
+        return QP_buildout()
+    
+    def test_init(self):
+        qp_buildout = self.get_test_object()
+        assert isinstance(qp_buildout, QP_buildout)
+    
+    def test_from_file(self):
+        qp_buildout = self.get_test_object()
+        qp_buildout.to_file("tmp/")
+        test_object = QP_buildout.from_file("tmp/")
+        assert qp_buildout == test_object
