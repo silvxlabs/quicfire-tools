@@ -968,3 +968,41 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             max_points_along_plume_edge=int(lines[14].split()[0]),
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
+
+class Sensor1(InputFile):
+    """
+    Class representing the sensor1.inp input file. 
+    This file contains information on winds, and serves as the
+    primary source for wind speed(s) and direction(s)
+
+    Attributes
+    ----------
+    time_now : PositiveInt
+        Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00).
+        Must match time at beginning of fire (QU_Simparams.inp and QUIC_fire.inp)
+    sensor_height : PositiveFloat
+        Wind measurement height (m). Default is 6.1m (20ft)
+    wind_speed : PositiveFloat
+        Wind speed (m/s)
+    wind_direction : NonNegativeInt < 360
+        Wind direction (degrees). Use 0° for North
+    """
+    time_now: PositiveInt
+    sensor_height: PositiveFloat = 6.1 #20ft
+    wind_speed: PositiveFloat
+    wind_direction: NonNegativeInt = Field(lt = 360)
+
+    @computed_field
+    @property
+    def wind_lines(self):
+        """
+        This is meant to support wind shifts in the future.
+        This computed field could be altered to reproduce the lines below
+        for a series of times, speeds, and directions.
+        """
+        return (f"{self.time_now} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+                f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+                f"0.1 !site zo\n"
+                f"0. ! 1/L (default = 0)\n"
+                f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+                f"{self.sensor_height} {self.wind_speed} {self.wind_direction}")
