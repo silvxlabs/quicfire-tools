@@ -830,7 +830,8 @@ class QUIC_fire(InputFile):
     intensity_out : int
         Output flag [0, 1]: surface fire intensity at every fire time step
     """
-    filename: str = Field("QUIC_fire.inp", allow_mutation=False)
+    name: str = "QUIC_fire"
+    _extension: str = ".inp"
     nz: PositiveInt
     time_now: PositiveInt
     sim_time: PositiveInt
