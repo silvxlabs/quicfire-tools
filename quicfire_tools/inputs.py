@@ -1017,7 +1017,7 @@ class Sensor1(InputFile):
             lines = f.readlines()
         return cls(
             time_now = int(lines[6].strip().split("!")[0]),
-            sensor_height = int(lines[11].split(" ")[0]),
-            wind_speed = int(lines[11].split(" ")[1]),
+            sensor_height = float(lines[11].split(" ")[0]),
+            wind_speed = float(lines[11].split(" ")[1]),
             wind_direction = int(lines[11].split(" ")[2])
         )
