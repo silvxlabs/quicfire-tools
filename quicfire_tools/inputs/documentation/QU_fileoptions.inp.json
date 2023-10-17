@@ -10,7 +10,6 @@
       "3": "both"
     },
     "units": "[-]",
-    "variable_name_fortran": "flag%frm",
     "can_be_modified": "N",
     "recommended_value": "2"
   },
@@ -20,7 +19,6 @@
     "tested_values_range": "[0 1]",
     "description": "Flag to write out non-mass conserved initial field (uofield.dat): 0 = do not write, 1 = write",
     "units": "[-]",
-    "variable_name_fortran": "flag%uofield",
     "can_be_modified": "N",
     "recommended_value": "0"
   },
@@ -30,7 +28,6 @@
     "tested_values_range": "[0 1]",
     "description": "Flag to write out the file uosensorfield.dat, the initial sensor velocity field: 0 = do not write, 1 = write",
     "units": "[-]",
-    "variable_name_fortran": "flag%uosensor",
     "can_be_modified": "N",
     "recommended_value": "0"
   },
@@ -40,7 +37,6 @@
     "tested_values_range": "[0 1]",
     "description": "Flag to write out the file QU_staggered_velocity.bin used by QUIC-Pressure: 0 = do not write, 1 = write",
     "units": "[-]",
-    "variable_name_fortran": "flag%staggered",
     "can_be_modified": "N",
     "recommended_value": "0"
   },
@@ -50,7 +46,6 @@
     "tested_values_range": "[0 1]",
     "description": "Generate wind startup files for ensemble simulations: 0 = do not write, 1 = write",
     "units": "[-]",
-    "variable_name_fortran": "flag%genStartup",
     "can_be_modified": "Y"
   }
 }

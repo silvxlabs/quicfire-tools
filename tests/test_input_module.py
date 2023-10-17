@@ -752,34 +752,20 @@ class TestQFire_Advanced_User_Inputs:
         # Read the content of the file and check for correctness
         with open("tmp/QFIRE_advanced_user_inputs.inp", 'r') as file:
             lines = file.readlines()
-            assert float(lines[0].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
-            assert float(lines[1].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.firebrand_radius_scale_factor
-            assert float(lines[2].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.firebrand_trajectory_time_step
-            assert float(lines[3].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.firebrand_launch_interval
-            assert float(lines[4].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.firebrands_per_deposition
-            assert float(lines[5].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.firebrand_area_ratio
-            assert float(lines[6].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
-            assert float(lines[7].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
-            assert float(lines[8].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.firebrand_germination_delay
-            assert float(lines[9].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.vertical_velocity_scale_factor
-            assert float(lines[10].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.minimum_firebrand_ignitions
-            assert float(lines[11].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.maximum_firebrand_ignitions
-            assert float(lines[12].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.minimum_landing_angle
-            assert float(lines[13].strip().split("!")[
-                             0]) == qfire_advanced_user_inputs.maximum_firebrand_thickness
+            assert float(lines[0].strip().split("!")[0]) == qfire_advanced_user_inputs.fraction_cells_launch_firebrands
+            assert float(lines[1].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_radius_scale_factor
+            assert float(lines[2].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_trajectory_time_step
+            assert float(lines[3].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_launch_interval
+            assert float(lines[4].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrands_per_deposition
+            assert float(lines[5].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_area_ratio
+            assert float(lines[6].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_burn_rate_coefficient
+            assert float(lines[7].strip().split("!")[0]) == qfire_advanced_user_inputs.max_firebrand_thickness_fraction
+            assert float(lines[8].strip().split("!")[0]) == qfire_advanced_user_inputs.firebrand_germination_delay
+            assert float(lines[9].strip().split("!")[0]) == qfire_advanced_user_inputs.vertical_velocity_scale_factor
+            assert float(lines[10].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_firebrand_ignitions
+            assert float(lines[11].strip().split("!")[0]) == qfire_advanced_user_inputs.maximum_firebrand_ignitions
+            assert float(lines[12].strip().split("!")[0]) == qfire_advanced_user_inputs.minimum_landing_angle
+            assert float(lines[13].strip().split("!")[0]) == qfire_advanced_user_inputs.maximum_firebrand_thickness
 
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
@@ -925,3 +911,264 @@ class TestQUIC_fire:
         test_object = QUIC_fire.from_file("tmp/")
         assert isinstance(test_object, QUIC_fire)
         assert quic_fire == test_object
+
+class Test_QFire_Bldg_Advanced_User_Inputs:
+
+    def test_default_init(self):
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+
+        assert bldg_inputs.convert_buildings_to_fuel_flag == 0
+        assert bldg_inputs.building_fuel_density == 0.5
+        assert bldg_inputs.building_attenuation_coefficient == 2.
+        assert bldg_inputs.building_surface_roughness == 0.01
+        assert bldg_inputs.convert_fuel_to_canopy_flag == 1
+        assert bldg_inputs.update_canopy_winds_flag == 1
+        assert bldg_inputs.fuel_attenuation_coefficient == 1.
+        assert bldg_inputs.fuel_surface_roughness == 0.1
+
+    def test_custom_init(self):
+        # Change a flag
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs(
+            convert_buildings_to_fuel_flag=1)
+        assert bldg_inputs.convert_buildings_to_fuel_flag == 1
+
+        # Change a float
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs(building_fuel_density=0.6)
+        assert bldg_inputs.building_fuel_density == 0.6
+
+        # Test data type casting
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs(
+            building_fuel_density="0.6")
+        assert isinstance(bldg_inputs.building_fuel_density, float)
+
+    def test_init_invalid_values(self):
+        # Test invalid convert_buildings_to_fuel_flag
+        for invalid_flag in [-1, 2, "1", 1., 1.5]:
+            with pytest.raises(ValidationError):
+                QFire_Bldg_Advanced_User_Inputs(
+                    convert_buildings_to_fuel_flag=invalid_flag)
+
+        # Test invalid building_fuel_density
+        for invalid_density in [-1, ""]:
+            with pytest.raises(ValidationError):
+                QFire_Bldg_Advanced_User_Inputs(
+                    building_fuel_density=invalid_density)
+
+    def test_to_dict(self):
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+        result_dict = bldg_inputs.to_dict()
+
+        assert result_dict['convert_buildings_to_fuel_flag'] == bldg_inputs.convert_buildings_to_fuel_flag
+        assert result_dict['building_fuel_density'] == bldg_inputs.building_fuel_density
+        assert result_dict['building_attenuation_coefficient'] == bldg_inputs.building_attenuation_coefficient
+        assert result_dict['building_surface_roughness'] == bldg_inputs.building_surface_roughness
+        assert result_dict['convert_fuel_to_canopy_flag'] == bldg_inputs.convert_fuel_to_canopy_flag
+        assert result_dict['update_canopy_winds_flag'] == bldg_inputs.update_canopy_winds_flag
+        assert result_dict['fuel_attenuation_coefficient'] == bldg_inputs.fuel_attenuation_coefficient
+        assert result_dict['fuel_surface_roughness'] == bldg_inputs.fuel_surface_roughness
+
+    def test_from_dict(self):
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+        result_dict = bldg_inputs.to_dict()
+        test_obj = QFire_Bldg_Advanced_User_Inputs.from_dict(result_dict)
+        assert test_obj == bldg_inputs
+
+    def test_to_docs(self):
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+        result_dict = bldg_inputs.to_dict()
+        result_docs = bldg_inputs.get_documentation()
+        for key in result_dict:
+            assert key in result_docs
+        for key in result_docs:
+            assert key in result_dict
+
+    def test_to_file(self):
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+        bldg_inputs.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QFIRE_bldg_advanced_user_inputs.inp", 'r') as file:
+            lines = file.readlines()
+        assert int(lines[0].strip().split("!")[0]) == bldg_inputs.convert_buildings_to_fuel_flag
+        assert float(lines[1].strip().split("!")[0]) == bldg_inputs.building_fuel_density
+        assert float(lines[2].strip().split("!")[0]) == bldg_inputs.building_attenuation_coefficient
+        assert float(lines[3].strip().split("!")[0]) == bldg_inputs.building_surface_roughness
+        assert int(lines[4].strip().split("!")[0]) == bldg_inputs.convert_fuel_to_canopy_flag
+        assert int(lines[5].strip().split("!")[0]) == bldg_inputs.update_canopy_winds_flag
+        assert float(lines[6].strip().split("!")[0]) == bldg_inputs.fuel_attenuation_coefficient
+        assert float(lines[7].strip().split("!")[0]) == bldg_inputs.fuel_surface_roughness
+
+        # Test writing to a non-existent directory
+        with pytest.raises(FileNotFoundError):
+            bldg_inputs.to_file(
+                "/non_existent_path/QFIRE_bldg_advanced_user_inputs.inp")
+
+    def test_from_file(self):
+        bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+        bldg_inputs.to_file("tmp/")
+        test_object = QFire_Bldg_Advanced_User_Inputs.from_file("tmp/")
+        assert isinstance(test_object, QFire_Bldg_Advanced_User_Inputs)
+        assert bldg_inputs == test_object
+
+
+class Test_QFire_Plume_Advanced_User_Inputs:
+
+    def test_default_init(self):
+        plume_inputs = QFire_Plume_Advanced_User_Inputs()
+
+        assert plume_inputs.max_plumes_per_timestep == 150000
+        assert plume_inputs.min_plume_updraft_velocity == 0.1
+        assert plume_inputs.max_plume_updraft_velocity == 100.
+        assert plume_inputs.min_velocity_ratio == 0.1
+        assert plume_inputs.brunt_vaisala_freq_squared == 0.
+        assert plume_inputs.creeping_flag == 1
+        assert plume_inputs.adaptive_timestep_flag == 0
+        assert plume_inputs.plume_timestep == 1.
+        assert plume_inputs.sor_option_flag == 1
+        assert plume_inputs.sor_alpha_plume_center == 10.
+        assert plume_inputs.sor_alpha_plume_edge == 1.
+        assert plume_inputs.max_plume_merging_angle == 30.
+        assert plume_inputs.max_plume_overlap_fraction == 0.7
+        assert plume_inputs.plume_to_grid_updrafts_flag == 1
+        assert plume_inputs.max_points_along_plume_edge == 10
+        assert plume_inputs.plume_to_grid_intersection_flag == 1
+
+    def test_custom_init(self):
+        plume_inputs = QFire_Plume_Advanced_User_Inputs(
+            max_plumes_per_timestep=100000,
+            min_plume_updraft_velocity=0.2,
+            creeping_flag=0,
+            max_plume_updraft_velocity="100."
+        )
+        assert plume_inputs.max_plumes_per_timestep == 100000
+        assert plume_inputs.min_plume_updraft_velocity == 0.2
+        assert plume_inputs.creeping_flag == 0
+        assert plume_inputs.max_plume_updraft_velocity == 100.
+
+    def test_invalid_values(self):
+        # Invalid max_plumes_per_timestep (Positive integer)
+        for value in [-1, 0, 1.5, "a"]:
+            with pytest.raises(ValidationError):
+                QFire_Plume_Advanced_User_Inputs(max_plumes_per_timestep=value)
+
+        # Invalid min_plume_updraft_velocity (Positive float)
+        for value in [-1, 0, "a"]:
+            with pytest.raises(ValidationError):
+                QFire_Plume_Advanced_User_Inputs(min_plume_updraft_velocity=value)
+
+        # Invalid brunt_vaisala_freq_squared (Non-negative float)
+        for value in [-1, "a"]:
+            with pytest.raises(ValidationError):
+                QFire_Plume_Advanced_User_Inputs(brunt_vaisala_freq_squared=value)
+
+        # Invalid creeping_flag (Literal 0 or 1)
+        for value in [-1, 2, 1.5, "a", "0"]:
+            with pytest.raises(ValidationError):
+                QFire_Plume_Advanced_User_Inputs(creeping_flag=value)
+
+    def test_to_dict(self):
+        plume_inputs = QFire_Plume_Advanced_User_Inputs()
+        result_dict = plume_inputs.to_dict()
+
+        assert result_dict['max_plumes_per_timestep'] == plume_inputs.max_plumes_per_timestep
+        assert result_dict['min_plume_updraft_velocity'] == plume_inputs.min_plume_updraft_velocity
+        assert result_dict['max_plume_updraft_velocity'] == plume_inputs.max_plume_updraft_velocity
+        assert result_dict['min_velocity_ratio'] == plume_inputs.min_velocity_ratio
+        assert result_dict['brunt_vaisala_freq_squared'] == plume_inputs.brunt_vaisala_freq_squared
+        assert result_dict['creeping_flag'] == plume_inputs.creeping_flag
+        assert result_dict['adaptive_timestep_flag'] == plume_inputs.adaptive_timestep_flag
+        assert result_dict['plume_timestep'] == plume_inputs.plume_timestep
+        assert result_dict['sor_option_flag'] == plume_inputs.sor_option_flag
+        assert result_dict['sor_alpha_plume_center'] == plume_inputs.sor_alpha_plume_center
+        assert result_dict['sor_alpha_plume_edge'] == plume_inputs.sor_alpha_plume_edge
+        assert result_dict['max_plume_merging_angle'] == plume_inputs.max_plume_merging_angle
+        assert result_dict['max_plume_overlap_fraction'] == plume_inputs.max_plume_overlap_fraction
+        assert result_dict['plume_to_grid_updrafts_flag'] == plume_inputs.plume_to_grid_updrafts_flag
+        assert result_dict['max_points_along_plume_edge'] == plume_inputs.max_points_along_plume_edge
+        assert result_dict['plume_to_grid_intersection_flag'] == plume_inputs.plume_to_grid_intersection_flag
+
+    def test_from_dict(self):
+        plume_inputs = QFire_Plume_Advanced_User_Inputs()
+        result_dict = plume_inputs.to_dict()
+        test_obj = QFire_Plume_Advanced_User_Inputs.from_dict(result_dict)
+        assert test_obj == plume_inputs
+
+    def test_to_docs(self):
+        plume_inputs = QFire_Plume_Advanced_User_Inputs()
+        result_dict = plume_inputs.to_dict()
+        result_docs = plume_inputs.get_documentation()
+        for key in result_dict:
+            assert key in result_docs
+        for key in result_docs:
+            assert key in result_dict
+
+    def test_to_file(self):
+        plume_inputs = QFire_Plume_Advanced_User_Inputs()
+        plume_inputs.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QFIRE_plume_advanced_user_inputs.inp", 'r') as file:
+            lines = file.readlines()
+        assert int(lines[0].strip().split("!")[0]) == plume_inputs.max_plumes_per_timestep
+        assert float(lines[1].strip().split("!")[0]) == plume_inputs.min_plume_updraft_velocity
+        assert float(lines[2].strip().split("!")[0]) == plume_inputs.max_plume_updraft_velocity
+        assert float(lines[3].strip().split("!")[0]) == plume_inputs.min_velocity_ratio
+        assert float(lines[4].strip().split("!")[0]) == plume_inputs.brunt_vaisala_freq_squared
+        assert int(lines[5].strip().split("!")[0]) == plume_inputs.creeping_flag
+        assert int(lines[6].strip().split("!")[0]) == plume_inputs.adaptive_timestep_flag
+        assert float(lines[7].strip().split("!")[0]) == plume_inputs.plume_timestep
+        assert int(lines[8].strip().split("!")[0]) == plume_inputs.sor_option_flag
+        assert float(lines[9].strip().split("!")[0]) == plume_inputs.sor_alpha_plume_center
+        assert float(lines[10].strip().split("!")[0]) == plume_inputs.sor_alpha_plume_edge
+        assert float(lines[11].strip().split("!")[0]) == plume_inputs.max_plume_merging_angle
+        assert float(lines[12].strip().split("!")[0]) == plume_inputs.max_plume_overlap_fraction
+        assert int(lines[13].strip().split("!")[0]) == plume_inputs.plume_to_grid_updrafts_flag
+        assert int(lines[14].strip().split("!")[0]) == plume_inputs.max_points_along_plume_edge
+        assert int(lines[15].strip().split("!")[0]) == plume_inputs.plume_to_grid_intersection_flag
+
+    def test_from_file(self):
+        plume_inputs = QFire_Plume_Advanced_User_Inputs()
+        plume_inputs.to_file("tmp/")
+        test_object = QFire_Plume_Advanced_User_Inputs.from_file("tmp/")
+        assert isinstance(test_object, QFire_Plume_Advanced_User_Inputs)
+        assert plume_inputs == test_object
+
+
+class TestSimulationInputs:
+    def get_basic_test_object(self):
+        return SimulationInputs.setup_simulation(
+            nx=100, ny=100, fire_nz=40, quic_nz=26,
+            quic_height=180, dx=2, dy=2, dz=1,
+            wind_speed=2.7, wind_direction=270,
+            simulation_time=600, output_time=60)
+
+    def test_basic_inputs(self):
+        sim_inputs = self.get_basic_test_object()
+        assert isinstance(sim_inputs, SimulationInputs)
+
+    def test_list_inputs(self):
+        sim_inputs = self.get_basic_test_object()
+        inputs = sim_inputs.list_inputs()
+        assert "rasterorigin" in inputs
+
+    def test_get_input(self):
+        sim_inputs = self.get_basic_test_object()
+        rasterorigin = sim_inputs.get_input("rasterorigin")
+        assert isinstance(rasterorigin, RasterOrigin)
+
+
+class TestRuntimeAdvancedUserInputs:
+    def get_test_object(self):
+        return RuntimeAdvancedUserInputs()
+
+    def test_init(self):
+        raui = self.get_test_object()
+        assert isinstance(raui, RuntimeAdvancedUserInputs)
+        assert raui.num_cpus == 8
+        assert raui.use_acw == 0
+
+    def test_from_file(self):
+        raui = self.get_test_object()
+        raui.to_file("tmp/")
+        test_object = RuntimeAdvancedUserInputs.from_file("tmp/")
+        assert raui == test_object

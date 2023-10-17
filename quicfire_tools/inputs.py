@@ -28,6 +28,95 @@ TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("templates")
 
 
+class SimulationInputs:
+    _required_inputs = []
+
+    def __init__(self, input_files: list):
+        # Initialize a dictionary of input files
+        self._inputs = {i.name: i for i in input_files}
+
+        # Validate that all required input files are present
+        for required_input in self._required_inputs:
+            if required_input not in input_files:
+                raise ValueError(f"Missing required input file: "
+                                 f"{required_input}")
+
+    def list_inputs(self) -> list[str]:
+        return list(self._inputs.keys())
+
+    def get_input(self, input_name: str) -> InputFile:
+        return self._inputs[input_name]
+
+    def write_inputs(self, directory: str | Path, version: str = "latest"):
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        if not directory.exists():
+            raise NotADirectoryError(f"{directory} does not exist")
+
+        for input_name in self.list_inputs():
+            input_file = self.get_input(input_name)
+            input_file.to_file(directory, version=version)
+
+    @classmethod
+    def setup_simulation(cls, nx: int, ny: int, fire_nz: int, quic_nz: int,
+                         quic_height: float, dx: float, dy: float, dz: float,
+                         wind_speed: float, wind_direction: float,
+                         simulation_time: int, output_time: int):
+        """
+        Creates a SimulationInputs object with the minimum required inputs to
+        build a QUIC-Fire input file deck and run a simulation.
+
+        Parameters
+        ----------
+        nx
+        ny
+        fire_nz
+        quic_nz
+        quic_height
+        dx
+        dy
+        dz
+        wind_speed
+        wind_direction
+        simulation_time
+        output_time
+
+        Returns
+        -------
+        SimulationInputs
+            Class containing the minimum required inputs to build a QUIC-Fire
+            input file deck and run a simulation.
+        """
+        # Initialize default input files
+        raster_origin = RasterOrigin()
+        qu_bldgs = QU_Buildings()
+        qu_fileoptions = QU_Fileoptions()
+        qfire_adv_user_input = QFire_Advanced_User_Inputs()
+        qfire_bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+
+        # Initialize input files with required parameters
+        qu_simparams = QU_Simparams(nx=nx, ny=ny, nz=quic_nz, dx=dx, dy=dy,
+                                    quic_domain_height=quic_height)
+        gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=dz,
+                            aa1=1.0)
+
+        input_files = [raster_origin, qu_bldgs, qu_fileoptions,
+                       qfire_adv_user_input, qfire_bldg_inputs, qu_simparams,
+                       gridlist]
+
+        return cls(input_files)
+
+    @classmethod
+    def from_directory(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        input_files = []
+        for input_file in cls._required_inputs:
+            input_files.append(input_file.from_file(directory))
+        return cls(input_files)
+
+
 class InputFile(BaseModel, validate_assignment=True):
     """
     Base class representing an input file.
@@ -37,15 +126,23 @@ class InputFile(BaseModel, validate_assignment=True):
     1) Return documentation for each parameter in the input file.
     2) Provide a method to write the input file to a specified directory.
     """
-    filename: str
+    name: str
+    _extension: str
+    _param_info: dict = None
+
+    @property
+    def _filename(self):
+        return f"{self.name}{self._extension}"
 
     @property
     def param_info(self):
         """
         Return a dictionary of parameter information for the input file.
         """
-        with open(DOCS_PATH / f"{self.filename}.json", "r") as f:
-            return json.load(f)
+        if self._param_info is None:  # open the file if it hasn't been read in
+            with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
+                self._param_info = json.load(f)
+        return self._param_info
 
     def list_parameters(self):
         """List all parameters in the input file."""
@@ -86,7 +183,8 @@ class InputFile(BaseModel, validate_assignment=True):
         """
         # return {attr: value for attr, value in self.__dict__.items()
         #         if not attr.startswith('_')}
-        return self.model_dump(exclude={"filename", "param_info"})
+        return self.model_dump(exclude={"name", "_extension", "_filename",
+                                        "param_info"})
 
     def to_file(self, directory: Path, version: str = "latest"):
         """
@@ -102,13 +200,13 @@ class InputFile(BaseModel, validate_assignment=True):
         if isinstance(directory, str):
             directory = Path(directory)
 
-        template_file_path = TEMPLATES_PATH / version / f"{self.filename}"
+        template_file_path = TEMPLATES_PATH / version / f"{self._filename}"
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
 
         result = src.substitute(self.to_dict())
 
-        output_file_path = directory / self.filename
+        output_file_path = directory / self._filename
         with open(output_file_path, "w") as fout:
             fout.write(result)
 
@@ -124,8 +222,6 @@ class Gridlist(InputFile):
 
     Attributes
     ----------
-    filename : str
-        Name of the file to write to. Default is "gridlist.txt".
     n : int
         Number of cells in the x-direction [-]
     m : int
@@ -141,7 +237,8 @@ class Gridlist(InputFile):
     aa1 : float
         Stretching factor for the vertical grid spacing [-]
     """
-    filename: str = Field("gridlist", allow_mutation=False)
+    name: str = Field("gridlist", frozen=True)
+    _extension: str = ""
     n: PositiveInt
     m: PositiveInt
     l: PositiveInt
@@ -158,14 +255,13 @@ class RasterOrigin(InputFile):
 
     Attributes
     ----------
-    filename : str
-        Name of the file to write to. Default is "rasterorigin.txt".
     utm_x : float
         UTM-x coordinates of the south-west corner of domain [m]
     utm_y : float
         UTM-y coordinates of the south-west corner of domain [m]
     """
-    filename: str = Field("rasterorigin.txt", allow_mutation=False)
+    name: str = Field("rasterorigin", frozen=True)
+    _extension: str = ".txt"
     utm_x: NonNegativeFloat = 0.
     utm_y: NonNegativeFloat = 0.
 
@@ -179,9 +275,8 @@ class RasterOrigin(InputFile):
             directory = Path(directory)
         with open(directory / "rasterorigin.txt", "r") as f:
             lines = f.readlines()
-        utm_x = float(lines[0].split()[0])
-        utm_y = float(lines[1].split()[0])
-        return cls(utm_x=utm_x, utm_y=utm_y)
+        return cls(utm_x=float(lines[0].split()[0]),
+                   utm_y=float(lines[1].split()[0]))
 
 
 class QU_Buildings(InputFile):
@@ -192,8 +287,6 @@ class QU_Buildings(InputFile):
 
     Attributes
     ----------
-    filename : str
-        Name of the file to write to. Default is "QU_buildings.inp".
     wall_roughness_length : float
         Wall roughness length [m]. Must be greater than 0. Default is 0.1.
     number_of_buildings : int
@@ -202,7 +295,8 @@ class QU_Buildings(InputFile):
         Number of polygon building nodes [-]. Default is 0. Not currently used
         in QUIC-Fire.
     """
-    filename: str = Field("QU_buildings.inp", allow_mutation=False)
+    name: str = Field("QU_buildings", frozen=True)
+    _extension: str = ".inp"
     wall_roughness_length: PositiveFloat = 0.1
     number_of_buildings: NonNegativeInt = 0
     number_of_polygon_nodes: NonNegativeInt = 0
@@ -217,12 +311,9 @@ class QU_Buildings(InputFile):
             directory = Path(directory)
         with open(directory / "QU_buildings.inp", "r") as f:
             lines = f.readlines()
-        wall_roughness_length = float(lines[1].split()[0])
-        number_of_buildings = int(lines[2].split()[0])
-        number_of_polygon_nodes = int(lines[3].split()[0])
-        return cls(wall_roughness_length=wall_roughness_length,
-                   number_of_buildings=number_of_buildings,
-                   number_of_polygon_nodes=number_of_polygon_nodes)
+        return cls(wall_roughness_length=float(lines[1].split()[0]),
+                   number_of_buildings=int(lines[2].split()[0]),
+                   number_of_polygon_nodes=int(lines[3].split()[0]))
 
 
 class QU_Fileoptions(InputFile):
@@ -232,8 +323,6 @@ class QU_Fileoptions(InputFile):
 
     Attributes
     ----------
-    filename : str
-        Name of the file to write to. Default is "QU_fileoptions.inp".
     output_data_file_format_flag : int
         Output data file format flag. Values accepted are [1, 2, 3].
         Recommended value 2. 1 - binary, 2 - ASCII, 3 - both.
@@ -250,7 +339,8 @@ class QU_Fileoptions(InputFile):
         Generate wind startup files for ensemble simulations. Values accepted
         are [0, 1]. Recommended value 0. 0 - off, 1 - on.
     """
-    filename: str = Field("QU_fileoptions.inp", allow_mutation=False)
+    name: str = Field("QU_fileoptions", frozen=True)
+    _extension: str = ".inp"
     output_data_file_format_flag: Literal[1, 2, 3] = 2
     non_mass_conserved_initial_field_flag: Literal[0, 1] = 0
     initial_sensor_velocity_field_flag: Literal[0, 1] = 0
@@ -267,16 +357,11 @@ class QU_Fileoptions(InputFile):
             directory = Path(directory)
         with open(directory / "QU_fileoptions.inp", "r") as f:
             lines = f.readlines()
-        output_data_file_format_flag = int(lines[1].split()[0])
-        non_mass_conserved_initial_field_flag = int(lines[2].split()[0])
-        initial_sensor_velocity_field_flag = int(lines[3].split()[0])
-        qu_staggered_velocity_file_flag = int(lines[4].split()[0])
-        generate_wind_startup_files_flag = int(lines[5].split()[0])
-        return cls(output_data_file_format_flag=output_data_file_format_flag,
-                   non_mass_conserved_initial_field_flag=non_mass_conserved_initial_field_flag,
-                   initial_sensor_velocity_field_flag=initial_sensor_velocity_field_flag,
-                   qu_staggered_velocity_file_flag=qu_staggered_velocity_file_flag,
-                   generate_wind_startup_files_flag=generate_wind_startup_files_flag)
+        return cls(output_data_file_format_flag=int(lines[1].split()[0]),
+                   non_mass_conserved_initial_field_flag=int(lines[2].split()[0]),
+                   initial_sensor_velocity_field_flag=int(lines[3].split()[0]),
+                   qu_staggered_velocity_file_flag=int(lines[4].split()[0]),
+                   generate_wind_startup_files_flag=int(lines[5].split()[0]))
 
 
 class QU_Simparams(InputFile):
@@ -284,8 +369,6 @@ class QU_Simparams(InputFile):
     Class representing the QU_simparams.inp file. This file contains the
     simulation parameters for the QUIC-Fire simulation.
 
-    filename : str
-        Name of the file to write to. Default is "QU_simparams.inp".
     nx : int
         Number of cells in the x-direction [-]. Recommended value: > 100
     ny : int
@@ -296,6 +379,8 @@ class QU_Simparams(InputFile):
         Cell size in the x-direction [m]. Recommended value: 2 m
     dy : float
         Cell size in the y-direction [m]. Recommended value: 2 m
+    quic_domain_height : float
+        QUIC domain height [m]. Recommended value: 300 m
     surface_vertical_cell_size : float
         Surface vertical cell size [m].
     number_surface_cells : int
@@ -347,12 +432,14 @@ class QU_Simparams(InputFile):
         Building array flag. 0 = off, 1 = on. Recommended value: 0. Default is
         0.
     """
-    filename: str = Field("QU_simparams.inp", allow_mutation=False)
+    name: str = Field("QU_simparams", frozen=True)
+    _extension: str = ".inp"
     nx: PositiveInt
     ny: PositiveInt
     nz: PositiveInt
     dx: PositiveFloat
     dy: PositiveFloat
+    quic_domain_height: PositiveFloat
     surface_vertical_cell_size: PositiveFloat = 1.
     number_surface_cells: PositiveInt = 5
     stretch_grid_flag: Literal[0, 1, 3] = 3
@@ -386,7 +473,7 @@ class QU_Simparams(InputFile):
         elif self.stretch_grid_flag == 3:
             return compute_parabolic_stretched_grid(
                 self.surface_vertical_cell_size, self.number_surface_cells,
-                self.nz, 300).tolist()
+                self.nz, self.quic_domain_height).tolist()
 
     @computed_field
     @property
@@ -667,8 +754,8 @@ class QFire_Advanced_User_Inputs(InputFile):
     maximum_firebrand_thickness : PositiveFloat
         Maximum firebrand's thickness [m]
     """
-    filename: str = Field("QFire_Advanced_User_Inputs.inp",
-                          allow_mutation=False)
+    name: str = Field("QFire_Advanced_User_Inputs", frozen=True)
+    _extension: str = ".inp"
     fraction_cells_launch_firebrands: PositiveFloat = Field(0.05, ge=0, lt=1)
     firebrand_radius_scale_factor: PositiveFloat = Field(40., ge=1)
     firebrand_trajectory_time_step: PositiveInt = 1
@@ -694,35 +781,22 @@ class QFire_Advanced_User_Inputs(InputFile):
             directory = Path(directory)
         with open(directory / "QFire_Advanced_User_Inputs.inp", "r") as f:
             lines = f.readlines()
-        fraction_cells_launch_firebrands = float(lines[0].split()[0])
-        firebrand_radius_scale_factor = float(lines[1].split()[0])
-        firebrand_trajectory_time_step = int(lines[2].split()[0])
-        firebrand_launch_interval = int(lines[3].split()[0])
-        firebrands_per_deposition = int(lines[4].split()[0])
-        firebrand_area_ratio = float(lines[5].split()[0])
-        minimum_burn_rate_coefficient = float(lines[6].split()[0])
-        max_firebrand_thickness_fraction = float(lines[7].split()[0])
-        firebrand_germination_delay = int(lines[8].split()[0])
-        vertical_velocity_scale_factor = float(lines[9].split()[0])
-        minimum_firebrand_ignitions = int(lines[10].split()[0])
-        maximum_firebrand_ignitions = int(lines[11].split()[0])
-        minimum_landing_angle = float(lines[12].split()[0])
-        maximum_firebrand_thickness = float(lines[13].split()[0])
         return cls(
-            fraction_cells_launch_firebrands=fraction_cells_launch_firebrands,
-            firebrand_radius_scale_factor=firebrand_radius_scale_factor,
-            firebrand_trajectory_time_step=firebrand_trajectory_time_step,
-            firebrand_launch_interval=firebrand_launch_interval,
-            firebrands_per_deposition=firebrands_per_deposition,
-            firebrand_area_ratio=firebrand_area_ratio,
-            minimum_burn_rate_coefficient=minimum_burn_rate_coefficient,
-            max_firebrand_thickness_fraction=max_firebrand_thickness_fraction,
-            firebrand_germination_delay=firebrand_germination_delay,
-            vertical_velocity_scale_factor=vertical_velocity_scale_factor,
-            minimum_firebrand_ignitions=minimum_firebrand_ignitions,
-            maximum_firebrand_ignitions=maximum_firebrand_ignitions,
-            minimum_landing_angle=minimum_landing_angle,
-            maximum_firebrand_thickness=maximum_firebrand_thickness)
+            fraction_cells_launch_firebrands=float(lines[0].split()[0]),
+            firebrand_radius_scale_factor=float(lines[1].split()[0]),
+            firebrand_trajectory_time_step=int(lines[2].split()[0]),
+            firebrand_launch_interval=int(lines[3].split()[0]),
+            firebrands_per_deposition=int(lines[4].split()[0]),
+            firebrand_area_ratio=float(lines[5].split()[0]),
+            minimum_burn_rate_coefficient=float(lines[6].split()[0]),
+            max_firebrand_thickness_fraction=float(lines[7].split()[0]),
+            firebrand_germination_delay=int(lines[8].split()[0]),
+            vertical_velocity_scale_factor=float(lines[9].split()[0]),
+            minimum_firebrand_ignitions=int(lines[10].split()[0]),
+            maximum_firebrand_ignitions=int(lines[11].split()[0]),
+            minimum_landing_angle=float(lines[12].split()[0]),
+            maximum_firebrand_thickness=float(lines[13].split()[0]),
+        )
 
 
 class QUIC_fire(InputFile):
@@ -1082,3 +1156,206 @@ class QUIC_fire(InputFile):
                    radiation_out=radiation_out,
                    intensity_out=intensity_out,
                    auto_kill=auto_kill)
+
+
+class QFire_Bldg_Advanced_User_Inputs(InputFile):
+    """
+    Class representing the QFire_Bldg_Advanced_User_Inputs.inp input file. This
+    file contains advanced parameters related to buildings and fuel.
+
+    Attributes
+    ----------
+    convert_buildings_to_fuel_flag : int
+        Flag to convert QUIC-URB buildings to fuel. 0 = do not convert,
+        1 = convert. Recommended value: 0.
+    building_fuel_density : PositiveFloat
+        Thin fuel density within buildings if no fuel is specified and buildings
+        are converted to fuel. Higher value = more fuel. Recommended value: 0.5.
+        Units: [kg/m^3]
+    building_attenuation_coefficient : PositiveFloat
+        Attenuation coefficient within buildings if buildings are converted to
+        fuel. Higher value = more drag. Recommended value: 2.
+    building_surface_roughness : PositiveFloat
+        Surface roughness within buildings if buildings are converted to fuel.
+        Higher value = lower wind speed. Recommended value: 0.01 m. Units: [m]
+    convert_fuel_to_canopy_flag : int
+        Flag to convert fuel to canopy for winds. 0 = do not convert,
+        1 = convert. Recommended value: 1.
+    update_canopy_winds_flag : int
+        Flag to update canopy winds when fuel is consumed. 0 = do not update,
+        1 = update. Recommended value: 1.
+    fuel_attenuation_coefficient : PositiveFloat
+        Attenuation coefficient within fuel for the wind profile. Higher
+        value = more drag. Recommended value: 1.
+    fuel_surface_roughness : PositiveFloat
+        Surface roughness within fuel. Higher value = lower wind speed.
+        Recommended value: 0.1 m. Units: [m]
+        """
+    name: str = Field("QFire_Bldg_Advanced_User_Inputs", frozen=True)
+    _extension: str = ".inp"
+    convert_buildings_to_fuel_flag: Literal[0, 1] = 0
+    building_fuel_density: PositiveFloat = Field(0.5, ge=0)
+    building_attenuation_coefficient: PositiveFloat = Field(2.0, ge=0)
+    building_surface_roughness: PositiveFloat = Field(0.01, ge=0)
+    convert_fuel_to_canopy_flag: Literal[0, 1] = 1
+    update_canopy_winds_flag: Literal[0, 1] = 1
+    fuel_attenuation_coefficient: PositiveFloat = Field(1.0, ge=0)
+    fuel_surface_roughness: PositiveFloat = Field(0.1, ge=0)
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        """
+        Initializes a QFire_Bldg_Advanced_User_Inputs object from a directory
+        containing a QFire_Bldg_Advanced_User_Inputs.inp file.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QFire_Bldg_Advanced_User_Inputs.inp", "r") as f:
+            lines = f.readlines()
+        return cls(
+            convert_buildings_to_fuel_flag=int(lines[0].split()[0]),
+            building_fuel_density=float(lines[1].split()[0]),
+            building_attenuation_coefficient=float(lines[2].split()[0]),
+            building_surface_roughness=float(lines[3].split()[0]),
+            convert_fuel_to_canopy_flag=int(lines[4].split()[0]),
+            update_canopy_winds_flag=int(lines[5].split()[0]),
+            fuel_attenuation_coefficient=float(lines[6].split()[0]),
+            fuel_surface_roughness=float(lines[7].split()[0]),
+        )
+
+
+class QFire_Plume_Advanced_User_Inputs(InputFile):
+    """
+    Class representing the QFire_Plume_Advanced_User_Inputs.inp input file.
+    This file contains advanced parameters related to modeling buoyant plumes.
+
+    Attributes
+    ----------
+    max_plumes_per_timestep : PositiveInt
+        Maximum number of plumes allowed at each time step. Higher values slow
+        down the simulation. Default value: 150,000. Recommended range:
+        50,000 - 500,000.
+    min_plume_updraft_velocity : PositiveFloat
+        Minimum plume updraft velocity [m/s]. If plume velocity drops below this
+        value, the plume is removed. Higher values reduce number of plumes.
+        Default value: 0.1 m/s.
+    max_plume_updraft_velocity : PositiveFloat
+        Maximum allowed plume updraft velocity [m/s]. Default value: 100 m/s.
+    min_velocity_ratio : PositiveFloat
+        Minimum ratio between plume updraft velocity and wind speed. If ratio
+        drops below this value, plume is removed. Higher values reduce plumes.
+        Default value: 0.1.
+    brunt_vaisala_freq_squared : NonNegativeFloat
+        Inverse of the Brunt-Vaisala frequency squared [1/s^2], a measure of
+        atmospheric stability. Default value: 0 1/s^2.
+    creeping_flag : Literal[0, 1]
+        Flag to enable (1) or disable (0) fire spread by creeping.
+        Default value: 1.
+    adaptive_timestep_flag : Literal[0, 1]
+        Enable (1) or disable (0) adaptive time stepping. Adaptive time stepping
+        improves accuracy but increases simulation time. Default value: 0.
+    plume_timestep : PositiveFloat
+        Time step [s] used to compute buoyant plume trajectories. Higher values
+        reduce accuracy. Default value: 1s.
+    sor_option_flag : Literal[0, 1]
+        SOR solver option. 0 = standard SOR, 1 = memory SOR. Default value: 1.
+    sor_alpha_plume_center : PositiveFloat
+        SOR alpha value at plume centerline. Higher values reduce influence of
+        plumes on winds. Default value: 10.
+    sor_alpha_plume_edge : PositiveFloat
+        SOR alpha value at plume edge. Higher values reduce influence of plumes
+        on winds. Default value: 1.
+        max_plume_merging_angle : PositiveFloat
+        Maximum angle [degrees] between plumes to determine merging eligibility.
+        Higher values increase plume merging. Default value: 30 degrees.
+    max_plume_overlap_fraction : PositiveFloat
+        Maximum fraction of smaller plume trajectory overlapped by larger plume
+        to be considered for merging. Higher values increase merging.
+    plume_to_grid_updrafts_flag : Literal[0, 1]
+        Method to map plume updrafts to grid. 0 = new method, 1 = old method.
+        New method improves accuracy. Default value: 1. New method takes longer,
+        but is needed if smoke is simulated afterwards.
+    max_points_along_plume_edge : PositiveInt
+        Maximum points to sample along grid cell edge for new plume-to-grid
+        method. Default value: 10.
+    plume_to_grid_intersection_flag : Literal[0, 1]
+        Scheme to sum plume-to-grid updrafts when multiple plumes intersect a
+        grid cell. 0 = cube method, 1 = max value method. Default value: 1.
+    """
+    name: str = Field("QFire_Plume_Advanced_User_Inputs", frozen=True)
+    _extension: str = ".inp"
+    max_plumes_per_timestep: PositiveInt = Field(150000, gt=0)
+    min_plume_updraft_velocity: PositiveFloat = Field(0.1, gt=0)
+    max_plume_updraft_velocity: PositiveFloat = Field(100., gt=0)
+    min_velocity_ratio: PositiveFloat = Field(0.1, gt=0)
+    brunt_vaisala_freq_squared: NonNegativeFloat = Field(0., ge=0)
+    creeping_flag: Literal[0, 1] = 1
+    adaptive_timestep_flag: Literal[0, 1] = 0
+    plume_timestep: PositiveFloat = Field(1., gt=0)
+    sor_option_flag: Literal[0, 1] = 1
+    sor_alpha_plume_center: PositiveFloat = Field(10., gt=0)
+    sor_alpha_plume_edge: PositiveFloat = Field(1., gt=0)
+    max_plume_merging_angle: PositiveFloat = Field(30., gt=0, le=180)
+    max_plume_overlap_fraction: PositiveFloat = Field(0.7, gt=0, le=1)
+    plume_to_grid_updrafts_flag: Literal[0, 1] = 1
+    max_points_along_plume_edge: PositiveInt = Field(10, ge=1, le=100)
+    plume_to_grid_intersection_flag: Literal[0, 1] = 1
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        with open(directory / "QFire_Plume_Advanced_User_Inputs.inp", "r") as f:
+            lines = f.readlines()
+
+        return cls(
+            max_plumes_per_timestep=int(lines[0].split()[0]),
+            min_plume_updraft_velocity=float(lines[1].split()[0]),
+            max_plume_updraft_velocity=float(lines[2].split()[0]),
+            min_velocity_ratio=float(lines[3].split()[0]),
+            brunt_vaisala_freq_squared=float(lines[4].split()[0]),
+            creeping_flag=int(lines[5].split()[0]),
+            adaptive_timestep_flag=int(lines[6].split()[0]),
+            plume_timestep=float(lines[7].split()[0]),
+            sor_option_flag=int(lines[8].split()[0]),
+            sor_alpha_plume_center=float(lines[9].split()[0]),
+            sor_alpha_plume_edge=float(lines[10].split()[0]),
+            max_plume_merging_angle=float(lines[11].split()[0]),
+            max_plume_overlap_fraction=float(lines[12].split()[0]),
+            plume_to_grid_updrafts_flag=int(lines[13].split()[0]),
+            max_points_along_plume_edge=int(lines[14].split()[0]),
+            plume_to_grid_intersection_flag=int(lines[15].split()[0]),
+        )
+
+
+class RuntimeAdvancedUserInputs(InputFile):
+    """
+    Class representing the Runtime_Advanced_User_Inputs.inp input file.
+    This file contains advanced parameters related to computer memory usage.
+
+    Attributes
+    ----------
+    num_cpus : PositiveInt
+        Maximum number of CPU to use. Do not exceed 8. Use 1 for ensemble 
+        simulations.
+    use_acw : Literal[0,1]
+        Use Adaptive Computation Window (0=Disabled 1=Enabled)
+    """
+    name: str = "Runtime_Advanced_User_Inputs"
+    _extension: str = ".inp"
+    num_cpus: PositiveInt = Field(le=8, default=8)
+    use_acw: Literal[0, 1] = 0
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        with open(directory / "Runtime_Advanced_User_Inputs.inp", "r") as f:
+            lines = f.readlines()
+
+        return cls(
+            num_cpus=int(lines[0].strip().split("!")[0]),
+            use_acw=int(lines[1].strip().split("!")[0])
+        )
