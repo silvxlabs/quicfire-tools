@@ -1035,14 +1035,14 @@ class TestQUTopoInputs:
     
     def test_complex_inputs(self):
         topoinputs = self.get_complex_test_object()
-        assert topoinputs.topo_type.topo_flag == 1
+        assert topoinputs.topo_type.topo_flag.value == 1
         assert topoinputs.topo_lines == (f"1\t\t! N/A, "
                 f"topo flag: 0 = flat, 1 = Gaussian hill, "
                 f"2 = hill pass, 3 = slope mesa, 4 = canyon, "
                 f"5 = custom, 6 = half circle, 7 = sinusoid, "
                 f"8 = cos hill, 9 = QP_elevation.inp, "
                 f"10 = terrainOutput.txt (ARA), "
-                f"11 = terrain.dat (firetec)\n")
+                f"11 = terrain.dat (firetec)")
         assert topoinputs.smoothing_method == 1
         assert topoinputs.sor_relax == 1.78
     
@@ -1056,5 +1056,5 @@ class TestQUTopoInputs:
         topoinputs = self.get_default_test_object()
         topoinputs.to_file("tmp/")
         test_object = QU_TopoInputs.from_file("tmp/")
-        assert isinstance(test_object, QU_TpopInputs)
+        assert isinstance(test_object, QU_TopoInputs)
         assert topoinputs == test_object

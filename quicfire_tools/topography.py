@@ -34,25 +34,28 @@ class TopoType(BaseModel):
                 f"5 = custom, 6 = half circle, 7 = sinusoid, "
                 f"8 = cos hill, 9 = QP_elevation.inp, "
                 f"10 = terrainOutput.txt (ARA), "
-                f"11 = terrain.dat (firetec)\n")
+                f"11 = terrain.dat (firetec)")
     
 class GaussianHillTopo(TopoType):
-    topo_flag: TopoSources = 1
+    topo_flag: TopoSources = TopoSources(1)
     x_hilltop: PositiveInt
     y_hilltop: PositiveInt
     elevation_max: PositiveInt
     elevation_std: PositiveFloat
 
 class HillPassTopo(TopoType):
+    topo_flag: TopoSources = TopoSources(2)
     max_height: PositiveInt
     location_param: PositiveFloat
 
 class SlopeMesaTopo(TopoType):
+    topo_flag: TopoSources = TopoSources(3)
     slope_axis: Literal[0,1]
     slope_value: PositiveFloat
     flat_fraction: float = Field(ge=0, le=1)
 
 class CanyonTopo(TopoType):
+    topo_flag: TopoSources = TopoSources(4)
     x_start: PositiveInt
     y_center: PositiveInt
     slope_value: PositiveFloat
@@ -60,14 +63,17 @@ class CanyonTopo(TopoType):
     vertical_offset: PositiveFloat
 
 class HalfCircleTopo(TopoType):
+    topo_flag: TopoSources = TopoSources(6)
     x_location: PositiveInt
     y_location: PositiveInt
     radius: PositiveFloat
 
 class SinusoidTopo(TopoType):
+    topo_flag: TopoSources = TopoSources(7)
     period: PositiveFloat
     amplitude: PositiveFloat
 
 class CosHillTopo(TopoType):
+    topo_flag: TopoSources = TopoSources(8)
     aspect: PositiveFloat
     height: PositiveInt

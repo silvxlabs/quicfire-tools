@@ -1008,6 +1008,8 @@ class QU_TopoInputs(InputFile):
     sor_relax : float
         SOR overrelaxation coefficient. Only used if there is topo.
     """
+    name: str = "QU_TopoInputs"
+    _extension: str = ".inp"
     filename: str = "topo.dat"
     topo_type: TopoType = TopoType(topo_flag = 0)
     smoothing_method: Literal[0,1,2] = 0
@@ -1019,7 +1021,7 @@ class QU_TopoInputs(InputFile):
     @field_validator('smoothing_method')
     @classmethod
     def validate_smoothing(cls, v: int, info: ValidationInfo) -> int:
-        if info.data['topo_type'].topo_flag in [5,9,10,11]:
+        if info.data['topo_type'].topo_flag.value in [5,9,10,11]:
             if v == 0: raise ValueError(f"QU_TopoInputs: a smoothing method must be applied when using custom topography")
         return v
     
@@ -1038,7 +1040,7 @@ class QU_TopoInputs(InputFile):
         # Line 0 is Header
         filename = str(lines[1].strip())
         # Get topo lines
-        topo_flag = int(lines[2].strip().split("1")[0])
+        topo_flag = int(lines[2].strip().split("!")[0])
         add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
         add = add_dict.get(topo_flag)
         topo_params = []
@@ -1062,7 +1064,7 @@ class QU_TopoInputs(InputFile):
         elif topo_flag == 7:
             period, amplitude = topo_params
             topo_type = SinusoidTopo(period, amplitude)
-        elif topo_flag == 0:
+        elif topo_flag == 8:
             aspect, height = topo_params
             topo_type = CosHillTopo(aspect, height)
         else:
