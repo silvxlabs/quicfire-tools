@@ -155,55 +155,6 @@
         "can_be_modified": "Y",
         "recommended_value": "6 (NJT recommendation: 7)"
     },
-    "ignition_type.xmin": {
-        "values_accepted": "[0 Lx]",
-        "tested_values_range": "Any",
-        "description": "South-west corner in the x-direction",
-        "units": "[m]",
-        "can_be_modified": "Y"
-    },
-    "ignition_type.ymin": {
-        "values_accepted": "[0 Lx]",
-        "tested_values_range": "Any",
-        "description": "South-west corner in the y-direction",
-        "units": "[m]",
-        "can_be_modified": "Y"
-    },
-    "ignition_type.xlen": {
-        "values_accepted": "> 0",
-        "tested_values_range": "Any",
-        "description": "Length in the x-direction",
-        "units": "[m]",
-        "can_be_modified": "Y"
-    },
-    "ignition_type.ylen": {
-        "values_accepted": "> 0",
-        "tested_values_range": "Any",
-        "description": "Length in the y-direction",
-        "units": "[m]",
-        "can_be_modified": "Y"
-    },
-    "ignition_type.xwidth": {
-        "values_accepted": "> 0",
-        "tested_values_range": "Any",
-        "description": "Width of the ring in the x-direction. For square ring ignitions (ignition flag = 2) only",
-        "units": "[m]",
-        "can_be_modified": "Y"
-    },
-    "ignition_type.ywidth": {
-        "values_accepted": "> 0",
-        "tested_values_range": "Any",
-        "description": "Width of the ring in the y-direction. For square ring ignitions (ignition flag = 2) only",
-        "units": "[m]",
-        "can_be_modified": "Y"
-    },
-    "ignition_type.width": {
-        "values_accepted": "> 0",
-        "tested_values_range": "Any",
-        "description": "Width of the ring. For circular ring ignitions (ignition flag = 3) only",
-        "units": "[m]",
-        "can_be_modified": "Y"
-    },
     "ignitions_per_cell": {
         "values_accepted": "> 0",
         "tested_values_range": "10-10000",
