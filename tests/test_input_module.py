@@ -1013,3 +1013,41 @@ class TestSimulationInputs:
         sim_inputs = self.get_basic_test_object()
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
+
+class Test_QU_metparams:
+    def get_test_object(self):
+        return QU_metparams()
+    
+    def test_init(self):
+        qu_metparams = self.get_test_object()
+        assert qu_metparams.num_sensors == 1
+        assert qu_metparams.sensor_name == "sensor1"
+    
+    def test_to_dict(self):
+        qu_metparams = self.get_test_object()
+        result_dict = qu_metparams.to_dict()
+        assert result_dict['num_sensors'] == qu_metparams.num_sensors
+        assert result_dict['sensor_name'] == qu_metparams.sensor_name
+    
+    def test_from_dict(self):
+        qu_metparams = self.get_test_object()
+        result_dict = qu_metparams.to_dict()
+        test_obj = QU_metparams.from_dict(result_dict)
+        assert test_obj == qu_metparams
+    
+    def test_to_file(self):
+        qu_metparams = self.get_test_object()
+        qu_metparams.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QU_metparams.inp", 'r') as file:
+            lines = file.readlines()
+        assert int(lines[2].strip().split("!")[0]) == qu_metparams.num_sensors
+        assert str(lines[4].strip().split("!")[0].strip()) == qu_metparams.sensor_name
+    
+    def test_from_file(self):
+        qu_metparams = self.get_test_object()
+        qu_metparams.to_file("tmp/")
+        test_object = QU_metparams.from_file("tmp/")
+        assert isinstance(test_object, QU_metparams)
+        assert qu_metparams == test_object

@@ -968,3 +968,38 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             max_points_along_plume_edge=int(lines[14].split()[0]),
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
+
+class QU_metparams(InputFile):
+    """
+    Class representing the QU_metparams.inp input file.
+    This file contains information about wind profiles
+
+    Attributes
+    ----------
+    num_sensors : int
+        Number of measuring sites. Multiple wind profiles are not yet supported.
+    sensor_name : str
+        Name of the wind profile. This will correspond to the filename of the wind profile, e.g. sensor1.inp
+    """
+    name: str = "QU_metparams"
+    _extension: str = ".inp"
+    num_sensors: PositiveInt = 1
+    sensor_name: str = "sensor1"
+
+    @computed_field
+    @property
+    def sensor_lines(self) -> str:
+        return (f"{self.sensor_name} !Site Name\n"
+                f"!File name\n"
+                f"{self.sensor_name}.inp")
+    
+    @classmethod
+    def from_file(cls, directory):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QU_metparams.inp", "r") as f:
+            lines = f.readlines()
+        return cls(
+            num_sensors = int(lines[2].strip().split()[0]),
+            sensor_name = str(lines[4].strip().split()[0].strip())
+        )
