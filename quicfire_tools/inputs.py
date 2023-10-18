@@ -604,7 +604,7 @@ class QU_Simparams(InputFile):
         )
 
         # Write header line
-        header_line = f"! DZ array [m]"
+        header_line = "! DZ array [m]"
 
         # Write dz_array lines
         dz_array_lines_list = []
@@ -631,7 +631,7 @@ class QU_Simparams(InputFile):
         )
 
         # Write header line
-        header_line = f"! DZ array [m]"
+        header_line = "! DZ array [m]"
 
         # Write dz_array lines
         dz_lines = "\n".join([f"{float(dz)}" for dz in self.dz_array])
@@ -663,7 +663,7 @@ class QU_Simparams(InputFile):
         utc_offset_line = f"{self.utc_offset}\t! UTC offset [hours]"
 
         # Write header line
-        header_line = f"! Wind step times [s]"
+        header_line = "! Wind step times [s]"
 
         # Write wind_step_times lines
         wind_step_times_lines_list = []
@@ -718,7 +718,7 @@ class QU_Simparams(InputFile):
         elif stretch_grid_flag == 3:
             surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
             number_surface_cells = int(lines[8].strip().split("!")[0])
-            _header = lines[9].strip().split("!")[0]
+            _ = lines[9].strip().split("!")[0]
             for i in range(10, 10 + nz):
                 _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
             current_line = 10 + nz
@@ -728,7 +728,7 @@ class QU_Simparams(InputFile):
         # Read QU wind parameters
         number_wind_steps = int(lines[current_line].strip().split("!")[0])
         utc_offset = int(lines[current_line + 1].strip().split("!")[0])
-        _header = lines[current_line + 2].strip().split("!")[0]
+        _ = lines[current_line + 2].strip().split("!")[0]
         wind_times = []
         for i in range(current_line + 3, current_line + 3 + number_wind_steps):
             wind_times.append(int(lines[i].strip()))
@@ -1027,7 +1027,7 @@ class QUIC_fire(InputFile):
     @classmethod
     def validate_random_seed(cls, v: int) -> int:
         if v == 0:
-            raise ValueError(f"QUIC_fire.inp: random_seed must be not be 0")
+            raise ValueError("QUIC_fire.inp: random_seed must be not be 0")
         return v
 
     @computed_field
@@ -1071,10 +1071,10 @@ class QUIC_fire(InputFile):
     @property
     def fuel_lines(self) -> str:
         flag_line = (
-            f" 1 = uniform; "
-            f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-            f" files for quic grid, 4 = Firetech files for "
-            f"different grid (need interpolation)"
+            " 1 = uniform; "
+            "2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
+            " files for quic grid, 4 = Firetech files for "
+            "different grid (need interpolation)"
         )
         fuel_density_flag_line = f"{self.fuel_flag}\t! fuel density flag:" + flag_line
         fuel_moist_flag_line = f"\n{self.fuel_flag}\t! fuel moisture flag:" + flag_line
