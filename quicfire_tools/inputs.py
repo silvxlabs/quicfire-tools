@@ -1397,7 +1397,7 @@ class QU_TopoInputs(InputFile):
         add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
         add = add_dict.get(topo_flag)
         topo_params = []
-        for i in range(2,2+add):
+        for i in range(3,3+add):
             topo_params.append(int(lines[i].strip().split("!")[0]))
         if topo_flag == 1:
             x_hilltop, y_hilltop, elevation_max, elevation_std = topo_params
