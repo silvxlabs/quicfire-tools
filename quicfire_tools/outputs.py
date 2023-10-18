@@ -7,9 +7,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import numpy as np
 # External imports
 import zarr
+import numpy as np
 from numpy import ndarray
 
 # Internal imports
