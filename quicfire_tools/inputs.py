@@ -1328,63 +1328,6 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
 
-
-class Sensor1(InputFile):
-    """
-    Class representing the sensor1.inp input file.
-    This file contains information on winds, and serves as the
-    primary source for wind speed(s) and direction(s)
-
-    Attributes
-    ----------
-    time_now : PositiveInt
-        Begining of time step in Unix Epoch time (integer seconds since
-        1970/1/1 00:00:00). Must match time at beginning of fire
-        (QU_Simparams.inp and QUIC_fire.inp)
-    sensor_height : PositiveFloat
-        Wind measurement height (m). Default is 6.1m (20ft)
-    wind_speed : PositiveFloat
-        Wind speed (m/s)
-    wind_direction : NonNegativeInt < 360
-        Wind direction (degrees). Use 0° for North
-    """
-    name: str = "sensor1"
-    _extension: str = ".inp"
-    time_now: PositiveInt
-    sensor_height: PositiveFloat = 6.1  # 20ft
-    wind_speed: PositiveFloat
-    wind_direction: NonNegativeInt = Field(lt=360)
-
-    @computed_field
-    @property
-    def wind_lines(self) -> str:
-        """
-        This is meant to support wind shifts in the future.
-        This computed field could be altered to reproduce the lines below
-        for a series of times, speeds, and directions.
-        """
-        return (f"{self.time_now} !Begining of time step in Unix Epoch time"
-                f"(integer seconds since 1970/1/1 00:00:00)\n"
-                f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban "
-                f"canopy, 4 = discrete data points)\n"
-                f"0.1 !site zo\n"
-                f"0. ! 1/L (default = 0)\n"
-                f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
-                f"{self.sensor_height} {self.wind_speed} {self.wind_direction}")
-
-    @classmethod
-    def from_file(cls, directory: str | Path):
-        if isinstance(directory, str):
-            directory = Path(directory)
-        with open(directory / "sensor1.inp", "r") as f:
-            lines = f.readlines()
-        return cls(
-            time_now=int(lines[6].strip().split("!")[0]),
-            sensor_height=float(lines[11].split(" ")[0]),
-            wind_speed=float(lines[11].split(" ")[1]),
-            wind_direction=int(lines[11].split(" ")[2])
-        )
-
       
 class RuntimeAdvancedUserInputs(InputFile):
     """
@@ -1461,3 +1404,96 @@ class QU_movingcoords(InputFile):
             print("WARNING: QP_buildout.inp: number of vegetative canopies will be set to 0.")
         
         return cls()
+
+      
+class QU_metparams(InputFile):
+    """
+    Class representing the QU_metparams.inp input file.
+    This file contains information about wind profiles
+
+    Attributes
+    ----------
+    num_sensors : int
+        Number of measuring sites. Multiple wind profiles are not yet supported.
+    sensor_name : str
+        Name of the wind profile. This will correspond to the filename of the wind profile, e.g. sensor1.inp
+    """
+    name: str = "QU_metparams"
+    _extension: str = ".inp"
+    num_sensors: PositiveInt = 1
+    sensor_name: str = "sensor1"
+
+    @computed_field
+    @property
+    def sensor_lines(self) -> str:
+        return (f"{self.sensor_name} !Site Name\n"
+                f"!File name\n"
+                f"{self.sensor_name}.inp")
+    
+    @classmethod
+    def from_file(cls, directory):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QU_metparams.inp", "r") as f:
+            lines = f.readlines()
+        return cls(
+            num_sensors = int(lines[2].strip().split()[0]),
+            sensor_name = str(lines[4].strip().split()[0].strip())
+        )
+      
+      
+class Sensor1(InputFile):
+    """
+    Class representing the sensor1.inp input file.
+    This file contains information on winds, and serves as the
+    primary source for wind speed(s) and direction(s)
+
+    Attributes
+    ----------
+    time_now : PositiveInt
+        Begining of time step in Unix Epoch time (integer seconds since
+        1970/1/1 00:00:00). Must match time at beginning of fire
+        (QU_Simparams.inp and QUIC_fire.inp)
+    sensor_height : PositiveFloat
+        Wind measurement height (m). Default is 6.1m (20ft)
+    wind_speed : PositiveFloat
+        Wind speed (m/s)
+    wind_direction : NonNegativeInt < 360
+        Wind direction (degrees). Use 0° for North
+    """
+    name: str = "sensor1"
+    _extension: str = ".inp"
+    time_now: PositiveInt
+    sensor_height: PositiveFloat = 6.1  # 20ft
+    wind_speed: PositiveFloat
+    wind_direction: NonNegativeInt = Field(lt=360)
+
+    @computed_field
+    @property
+    def wind_lines(self) -> str:
+        """
+        This is meant to support wind shifts in the future.
+        This computed field could be altered to reproduce the lines below
+        for a series of times, speeds, and directions.
+        """
+        return (f"{self.time_now} !Begining of time step in Unix Epoch time"
+                f"(integer seconds since 1970/1/1 00:00:00)\n"
+                f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban "
+                f"canopy, 4 = discrete data points)\n"
+                f"0.1 !site zo\n"
+                f"0. ! 1/L (default = 0)\n"
+                f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+                f"{self.sensor_height} {self.wind_speed} {self.wind_direction}")
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "sensor1.inp", "r") as f:
+            lines = f.readlines()
+        return cls(
+            time_now=int(lines[6].strip().split("!")[0]),
+            sensor_height=float(lines[11].split(" ")[0]),
+            wind_speed=float(lines[11].split(" ")[1]),
+            wind_direction=int(lines[11].split(" ")[2])
+        )

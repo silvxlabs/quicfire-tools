@@ -1157,32 +1157,7 @@ class TestSimulationInputs:
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
 
-
-class TestSensor1:
-    def get_test_object(self):
-        return Sensor1(time_now=1697555154,
-                       wind_speed=5,
-                       wind_direction=270)
-
-    def test_init(self):
-        sensor1 = self.get_test_object()
-        assert isinstance(sensor1, Sensor1)
-        assert sensor1.wind_speed == 5.0
-        assert sensor1.wind_direction == 270
-        assert sensor1.sensor_height == 6.1
-
-    def test_error(self):
-        sensor1 = self.get_test_object()
-        with pytest.raises(ValidationError):
-            sensor1.wind_direction = 360
-
-    def test_from_file(self):
-        sensor1 = self.get_test_object()
-        sensor1.to_file("tmp/")
-        test_object = Sensor1.from_file("tmp/")
-        assert sensor1 == test_object
-
-        
+      
 class TestRuntimeAdvancedUserInputs:
     def get_test_object(self):
         return RuntimeAdvancedUserInputs()
@@ -1228,3 +1203,68 @@ class TestQUbuildout:
         qp_buildout.to_file("tmp/")
         test_object = QP_buildout.from_file("tmp/")
         assert qp_buildout == test_object
+
+
+class Test_QU_metparams:
+    def get_test_object(self):
+        return QU_metparams()
+    
+    def test_init(self):
+        qu_metparams = self.get_test_object()
+        assert qu_metparams.num_sensors == 1
+        assert qu_metparams.sensor_name == "sensor1"
+    
+    def test_to_dict(self):
+        qu_metparams = self.get_test_object()
+        result_dict = qu_metparams.to_dict()
+        assert result_dict['num_sensors'] == qu_metparams.num_sensors
+        assert result_dict['sensor_name'] == qu_metparams.sensor_name
+    
+    def test_from_dict(self):
+        qu_metparams = self.get_test_object()
+        result_dict = qu_metparams.to_dict()
+        test_obj = QU_metparams.from_dict(result_dict)
+        assert test_obj == qu_metparams
+    
+    def test_to_file(self):
+        qu_metparams = self.get_test_object()
+        qu_metparams.to_file("tmp/")
+
+        # Read the content of the file and check for correctness
+        with open("tmp/QU_metparams.inp", 'r') as file:
+            lines = file.readlines()
+        assert int(lines[2].strip().split("!")[0]) == qu_metparams.num_sensors
+        assert str(lines[4].strip().split("!")[0].strip()) == qu_metparams.sensor_name
+    
+    def test_from_file(self):
+        qu_metparams = self.get_test_object()
+        qu_metparams.to_file("tmp/")
+        test_object = QU_metparams.from_file("tmp/")
+        assert isinstance(test_object, QU_metparams)
+        assert qu_metparams == test_object
+
+
+class TestSensor1:
+    def get_test_object(self):
+        return Sensor1(time_now=1697555154,
+                       wind_speed=5,
+                       wind_direction=270)
+
+    def test_init(self):
+        sensor1 = self.get_test_object()
+        assert isinstance(sensor1, Sensor1)
+        assert sensor1.wind_speed == 5.0
+        assert sensor1.wind_direction == 270
+        assert sensor1.sensor_height == 6.1
+
+    def test_error(self):
+        sensor1 = self.get_test_object()
+        with pytest.raises(ValidationError):
+            sensor1.wind_direction = 360
+
+    def test_from_file(self):
+        sensor1 = self.get_test_object()
+        sensor1.to_file("tmp/")
+        test_object = Sensor1.from_file("tmp/")
+        assert sensor1 == test_object
+
