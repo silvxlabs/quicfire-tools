@@ -1,6 +1,7 @@
 """
 Test module for the inputs module of the quicfire_tools package.
 """
+
 from pathlib import Path
 
 import pytest
@@ -1157,6 +1158,31 @@ class TestSimulationInputs:
         assert isinstance(rasterorigin, RasterOrigin)
 
 
+class TestSensor1:
+    def get_test_object(self):
+        return Sensor1(time_now=1697555154,
+                       wind_speed=5,
+                       wind_direction=270)
+
+    def test_init(self):
+        sensor1 = self.get_test_object()
+        assert isinstance(sensor1, Sensor1)
+        assert sensor1.wind_speed == 5.0
+        assert sensor1.wind_direction == 270
+        assert sensor1.sensor_height == 6.1
+
+    def test_error(self):
+        sensor1 = self.get_test_object()
+        with pytest.raises(ValidationError):
+            sensor1.wind_direction = 360
+
+    def test_from_file(self):
+        sensor1 = self.get_test_object()
+        sensor1.to_file("tmp/")
+        test_object = Sensor1.from_file("tmp/")
+        assert sensor1 == test_object
+
+        
 class TestRuntimeAdvancedUserInputs:
     def get_test_object(self):
         return RuntimeAdvancedUserInputs()
