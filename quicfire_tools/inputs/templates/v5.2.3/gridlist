@@ -1,5 +1,5 @@
 n=$nx
-m=$ny 
+m=$ny
 l=$nz
 aa1=$dz
 nv=8

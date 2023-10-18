@@ -10,7 +10,7 @@
 10             ! alpha 2 - plume centerline
 2              ! alpha 2 - plume edges
 30.            ! deg, max angle between plumes to merging
-0.7            ! N/A, fraction of overlap of plumes for merging 
+0.7            ! N/A, fraction of overlap of plumes for merging
 1              ! N/A, which wplume-to-grid scheme: 0 = new, 1 = old
 10             ! N/A, number of points per edge for new scheme (only new scheme)
 1              ! N/A, w computation: 1 = max(w), 0 = sum(w^3)

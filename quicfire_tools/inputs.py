@@ -3,47 +3,48 @@ QUIC-Fire Tools Simulation Input Module
 """
 from __future__ import annotations
 
-# Internal Imports
-from quicfire_tools.utils import compute_parabolic_stretched_grid
-
-from quicfire_tools.topography import (
-    TopoType,
-    GaussianHillTopo,
-    HillPassTopo,
-    SlopeMesaTopo,
-    CanyonTopo,
-    HalfCircleTopo,
-    SinusoidTopo,
-    CosHillTopo,
-)
-from quicfire_tools.ignitions import (
-    IgnitionType,
-    RectangleIgnition,
-    SquareRingIgnition,
-    CircularRingIgnition,
-)
+import importlib.resources
 
 # Core Imports
 import json
 import time
-import importlib.resources
 from pathlib import Path
-from typing import Literal
 from string import Template
+from typing import Literal
 
 # External Imports
 import numpy as np
 from pydantic import (
     BaseModel,
     Field,
-    NonNegativeInt,
-    PositiveInt,
-    PositiveFloat,
     NonNegativeFloat,
+    NonNegativeInt,
+    PositiveFloat,
+    PositiveInt,
+    SerializeAsAny,
     computed_field,
     field_validator,
-    SerializeAsAny,
 )
+
+from quicfire_tools.ignitions import (
+    CircularRingIgnition,
+    IgnitionType,
+    RectangleIgnition,
+    SquareRingIgnition,
+)
+from quicfire_tools.topography import (
+    CanyonTopo,
+    CosHillTopo,
+    GaussianHillTopo,
+    HalfCircleTopo,
+    HillPassTopo,
+    SinusoidTopo,
+    SlopeMesaTopo,
+    TopoType,
+)
+
+# Internal Imports
+from quicfire_tools.utils import compute_parabolic_stretched_grid
 
 DOCS_PATH = (
     importlib.resources.files("quicfire_tools")
