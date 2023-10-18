@@ -21,7 +21,7 @@ from string import Template
 import numpy as np
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
                       PositiveFloat, NonNegativeFloat, computed_field,
-                      field_validator, ValidationInfo)
+                      field_validator)
 
 # TODO: Multiple wind directions
 # TODO: String for .dat files that exist
