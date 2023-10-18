@@ -1,0 +1,12 @@
+{
+    "num_buildings":{
+        "values_accepted": "0",
+        "description": "total number of buildings",
+        "can_be_modified": "N"
+    },
+    "num_canopies": {
+        "values_accepted": "0",
+        "description": "total number of vegitative canopies",
+        "can_be_modified": "N"
+    }
+}

@@ -1,0 +1,113 @@
+{
+    "rectangle_ignition": {
+        "x_min": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "Any",
+            "description": "South-west corner in the x-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_min": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "Any",
+            "description": "South-west corner in the y-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "x_length": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Length in the x-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_length": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Length in the y-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        }
+    },
+    "square_ring_ignition": {
+        "x_min": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "Any",
+            "description": "South-west corner in the x-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_min": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "Any",
+            "description": "South-west corner in the y-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "x_length": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Length in the x-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_length": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Length in the y-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "x_width": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Width of the ring in the x-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_width": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Width of the ring in the y-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        }
+    },
+    "cicular_ring_ignition": {
+        "x_min": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "Any",
+            "description": "South-west corner in the x-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_min": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "Any",
+            "description": "South-west corner in the y-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "x_length": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Length in the x-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_length": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Length in the y-direction",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "ring_width": {
+            "values_accepted": "> 0",
+            "tested_values_range": "Any",
+            "description": "Width of the ring",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        }
+    }
+}
