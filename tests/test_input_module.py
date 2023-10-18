@@ -1,7 +1,7 @@
 """
 Test module for the inputs module of the quicfire_tools package.
 """
-from lib2to3.refactor import get_all_fix_names
+
 from pathlib import Path
 
 import pytest
