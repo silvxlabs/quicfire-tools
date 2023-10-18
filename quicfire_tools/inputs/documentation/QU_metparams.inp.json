@@ -1,0 +1,16 @@
+{
+    "num_sensors": {
+        "values_accepted": "1",
+        "tested_values_range": "[1 Inf)",
+        "description": "Number of measuring sites",
+        "units": "[-]",
+        "can_be_modified": "N"
+    },
+    "sensor_name": {
+        "values_acepted": "sensor1",
+        "tested_values_range": "N/A",
+        "description": "Name of the wind profile",
+        "units": "[-]",
+        "can_be_modified": "N"
+    }
+}
