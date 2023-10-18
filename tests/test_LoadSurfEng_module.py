@@ -114,8 +114,48 @@ def main():
     xarr_fire_stop_time = xarr_fire_stop_time.compute()
     del burned_binary
 
-    xarr_residence_time = xarr_fire_stop_time - xarr_arrival_time        
+    xarr_residence_time = xarr_fire_stop_time - xarr_arrival_time
+
+    #NEW code to run for avg power and stdDev:
+    burn_indexes = np.where(xarr_residence_time>0)
+    num_burn_cells = len(burn_indexes[0])
+    max_res_time = xarr_residence_time.max()
+    power_burn_cells = np.empty((num_burn_cells,max_res_time))
+    for i in range(num_burn_cells):
+        ty = burn_indexes[0][i] #temp y
+        tx = burn_indexes[1][i]
+        start_t = int(xarr_arrival_time[y_cell, x_cell])
+        stop_t = int(xarr_fire_stop_time[y_cell, x_cell])
+        cell_power = ds.surfEnergy[start_t:stop_t,y_cell,x_cell]
+        power_burn_cells[i,:(stop_t-start_t)] = cell_power.to_numpy()
     
+    power_mean_overtime = np.nanmean(power_burn_cells, axis=1)
+    power_median_overtime = np.nanmedian(power_burn_cells, axis=1)
+    power_stdev_overtime = np.nanstd(power_burn_cells, axis=1)
+
+    #Raw data for Joe:
+    df = pd.DataFrame({"power_mean_overtime":power_mean_overtime,"power_median_overtime":power_median_overtime,
+                       "power_stdev_overtime":power_stdev_overtime})
+    df.to_csv(os.path.join(save_dir,"FtStewart_PowerOvertime.csv"), index=False)
+    del df
+
+    plt.plot(max_res_time, power_mean_overtime)
+    plt.fill_between(power_mean_overtime,power_mean_overtime-power_stdev_overtime,power_mean_overtime+power_stdev_overtime)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Power (kW/m^2)')
+    plt.title('Average Power of Surface Cells After Ignition')
+    plt.savefig(os.path.join(save_dir, 'SufaceCell_MeanPowerAfterIg.png'))
+    plt.close()  
+
+    plt.plot(max_res_time, power_median_overtime)
+    plt.fill_between(power_median_overtime,power_median_overtime-power_stdev_overtime,power_median_overtime+power_stdev_overtime)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Power (kW/m^2)')
+    plt.title('Median Power of Surface Cells After Ignition')
+    plt.savefig(os.path.join(save_dir, 'SufaceCell_MedianPowerAfterIg.png'))
+    plt.close()   
+    
+    ###This method is dumb. I should be able to use np.where to index the burned cells:
     #Sample burning cells
     def find_cells_that_burned(xarr_residence_time, SIM_PARAMS, n=1, time_len=15):
         """
