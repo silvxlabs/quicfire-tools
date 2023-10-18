@@ -5,6 +5,10 @@ from __future__ import annotations
 
 # Internal Imports
 from quicfire_tools.utils import compute_parabolic_stretched_grid
+
+from quicfire_tools.topography import (TopoType, 
+                                       GaussianHillTopo, HillPassTopo, SlopeMesaTopo,
+                                       CanyonTopo, HalfCircleTopo, SinusoidTopo, CosHillTopo)
 from quicfire_tools.ignitions import (IgnitionType, RectangleIgnition,
                                       SquareRingIgnition,
                                       CircularRingIgnition)
@@ -20,7 +24,8 @@ from string import Template
 # External Imports
 import numpy as np
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
-                      PositiveFloat, NonNegativeFloat, computed_field, field_validator)
+                      PositiveFloat, NonNegativeFloat, computed_field, field_validator,
+                      SerializeAsAny)
 
 DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("documentation")
@@ -1329,6 +1334,127 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
         )
 
       
+class QU_TopoInputs(InputFile):
+    """
+    Class representing the QU_TopoInputs.inp input file. This file
+    contains advanced inputs pertaining to topography.
+
+    filename : str
+        Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp
+    topo_type : TopoType
+        Topography type specified as a TopoType class from topography.py
+        0 = no terrain file provided, QUIC-Fire is run with flat terrain
+        1 = Gaussian hill
+        2 = hill pass
+        3 = slope mesa
+        4 = canyon
+        5 = custom
+        6 = half circle
+        7 = sinusoid
+        8 = cos hill
+        9 = terrain is provided via QP_elevation.bin (see Section 2.7)
+        10 = terrain is provided via terrainOutput.txt
+        11 = terrain.dat (firetec)
+    smoothing_method : int
+        0 = none (default for idealized topo)
+        1 = Blur
+        2 = David Robinson’s method based on second derivative
+    smoothing_passes : int
+        Number of smoothing passes. Real terrain MUST be smoothed
+    sor_iterations : int
+        Number of SOR iteration to define background winds before starting the fire
+    sor_cycles : int
+        Number of times the SOR solver initial fields is reset to define 
+        background winds before starting the fire
+    sor_relax : float
+        SOR overrelaxation coefficient. Only used if there is topo.
+    """
+    name: str = "QU_TopoInputs"
+    _extension: str = ".inp"
+    filename: str = "topo.dat"
+    topo_type: SerializeAsAny[TopoType] = TopoType(topo_flag = 0)
+    smoothing_method: Literal[0,1,2] = 2
+    smoothing_passes: PositiveInt = Field(le = 500, default = 500)
+    sor_iterations: PositiveInt = Field(le = 500, default = 200)
+    sor_cycles: Literal[0,1,2,3,4] = 4
+    sor_relax: PositiveFloat = Field(le = 2, default = 0.9)
+    
+    @computed_field
+    @property
+    def topo_lines(self) -> str:
+        return str(self.topo_type)
+    
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "QU_TopoInputs.inp", "r") as f:
+            lines = f.readlines()
+        
+        # Line 0 is Header
+        filename = str(lines[1].strip())
+        # Get topo lines
+        topo_flag = int(lines[2].strip().split("!")[0])
+        add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
+        add = add_dict.get(topo_flag)
+        topo_params = []
+        for i in range(3,3+add):
+            topo_params.append(float(lines[i].strip().split("!")[0]))
+        if topo_flag == 1:
+            x_hilltop, y_hilltop, elevation_max, elevation_std = topo_params
+            topo_type = GaussianHillTopo(x_hilltop = int(x_hilltop), 
+                                         y_hilltop = int(y_hilltop), 
+                                         elevation_max = int(elevation_max), 
+                                         elevation_std = elevation_std)
+        elif topo_flag == 2:
+            max_height, location_param = topo_params
+            topo_type = HillPassTopo(max_height = int(max_height), 
+                                     location_param = location_param)
+        elif topo_flag == 3:
+            slope_axis, slope_value, flat_fraction = topo_params
+            topo_type = SlopeMesaTopo(slope_axis = int(slope_axis), 
+                                      slope_value = slope_value, 
+                                      flat_fraction = flat_fraction)
+        elif topo_flag == 4:
+            x_start, y_center, slope_value, canyon_std, vertical_offset = topo_params
+            topo_type = CanyonTopo(x_start = int(x_start), 
+                                   y_center = int(y_center), 
+                                   sloe_value = slope_value, 
+                                   canyon_std = canyon_std, 
+                                   vertical_offset = vertical_offset)
+        elif topo_flag == 6:
+            x_location, y_location, radius = topo_params
+            topo_type = HalfCircleTopo(x_location = int(x_location), 
+                                       y_location = int(y_location), 
+                                       radius = radius)
+        elif topo_flag == 7:
+            period, amplitude = topo_params
+            topo_type = SinusoidTopo(period = period, 
+                                     amplitude = amplitude)
+        elif topo_flag == 8:
+            aspect, height = topo_params
+            topo_type = CosHillTopo(aspect = aspect, 
+                                    height = height)
+        else:
+            topo_type = TopoType(topo_flag = topo_flag)
+        current_line = 3 + add
+        # Smoothing and SOR
+        smoothing_method = int(lines[current_line].strip().split("!")[0])
+        smoothing_passes = int(lines[current_line+1].strip().split("!")[0])
+        sor_iterations = int(lines[current_line+2].strip().split("!")[0])
+        sor_cycles = int(lines[current_line+3].strip().split("!")[0])
+        sor_relax = float(lines[current_line+4].strip().split("!")[0])
+
+        return cls(
+            filename = filename,
+            topo_type = topo_type,
+            smoothing_method = smoothing_method,
+            smoothing_passes = smoothing_passes,
+            sor_iterations = sor_iterations,
+            sor_cycles = sor_cycles,
+            sor_relax = sor_relax
+        )
+
 class RuntimeAdvancedUserInputs(InputFile):
     """
     Class representing the Runtime_Advanced_User_Inputs.inp input file.
@@ -1346,7 +1472,6 @@ class RuntimeAdvancedUserInputs(InputFile):
     _extension: str = ".inp"
     num_cpus: PositiveInt = Field(le=8, default=8)
     use_acw: Literal[0, 1] = 0
-    
     @classmethod
     def from_file(cls, directory: str | Path):
         if isinstance(directory, str):

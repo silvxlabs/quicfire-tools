@@ -1,7 +1,6 @@
 """
 Test module for the inputs module of the quicfire_tools package.
 """
-
 from pathlib import Path
 
 import pytest
@@ -1157,6 +1156,115 @@ class TestSimulationInputs:
         rasterorigin = sim_inputs.get_input("rasterorigin")
         assert isinstance(rasterorigin, RasterOrigin)
 
+        
+class TestQUTopoInputs:
+    def get_default_test_object(self):
+        return QU_TopoInputs(topo_type = TopoType(topo_flag = 0))
+    
+    def get_complex_test_object(self):
+        return QU_TopoInputs(
+            topo_type = GaussianHillTopo(x_hilltop = 100, y_hilltop = 150, elevation_max = 500, elevation_std = 20),
+            smoothing_method = 1,
+            sor_relax = 1.78
+        )
+    
+    def test_default_inputs(self):
+        topoinputs = self.get_default_test_object()
+        assert topoinputs.filename == "topo.dat"
+        assert isinstance(topoinputs.topo_type, TopoType)
+        assert topoinputs.smoothing_passes == 500
+    
+    def test_complex_inputs(self):
+        topoinputs = self.get_complex_test_object()
+        assert topoinputs.topo_type.topo_flag.value == 1
+        assert topoinputs.topo_lines == (f"1\t\t! N/A, "
+                f"topo flag: 0 = flat, 1 = Gaussian hill, "
+                f"2 = hill pass, 3 = slope mesa, 4 = canyon, "
+                f"5 = custom, 6 = half circle, 7 = sinusoid, "
+                f"8 = cos hill, 9 = QP_elevation.inp, "
+                f"10 = terrainOutput.txt (ARA), "
+                f"11 = terrain.dat (firetec)\n"
+                f"100\t! m, x-center\n"
+                f"150\t! m, y-center\n"
+                f"500\t! m, max height\n"
+                f"20.0\t! m, std")
+        assert topoinputs.smoothing_method == 1
+        assert topoinputs.sor_relax == 1.78
+    
+    def test_to_dict(self):
+        topoinputs = self.get_default_test_object()
+        test_dict = topoinputs.to_dict()
+        assert test_dict['smoothing_method'] == topoinputs.smoothing_method
+        assert test_dict['smoothing_passes'] == topoinputs.smoothing_passes
+        assert test_dict['sor_iterations'] == topoinputs.sor_iterations
+        assert test_dict['sor_cycles'] == topoinputs.sor_cycles
+        assert test_dict['sor_relax'] == topoinputs.sor_relax
+
+        topoinputs = self.get_complex_test_object()
+        test_dict = topoinputs.to_dict()
+        assert test_dict['topo_type']['x_hilltop'] == topoinputs.topo_type.x_hilltop
+        assert test_dict['topo_type']['y_hilltop'] == topoinputs.topo_type.y_hilltop
+        assert test_dict['topo_type']['elevation_max'] == topoinputs.topo_type.elevation_max
+        assert test_dict['topo_type']['elevation_std'] == topoinputs.topo_type.elevation_std
+        assert test_dict['smoothing_method'] == topoinputs.smoothing_method
+        assert test_dict['smoothing_passes'] == topoinputs.smoothing_passes
+        assert test_dict['sor_iterations'] == topoinputs.sor_iterations
+        assert test_dict['sor_cycles'] == topoinputs.sor_cycles
+        assert test_dict['sor_relax'] == topoinputs.sor_relax
+    
+    def test_from_dict(self):
+        topoinputs = self.get_default_test_object()
+        result_dict = topoinputs.to_dict()
+        test_obj = QU_TopoInputs.from_dict(result_dict)
+        assert test_obj == topoinputs
+
+    def test_to_file(self):
+        topoinputs = self.get_default_test_object()
+        topoinputs.to_file("tmp/")
+        with open("tmp/QU_TopoInputs.inp", 'r') as file:
+            lines = file.readlines()
+        topo_flag = int(lines[2].strip().split("!")[0])
+        assert topo_flag == topoinputs.topo_type.topo_flag.value
+        add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
+        add = add_dict.get(topo_flag)
+        current_line = current_line = 3 + add
+        assert int(lines[current_line].strip().split("!")[0]) == topoinputs.smoothing_method
+        assert int(lines[current_line+1].strip().split("!")[0]) == topoinputs.smoothing_passes
+        assert int(lines[current_line+2].strip().split("!")[0]) == topoinputs.sor_iterations
+        assert int(lines[current_line+3].strip().split("!")[0]) == topoinputs.sor_cycles
+        assert float(lines[current_line+4].strip().split("!")[0]) == topoinputs.sor_relax
+
+        topoinputs = self.get_complex_test_object()
+        topoinputs.to_file("tmp/")
+        with open("tmp/QU_TopoInputs.inp", 'r') as file:
+            lines = file.readlines()
+        topo_flag = int(lines[2].strip().split("!")[0])
+        assert topo_flag == topoinputs.topo_type.topo_flag.value
+        add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
+        add = add_dict.get(topo_flag)
+        assert int(lines[3].strip().split("!")[0]) == topoinputs.topo_type.x_hilltop
+        assert int(lines[4].strip().split("!")[0]) == topoinputs.topo_type.y_hilltop
+        assert int(lines[5].strip().split("!")[0]) == topoinputs.topo_type.elevation_max
+        assert float(lines[6].strip().split("!")[0]) == topoinputs.topo_type.elevation_std
+        current_line = current_line = 3 + add
+        assert int(lines[current_line].strip().split("!")[0]) == topoinputs.smoothing_method
+        assert int(lines[current_line+1].strip().split("!")[0]) == topoinputs.smoothing_passes
+        assert int(lines[current_line+2].strip().split("!")[0]) == topoinputs.sor_iterations
+        assert int(lines[current_line+3].strip().split("!")[0]) == topoinputs.sor_cycles
+        assert float(lines[current_line+4].strip().split("!")[0]) == topoinputs.sor_relax
+
+    def test_from_file(self):
+        topoinputs = self.get_default_test_object()
+        topoinputs.to_file("tmp/")
+        test_object = QU_TopoInputs.from_file("tmp/")
+        assert isinstance(test_object, QU_TopoInputs)
+        assert topoinputs == test_object
+
+        topoinputs = self.get_complex_test_object()
+        topoinputs.to_file("tmp/")
+        test_object = QU_TopoInputs.from_file("tmp/")
+        assert isinstance(test_object, QU_TopoInputs)
+        assert topoinputs == test_object
       
 class TestRuntimeAdvancedUserInputs:
     def get_test_object(self):
@@ -1267,4 +1375,3 @@ class TestSensor1:
         sensor1.to_file("tmp/")
         test_object = Sensor1.from_file("tmp/")
         assert sensor1 == test_object
-
