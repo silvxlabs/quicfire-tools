@@ -3,29 +3,44 @@ QUIC-Fire Tools Simulation Input Module
 """
 from __future__ import annotations
 
-# Internal Imports
-from quicfire_tools.utils import compute_parabolic_stretched_grid
-from quicfire_tools.ignitions import (IgnitionType, RectangleIgnition,
-                                      SquareRingIgnition,
-                                      CircularRingIgnition)
-
+import importlib.resources
 # Core Imports
 import json
 import time
-import importlib.resources
 from pathlib import Path
-from typing import Literal
 from string import Template
+from typing import Literal
 
 # External Imports
 import numpy as np
-from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
-                      PositiveFloat, NonNegativeFloat, computed_field, field_validator)
+from pydantic import (
+    BaseModel,
+    Field,
+    NonNegativeInt,
+    PositiveInt,
+    PositiveFloat,
+    NonNegativeFloat,
+    computed_field,
+    field_validator,
+)
 
-DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
-    'inputs').joinpath("documentation")
-TEMPLATES_PATH = importlib.resources.files('quicfire_tools').joinpath(
-    'inputs').joinpath("templates")
+from quicfire_tools.ignitions import (
+    IgnitionType,
+    RectangleIgnition,
+    SquareRingIgnition,
+    CircularRingIgnition,
+)
+# Internal Imports
+from quicfire_tools.utils import compute_parabolic_stretched_grid
+
+DOCS_PATH = (
+    importlib.resources.files("quicfire_tools")
+    .joinpath("inputs")
+    .joinpath("documentation")
+)
+TEMPLATES_PATH = (
+    importlib.resources.files("quicfire_tools").joinpath("inputs").joinpath("templates")
+)
 
 
 class SimulationInputs:
@@ -38,8 +53,7 @@ class SimulationInputs:
         # Validate that all required input files are present
         for required_input in self._required_inputs:
             if required_input not in input_files:
-                raise ValueError(f"Missing required input file: "
-                                 f"{required_input}")
+                raise ValueError(f"Missing required input file: " f"{required_input}")
 
     def list_inputs(self) -> list[str]:
         return list(self._inputs.keys())
@@ -59,10 +73,21 @@ class SimulationInputs:
             input_file.to_file(directory, version=version)
 
     @classmethod
-    def setup_simulation(cls, nx: int, ny: int, fire_nz: int, quic_nz: int,
-                         quic_height: float, dx: float, dy: float, dz: float,
-                         wind_speed: float, wind_direction: float,
-                         simulation_time: int, output_time: int):
+    def setup_simulation(
+        cls,
+        nx: int,
+        ny: int,
+        fire_nz: int,
+        quic_nz: int,
+        quic_height: float,
+        dx: float,
+        dy: float,
+        dz: float,
+        wind_speed: float,
+        wind_direction: float,
+        simulation_time: int,
+        output_time: int,
+    ):
         """
         Creates a SimulationInputs object with the minimum required inputs to
         build a QUIC-Fire input file deck and run a simulation.
@@ -96,14 +121,20 @@ class SimulationInputs:
         qfire_bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
 
         # Initialize input files with required parameters
-        qu_simparams = QU_Simparams(nx=nx, ny=ny, nz=quic_nz, dx=dx, dy=dy,
-                                    quic_domain_height=quic_height)
-        gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=dz,
-                            aa1=1.0)
+        qu_simparams = QU_Simparams(
+            nx=nx, ny=ny, nz=quic_nz, dx=dx, dy=dy, quic_domain_height=quic_height
+        )
+        gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=dz, aa1=1.0)
 
-        input_files = [raster_origin, qu_bldgs, qu_fileoptions,
-                       qfire_adv_user_input, qfire_bldg_inputs, qu_simparams,
-                       gridlist]
+        input_files = [
+            raster_origin,
+            qu_bldgs,
+            qu_fileoptions,
+            qfire_adv_user_input,
+            qfire_bldg_inputs,
+            qu_simparams,
+            gridlist,
+        ]
 
         return cls(input_files)
 
@@ -126,6 +157,7 @@ class InputFile(BaseModel, validate_assignment=True):
     1) Return documentation for each parameter in the input file.
     2) Provide a method to write the input file to a specified directory.
     """
+
     name: str
     _extension: str
     _param_info: dict = None
@@ -183,8 +215,9 @@ class InputFile(BaseModel, validate_assignment=True):
         """
         # return {attr: value for attr, value in self.__dict__.items()
         #         if not attr.startswith('_')}
-        return self.model_dump(exclude={"name", "_extension", "_filename",
-                                        "param_info"})
+        return self.model_dump(
+            exclude={"name", "_extension", "_filename", "param_info"}
+        )
 
     def to_file(self, directory: Path, version: str = "latest"):
         """
@@ -237,6 +270,7 @@ class Gridlist(InputFile):
     aa1 : float
         Stretching factor for the vertical grid spacing [-]
     """
+
     name: str = Field("gridlist", frozen=True)
     _extension: str = ""
     n: PositiveInt
@@ -260,10 +294,11 @@ class RasterOrigin(InputFile):
     utm_y : float
         UTM-y coordinates of the south-west corner of domain [m]
     """
+
     name: str = Field("rasterorigin", frozen=True)
     _extension: str = ".txt"
-    utm_x: NonNegativeFloat = 0.
-    utm_y: NonNegativeFloat = 0.
+    utm_x: NonNegativeFloat = 0.0
+    utm_y: NonNegativeFloat = 0.0
 
     @classmethod
     def from_file(cls, directory: str | Path):
@@ -275,8 +310,7 @@ class RasterOrigin(InputFile):
             directory = Path(directory)
         with open(directory / "rasterorigin.txt", "r") as f:
             lines = f.readlines()
-        return cls(utm_x=float(lines[0].split()[0]),
-                   utm_y=float(lines[1].split()[0]))
+        return cls(utm_x=float(lines[0].split()[0]), utm_y=float(lines[1].split()[0]))
 
 
 class QU_Buildings(InputFile):
@@ -295,6 +329,7 @@ class QU_Buildings(InputFile):
         Number of polygon building nodes [-]. Default is 0. Not currently used
         in QUIC-Fire.
     """
+
     name: str = Field("QU_buildings", frozen=True)
     _extension: str = ".inp"
     wall_roughness_length: PositiveFloat = 0.1
@@ -311,9 +346,11 @@ class QU_Buildings(InputFile):
             directory = Path(directory)
         with open(directory / "QU_buildings.inp", "r") as f:
             lines = f.readlines()
-        return cls(wall_roughness_length=float(lines[1].split()[0]),
-                   number_of_buildings=int(lines[2].split()[0]),
-                   number_of_polygon_nodes=int(lines[3].split()[0]))
+        return cls(
+            wall_roughness_length=float(lines[1].split()[0]),
+            number_of_buildings=int(lines[2].split()[0]),
+            number_of_polygon_nodes=int(lines[3].split()[0]),
+        )
 
 
 class QU_Fileoptions(InputFile):
@@ -339,6 +376,7 @@ class QU_Fileoptions(InputFile):
         Generate wind startup files for ensemble simulations. Values accepted
         are [0, 1]. Recommended value 0. 0 - off, 1 - on.
     """
+
     name: str = Field("QU_fileoptions", frozen=True)
     _extension: str = ".inp"
     output_data_file_format_flag: Literal[1, 2, 3] = 2
@@ -357,11 +395,13 @@ class QU_Fileoptions(InputFile):
             directory = Path(directory)
         with open(directory / "QU_fileoptions.inp", "r") as f:
             lines = f.readlines()
-        return cls(output_data_file_format_flag=int(lines[1].split()[0]),
-                   non_mass_conserved_initial_field_flag=int(lines[2].split()[0]),
-                   initial_sensor_velocity_field_flag=int(lines[3].split()[0]),
-                   qu_staggered_velocity_file_flag=int(lines[4].split()[0]),
-                   generate_wind_startup_files_flag=int(lines[5].split()[0]))
+        return cls(
+            output_data_file_format_flag=int(lines[1].split()[0]),
+            non_mass_conserved_initial_field_flag=int(lines[2].split()[0]),
+            initial_sensor_velocity_field_flag=int(lines[3].split()[0]),
+            qu_staggered_velocity_file_flag=int(lines[4].split()[0]),
+            generate_wind_startup_files_flag=int(lines[5].split()[0]),
+        )
 
 
 class QU_Simparams(InputFile):
@@ -432,6 +472,7 @@ class QU_Simparams(InputFile):
         Building array flag. 0 = off, 1 = on. Recommended value: 0. Default is
         0.
     """
+
     name: str = Field("QU_simparams", frozen=True)
     _extension: str = ".inp"
     nx: PositiveInt
@@ -440,7 +481,7 @@ class QU_Simparams(InputFile):
     dx: PositiveFloat
     dy: PositiveFloat
     quic_domain_height: PositiveFloat
-    surface_vertical_cell_size: PositiveFloat = 1.
+    surface_vertical_cell_size: PositiveFloat = 1.0
     number_surface_cells: PositiveInt = 5
     stretch_grid_flag: Literal[0, 1, 3] = 3
     custom_dz_array: list[PositiveFloat] = []
@@ -450,9 +491,9 @@ class QU_Simparams(InputFile):
     sor_residual_reduction: PositiveInt = 3
     use_diffusion_flag: Literal[0, 1] = 0
     number_diffusion_iterations: PositiveInt = 10
-    domain_rotation: float = 0.
-    utm_x: float = 0.
-    utm_y: float = 0.
+    domain_rotation: float = 0.0
+    utm_x: float = 0.0
+    utm_y: float = 0.0
     utm_zone_number: PositiveInt = 1
     utm_zone_letter: PositiveInt = 1
     quic_cfd_flag: Literal[0, 1] = 0
@@ -472,8 +513,11 @@ class QU_Simparams(InputFile):
             return self.custom_dz_array
         elif self.stretch_grid_flag == 3:
             return compute_parabolic_stretched_grid(
-                self.surface_vertical_cell_size, self.number_surface_cells,
-                self.nz, self.quic_domain_height).tolist()
+                self.surface_vertical_cell_size,
+                self.number_surface_cells,
+                self.nz,
+                self.quic_domain_height,
+            ).tolist()
 
     @computed_field
     @property
@@ -487,7 +531,7 @@ class QU_Simparams(InputFile):
         stretch_grid_func_map = {
             0: self._stretch_grid_flag_0,
             1: self._stretch_grid_flag_1,
-            3: self._stretch_grid_flag_3
+            3: self._stretch_grid_flag_3,
         }
         return stretch_grid_func_map[self.stretch_grid_flag]()
 
@@ -502,10 +546,12 @@ class QU_Simparams(InputFile):
         file. Adds the uniform grid to dz_array.
         """
         # Create the lines for the uniform grid
-        surface_dz_line = (f"{float(self.surface_vertical_cell_size)}\t"
-                           f"! Surface DZ [m]")
-        number_surface_cells_line = (f"{self.number_surface_cells}\t"
-                                     f"! Number of uniform surface cells")
+        surface_dz_line = (
+            f"{float(self.surface_vertical_cell_size)}\t" f"! Surface DZ [m]"
+        )
+        number_surface_cells_line = (
+            f"{self.number_surface_cells}\t" f"! Number of uniform surface cells"
+        )
 
         return f"{surface_dz_line}\n{number_surface_cells_line}"
 
@@ -516,26 +562,33 @@ class QU_Simparams(InputFile):
         """
         # Verify that dz_array is not empty
         if not self.dz_array:
-            raise ValueError("dz_array must not be empty if stretch_grid_flag "
-                             "is 1. Please provide a custom_dz_array with nz "
-                             "elements or use a different stretch_grid_flag.")
+            raise ValueError(
+                "dz_array must not be empty if stretch_grid_flag "
+                "is 1. Please provide a custom_dz_array with nz "
+                "elements or use a different stretch_grid_flag."
+            )
 
         # Verify that nz is equal to the length of dz_array
         if self.nz != len(self.dz_array):
-            raise ValueError(f"nz must be equal to the length of dz_array. "
-                             f"{self.nz} != {len(self.dz_array)}")
+            raise ValueError(
+                f"nz must be equal to the length of dz_array. "
+                f"{self.nz} != {len(self.dz_array)}"
+            )
 
         # Verify that the first number_surface_cells_line elements of dz_array
         # are equal to the surface_vertical_cell_size
-        for dz in self.dz_array[:self.number_surface_cells]:
+        for dz in self.dz_array[: self.number_surface_cells]:
             if dz != self.surface_vertical_cell_size:
-                raise ValueError("The first number_surface_cells_line "
-                                 "elements of dz_array must be equal to "
-                                 "surface_vertical_cell_size")
+                raise ValueError(
+                    "The first number_surface_cells_line "
+                    "elements of dz_array must be equal to "
+                    "surface_vertical_cell_size"
+                )
 
         # Write surface vertical cell size line
-        surface_dz_line = (f"{float(self.surface_vertical_cell_size)}\t! "
-                           f"Surface DZ [m]")
+        surface_dz_line = (
+            f"{float(self.surface_vertical_cell_size)}\t! " f"Surface DZ [m]"
+        )
 
         # Write header line
         header_line = f"! DZ array [m]"
@@ -555,12 +608,14 @@ class QU_Simparams(InputFile):
         parabolic vertical cell size. Adds the parabolic grid to dz_array.
         """
         # Write surface vertical cell size line
-        surface_dz_line = (f"{float(self.surface_vertical_cell_size)}\t! "
-                           f"Surface DZ [m]")
+        surface_dz_line = (
+            f"{float(self.surface_vertical_cell_size)}\t! " f"Surface DZ [m]"
+        )
 
         # Write number of surface cells line
-        number_surface_cells_line = (f"{self.number_surface_cells}\t! "
-                                     f"Number of uniform surface cells")
+        number_surface_cells_line = (
+            f"{self.number_surface_cells}\t! " f"Number of uniform surface cells"
+        )
 
         # Write header line
         header_line = f"! DZ array [m]"
@@ -568,8 +623,10 @@ class QU_Simparams(InputFile):
         # Write dz_array lines
         dz_lines = "\n".join([f"{float(dz)}" for dz in self.dz_array])
 
-        return (f"{surface_dz_line}\n{number_surface_cells_line}\n{header_line}"
-                f"\n{dz_lines}")
+        return (
+            f"{surface_dz_line}\n{number_surface_cells_line}\n{header_line}"
+            f"\n{dz_lines}"
+        )
 
     def _generate_wind_time_lines(self):
         """
@@ -578,13 +635,16 @@ class QU_Simparams(InputFile):
         """
         # Verify that wind_step_times is not empty
         if not self.wind_times:
-            raise ValueError("wind_step_times must not be empty. Please "
-                             "provide a wind_step_times with num_wind_steps "
-                             "elements or use a different num_wind_steps.")
+            raise ValueError(
+                "wind_step_times must not be empty. Please "
+                "provide a wind_step_times with num_wind_steps "
+                "elements or use a different num_wind_steps."
+            )
 
         # Write number of time increments line
-        number_time_increments_line = (f"{len(self.wind_times)}\t"
-                                       f"! Number of time increments")
+        number_time_increments_line = (
+            f"{len(self.wind_times)}\t" f"! Number of time increments"
+        )
 
         # Write utc_offset line
         utc_offset_line = f"{self.utc_offset}\t! UTC offset [hours]"
@@ -598,10 +658,14 @@ class QU_Simparams(InputFile):
             wind_step_times_lines_list.append(f"{wind_time}")
         wind_step_times_lines = "\n".join(wind_step_times_lines_list)
 
-        return "\n".join([number_time_increments_line,
-                          utc_offset_line,
-                          header_line,
-                          wind_step_times_lines])
+        return "\n".join(
+            [
+                number_time_increments_line,
+                utc_offset_line,
+                header_line,
+                wind_step_times_lines,
+            ]
+        )
 
     @classmethod
     def from_file(cls, directory: str | Path):
@@ -643,8 +707,7 @@ class QU_Simparams(InputFile):
             number_surface_cells = int(lines[8].strip().split("!")[0])
             _header = lines[9].strip().split("!")[0]
             for i in range(10, 10 + nz):
-                _from_file_dz_array.append(
-                    float(lines[i].strip().split("!")[0]))
+                _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
             current_line = 10 + nz
         else:
             raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
@@ -663,42 +726,45 @@ class QU_Simparams(InputFile):
 
         # Read remaining QU parameters
         sor_iter_max = int(lines[current_line].strip().split("!")[0])
-        sor_residual_reduction = int(
-            lines[current_line + 1].strip().split("!")[0])
+        sor_residual_reduction = int(lines[current_line + 1].strip().split("!")[0])
         use_diffusion_flag = int(lines[current_line + 2].strip().split("!")[0])
-        number_diffusion_iterations = int(
-            lines[current_line + 3].strip().split("!")[0])
+        number_diffusion_iterations = int(lines[current_line + 3].strip().split("!")[0])
         domain_rotation = float(lines[current_line + 4].strip().split("!")[0])
         utm_x = float(lines[current_line + 5].strip().split("!")[0])
         utm_y = float(lines[current_line + 6].strip().split("!")[0])
         utm_zone_number = int(lines[current_line + 7].strip().split("!")[0])
         utm_zone_letter = int(lines[current_line + 8].strip().split("!")[0])
         quic_cfd_flag = int(lines[current_line + 9].strip().split("!")[0])
-        explosive_bldg_flag = int(
-            lines[current_line + 10].strip().split("!")[0])
+        explosive_bldg_flag = int(lines[current_line + 10].strip().split("!")[0])
         bldg_array_flag = int(lines[current_line + 11].strip().split("!")[0])
 
-        return cls(nx=nx, ny=ny, nz=nz, dx=dx, dy=dy,
-                   surface_vertical_cell_size=surface_vertical_cell_size,
-                   number_surface_cells=number_surface_cells,
-                   stretch_grid_flag=stretch_grid_flag,
-                   custom_dz_array=custom_dz_array,
-                   utc_offset=utc_offset,
-                   wind_times=wind_times,
-                   sor_iter_max=sor_iter_max,
-                   sor_residual_reduction=sor_residual_reduction,
-                   use_diffusion_flag=use_diffusion_flag,
-                   number_diffusion_iterations=number_diffusion_iterations,
-                   domain_rotation=domain_rotation,
-                   utm_x=utm_x,
-                   utm_y=utm_y,
-                   utm_zone_number=utm_zone_number,
-                   utm_zone_letter=utm_zone_letter,
-                   quic_cfd_flag=quic_cfd_flag,
-                   explosive_bldg_flag=explosive_bldg_flag,
-                   bldg_array_flag=bldg_array_flag,
-                   _from_file=True,
-                   _from_file_dz_array=_from_file_dz_array)
+        return cls(
+            nx=nx,
+            ny=ny,
+            nz=nz,
+            dx=dx,
+            dy=dy,
+            surface_vertical_cell_size=surface_vertical_cell_size,
+            number_surface_cells=number_surface_cells,
+            stretch_grid_flag=stretch_grid_flag,
+            custom_dz_array=custom_dz_array,
+            utc_offset=utc_offset,
+            wind_times=wind_times,
+            sor_iter_max=sor_iter_max,
+            sor_residual_reduction=sor_residual_reduction,
+            use_diffusion_flag=use_diffusion_flag,
+            number_diffusion_iterations=number_diffusion_iterations,
+            domain_rotation=domain_rotation,
+            utm_x=utm_x,
+            utm_y=utm_y,
+            utm_zone_number=utm_zone_number,
+            utm_zone_letter=utm_zone_letter,
+            quic_cfd_flag=quic_cfd_flag,
+            explosive_bldg_flag=explosive_bldg_flag,
+            bldg_array_flag=bldg_array_flag,
+            _from_file=True,
+            _from_file_dz_array=_from_file_dz_array,
+        )
 
 
 class QFire_Advanced_User_Inputs(InputFile):
@@ -754,10 +820,11 @@ class QFire_Advanced_User_Inputs(InputFile):
     maximum_firebrand_thickness : PositiveFloat
         Maximum firebrand's thickness [m]
     """
+
     name: str = Field("QFire_Advanced_User_Inputs", frozen=True)
     _extension: str = ".inp"
     fraction_cells_launch_firebrands: PositiveFloat = Field(0.05, ge=0, lt=1)
-    firebrand_radius_scale_factor: PositiveFloat = Field(40., ge=1)
+    firebrand_radius_scale_factor: PositiveFloat = Field(40.0, ge=1)
     firebrand_trajectory_time_step: PositiveInt = 1
     firebrand_launch_interval: PositiveInt = 10
     firebrands_per_deposition: PositiveInt = 500
@@ -904,6 +971,7 @@ class QUIC_fire(InputFile):
     intensity_out : int
         Output flag [0, 1]: surface fire intensity at every fire time step
     """
+
     name: str = "QUIC_fire"
     _extension: str = ".inp"
     nz: PositiveInt
@@ -915,7 +983,7 @@ class QUIC_fire(InputFile):
     out_time_wind_avg: PositiveInt = 30
     ignition_type: IgnitionType = IgnitionType(ignition_flag=6)
     fire_flag: Literal[0, 1] = 1
-    random_seed: int = Field(ge=-1, default = -1)
+    random_seed: int = Field(ge=-1, default=-1)
     fire_time_step: PositiveInt = 1
     quic_time_step: PositiveInt = 1
     stretch_grid_flag: Literal[0, 1] = 0
@@ -942,10 +1010,11 @@ class QUIC_fire(InputFile):
     radiation_out: Literal[0, 1] = 0
     intensity_out: Literal[0, 1] = 0
 
-    @field_validator('random_seed')
+    @field_validator("random_seed")
     @classmethod
     def validate_random_seed(cls, v: int) -> int:
-        if v == 0: raise ValueError(f"QUIC_fire.inp: random_seed must be not be 0")
+        if v == 0:
+            raise ValueError(f"QUIC_fire.inp: random_seed must be not be 0")
         return v
 
     @computed_field
@@ -960,12 +1029,15 @@ class QUIC_fire(InputFile):
                 raise ValueError(
                     "dz_array must not be empty if stretch_grid_flag "
                     "is 1. Please provide a dz_array with nz elements"
-                    " or use a different stretch_grid_flag.")
+                    " or use a different stretch_grid_flag."
+                )
 
             # Verify that nz is equal to the length of dz_array
             if self.nz != len(self.dz_array):
-                raise ValueError(f"nz must be equal to the length of dz_array. "
-                                 f"{self.nz} != {len(self.dz_array)}")
+                raise ValueError(
+                    f"nz must be equal to the length of dz_array. "
+                    f"{self.nz} != {len(self.dz_array)}"
+                )
 
             # Write dz_array lines
             dz_array_lines_list = []
@@ -985,10 +1057,12 @@ class QUIC_fire(InputFile):
     @computed_field
     @property
     def fuel_lines(self) -> str:
-        flag_line = (f" 1 = uniform; "
-                     f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-                     f" files for quic grid, 4 = Firetech files for "
-                     f"different grid (need interpolation)")
+        flag_line = (
+            f" 1 = uniform; "
+            f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
+            f" files for quic grid, 4 = Firetech files for "
+            f"different grid (need interpolation)"
+        )
         fuel_density_flag_line = f"{self.fuel_flag}\t! fuel density flag:" + flag_line
         fuel_moist_flag_line = f"\n{self.fuel_flag}\t! fuel moisture flag:" + flag_line
         fuel_height_flag_line = f"\n{self.fuel_flag}\t! fuel height flag:" + flag_line
@@ -999,11 +1073,19 @@ class QUIC_fire(InputFile):
                 assert self.fuel_height is not None
             except AssertionError:
                 raise ValueError(
-                    "fuel_params: FuelInputs class must have values for fuel_density, fuel_moisture, and fuel_height")
+                    "fuel_params: FuelInputs class must have values for fuel_density, fuel_moisture, and fuel_height"
+                )
             fuel_dens_line = f"\n{self.fuel_density}"
             fuel_moist_line = f"\n{self.fuel_moisture}"
             fuel_height_line = f"\n{self.fuel_height}"
-            return fuel_density_flag_line + fuel_dens_line + fuel_moist_flag_line + fuel_moist_line + fuel_height_flag_line + fuel_height_line
+            return (
+                fuel_density_flag_line
+                + fuel_dens_line
+                + fuel_moist_flag_line
+                + fuel_moist_line
+                + fuel_height_flag_line
+                + fuel_height_line
+            )
         return fuel_density_flag_line + fuel_moist_flag_line
 
     @classmethod
@@ -1045,7 +1127,8 @@ class QUIC_fire(InputFile):
                     float(lines[i].strip())
                 except ValueError:
                     print(
-                        "QUIC_fire.inp: dz input value is not a float. Does the number of dz inputs match nz?")
+                        "QUIC_fire.inp: dz input value is not a float. Does the number of dz inputs match nz?"
+                    )
                 dz_array.append(float(lines[i].strip()))
             current_line = 15 + len(nz)
 
@@ -1063,7 +1146,8 @@ class QUIC_fire(InputFile):
             fuel_height = float(lines[current_line + 5].strip())
             if moisture_flag != fuel_flag or height_flag != fuel_flag:
                 raise ValueError(
-                    "QUIC_fire.inp: Fuel moisture and fue height flags must match fuel density flag")
+                    "QUIC_fire.inp: Fuel moisture and fue height flags must match fuel density flag"
+                )
             current_line += 6
         else:
             fuel_density = None
@@ -1086,12 +1170,14 @@ class QUIC_fire(InputFile):
             ignition_type = RectangleIgnition(x_min, y_min, x_length, y_length)
         elif ignition_flag == 2:
             x_min, y_min, x_length, y_length, x_width, y_width = ignition_params
-            ignition_type = SquareRingIgnition(x_min, y_min, x_length, y_length,
-                                               x_width, y_width)
+            ignition_type = SquareRingIgnition(
+                x_min, y_min, x_length, y_length, x_width, y_width
+            )
         elif ignition_flag == 3:
             x_min, y_min, x_length, y_length, ring_width = ignition_params
-            ignition_type = CircularRingIgnition(x_min, y_min, x_length,
-                                                 y_length, ring_width)
+            ignition_type = CircularRingIgnition(
+                x_min, y_min, x_length, y_length, ring_width
+            )
         elif ignition_flag == 6:
             ignition_type = IgnitionType(ignition_flag=6)
         current_line += add
@@ -1122,40 +1208,42 @@ class QUIC_fire(InputFile):
         # ! AUTOKILL
         auto_kill = int(lines[current_line + 15].strip().split("!")[0])
 
-        return cls(fire_flag=fire_flag,
-                   random_seed=random_seed,
-                   time_now=time_now,
-                   sim_time=sim_time,
-                   fire_time_step=fire_time_step,
-                   quic_time_step=quic_time_step,
-                   out_time_fire = out_time_fire,
-                   out_time_wind = out_time_wind,
-                   out_time_emis_rad = out_time_emis_rad,
-                   out_time_wind_avg = out_time_wind_avg,
-                   nz=nz,
-                   stretch_grid_flag=stretch_grid_flag,
-                   dz=dz,
-                   dz_array=dz_array,
-                   fuel_flag=fuel_flag,
-                   fuel_density = fuel_density,
-                   fuel_moisture = fuel_moisture,
-                   fuel_height = fuel_height,
-                   ignition_type=ignition_type,
-                   ignitions_per_cell=ignitions_per_cell,
-                   firebrand_flag=firebrand_flag,
-                   eng_to_atm_out=eng_to_atm_out,
-                   react_rate_out=react_rate_out,
-                   fuel_dens_out=fuel_dens_out,
-                   QF_wind_out=QF_wind_out,
-                   QU_wind_inst_out=QU_wind_inst_out,
-                   QU_wind_avg_out=QU_wind_avg_out,
-                   fuel_moist_out=fuel_moist_out,
-                   mass_burnt_out=mass_burnt_out,
-                   firebrand_out=firebrand_out,
-                   emissions_out=emissions_out,
-                   radiation_out=radiation_out,
-                   intensity_out=intensity_out,
-                   auto_kill=auto_kill)
+        return cls(
+            fire_flag=fire_flag,
+            random_seed=random_seed,
+            time_now=time_now,
+            sim_time=sim_time,
+            fire_time_step=fire_time_step,
+            quic_time_step=quic_time_step,
+            out_time_fire=out_time_fire,
+            out_time_wind=out_time_wind,
+            out_time_emis_rad=out_time_emis_rad,
+            out_time_wind_avg=out_time_wind_avg,
+            nz=nz,
+            stretch_grid_flag=stretch_grid_flag,
+            dz=dz,
+            dz_array=dz_array,
+            fuel_flag=fuel_flag,
+            fuel_density=fuel_density,
+            fuel_moisture=fuel_moisture,
+            fuel_height=fuel_height,
+            ignition_type=ignition_type,
+            ignitions_per_cell=ignitions_per_cell,
+            firebrand_flag=firebrand_flag,
+            eng_to_atm_out=eng_to_atm_out,
+            react_rate_out=react_rate_out,
+            fuel_dens_out=fuel_dens_out,
+            QF_wind_out=QF_wind_out,
+            QU_wind_inst_out=QU_wind_inst_out,
+            QU_wind_avg_out=QU_wind_avg_out,
+            fuel_moist_out=fuel_moist_out,
+            mass_burnt_out=mass_burnt_out,
+            firebrand_out=firebrand_out,
+            emissions_out=emissions_out,
+            radiation_out=radiation_out,
+            intensity_out=intensity_out,
+            auto_kill=auto_kill,
+        )
 
 
 class QFire_Bldg_Advanced_User_Inputs(InputFile):
@@ -1190,7 +1278,8 @@ class QFire_Bldg_Advanced_User_Inputs(InputFile):
     fuel_surface_roughness : PositiveFloat
         Surface roughness within fuel. Higher value = lower wind speed.
         Recommended value: 0.1 m. Units: [m]
-        """
+    """
+
     name: str = Field("QFire_Bldg_Advanced_User_Inputs", frozen=True)
     _extension: str = ".inp"
     convert_buildings_to_fuel_flag: Literal[0, 1] = 0
@@ -1282,20 +1371,21 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
         Scheme to sum plume-to-grid updrafts when multiple plumes intersect a
         grid cell. 0 = cube method, 1 = max value method. Default value: 1.
     """
+
     name: str = Field("QFire_Plume_Advanced_User_Inputs", frozen=True)
     _extension: str = ".inp"
     max_plumes_per_timestep: PositiveInt = Field(150000, gt=0)
     min_plume_updraft_velocity: PositiveFloat = Field(0.1, gt=0)
-    max_plume_updraft_velocity: PositiveFloat = Field(100., gt=0)
+    max_plume_updraft_velocity: PositiveFloat = Field(100.0, gt=0)
     min_velocity_ratio: PositiveFloat = Field(0.1, gt=0)
-    brunt_vaisala_freq_squared: NonNegativeFloat = Field(0., ge=0)
+    brunt_vaisala_freq_squared: NonNegativeFloat = Field(0.0, ge=0)
     creeping_flag: Literal[0, 1] = 1
     adaptive_timestep_flag: Literal[0, 1] = 0
-    plume_timestep: PositiveFloat = Field(1., gt=0)
+    plume_timestep: PositiveFloat = Field(1.0, gt=0)
     sor_option_flag: Literal[0, 1] = 1
-    sor_alpha_plume_center: PositiveFloat = Field(10., gt=0)
-    sor_alpha_plume_edge: PositiveFloat = Field(1., gt=0)
-    max_plume_merging_angle: PositiveFloat = Field(30., gt=0, le=180)
+    sor_alpha_plume_center: PositiveFloat = Field(10.0, gt=0)
+    sor_alpha_plume_edge: PositiveFloat = Field(1.0, gt=0)
+    max_plume_merging_angle: PositiveFloat = Field(30.0, gt=0, le=180)
     max_plume_overlap_fraction: PositiveFloat = Field(0.7, gt=0, le=1)
     plume_to_grid_updrafts_flag: Literal[0, 1] = 1
     max_points_along_plume_edge: PositiveInt = Field(10, ge=1, le=100)
@@ -1328,7 +1418,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
             plume_to_grid_intersection_flag=int(lines[15].split()[0]),
         )
 
-      
+
 class RuntimeAdvancedUserInputs(InputFile):
     """
     Class representing the Runtime_Advanced_User_Inputs.inp input file.
@@ -1337,11 +1427,12 @@ class RuntimeAdvancedUserInputs(InputFile):
     Attributes
     ----------
     num_cpus : PositiveInt
-        Maximum number of CPU to use. Do not exceed 8. Use 1 for ensemble 
+        Maximum number of CPU to use. Do not exceed 8. Use 1 for ensemble
         simulations.
     use_acw : Literal[0,1]
         Use Adaptive Computation Window (0=Disabled 1=Enabled)
     """
+
     name: str = "Runtime_Advanced_User_Inputs"
     _extension: str = ".inp"
     num_cpus: PositiveInt = Field(le=8, default=8)
@@ -1357,15 +1448,16 @@ class RuntimeAdvancedUserInputs(InputFile):
 
         return cls(
             num_cpus=int(lines[0].strip().split("!")[0]),
-            use_acw=int(lines[1].strip().split("!")[0])
+            use_acw=int(lines[1].strip().split("!")[0]),
         )
-      
-      
+
+
 class QU_movingcoords(InputFile):
     """
     Class representing the QU_movingcoords.inp input file.
     This is a QUIC legacy file that is not modified for QUIC-Fire use.
     """
+
     name: str = "QU_movingcoords"
     _extension: str = ".inp"
 
@@ -1378,16 +1470,19 @@ class QU_movingcoords(InputFile):
             lines = f.readlines()
 
         if int(lines[1].strip().split("!")[0]) == 1:
-            print("WARNING: QU_movingcoords.inp: Moving coordinates flag == 1 not supported.")
-        
+            print(
+                "WARNING: QU_movingcoords.inp: Moving coordinates flag == 1 not supported."
+            )
+
         return cls()
-  
-  
-  class QP_buildout(InputFile):
+
+
+class QP_buildout(InputFile):
     """
     Class representing the QU_buildout.inp input file.
     This is a QUIC legacy file that is not modified for QUIC-Fire use.
     """
+
     name: str = "QP_buildout"
     _extension: str = ".inp"
 
@@ -1398,10 +1493,12 @@ class QU_movingcoords(InputFile):
 
         with open(directory / "QP_buildout.inp", "r") as f:
             lines = f.readlines()
-        
+
         if int(lines[0].strip().split("!")[0]) == 1:
             print("WARNING: QP_buildout.inp: number of buildings will be set to 0.")
         if int(lines[1].strip().split("!")[0]) == 1:
-            print("WARNING: QP_buildout.inp: number of vegetative canopies will be set to 0.")
-        
+            print(
+                "WARNING: QP_buildout.inp: number of vegetative canopies will be set to 0."
+            )
+
         return cls()
