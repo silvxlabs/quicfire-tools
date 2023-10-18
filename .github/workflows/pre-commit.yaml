@@ -1,0 +1,16 @@
+name: Linting and Formatting
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pre-commit:
+    name: Run pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - uses: pre-commit/action@v3.0.0
