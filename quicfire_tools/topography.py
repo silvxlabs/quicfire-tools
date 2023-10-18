@@ -8,9 +8,9 @@ from enum import Enum
 
 # External Imports
 from typing import Literal
-from pydantic import BaseModel, PositiveInt, PositiveFloat, Field
+from pydantic import BaseModel, PositiveInt, PositiveFloat, Field, SerializeAsAny
 
-class TopoSources(Enum):
+class TopoSources(int, Enum):
     flat = 0
     gaussian_hill = 1
     hill_pass = 2
@@ -25,7 +25,7 @@ class TopoSources(Enum):
     terrain_dat = 11
 
 class TopoType(BaseModel):
-    topo_flag: TopoSources
+    topo_flag: SerializeAsAny[TopoSources]
 
     def __str__(self):
         return (f"{self.topo_flag.value}\t\t! N/A, "
@@ -37,7 +37,7 @@ class TopoType(BaseModel):
                 f"11 = terrain.dat (firetec)")
     
 class GaussianHillTopo(TopoType):
-    topo_flag: TopoSources = TopoSources(1)
+    topo_flag: SerializeAsAny[TopoSources] = TopoSources(1)
     x_hilltop: PositiveInt
     y_hilltop: PositiveInt
     elevation_max: PositiveInt
@@ -45,14 +45,14 @@ class GaussianHillTopo(TopoType):
 
     def __str__(self):
         flag_line = super().__str__()
-        params = (f"{self.x_hilltop}\t! m, x-center\n"
+        params = (f"\n{self.x_hilltop}\t! m, x-center\n"
                   f"{self.y_hilltop}\t! m, y-center\n"
                   f"{self.elevation_max}\t! m, max height\n"
                   f"{self.elevation_std}\t! m, std")
         return flag_line + params
 
 class HillPassTopo(TopoType):
-    topo_flag: TopoSources = TopoSources(2)
+    topo_flag: SerializeAsAny[TopoSources] = TopoSources(2)
     max_height: PositiveInt
     location_param: PositiveFloat
 
@@ -63,7 +63,7 @@ class HillPassTopo(TopoType):
         return flag_line + params
 
 class SlopeMesaTopo(TopoType):
-    topo_flag: TopoSources = TopoSources(3)
+    topo_flag: SerializeAsAny[TopoSources] = TopoSources(3)
     slope_axis: Literal[0,1]
     slope_value: PositiveFloat
     flat_fraction: float = Field(ge=0, le=1)
@@ -76,7 +76,7 @@ class SlopeMesaTopo(TopoType):
         return flag_line + params
     
 class CanyonTopo(TopoType):
-    topo_flag: TopoSources = TopoSources(4)
+    topo_flag: SerializeAsAny[TopoSources] = TopoSources(4)
     x_start: PositiveInt
     y_center: PositiveInt
     slope_value: PositiveFloat
@@ -93,7 +93,7 @@ class CanyonTopo(TopoType):
         return flag_line + params
 
 class HalfCircleTopo(TopoType):
-    topo_flag: TopoSources = TopoSources(6)
+    topo_flag: SerializeAsAny[TopoSources] = TopoSources(6)
     x_location: PositiveInt
     y_location: PositiveInt
     radius: PositiveFloat
@@ -106,7 +106,7 @@ class HalfCircleTopo(TopoType):
         return flag_line + params
 
 class SinusoidTopo(TopoType):
-    topo_flag: TopoSources = TopoSources(7)
+    topo_flag: SerializeAsAny[TopoSources] = TopoSources(7)
     period: PositiveFloat
     amplitude: PositiveFloat
     
@@ -117,7 +117,7 @@ class SinusoidTopo(TopoType):
         return flag_line + params
 
 class CosHillTopo(TopoType):
-    topo_flag: TopoSources = TopoSources(8)
+    topo_flag: SerializeAsAny[TopoSources] = TopoSources(8)
     aspect: PositiveFloat
     height: PositiveInt
     def __str__(self):

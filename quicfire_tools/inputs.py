@@ -24,7 +24,8 @@ from string import Template
 # External Imports
 import numpy as np
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
-                      PositiveFloat, NonNegativeFloat, computed_field, field_validator)
+                      PositiveFloat, NonNegativeFloat, computed_field, field_validator,
+                      SerializeAsAny)
 
 DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("documentation")
@@ -1371,7 +1372,7 @@ class QU_TopoInputs(InputFile):
     name: str = "QU_TopoInputs"
     _extension: str = ".inp"
     filename: str = "topo.dat"
-    topo_type: TopoType = TopoType(topo_flag = 0)
+    topo_type: SerializeAsAny[TopoType] = TopoType(topo_flag = 0)
     smoothing_method: Literal[0,1,2] = 2
     smoothing_passes: PositiveInt = Field(le = 500, default = 500)
     sor_iterations: PositiveInt = Field(le = 500, default = 200)
@@ -1398,28 +1399,42 @@ class QU_TopoInputs(InputFile):
         add = add_dict.get(topo_flag)
         topo_params = []
         for i in range(3,3+add):
-            topo_params.append(int(lines[i].strip().split("!")[0]))
+            topo_params.append(float(lines[i].strip().split("!")[0]))
         if topo_flag == 1:
             x_hilltop, y_hilltop, elevation_max, elevation_std = topo_params
-            topo_type = GaussianHillTopo(x_hilltop, y_hilltop, elevation_max, elevation_std)
+            topo_type = GaussianHillTopo(x_hilltop = int(x_hilltop), 
+                                         y_hilltop = int(y_hilltop), 
+                                         elevation_max = int(elevation_max), 
+                                         elevation_std = elevation_std)
         elif topo_flag == 2:
             max_height, location_param = topo_params
-            topo_type = HillPassTopo(max_height, location_param)
+            topo_type = HillPassTopo(max_height = int(max_height), 
+                                     location_param = location_param)
         elif topo_flag == 3:
             slope_axis, slope_value, flat_fraction = topo_params
-            topo_type = SlopeMesaTopo(slope_axis, slope_value, flat_fraction)
+            topo_type = SlopeMesaTopo(slope_axis = int(slope_axis), 
+                                      slope_value = slope_value, 
+                                      flat_fraction = flat_fraction)
         elif topo_flag == 4:
             x_start, y_center, slope_value, canyon_std, vertical_offset = topo_params
-            topo_type = CanyonTopo(x_start, y_center, slope_value, canyon_std, vertical_offset)
+            topo_type = CanyonTopo(x_start = int(x_start), 
+                                   y_center = int(y_center), 
+                                   sloe_value = slope_value, 
+                                   canyon_std = canyon_std, 
+                                   vertical_offset = vertical_offset)
         elif topo_flag == 6:
             x_location, y_location, radius = topo_params
-            topo_type = HalfCircleTopo(x_location, y_location, radius)
+            topo_type = HalfCircleTopo(x_location = int(x_location), 
+                                       y_location = int(y_location), 
+                                       radius = radius)
         elif topo_flag == 7:
             period, amplitude = topo_params
-            topo_type = SinusoidTopo(period, amplitude)
+            topo_type = SinusoidTopo(period = period, 
+                                     amplitude = amplitude)
         elif topo_flag == 8:
             aspect, height = topo_params
-            topo_type = CosHillTopo(aspect, height)
+            topo_type = CosHillTopo(aspect = aspect, 
+                                    height = height)
         else:
             topo_type = TopoType(topo_flag = topo_flag)
         current_line = 3 + add

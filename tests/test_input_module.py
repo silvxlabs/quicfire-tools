@@ -1185,7 +1185,11 @@ class TestQUTopoInputs:
                 f"5 = custom, 6 = half circle, 7 = sinusoid, "
                 f"8 = cos hill, 9 = QP_elevation.inp, "
                 f"10 = terrainOutput.txt (ARA), "
-                f"11 = terrain.dat (firetec)")
+                f"11 = terrain.dat (firetec)\n"
+                f"100\t! m, x-center\n"
+                f"150\t! m, y-center\n"
+                f"500\t! m, max height\n"
+                f"20.0\t! m, std")
         assert topoinputs.smoothing_method == 1
         assert topoinputs.sor_relax == 1.78
     
@@ -1200,12 +1204,10 @@ class TestQUTopoInputs:
 
         topoinputs = self.get_complex_test_object()
         test_dict = topoinputs.to_dict()
-        assert isinstance(test_dict["topo_type"], TopoType)
-        assert test_dict['topo_type'].topo_flag == topoinputs.topo_type.topo_flag
-        assert test_dict['topo_type'].x_hilltop == topoinputs.topo_type.x_hilltop
-        assert test_dict['topo_type'].y_hilltop == topoinputs.topo_type.y_hilltop
-        assert test_dict['topo_type'].elevation_max == topoinputs.topo_type.elevation_max
-        assert test_dict['topo_type'].elevation_std == topoinputs.topo_type.elevation_std
+        assert test_dict['topo_type']['x_hilltop'] == topoinputs.topo_type.x_hilltop
+        assert test_dict['topo_type']['y_hilltop'] == topoinputs.topo_type.y_hilltop
+        assert test_dict['topo_type']['elevation_max'] == topoinputs.topo_type.elevation_max
+        assert test_dict['topo_type']['elevation_std'] == topoinputs.topo_type.elevation_std
         assert test_dict['smoothing_method'] == topoinputs.smoothing_method
         assert test_dict['smoothing_passes'] == topoinputs.smoothing_passes
         assert test_dict['sor_iterations'] == topoinputs.sor_iterations
@@ -1224,7 +1226,7 @@ class TestQUTopoInputs:
         with open("tmp/QU_TopoInputs.inp", 'r') as file:
             lines = file.readlines()
         topo_flag = int(lines[2].strip().split("!")[0])
-        assert topo_flag == topoinputs.topo_type.topo_flag
+        assert topo_flag == topoinputs.topo_type.topo_flag.value
         add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
         add = add_dict.get(topo_flag)
         current_line = current_line = 3 + add
@@ -1239,13 +1241,13 @@ class TestQUTopoInputs:
         with open("tmp/QU_TopoInputs.inp", 'r') as file:
             lines = file.readlines()
         topo_flag = int(lines[2].strip().split("!")[0])
-        assert topo_flag == topoinputs.topo_type.topo_flag
+        assert topo_flag == topoinputs.topo_type.topo_flag.value
         add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
         add = add_dict.get(topo_flag)
         assert int(lines[3].strip().split("!")[0]) == topoinputs.topo_type.x_hilltop
         assert int(lines[4].strip().split("!")[0]) == topoinputs.topo_type.y_hilltop
         assert int(lines[5].strip().split("!")[0]) == topoinputs.topo_type.elevation_max
-        assert int(lines[6].strip().split("!")[0]) == topoinputs.topo_type.elevation_std
+        assert float(lines[6].strip().split("!")[0]) == topoinputs.topo_type.elevation_std
         current_line = current_line = 3 + add
         assert int(lines[current_line].strip().split("!")[0]) == topoinputs.smoothing_method
         assert int(lines[current_line+1].strip().split("!")[0]) == topoinputs.smoothing_passes
