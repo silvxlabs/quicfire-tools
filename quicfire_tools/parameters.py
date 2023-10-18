@@ -1,5 +1,5 @@
 # External Imports
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 class SimulationParameters(BaseModel):
@@ -64,22 +64,39 @@ class SimulationParameters(BaseModel):
         return self.model_dump()
 
     @classmethod
-    def from_fastfuels(cls, zarray, wind_speed, wind_direction, sim_time, auto_kill, num_cpus, fuel_flag, ignition_flag, output_time, topo_flag, fuel_density, fuel_moisture, fuel_height):
-        return cls(nx=zarray.attrs["dx"],
-                   ny=zarray.attrs["dy"],
-                   nz=zarray.attrs["dz"],
-                   dx=zarray.attrs["dx"],
-                   dy=zarray.attrs["dy"],
-                   dz=zarray.attrs["dz"],
-                   wind_speed=wind_speed,
-                   wind_direction=wind_direction,
-                   sim_time=sim_time,
-                   auto_kill=auto_kill,
-                   num_cpus=num_cpus,
-                   fuel_flag=fuel_flag,
-                   ignition_flag=ignition_flag,
-                   output_time=output_time,
-                   topo_flag=topo_flag,
-                   fuel_density=fuel_density,
-                   fuel_moisture=fuel_moisture,
-                   fuel_height=fuel_height)
+    def from_fastfuels(
+        cls,
+        zarray,
+        wind_speed,
+        wind_direction,
+        sim_time,
+        auto_kill,
+        num_cpus,
+        fuel_flag,
+        ignition_flag,
+        output_time,
+        topo_flag,
+        fuel_density,
+        fuel_moisture,
+        fuel_height,
+    ):
+        return cls(
+            nx=zarray.attrs["dx"],
+            ny=zarray.attrs["dy"],
+            nz=zarray.attrs["dz"],
+            dx=zarray.attrs["dx"],
+            dy=zarray.attrs["dy"],
+            dz=zarray.attrs["dz"],
+            wind_speed=wind_speed,
+            wind_direction=wind_direction,
+            sim_time=sim_time,
+            auto_kill=auto_kill,
+            num_cpus=num_cpus,
+            fuel_flag=fuel_flag,
+            ignition_flag=ignition_flag,
+            output_time=output_time,
+            topo_flag=topo_flag,
+            fuel_density=fuel_density,
+            fuel_moisture=fuel_moisture,
+            fuel_height=fuel_height,
+        )

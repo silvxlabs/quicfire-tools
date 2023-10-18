@@ -5,9 +5,9 @@ Utility functions for quicfire-tools.
 import numpy as np
 
 
-def compute_parabolic_stretched_grid(dz_surf: float, n_surf_cell: int,
-                                     n_tot_cells: int,
-                                     domain_height: float) -> np.ndarray:
+def compute_parabolic_stretched_grid(
+    dz_surf: float, n_surf_cell: int, n_tot_cells: int, domain_height: float
+) -> np.ndarray:
     """
     Generate a vertical grid spacing array with parabolic stretching.
 
@@ -29,13 +29,15 @@ def compute_parabolic_stretched_grid(dz_surf: float, n_surf_cell: int,
     Returns
     -------
     np.ndarray
-        Array representing the vertical grid spacing (dz) values for the simulation.
+        Array representing the vertical grid spacing (dz) values for the
+        simulation.
 
     Notes
     -----
-    The function computes a parabolic stretching of the vertical grid spacings. The grid consists of
-    a specified number of cells with uniform spacing at the surface, followed by cells with spacings determined
-    by a parabolic formula until the total domain height is achieved.
+    The function computes a parabolic stretching of the vertical grid spacings.
+    The grid consists of a specified number of cells with uniform spacing at
+    the surface, followed by cells with spacings determined by a parabolic
+    formula until the total domain height is achieved.
     """
     dzmax_high = domain_height - dz_surf * n_surf_cell
     dzmax_low = 0
@@ -46,12 +48,12 @@ def compute_parabolic_stretched_grid(dz_surf: float, n_surf_cell: int,
         dzmax = 0.5 * (dzmax_low + dzmax_high)
 
         c1 = (dzmax - dz_surf) / ((n_tot_cells - n_surf_cell) ** 2)
-        c2 = -2. * c1 * n_surf_cell
-        c3 = dz_surf + c1 * n_surf_cell ** 2
+        c2 = -2.0 * c1 * n_surf_cell
+        c3 = dz_surf + c1 * n_surf_cell**2
 
         # Apply parabolic formula for cells beyond the surface cells
         kreal = np.arange(n_surf_cell, n_tot_cells, dtype=float)
-        dz[n_surf_cell:] = (c1 * kreal ** 2) + (c2 * kreal) + c3
+        dz[n_surf_cell:] = (c1 * kreal**2) + (c2 * kreal) + c3
 
         zmax_temp = np.sum(dz)
 
