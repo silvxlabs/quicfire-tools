@@ -1046,9 +1046,40 @@ class TestQUTopoInputs:
         assert topoinputs.smoothing_method == 1
         assert topoinputs.sor_relax == 1.78
     
+    def test_to_dict(self):
+        topoinputs = self.get_default_test_object()
+        test_dict = topoinputs.to_dict()
+        assert test_dict['smoothing_method'] == topoinputs.smoothing_method
+        assert test_dict['smoothing_passes'] == topoinputs.smoothing_passes
+        assert test_dict['sor_iterations'] == topoinputs.sor_iterations
+        assert test_dict['sor_cycles'] == topoinputs.sor_cycles
+        assert test_dict['sor_relax'] == topoinputs.sor_relax
+    
+    def test_from_dict(self):
+        topoinputs = self.get_default_test_object()
+        result_dict = topoinputs.to_dict()
+        test_obj = QU_TopoInputs.from_dict(result_dict)
+        assert test_obj == topoinputs
+
+    def test_to_file(self):
+        topoinputs = self.get_default_test_object()
+        topoinputs.to_file("tmp/")
+        with open("tmp/QU_TopoInputs.inp", 'r') as file:
+            lines = file.readlines()
+        topo_flag = int(lines[2].strip().split("!")[0])
+        add_dict = {0:0,1:4,2:2,3:3,4:5,5:0,6:3,7:2,8:2,9:0,10:0,11:0}
+        add = add_dict.get(topo_flag)
+        current_line = current_line = 3 + add
+        assert int(lines[current_line].strip().split("!")[0]) == topoinputs.smoothing_method
+        assert int(lines[current_line+1].strip().split("!")[0]) == topoinputs.smoothing_passes
+        assert int(lines[current_line+2].strip().split("!")[0]) == topoinputs.sor_iterations
+        assert int(lines[current_line+3].strip().split("!")[0]) == topoinputs.sor_cycles
+        assert float(lines[current_line+4].strip().split("!")[0]) == topoinputs.sor_relax
+
     def test_from_file(self):
         topoinputs = self.get_default_test_object()
         topoinputs.to_file("tmp/")
         test_object = QU_TopoInputs.from_file("tmp/")
         assert isinstance(test_object, QU_TopoInputs)
         assert topoinputs == test_object
+    
