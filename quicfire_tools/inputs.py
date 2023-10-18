@@ -20,7 +20,8 @@ from string import Template
 # External Imports
 import numpy as np
 from pydantic import (BaseModel, Field, NonNegativeInt, PositiveInt,
-                      PositiveFloat, NonNegativeFloat, computed_field, field_validator)
+                      PositiveFloat, NonNegativeFloat, computed_field, field_validator,
+                      SerializeAsAny)
 
 DOCS_PATH = importlib.resources.files('quicfire_tools').joinpath(
     'inputs').joinpath("documentation")
@@ -913,7 +914,7 @@ class QUIC_fire(InputFile):
     out_time_wind: PositiveInt = 30
     out_time_emis_rad: PositiveInt = 30
     out_time_wind_avg: PositiveInt = 30
-    ignition_type: IgnitionType = IgnitionType(ignition_flag=6)
+    ignition_type: SerializeAsAny[IgnitionType] = IgnitionType(ignition_flag=6)
     fire_flag: Literal[0, 1] = 1
     random_seed: int = Field(ge=-1, default = -1)
     fire_time_step: PositiveInt = 1

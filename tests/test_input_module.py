@@ -856,11 +856,11 @@ class TestQUIC_fire:
     def test_to_dict(self):
         """Test the to_dict method of a QUIC_fire object."""
         quic_fire = self.get_test_object()
+        quic_fire.ignition_type = RectangleIgnition(x_min = 20, y_min = 20, x_length = 10, y_length = 160)
         result_dict = quic_fire.to_dict()
 
         assert result_dict['nz'] == quic_fire.nz
         # TODO: revisit this one
-        # assert result_dict["output_times"] == quic_fire.output_times
         assert result_dict['time_now'] == quic_fire.time_now
         assert result_dict['sim_time'] == quic_fire.sim_time
         assert result_dict['fire_flag'] == quic_fire.fire_flag
@@ -879,6 +879,11 @@ class TestQUIC_fire:
         assert result_dict['fuel_moisture'] == quic_fire.fuel_moisture
         assert result_dict['fuel_height'] == quic_fire.fuel_height
         assert result_dict['fuel_lines'] == quic_fire.fuel_lines
+        assert result_dict['ignition_type']['ignition_flag'] == quic_fire.ignition_type.ignition_flag
+        assert result_dict['ignition_type']['x_min'] == quic_fire.ignition_type.x_min
+        assert result_dict['ignition_type']['y_min'] == quic_fire.ignition_type.y_min
+        assert result_dict['ignition_type']['x_length'] == quic_fire.ignition_type.x_length
+        assert result_dict['ignition_type']['y_length'] == quic_fire.ignition_type.y_length
         assert result_dict['ignitions_per_cell'] == quic_fire.ignitions_per_cell
         assert result_dict['firebrand_flag'] == quic_fire.firebrand_flag
         assert result_dict['auto_kill'] == quic_fire.auto_kill
