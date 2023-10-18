@@ -1382,7 +1382,7 @@ class QU_movingcoords(InputFile):
         return cls()
   
   
-  class QP_buildout(InputFile):
+class QP_buildout(InputFile):
     """
     Class representing the QU_buildout.inp input file.
     This is a QUIC legacy file that is not modified for QUIC-Fire use.
@@ -1397,12 +1397,12 @@ class QU_movingcoords(InputFile):
 
         with open(directory / "QP_buildout.inp", "r") as f:
             lines = f.readlines()
-        
+
         if int(lines[0].strip().split("!")[0]) == 1:
             print("WARNING: QP_buildout.inp: number of buildings will be set to 0.")
         if int(lines[1].strip().split("!")[0]) == 1:
             print("WARNING: QP_buildout.inp: number of vegetative canopies will be set to 0.")
-        
+
         return cls()
 
       
