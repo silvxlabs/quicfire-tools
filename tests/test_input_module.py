@@ -6,8 +6,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-import sys
-sys.path.insert(0, "/Users/ntutland/Documents/Projects/quicfire-tools")
 from quicfire_tools.inputs import *
 
 # Create a tmp/ directory to store the temporary test files
