@@ -1,4 +1,4 @@
-$fire_flag         ! Fire flag: 1 = run fire; 0 = no fire 
+$fire_flag         ! Fire flag: 1 = run fire; 0 = no fire
 $random_seed               ! Random number generator: -1: use time and date, any other integer > 0 is used as the seed
 ! FIRE TIMES
 $time_now		    ! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind

@@ -259,7 +259,7 @@
         "can_be_modified": "Y",
         "recommended_value": "0"
     },
-    "intensity_out": { 
+    "intensity_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
         "description": "Flag to output (1) or not (0) surface fire intensity at every fire time step",
@@ -275,4 +275,3 @@
         "can_be_modified": "Y"
     }
 }
-  

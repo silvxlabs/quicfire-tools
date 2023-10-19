@@ -25,4 +25,3 @@ camOrbit=0
 windBarNormalized=none
 windBarBounds=[-10.0,10.0]
 compile=0 run=1 compiler='gfortran' compiler_mode='release' testcase='LineFire' ./adv_compile_and_run.sh
-
