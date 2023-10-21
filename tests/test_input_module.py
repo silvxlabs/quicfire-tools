@@ -974,49 +974,58 @@ class TestQUIC_fire:
     def test_to_dict(self):
         """Test the to_dict method of a QUIC_fire object."""
         quic_fire = self.get_test_object()
-        quic_fire.ignition_type = RectangleIgnition(x_min = 20, y_min = 20, x_length = 10, y_length = 160)
+        quic_fire.ignition_type = RectangleIgnition(
+            x_min=20, y_min=20, x_length=10, y_length=160
+        )
         result_dict = quic_fire.to_dict()
 
         assert result_dict["nz"] == quic_fire.nz
         # TODO: revisit this one
-        assert result_dict['time_now'] == quic_fire.time_now
-        assert result_dict['sim_time'] == quic_fire.sim_time
-        assert result_dict['fire_flag'] == quic_fire.fire_flag
-        assert result_dict['random_seed'] == quic_fire.random_seed
-        assert result_dict['fire_time_step'] == quic_fire.fire_time_step
-        assert result_dict['quic_time_step'] == quic_fire.quic_time_step
-        assert result_dict['out_time_fire'] == quic_fire.out_time_fire
-        assert result_dict['out_time_wind'] == quic_fire.out_time_wind
-        assert result_dict['out_time_emis_rad'] == quic_fire.out_time_emis_rad
-        assert result_dict['out_time_wind_avg'] == quic_fire.out_time_wind_avg
-        assert result_dict['stretch_grid_flag'] == quic_fire.stretch_grid_flag
-        assert result_dict['dz'] == quic_fire.dz
-        assert result_dict['dz_array'] == quic_fire.dz_array
-        assert result_dict['fuel_flag'] == quic_fire.fuel_flag
-        assert result_dict['fuel_density'] == quic_fire.fuel_density
-        assert result_dict['fuel_moisture'] == quic_fire.fuel_moisture
-        assert result_dict['fuel_height'] == quic_fire.fuel_height
-        assert result_dict['fuel_lines'] == quic_fire.fuel_lines
-        assert result_dict['ignition_type']['ignition_flag'] == quic_fire.ignition_type.ignition_flag
-        assert result_dict['ignition_type']['x_min'] == quic_fire.ignition_type.x_min
-        assert result_dict['ignition_type']['y_min'] == quic_fire.ignition_type.y_min
-        assert result_dict['ignition_type']['x_length'] == quic_fire.ignition_type.x_length
-        assert result_dict['ignition_type']['y_length'] == quic_fire.ignition_type.y_length
-        assert result_dict['ignitions_per_cell'] == quic_fire.ignitions_per_cell
-        assert result_dict['firebrand_flag'] == quic_fire.firebrand_flag
-        assert result_dict['auto_kill'] == quic_fire.auto_kill
-        assert result_dict['eng_to_atm_out'] == quic_fire.eng_to_atm_out
-        assert result_dict['react_rate_out'] == quic_fire.react_rate_out
-        assert result_dict['fuel_dens_out'] == quic_fire.fuel_dens_out
-        assert result_dict['QF_wind_out'] == quic_fire.QF_wind_out
-        assert result_dict['QU_wind_inst_out'] == quic_fire.QU_wind_inst_out
-        assert result_dict['QU_wind_avg_out'] == quic_fire.QU_wind_avg_out
-        assert result_dict['fuel_moist_out'] == quic_fire.fuel_moist_out
-        assert result_dict['mass_burnt_out'] == quic_fire.mass_burnt_out
-        assert result_dict['firebrand_out'] == quic_fire.firebrand_out
-        assert result_dict['emissions_out'] == quic_fire.emissions_out
-        assert result_dict['radiation_out'] == quic_fire.radiation_out
-        assert result_dict['intensity_out'] == quic_fire.intensity_out
+        assert result_dict["time_now"] == quic_fire.time_now
+        assert result_dict["sim_time"] == quic_fire.sim_time
+        assert result_dict["fire_flag"] == quic_fire.fire_flag
+        assert result_dict["random_seed"] == quic_fire.random_seed
+        assert result_dict["fire_time_step"] == quic_fire.fire_time_step
+        assert result_dict["quic_time_step"] == quic_fire.quic_time_step
+        assert result_dict["out_time_fire"] == quic_fire.out_time_fire
+        assert result_dict["out_time_wind"] == quic_fire.out_time_wind
+        assert result_dict["out_time_emis_rad"] == quic_fire.out_time_emis_rad
+        assert result_dict["out_time_wind_avg"] == quic_fire.out_time_wind_avg
+        assert result_dict["stretch_grid_flag"] == quic_fire.stretch_grid_flag
+        assert result_dict["dz"] == quic_fire.dz
+        assert result_dict["dz_array"] == quic_fire.dz_array
+        assert result_dict["fuel_flag"] == quic_fire.fuel_flag
+        assert result_dict["fuel_density"] == quic_fire.fuel_density
+        assert result_dict["fuel_moisture"] == quic_fire.fuel_moisture
+        assert result_dict["fuel_height"] == quic_fire.fuel_height
+        assert result_dict["fuel_lines"] == quic_fire.fuel_lines
+        assert (
+            result_dict["ignition_type"]["ignition_flag"]
+            == quic_fire.ignition_type.ignition_flag
+        )
+        assert result_dict["ignition_type"]["x_min"] == quic_fire.ignition_type.x_min
+        assert result_dict["ignition_type"]["y_min"] == quic_fire.ignition_type.y_min
+        assert (
+            result_dict["ignition_type"]["x_length"] == quic_fire.ignition_type.x_length
+        )
+        assert (
+            result_dict["ignition_type"]["y_length"] == quic_fire.ignition_type.y_length
+        )
+        assert result_dict["ignitions_per_cell"] == quic_fire.ignitions_per_cell
+        assert result_dict["firebrand_flag"] == quic_fire.firebrand_flag
+        assert result_dict["auto_kill"] == quic_fire.auto_kill
+        assert result_dict["eng_to_atm_out"] == quic_fire.eng_to_atm_out
+        assert result_dict["react_rate_out"] == quic_fire.react_rate_out
+        assert result_dict["fuel_dens_out"] == quic_fire.fuel_dens_out
+        assert result_dict["QF_wind_out"] == quic_fire.QF_wind_out
+        assert result_dict["QU_wind_inst_out"] == quic_fire.QU_wind_inst_out
+        assert result_dict["QU_wind_avg_out"] == quic_fire.QU_wind_avg_out
+        assert result_dict["fuel_moist_out"] == quic_fire.fuel_moist_out
+        assert result_dict["mass_burnt_out"] == quic_fire.mass_burnt_out
+        assert result_dict["firebrand_out"] == quic_fire.firebrand_out
+        assert result_dict["emissions_out"] == quic_fire.emissions_out
+        assert result_dict["radiation_out"] == quic_fire.radiation_out
+        assert result_dict["intensity_out"] == quic_fire.intensity_out
 
         # Computed fields
         assert result_dict["stretch_grid_input"] == quic_fire.stretch_grid_input
