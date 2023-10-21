@@ -3,11 +3,11 @@ QUIC-Fire Tools Simulation Input Module
 """
 from __future__ import annotations
 
-import importlib.resources
 
 # Core Imports
 import json
 import time
+import importlib.resources
 from pathlib import Path
 from string import Template
 from typing import Literal
@@ -21,12 +21,12 @@ from pydantic import (
     NonNegativeInt,
     PositiveFloat,
     PositiveInt,
-    SerializeAsAny,
     computed_field,
     field_validator,
     SerializeAsAny,
 )
 
+# Internal imports
 from quicfire_tools.ignitions import (
     CircularRingIgnition,
     IgnitionType,
@@ -43,9 +43,8 @@ from quicfire_tools.topography import (
     SlopeMesaTopo,
     TopoType,
 )
-
-# Internal Imports
 from quicfire_tools.utils import compute_parabolic_stretched_grid
+
 
 DOCS_PATH = (
     importlib.resources.files("quicfire_tools")
