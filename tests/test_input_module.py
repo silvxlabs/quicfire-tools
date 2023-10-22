@@ -2,7 +2,6 @@
 Test module for the inputs module of the quicfire_tools package.
 """
 import pytest
-import numpy as np
 from pydantic import ValidationError
 from pathlib import Path
 
@@ -1709,3 +1708,4 @@ class TestSimulationInputs:
 
     def test_from_directory(self):
         sim_inputs = SimulationInputs.from_directory("tmp/")
+        assert isinstance(sim_inputs, SimulationInputs)
