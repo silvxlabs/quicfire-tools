@@ -53,6 +53,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "numpy",
+        "dask",
         "pydantic>=2",
         "zarr>=2",
     ],

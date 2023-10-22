@@ -13,3 +13,4 @@ dependencies:
   - zarr
   - numpy
   - scipy
+  - dask
