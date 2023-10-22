@@ -7,14 +7,15 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-# Internal imports
-from quicfire_tools.parameters import SimulationParameters
+import numpy as np
 
 # External imports
 import zarr
 import numpy as np
 import dask.array as da
-from numpy import ndarray
+
+# Internal imports
+from quicfire_tools.parameters import SimulationParameters
 
 FUELS_OUTPUTS = {
     "fire-energy_to_atmos": {
@@ -24,7 +25,7 @@ FUELS_OUTPUTS = {
         "delimiter": "-",
         "extension": ".bin",
         "description": "Energy released to the atmosphere that generates "
-                       "buoyant plumes",
+        "buoyant plumes",
         "units": "kW",
     },
     "fire-reaction_rate": {
@@ -70,7 +71,7 @@ FUELS_OUTPUTS = {
         "delimiter": "-",
         "extension": ".bin",
         "description": "2D file containing the percentage of mass burnt for each (i,j) "
-                       "location on the fire grid (vertically integrated)",
+        "location on the fire grid (vertically integrated)",
         "units": "%",
     },
 }
@@ -82,7 +83,7 @@ THERMAL_RADIATION_OUTPUTS = {
         "delimiter": "-",
         "extension": ".bin",
         "description": "The output shows the thermal flux to skin of a person "
-                       "collocated with fuel (for health effects).",
+        "collocated with fuel (for health effects).",
         "units": "(kW/m^2)^(4/3)s",
     },
     "thermalradiation": {
@@ -92,7 +93,7 @@ THERMAL_RADIATION_OUTPUTS = {
         "delimiter": "-",
         "extension": ".bin",
         "description": "The output shows the thermal flux to skin of a person "
-                       "collocated with fuel (for health effects).",
+        "collocated with fuel (for health effects).",
         "units": "kW/m^2",
     },
 }
@@ -133,7 +134,7 @@ EMISSIONS_OUTPUTS = {
         "delimiter": "-",
         "extension": ".bin",
         "description": "Mass of CO emitted between two emission file output"
-                       "times in grams",
+        "times in grams",
         "units": "g",
     },
     "pm-emissions": {
@@ -143,7 +144,7 @@ EMISSIONS_OUTPUTS = {
         "delimiter": "-",
         "extension": ".bin",
         "description": "Mass of PM2.5 emitted between two emission file output"
-                       "times in grams",
+        "times in grams",
         "units": "g",
     },
 }
@@ -156,9 +157,18 @@ OUTPUTS_MAP = {
 
 
 class OutputFile:
-    def __init__(self, name: str, file_format: str, shape: tuple,
-                 grid: str, delimiter: str, extension: str,
-                 description: str, units: str, index_map=None):
+    def __init__(
+        self,
+        name: str,
+        file_format: str,
+        shape: tuple,
+        grid: str,
+        delimiter: str,
+        extension: str,
+        description: str,
+        units: str,
+        index_map=None,
+    ):
         self.name = name
         self.file_format = file_format
         self.shape = shape
@@ -170,14 +180,15 @@ class OutputFile:
         self.times = []  # List of times corresponding to the timesteps
         self.filepaths = []  # List of file paths for each timestep
         function_mappings = {
-            'gridded': _process_gridded_bin,
-            'compressed': _process_compressed_bin
+            "gridded": _process_gridded_bin,
+            "compressed": _process_compressed_bin,
         }
         self._output_function = function_mappings.get(self.file_format)
         if self._output_function is None:
             raise ValueError(f"Unknown output format: {self.file_format}")
-        self._compressed_index_map = index_map if (self.file_format ==
-                                                   'compressed') else None
+        self._compressed_index_map = (
+            index_map if (self.file_format == "compressed") else None
+        )
 
     def add_timestep(self, time: float, filepath: str) -> None:
         """Add a new timestep to the OutputFile."""
@@ -202,7 +213,9 @@ class OutputFile:
         else:
             raise TypeError(f"Invalid timestep type: {type(timestep)}")
 
-    def _select_files_based_on_timestep(self, timestep: int | list[int] | None) -> list[Path]:
+    def _select_files_based_on_timestep(
+        self, timestep: int | list[int] | None
+    ) -> list[Path]:
         """Return files selected based on timestep."""
         if timestep is None:
             return self.filepaths
@@ -212,9 +225,9 @@ class OutputFile:
 
     def _get_single_timestep(self, output_file: Path) -> np.ndarray:
         """Return a numpy array for the given output file."""
-        return self._output_function(output_file,
-                                     self.shape,
-                                     self._compressed_index_map)
+        return self._output_function(
+            output_file, self.shape, self._compressed_index_map
+        )
 
     def _get_multiple_timesteps(self, output_files: list[Path]) -> np.ndarray:
         """Return a numpy array for the given output files."""
@@ -231,8 +244,9 @@ class SimulationOutputs:
     zarr file.
     """
 
-    def __init__(self, output_directory: Path | str,
-                 params: SimulationParameters) -> None:
+    def __init__(
+        self, output_directory: Path | str, params: SimulationParameters
+    ) -> None:
         # Convert to Path and resolve
         output_directory = Path(output_directory).resolve()
 
@@ -294,7 +308,7 @@ class SimulationOutputs:
                     extension=attributes["extension"],
                     description=attributes["description"],
                     units=attributes["units"],
-                    index_map=self._fire_indexes
+                    index_map=self._fire_indexes,
                 )
 
                 # Populate the output file with timesteps and filepaths
@@ -324,13 +338,13 @@ class SimulationOutputs:
     @staticmethod
     def _get_output_file_time(output, fpath) -> int:
         """Get the time of the output file."""
-        delimiter = OUTPUTS_MAP[output]['delimiter']
-        extension = OUTPUTS_MAP[output]['extension']
+        delimiter = OUTPUTS_MAP[output]["delimiter"]
+        extension = OUTPUTS_MAP[output]["extension"]
 
         try:
-            if delimiter == '':
+            if delimiter == "":
                 # Split on first numeric component
-                name_parts = re.split(r'(\d+)', fpath.name)
+                name_parts = re.split(r"(\d+)", fpath.name)
                 file_time = name_parts[1]
             else:
                 file_time = fpath.name.split(delimiter)[-1].split(extension)[0]
@@ -383,8 +397,9 @@ class SimulationOutputs:
         """Return a list of times for a given output key."""
         return self.outputs[key]
 
-    def to_numpy(self, key: str | OutputFile,
-                 timestep: None | int | list[int] = None) -> np.ndarray:
+    def to_numpy(
+        self, key: str | OutputFile, timestep: None | int | list[int] = None
+    ) -> np.ndarray:
         """Return a numpy array for the given output and timestep(s)."""
         output = self._validate_output(key)
         return output.to_numpy(timestep)
@@ -395,15 +410,20 @@ class SimulationOutputs:
             try:
                 output = self.outputs[output]
             except KeyError:
-                raise ValueError(f"{output} is not a valid output. Valid "
-                                 f"outputs are: {self.list_available_outputs()}")
+                raise ValueError(
+                    f"{output} is not a valid output. Valid "
+                    f"outputs are: {self.list_available_outputs()}"
+                )
         elif isinstance(output, OutputFile):
             if output not in self.outputs.values():
-                raise ValueError(f"{output} is not a valid output. Valid "
-                                 f"outputs are: {self.list_available_outputs()}")
+                raise ValueError(
+                    f"{output} is not a valid output. Valid "
+                    f"outputs are: {self.list_available_outputs()}"
+                )
         else:
-            raise TypeError(f"output must be a string or OutputFile object. "
-                            f"Got {type(output)}")
+            raise TypeError(
+                f"output must be a string or OutputFile object. " f"Got {type(output)}"
+            )
         return output
 
     def to_dask(self, key: str | OutputFile,
@@ -492,16 +512,18 @@ def _process_compressed_bin(filename, dim_yxz, *args) -> ndarray:
         If the index map (fire_indexes) is not provided in the arguments.
     ValueError
         If the index map (fire_indexes) is None.
-   """
+    """
     # TODO: Rename fire_indexes to something more generic
     try:
         fire_indexes = args[0]
     except IndexError:
-        raise ValueError("fire_indexes must be provided when processing "
-                         "compressed .bin files.")
+        raise ValueError(
+            "fire_indexes must be provided when processing " "compressed .bin files."
+        )
     if fire_indexes is None:
-        raise ValueError("fire_indexes must be provided when processing "
-                         "compressed .bin files.")
+        raise ValueError(
+            "fire_indexes must be provided when processing " "compressed .bin files."
+        )
 
     # Initialize the 3D array
     full_3d_array = np.zeros(dim_yxz, dtype=np.float32)
@@ -511,9 +533,7 @@ def _process_compressed_bin(filename, dim_yxz, *args) -> ndarray:
         np.fromfile(fid, dtype=np.int32, count=1)
 
         # Read in the sparse values
-        sparse_values = np.fromfile(
-            fid, dtype=np.float32, count=fire_indexes.shape[0]
-        )
+        sparse_values = np.fromfile(fid, dtype=np.float32, count=fire_indexes.shape[0])
 
         # Map indices of the sparse data to the indices of the dense array
         indices = (

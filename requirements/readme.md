@@ -16,4 +16,3 @@ Requirements for building documentation.
 
 Requirements for testing with different Python versions. Uses conda environment
 yaml files.
-

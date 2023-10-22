@@ -1,0 +1,55 @@
+{
+    "filename": {
+        "values_accepted": "Any",
+        "tested_values_range": "Any",
+        "description": "Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "topo_flag": {
+        "values_accepted": "[0 2]",
+        "tested_values_range": "[0 2]",
+        "description": "Topo flag: 0 = no terrain file provided, QUIC-Fire is run with flat terrain, 1 = Gaussian hill, 2 = hill pass, 3 = slope mesa, 4 = canyon, 5 = custom, 6 = half circle, 7 = sinusoid, 8 = cos hill, 9 = terrain is provided via QP_elevation.bin (see Section 2.7), 10 = terrain is provided via terrainOutput.txt, 11 = terrain.dat (firetec)",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "smoothing_method": {
+        "values_accepted": "[0 2]",
+        "tested_values_range": "[0 2]",
+        "description": "Smoothing method: 0 = none (default for idealized topo), 1 = Blur, 2 = David’s method based on second derivative",
+        "units": "[-]",
+        "recommended_value": "2 for real topo",
+        "can_be_modified": "Y"
+    },
+    "smoothing_passes": {
+        "values_accepted": "[0 500]",
+        "tested_values_range": "[0 200]",
+        "description": "Number of smoothing passes. Real terrain MUST be smoothed.",
+        "units": "[-]",
+        "recommended_value": "200 for real topo"
+    },
+    "sor_iterations": {
+        "values_accepted": "[0 500]",
+        "tested_values_range": "[0 500]",
+        "description": "Number of SOR iteration to define background winds before starting the fire",
+        "units": "[-]",
+        "recommended_value": "500 for real topo",
+        "can_be_modified": "Y"
+    },
+    "sor_cycles": {
+        "values_accepted": "[0 10]",
+        "tested_values_range": "[0 4]",
+        "description": "Number of times the SOR solver initial fields is reset to define background winds before starting the fire",
+        "units": "[-]",
+        "recommended_value": "4 for real topo",
+        "can_be_modified": "Y"
+    },
+    "sor_relax": {
+        "values_accepted": "[0 2]",
+        "tested_values_range": "[0.9 1.8]",
+        "description": "SOR overrelaxation coefficient. Only used if there is topo.",
+        "units": "[-]",
+        "recommended_value": "0.9-1.3 for real topo",
+        "can_be_modified": "Y"
+    }
+}

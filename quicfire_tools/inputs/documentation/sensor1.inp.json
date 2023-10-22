@@ -1,0 +1,34 @@
+{
+    "time_now":{
+        "data_type": "NonNegativeInt",
+        "values_accepted": "[0 Inf)",
+        "tested_values": "[0 Inf)",
+        "description": "Beginning of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "sensor_height": {
+        "data_type": "PositiveFloat",
+        "values_accepted": ">0",
+        "tested_values": "N/A",
+        "description": "Wind measurement height",
+        "units": "[m]",
+        "can_be_modified": "Y"
+    },
+    "wind_speed": {
+        "data_type": "PositiveFloat",
+        "values_accepted": ">0",
+        "tested_values": "N/A",
+        "description": "Wind speed",
+        "units": "[m/s]",
+        "can_be_modified": "Y"
+    },
+    "wind_direction": {
+        "data_type": "PositiveInt",
+        "values_accepted": "[0 359]",
+        "tested_values": "[0 359]",
+        "description": "Wind direction",
+        "units": "[degree]",
+        "can_be_modified": "Y"
+    }
+}

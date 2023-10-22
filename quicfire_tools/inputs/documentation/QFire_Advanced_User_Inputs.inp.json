@@ -1,0 +1,114 @@
+{
+  "fraction_cells_launch_firebrands": {
+    "data_type": "PositiveFloat",
+    "values_accepted": "(0, 1]",
+    "tested_values_range": "0.05-0.9",
+    "description": "Fraction of cells that could launch firebrand tracers from which firebrand tracers will actually be launched. Higher value = more firebrand tracers. Recommended value: 0.05",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "firebrand_radius_scale_factor": {
+    "data_type": "PositiveFloat",
+    "values_accepted": "> 1",
+    "tested_values_range": "40-80",
+    "description": "Multiplicative factor used to relate the length scale of the mixing (firebrand distribution entrainment length scale) to the initial size of the distribution. Higher value = higher growth rate or RT (firebrand distribution) with flight time. Recommended value: 40",
+    "units": "[-]",
+    "can_be_modified": "N"
+  },
+  "firebrand_trajectory_time_step": {
+    "data_type": "PositiveInt",
+    "values_accepted": "\u2265 1",
+    "tested_values_range": "1",
+    "description": "Time step used to determine the firebrand tracer trajectory. Higher value = less accurate trajectory. Recommended value: 1 s",
+    "units": "[s]",
+    "can_be_modified": "Y"
+  },
+  "firebrand_launch_interval": {
+    "data_type": "PositiveInt",
+    "values_accepted": "> 0",
+    "tested_values_range": "10-20",
+    "description": "Time interval between launching of firebrand tracers. Higher value = less firebrand tracers launched. Recommended value: 10 s",
+    "units": "[s]",
+    "can_be_modified": "Y"
+  },
+  "firebrands_per_deposition": {
+    "data_type": "PositiveInt",
+    "values_accepted": "> 0",
+    "tested_values_range": "500",
+    "description": "Number of firebrand tracers that one firebrand tracer launched represents. Recommended value: 500",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "firebrand_area_ratio": {
+    "data_type": "PositiveFloat",
+    "values_accepted": "> 0",
+    "tested_values_range": "20.",
+    "description": "Multiplicative factor used to relate the cell area and fraction of cells from which tracers are launched to initial area represented by one firebrand.",
+    "units": "[-]",
+    "can_be_modified": "N"
+  },
+  "minimum_burn_rate_coefficient": {
+    "data_type": "PositiveFloat",
+    "values_accepted": "> 0",
+    "tested_values_range": "50.",
+    "description": "Multiplicative factor relating the minimum mass-loss rate that a firebrand tracer needs to have to justify continuing to track its trajectory to the energy associated with a new ignition",
+    "units": "[-]",
+    "can_be_modified": "N"
+  },
+  "max_firebrand_thickness_fraction": {
+    "data_type": "PositiveFloat",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.75",
+    "description": "Multiplicative factor relating the thickness of launched firebrand tracer to maximum loftable firebrand thickness",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "firebrand_germination_delay": {
+    "data_type": "PositiveInt",
+    "values_accepted": "> 0",
+    "tested_values_range": "180",
+    "description": "Time after a firebrand has landed at which a fire is started",
+    "units": "[s]",
+    "can_be_modified": "Y"
+  },
+  "vertical_velocity_scale_factor": {
+    "data_type": "PositiveFloat",
+    "values_accepted": "> 1",
+    "tested_values_range": "5-10",
+    "description": "Maximum value of the multiplicative factor of the vertical velocity experienced by a firebrand = 1/(fraction of the QUIC-URB on fire)",
+    "units": "[-]",
+    "can_be_modified": "N"
+  },
+  "minimum_firebrand_ignitions": {
+    "data_type": "PositiveInt",
+    "values_accepted": "> 0",
+    "tested_values_range": "50-100",
+    "description": "Minimum number of ignitions to be sampled in a position where a firebrand lands",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "maximum_firebrand_ignitions": {
+    "data_type": "PositiveInt",
+    "values_accepted": "> 0",
+    "tested_values_range": "100-500",
+    "description": "Maximum number of ignitions sampled at positions distributed within RT around where a firebrand tracer lands",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "minimum_landing_angle": {
+    "data_type": "PositiveFloat",
+    "values_accepted": "[0, PI/2]",
+    "tested_values_range": "PI/3-PI/6",
+    "description": "Minimum value considered for the angle between the trajectory of the firebrand when it hits the ground and horizontal",
+    "units": "[rad]",
+    "can_be_modified": "N"
+  },
+  "maximum_firebrand_thickness": {
+    "data_type": "PositiveFloat",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.03-0.05",
+    "description": "Maximum firebrand's thickness",
+    "units": "[m]",
+    "can_be_modified": "Y"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "num_cpus":{
+    "data_type": "PositiveInt",
+    "values_accepted": ">0",
+    "tested_values_range": "[1, 8]",
+    "description": "Maximum number of CPU to use. Do not exceed 8. Use 1 for ensemble simulations.",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  },
+  "use_acw":{
+    "data_type": "Literal[0, 1]",
+    "values_accepted": "0,1",
+    "tested_values_range": "[0,1]",
+    "description": "Use Adaptive Computation Window (0=Disabled 1=Enabled)",
+    "can_be_modified": "Y"
+  }
+}

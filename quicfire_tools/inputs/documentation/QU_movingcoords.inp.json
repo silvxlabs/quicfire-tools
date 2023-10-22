@@ -1,0 +1,7 @@
+{
+    "moving_coordinates_flag": {
+        "values_accepted": "0",
+        "description": "Moving coordinates flag (0=no, 1=yes)",
+        "can_be_modified": "N"
+    }
+}
