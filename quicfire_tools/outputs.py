@@ -7,12 +7,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import numpy as np
-
 # External imports
 import zarr
 import numpy as np
 import dask.array as da
+from numpy import ndarray
 
 # Internal imports
 from quicfire_tools.parameters import SimulationParameters
@@ -426,8 +425,9 @@ class SimulationOutputs:
             )
         return output
 
-    def to_dask(self, key: str | OutputFile,
-                timestep: None | int | list[int] = None) -> np.ndarray:
+    def to_dask(
+        self, key: str | OutputFile, timestep: None | int | list[int] = None
+    ) -> np.ndarray:
         """Return a dask array for the given output and timestep(s)."""
         output = self._validate_output(key)
 
@@ -463,11 +463,9 @@ class SimulationOutputs:
             shape = (len(output.times), *output.shape)
             chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
             zarr_dataset = zarr_file.create_dataset(
-                output_name,
-                shape=shape,
-                chunks=chunks,
-                dtype=float)
-            zarr_dataset.attrs['_ARRAY_DIMENSIONS'] = ["time", "y", "x", "z"]
+                output_name, shape=shape, chunks=chunks, dtype=float
+            )
+            zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["time", "y", "x", "z"]
 
             # Write each timestep to the output's zarr dataset
             for time_step in range(len(output.times)):

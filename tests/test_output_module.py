@@ -68,8 +68,9 @@ class TestSimulationOutputs:
         Run a test to ensure that the zarr output contains a single output
         """
         single_output_name = "mburnt_integ"
-        zarr_with_datasets = self.sut.to_zarr("tmp/test.zarr",
-                                              outputs=single_output_name)
+        zarr_with_datasets = self.sut.to_zarr(
+            "tmp/test.zarr", outputs=single_output_name
+        )
         assert isinstance(zarr_with_datasets, zarr.hierarchy.Group)
         for output_name in self.sut.list_available_outputs():
             output = self.sut.get_output(output_name)
@@ -85,8 +86,9 @@ class TestSimulationOutputs:
         Run a test to ensure that the zarr output contains multiple outputs
         """
         multiple_output_names = ["mburnt_integ", "fuels-dens"]
-        zarr_with_datasets = self.sut.to_zarr("tmp/test.zarr",
-                                              outputs=multiple_output_names)
+        zarr_with_datasets = self.sut.to_zarr(
+            "tmp/test.zarr", outputs=multiple_output_names
+        )
         assert isinstance(zarr_with_datasets, zarr.hierarchy.Group)
         for output_name in self.sut.list_available_outputs():
             output = self.sut.get_output(output_name)
@@ -108,23 +110,31 @@ class TestSimulationOutputs:
         # Test: All outputs.
         # Produces 4D xarray dataset with all 3D outputs
         self.sut.to_zarr("tmp/test.zarr")
-        ds = xr.open_zarr("tmp/test.zarr", drop_variables=["groundfuelheight", "mburnt_integ"])
+        ds = xr.open_zarr(
+            "tmp/test.zarr", drop_variables=["groundfuelheight", "mburnt_integ"]
+        )
         print(ds)
 
         # Test: Single output
         # Produces 4D xarray dataset with single 2D output
         single_output_name = "mburnt_integ"
         self.sut.to_zarr("tmp/test.zarr", outputs=single_output_name)
-        drop_variables = [output_name for output_name in self.sut.list_available_outputs() if
-                          output_name != single_output_name]
+        drop_variables = [
+            output_name
+            for output_name in self.sut.list_available_outputs()
+            if output_name != single_output_name
+        ]
         ds = xr.open_zarr("tmp/test.zarr", drop_variables=drop_variables)
         print(ds)
 
         # Test: Multiple outputs different dimensions causes error
         multiple_output_names = ["mburnt_integ", "fuels-dens"]
         self.sut.to_zarr("tmp/test.zarr", outputs=multiple_output_names)
-        drop_variables = [output_name for output_name in self.sut.list_available_outputs() if
-                          output_name not in multiple_output_names]
+        drop_variables = [
+            output_name
+            for output_name in self.sut.list_available_outputs()
+            if output_name not in multiple_output_names
+        ]
         with pytest.raises(ValueError):
             xr.open_zarr("tmp/test.zarr", drop_variables=drop_variables)
 
