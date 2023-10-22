@@ -1,12 +1,31 @@
 """
 Test module for the inputs module of the quicfire_tools package.
 """
+import pytest
+import numpy as np
+from pydantic import ValidationError
 from pathlib import Path
 
-import pytest
-from pydantic import ValidationError
-
-from quicfire_tools.inputs import *
+from quicfire_tools.inputs import (
+    Gridlist,
+    RasterOrigin,
+    QU_Buildings,
+    QU_Fileoptions,
+    QU_Simparams,
+    QFire_Advanced_User_Inputs,
+    QUIC_fire,
+    QFire_Bldg_Advanced_User_Inputs,
+    QFire_Plume_Advanced_User_Inputs,
+    QU_TopoInputs,
+    RuntimeAdvancedUserInputs,
+    QU_movingcoords,
+    QP_buildout,
+    QU_metparams,
+    Sensor1,
+    SimulationInputs,
+)
+from quicfire_tools.ignitions import RectangleIgnition
+from quicfire_tools.topography import TopoType, GaussianHillTopo
 
 # Create a tmp/ directory to store the temporary test files
 Path("tmp/").mkdir(exist_ok=True)
@@ -1369,38 +1388,6 @@ class Test_QFire_Plume_Advanced_User_Inputs:
         assert plume_inputs == test_object
 
 
-class TestSimulationInputs:
-    def get_basic_test_object(self):
-        return SimulationInputs.setup_simulation(
-            nx=100,
-            ny=100,
-            fire_nz=40,
-            quic_nz=26,
-            quic_height=180,
-            dx=2,
-            dy=2,
-            dz=1,
-            wind_speed=2.7,
-            wind_direction=270,
-            simulation_time=600,
-            output_time=60,
-        )
-
-    def test_basic_inputs(self):
-        sim_inputs = self.get_basic_test_object()
-        assert isinstance(sim_inputs, SimulationInputs)
-
-    def test_list_inputs(self):
-        sim_inputs = self.get_basic_test_object()
-        inputs = sim_inputs.list_inputs()
-        assert "rasterorigin" in inputs
-
-    def test_get_input(self):
-        sim_inputs = self.get_basic_test_object()
-        rasterorigin = sim_inputs.get_input("rasterorigin")
-        assert isinstance(rasterorigin, RasterOrigin)
-
-
 class TestQUTopoInputs:
     def get_default_test_object(self):
         return QU_TopoInputs(topo_type=TopoType(topo_flag=0))
@@ -1682,3 +1669,43 @@ class TestSensor1:
         sensor1.to_file("tmp/")
         test_object = Sensor1.from_file("tmp/")
         assert sensor1 == test_object
+
+
+class TestSimulationInputs:
+    @staticmethod
+    def get_basic_test_object():
+        return SimulationInputs.setup_simulation(
+            nx=100,
+            ny=100,
+            fire_nz=40,
+            quic_nz=26,
+            quic_height=180,
+            dx=2,
+            dy=2,
+            fire_dz=1,
+            wind_speed=2.7,
+            wind_direction=270,
+            simulation_time=600,
+            output_time=60,
+        )
+
+    def test_basic_inputs(self):
+        sim_inputs = self.get_basic_test_object()
+        assert isinstance(sim_inputs, SimulationInputs)
+
+    def test_list_inputs(self):
+        sim_inputs = self.get_basic_test_object()
+        inputs = sim_inputs.list_inputs()
+        assert "rasterorigin" in inputs
+
+    def test_get_input(self):
+        sim_inputs = self.get_basic_test_object()
+        rasterorigin = sim_inputs.get_input("rasterorigin")
+        assert isinstance(rasterorigin, RasterOrigin)
+
+    def test_write_inputs(self):
+        sim_inputs = self.get_basic_test_object()
+        sim_inputs.write_inputs("tmp/")
+
+    def test_from_directory(self):
+        sim_inputs = SimulationInputs.from_directory("tmp/")

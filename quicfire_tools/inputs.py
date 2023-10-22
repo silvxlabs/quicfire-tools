@@ -57,24 +57,69 @@ TEMPLATES_PATH = (
 
 
 class SimulationInputs:
-    _required_inputs = []
+    """
+    Class representing a QUIC-Fire input file deck.
 
-    def __init__(self, input_files: list):
+    This is the fundamental class in the quicfire_tools.inputs module. It is
+    used to create, modify, and write QUIC-Fire input file decks. It is also
+    used to read in existing QUIC-Fire input file decks.
+    """
+
+    _required_inputs: list[str] = ["QUIC_fire", "QU_simparams", "gridlist"]
+
+    def __init__(self, input_files: list[InputFile]):
+        # Validate that all required input files are present
+        input_file_names = [input_file.name for input_file in input_files]
+        for required_input in self._required_inputs:
+            if required_input not in input_file_names:
+                raise ValueError(f"Missing required input file: {required_input}")
+
         # Initialize a dictionary of input files
         self._inputs = {i.name: i for i in input_files}
 
-        # Validate that all required input files are present
-        for required_input in self._required_inputs:
-            if required_input not in input_files:
-                raise ValueError(f"Missing required input file: " f"{required_input}")
-
     def list_inputs(self) -> list[str]:
+        """
+        List all input files by name in the SimulationInputs object.
+
+        Returns
+        -------
+        list[str]
+            List of input file names.
+        """
         return list(self._inputs.keys())
 
     def get_input(self, input_name: str) -> InputFile:
+        """
+        Retrieve an input file object by name from the SimulationInputs object.
+
+        Parameters
+        ----------
+        input_name: str
+            Name of the input file to retrieve.
+
+        Returns
+        -------
+        InputFile
+            Input file object.
+        """
         return self._inputs[input_name]
 
-    def write_inputs(self, directory: str | Path, version: str = "latest"):
+    def write_inputs(self, directory: str | Path, version: str = "latest") -> None:
+        """
+        Write all input files in the SimulationInputs object to a specified
+        directory.
+
+        This method is the core method of the SimulationInputs class. It
+        is the principle way to translate a SimulationInputs object into a
+        QUIC-Fire input file deck.
+
+        Parameters
+        ----------
+        directory: str | Path
+            Directory to write the input files to.
+        version: str
+            Version of the input files to write. Default is "latest".
+        """
         if isinstance(directory, str):
             directory = Path(directory)
 
@@ -84,6 +129,13 @@ class SimulationInputs:
         for input_name in self.list_inputs():
             input_file = self.get_input(input_name)
             input_file.to_file(directory, version=version)
+
+        # Copy QU_landuse from the template directory to the output directory
+        template_file_path = TEMPLATES_PATH / version / "QU_landuse.inp"
+        output_file_path = directory / "QU_landuse.inp"
+        with open(template_file_path, "rb") as ftemp:
+            with open(output_file_path, "wb") as fout:
+                fout.write(ftemp.read())
 
     @classmethod
     def setup_simulation(
@@ -95,7 +147,7 @@ class SimulationInputs:
         quic_height: float,
         dx: float,
         dy: float,
-        dz: float,
+        fire_dz: float,
         wind_speed: float,
         wind_direction: float,
         simulation_time: int,
@@ -107,18 +159,32 @@ class SimulationInputs:
 
         Parameters
         ----------
-        nx
-        ny
-        fire_nz
-        quic_nz
-        quic_height
-        dx
-        dy
-        dz
-        wind_speed
-        wind_direction
-        simulation_time
-        output_time
+        nx: int
+            Number of cells in the x-direction [-]
+        ny: int
+            Number of cells in the y-direction [-]
+        fire_nz: int
+            Number of cells in the z-direction for the fire grid [-]
+        quic_nz: int
+            Number of cells in the z-direction for the QUIC grid [-]
+        dx: float
+            Cell size in the x-direction [m]
+        dy: float
+            Cell size in the y-direction [m]
+        fire_dz: float
+            Cell size in the z-direction for the fire grid [m]
+        quic_height: float
+            QUIC domain height [m]. Determines the cell size in the z-direction
+            for the QUIC grid.
+        wind_speed: float
+            Wind speed [m/s]
+        wind_direction: float
+            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
+            be in range [0, 360).
+        simulation_time: int
+            Number of seconds to run the simulation for [s]
+        output_time: int
+            Number of seconds between output files [s]
 
         Returns
         -------
@@ -132,12 +198,31 @@ class SimulationInputs:
         qu_fileoptions = QU_Fileoptions()
         qfire_adv_user_input = QFire_Advanced_User_Inputs()
         qfire_bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+        qfire_plume_inputs = QFire_Plume_Advanced_User_Inputs()
+        qu_topo = QU_TopoInputs()
+        runtime_inputs = RuntimeAdvancedUserInputs()
+        qu_movingcoords = QU_movingcoords()
+        qp_buildout = QP_buildout()
+        qu_metparams = QU_metparams()
 
         # Initialize input files with required parameters
+        start_time = int(time.time())
         qu_simparams = QU_Simparams(
             nx=nx, ny=ny, nz=quic_nz, dx=dx, dy=dy, quic_domain_height=quic_height
         )
-        gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=dz, aa1=1.0)
+        quic_fire = QUIC_fire(
+            nz=fire_nz,
+            time_now=start_time,
+            sim_time=simulation_time,
+            out_time_fire=output_time,
+            out_time_wind=output_time,
+            out_time_emis_rad=output_time,
+            out_time_wind_avg=output_time,
+        )
+        gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=fire_dz, aa1=1.0)
+        wind_sensor = Sensor1(
+            time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
+        )
 
         input_files = [
             raster_origin,
@@ -145,19 +230,43 @@ class SimulationInputs:
             qu_fileoptions,
             qfire_adv_user_input,
             qfire_bldg_inputs,
+            qfire_plume_inputs,
+            qu_topo,
+            runtime_inputs,
+            qu_movingcoords,
+            qp_buildout,
+            qu_metparams,
             qu_simparams,
+            quic_fire,
             gridlist,
+            wind_sensor,
         ]
 
         return cls(input_files)
 
     @classmethod
-    def from_directory(cls, directory: str | Path):
+    def from_directory(cls, directory: str | Path) -> SimulationInputs:
+        """
+        Initializes a SimulationInputs object from a directory containing a
+        QUIC-Fire input file deck.
+
+        Parameters
+        ----------
+        directory: str | Path
+            Directory containing a QUIC-Fire input file deck.
+
+        Returns
+        -------
+        SimulationInputs
+            Class containing the input files in the QUIC-Fire input file deck.
+        """
         if isinstance(directory, str):
             directory = Path(directory)
         input_files = []
-        for input_file in cls._required_inputs:
-            input_files.append(input_file.from_file(directory))
+        for input_file_name in cls._required_inputs:
+            input_obj = globals()[input_file_name]
+            input_file = input_obj.from_file(directory)
+            input_files.append(input_file)
         return cls(input_files)
 
 
@@ -226,8 +335,6 @@ class InputFile(BaseModel, validate_assignment=True):
         dict
             Dictionary representation of the object.
         """
-        # return {attr: value for attr, value in self.__dict__.items()
-        #         if not attr.startswith('_')}
         return self.model_dump(
             exclude={"name", "_extension", "_filename", "param_info"}
         )
