@@ -1,0 +1,163 @@
+{
+    "gaussian_hill_topo": {
+        "x_hilltop": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "[0 Lx]",
+            "description": "Gaussian hill top location x-dir",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_hilltop": {
+            "values_accepted": "[0 Ly]",
+            "tested_values_range": "[0 Ly]",
+            "description": "Gaussian hill top location y-dir",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "elevation_max" : {
+            "values_accepted": "[0 Lz/3]",
+            "tested_values_range": "[0 Lz/3]",
+            "description": "Gaussian hill max elevation",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "elevation_std": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Gaussian hill standard deviation",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        }
+    },
+    "hill_pass_topo": {
+        "max_height": {
+            "values_accepted": "[0 Lz/3]",
+            "tested_values_range": "[0 Lz/3]",
+            "description": "Hill pass maximum height",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "location_param": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Hill pass location parameter",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        }
+    },
+    "slope_mesa_topo": {
+        "slope_axis": {
+            "values_accepted": "[0 1]",
+            "tested_values_range": "[0 1]",
+            "description": "Slope axis: 0=X, 1=Y",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "slope_value": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Slope in dh/dx or dh/dy",
+            "units": "[-]",
+            "can_be_modified": "Y"
+        },
+        "flat_fraction": {
+            "values_accepted": "[0 1]",
+            "tested_values_range": "[0 1]",
+            "description": "Fraction of domain that is flat",
+            "units": "[-]",
+            "can_be_modified": "Y"
+        }
+    },
+    "canyon_topo": {
+        "x_start": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "[0 Lx]",
+            "description": "Canyon location in x-dir",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_center": {
+            "values_accepted": "[0 Ly]",
+            "tested_values_range": "[0 Ly]",
+            "description": "Canyon location in x-dir",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "slope_value": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Slope in dh/dx or dh/dy",
+            "units": "[-]",
+            "can_be_modified": "Y"
+        },
+        "canyon_std": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Canyon function standard deviation",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "vertical_offset": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Canyon vertical offset",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        }
+    },
+    "half_circle_topo": {
+        "x_location": {
+            "values_accepted": "[0 Lx]",
+            "tested_values_range": "[0 Lx]",
+            "description": "Half circle x-location",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "y_location": {
+            "values_accepted": "[0 Ly]",
+            "tested_values_range": "[0 Ly]",
+            "description": "Half circle y-location",
+            "units": "[m]",
+            "can_be_modified": "Y"
+        },
+        "radius": {
+            "values_accepted": ">0",
+            "tested_values_range": "(0 Lx/2)",
+            "description": "Half circle radius",
+            "units": "[-]",
+            "can_be_modified": "Y"
+        }
+    },
+    "sinusoid_topo": {
+        "period": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Sinusoid period",
+            "units": "[-]",
+            "can_be_modified": "Y"
+        },
+        "amplitude": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Sinusoid amplitude",
+            "units": "[-]",
+            "can_be_modified": "Y"
+        }
+    },
+    "cos_hill_topo": {
+        "aspect": {
+            "values_accepted": "> 0",
+            "tested_values_range": "> 0",
+            "description": "Hill aspect",
+            "units": "[-] (likely degree)",
+            "can_be_modified": "Y"
+        },
+        "height": {
+            "values_accepted": "[0 Lz/3]",
+            "tested_values_range": "[0 Lz/3]",
+            "description": "Hill height",
+            "units": "[-] (likely m)",
+            "can_be_modified": "Y"
+        }
+    }
+}

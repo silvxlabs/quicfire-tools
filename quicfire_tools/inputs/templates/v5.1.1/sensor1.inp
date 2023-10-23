@@ -1,0 +1,12 @@
+sensor1 !Site Name
+0 !Upper level flag (1 = use this profile for upper level winds)
+50 !Upper level height (meters)
+1 !Site Coordinate Flag (1=QUIC, 2=UTM, 3=Lat/Lon)
+1 !X coordinate (meters)
+1 !Y coordinate (meters)
+$timenow !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)
+1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)
+0.1 !site zo
+0. ! 1/L (default = 0)
+!Height (m),Speed	(m/s), Direction (deg relative to true N)
+2 $wind_speed $wind_direction

@@ -1,0 +1,175 @@
+{
+  "nx": {
+    "data_type": "INT",
+    "values_accepted": "> 0",
+    "tested_values_range": "100-2000",
+    "description": "Number of cells in the x-direction",
+    "units": "[-]",
+    "recommended_value": "> 100"
+  },
+  "ny": {
+    "data_type": "INT",
+    "values_accepted": "> 0",
+    "tested_values_range": "100-2000",
+    "description": "Number of cells in the y-direction",
+    "units": "[-]",
+    "recommended_value": "> 100"
+  },
+  "nz": {
+    "data_type": "INT",
+    "values_accepted": "> 0",
+    "tested_values_range": "10-100",
+    "description": "Number of cells in the z-direction",
+    "units": "[-]"
+  },
+  "dx": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.5-250",
+    "description": "Cell size in the x-direction",
+    "units": "[m]",
+    "recommended_value": "2 m"
+  },
+  "dy": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.5-250",
+    "description": "Cell size in the y-direction",
+    "units": "[m]",
+    "recommended_value": "2 m"
+  },
+  "stretch_grid_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1, 2, 3, 4]",
+    "tested_values_range": "[0, 1, 3]",
+    "description": "Vertical grid stretching flag",
+    "units": "[-]",
+    "recommended_value": "3"
+  },
+  "surface_vertical_cell_size": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.5-5",
+    "description": "Surface vertical cell size",
+    "units": "[m]"
+  },
+  "number_surface_cells": {
+    "data_type": "INT",
+    "values_accepted": "> 0",
+    "tested_values_range": "1-5",
+    "description": "Number of cells with uniform cell size at the surface",
+    "units": "[-]"
+  },
+  "dz_array": {
+    "data_type": "REAL",
+    "values_accepted": "> 0",
+    "tested_values_range": "0.5-200",
+    "description": "Values of the vertical cell sizes",
+    "units": "[m]"
+  },
+  "utc_offset": {
+    "data_type": "INT",
+    "values_accepted": "[-12, +12]",
+    "tested_values_range": "-12 - +12",
+    "description": "Hours difference from UTM",
+    "units": "[h]"
+  },
+  "wind_times": {
+    "data_type": "INT",
+    "values_accepted": "0 - Inf",
+    "tested_values_range": "0 - Inf",
+    "description": "List of times at which the winds are available in Unix Epoch time",
+    "units": "[s]"
+  },
+  "sor_iter_max": {
+    "data_type": "INT",
+    "values_accepted": "> 0",
+    "tested_values_range": "[1, 500]",
+    "description": "Maximum number of iterations of the SOR wind solver",
+    "units": "[-]",
+    "recommended_value": "10"
+  },
+  "sor_residual_reduction": {
+    "data_type": "INT",
+    "values_accepted": "> 0",
+    "tested_values_range": "[1, 5]",
+    "description": "Residual reduction to assess convergence of the SOR solver",
+    "units": "[-]",
+    "recommended_value": "3"
+  },
+  "use_diffusion_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Use diffusion algorithm",
+    "units": "[-]",
+    "recommended_value": "0"
+  },
+  "number_diffusion_iterations": {
+    "data_type": "INT",
+    "values_accepted": "> 0",
+    "tested_values_range": "[0, 50]",
+    "description": "Number of diffusion iterations",
+    "units": "[-]"
+  },
+  "domain_rotation": {
+    "data_type": "REAL",
+    "values_accepted": "[-90, +90]",
+    "tested_values_range": "[-90, +90]",
+    "description": "Domain rotation relative to true north",
+    "units": "[degrees]",
+    "recommended_value": "0 deg"
+  },
+  "utm_x": {
+    "data_type": "REAL",
+    "values_accepted": "Can go across UTM zones",
+    "tested_values_range": "",
+    "description": "UTM-x coordinates of the south-west corner of domain",
+    "units": "[m]"
+  },
+  "utm_y": {
+    "data_type": "REAL",
+    "values_accepted": "Can go across UTM zones",
+    "tested_values_range": "",
+    "description": "UTM-y coordinates of the south-west corner of domain",
+    "units": "[m]"
+  },
+  "utm_zone_number": {
+    "data_type": "INT",
+    "values_accepted": "[1, 60]",
+    "tested_values_range": "[1, 60]",
+    "description": "UTM zone number",
+    "units": "[-]"
+  },
+  "utm_zone_letter": {
+    "data_type": "INT",
+    "values_accepted": "[1, 26]",
+    "tested_values_range": "[1, 26]",
+    "description": "UTM zone letter (A=1, B=2,..)",
+    "units": "[-]"
+  },
+  "quic_cfd_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "QUIC-CFD flag",
+    "units": "[-]",
+    "recommended_value": "0"
+  },
+  "explosive_bldg_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Explosive building damage flag",
+    "units": "[-]",
+    "recommended_value": "0"
+  },
+  "bldg_array_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0, 1]",
+    "tested_values_range": "[0, 1]",
+    "description": "Building array flag",
+    "units": "[-]",
+    "recommended_value": "0"
+  }
+}

@@ -1,0 +1,7 @@
+!QUIC 6.26
+0 !Met input flag (0=QUIC,1=WRF,2=ITT MM5,3=HOTMAC)
+1 !Number of measuring sites
+1 !Maximum size of data points profiles
+sensor1 !Site Name
+!File name
+sensor1.inp

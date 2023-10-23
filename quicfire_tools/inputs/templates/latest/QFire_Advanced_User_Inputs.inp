@@ -1,0 +1,14 @@
+$fraction_cells_launch_firebrands       ! N/A, fraction of the cells on fire that will launch a firebrand
+$firebrand_radius_scale_factor          ! N/A, scaling factor of the radius represented by the firebrands launched
+$firebrand_trajectory_time_step         ! s, time step for the firebrands trajectory calculation
+$firebrand_launch_interval              ! s, how often to launch firebrands
+$firebrands_per_deposition              ! N/A, number of firebrands distributed over the landing area
+$firebrand_area_ratio                   ! N/A, FB_FRACTION_LAUNCHED_to_RT_ratio
+$minimum_burn_rate_coefficient          ! N/A, min_b_value_coef
+$max_firebrand_thickness_fraction       ! N/A, fb_frac_of_max_size
+$firebrand_germination_delay            ! s, germination_delay
+$vertical_velocity_scale_factor         ! N/A, fraction of the cell on fire (to scale w)
+$minimum_firebrand_ignitions            ! N/A, minimum number of ignitions via firebrands at a point
+$maximum_firebrand_ignitions            ! N/A, maximum number of ignitions via firebrands at a point
+$minimum_landing_angle                  ! rad, min_theta_value (pi/6)
+$maximum_firebrand_thickness            ! m, fb thickness

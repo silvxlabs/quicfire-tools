@@ -1,17 +1,17 @@
-import sys
+"""
+Test module for quickfire_tools.outputs
+"""
+from pathlib import Path
 
-sys.path.append("../quicfire_tools")
-from quicfire_tools import outputs
-from quicfire_tools.parameters import SimulationParameters
-
-import zarr
-import pytest
 import numpy as np
+import pytest
+import zarr
 import xarray as xr
 import dask.array as da
 from scipy.io import FortranFile
 
-from pathlib import Path
+from quicfire_tools import outputs
+from quicfire_tools.parameters import SimulationParameters
 
 DATA_PATH = Path("data")
 SIMULATION_PATH = DATA_PATH / "crazy-canyon-simulation"
@@ -68,8 +68,9 @@ class TestSimulationOutputs:
         Run a test to ensure that the zarr output contains a single output
         """
         single_output_name = "mburnt_integ"
-        zarr_with_datasets = self.sut.to_zarr("tmp/test.zarr",
-                                              outputs=single_output_name)
+        zarr_with_datasets = self.sut.to_zarr(
+            "tmp/test.zarr", outputs=single_output_name
+        )
         assert isinstance(zarr_with_datasets, zarr.hierarchy.Group)
         for output_name in self.sut.list_available_outputs():
             output = self.sut.get_output(output_name)
@@ -85,8 +86,9 @@ class TestSimulationOutputs:
         Run a test to ensure that the zarr output contains multiple outputs
         """
         multiple_output_names = ["mburnt_integ", "fuels-dens"]
-        zarr_with_datasets = self.sut.to_zarr("tmp/test.zarr",
-                                              outputs=multiple_output_names)
+        zarr_with_datasets = self.sut.to_zarr(
+            "tmp/test.zarr", outputs=multiple_output_names
+        )
         assert isinstance(zarr_with_datasets, zarr.hierarchy.Group)
         for output_name in self.sut.list_available_outputs():
             output = self.sut.get_output(output_name)
@@ -108,23 +110,31 @@ class TestSimulationOutputs:
         # Test: All outputs.
         # Produces 4D xarray dataset with all 3D outputs
         self.sut.to_zarr("tmp/test.zarr")
-        ds = xr.open_zarr("tmp/test.zarr", drop_variables=["groundfuelheight", "mburnt_integ"])
+        ds = xr.open_zarr(
+            "tmp/test.zarr", drop_variables=["groundfuelheight", "mburnt_integ"]
+        )
         print(ds)
 
         # Test: Single output
         # Produces 4D xarray dataset with single 2D output
         single_output_name = "mburnt_integ"
         self.sut.to_zarr("tmp/test.zarr", outputs=single_output_name)
-        drop_variables = [output_name for output_name in self.sut.list_available_outputs() if
-                          output_name != single_output_name]
+        drop_variables = [
+            output_name
+            for output_name in self.sut.list_available_outputs()
+            if output_name != single_output_name
+        ]
         ds = xr.open_zarr("tmp/test.zarr", drop_variables=drop_variables)
         print(ds)
 
         # Test: Multiple outputs different dimensions causes error
         multiple_output_names = ["mburnt_integ", "fuels-dens"]
         self.sut.to_zarr("tmp/test.zarr", outputs=multiple_output_names)
-        drop_variables = [output_name for output_name in self.sut.list_available_outputs() if
-                          output_name not in multiple_output_names]
+        drop_variables = [
+            output_name
+            for output_name in self.sut.list_available_outputs()
+            if output_name not in multiple_output_names
+        ]
         with pytest.raises(ValueError):
             xr.open_zarr("tmp/test.zarr", drop_variables=drop_variables)
 
@@ -162,15 +172,13 @@ class TestOutputFile:
         output = self.simulation_outputs.get_output("fire-energy_to_atmos")
         output_path = output.filepaths
         data = output._get_multiple_timesteps(output_path)
-        assert data.shape == (
-            2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
+        assert data.shape == (2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
 
         # Test 3: 3D Compressed data (all timesteps)
         output = self.simulation_outputs.get_output("fuels-dens")
         output_path = output.filepaths
         data = output._get_multiple_timesteps(output_path)
-        assert data.shape == (
-            2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
+        assert data.shape == (2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
 
     def test_to_numpy(self):
         # Test 1: 2D gridded data (single timestep)
@@ -191,14 +199,12 @@ class TestOutputFile:
         # Test 4: 3D gridded data (all timesteps)
         output = self.simulation_outputs.get_output("fire-energy_to_atmos")
         data = self.simulation_outputs.to_numpy(output)
-        assert data.shape == (
-            2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
+        assert data.shape == (2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
 
         # Test 5: 3D gridded data (list timesteps)
         output = self.simulation_outputs.get_output("fire-energy_to_atmos")
         data = self.simulation_outputs.to_numpy(output, [0, 1])
-        assert data.shape == (
-            2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
+        assert data.shape == (2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
 
         # Test 6: 3D gridded data (invalid timesteps)
         output = self.simulation_outputs.get_output("fire-energy_to_atmos")
@@ -213,8 +219,7 @@ class TestOutputFile:
         # Test 8: 3D compressed data (all timesteps)
         output = self.simulation_outputs.get_output("fuels-dens")
         data = self.simulation_outputs.to_numpy(output)
-        assert data.shape == (
-            2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
+        assert data.shape == (2, SIM_PARAMS.ny, SIM_PARAMS.nx, SIM_PARAMS.nz + 1)
 
 
 class TestProcessGriddedBinSlice:
@@ -247,7 +252,8 @@ class TestProcessGriddedBinSlice:
 
     def test_groundfuelheight(self):
         input_data = self._load_and_process_input(
-            SIMULATION_PATH / "treesfueldepth.dat")
+            SIMULATION_PATH / "treesfueldepth.dat"
+        )
 
         output_fpath = OUTPUT_PATH / "groundfuelheight.bin"
         with open(output_fpath, "rb") as f:
@@ -275,15 +281,15 @@ class TestProcessGriddedBinSlice:
             # Read in each slice of the output data and compare to the
             # equivalent slice of the drawfire data
             for k in range(dims[2]):
-                output_data = self._process_gridded_bin_slice(f, dims[0],
-                                                              dims[1])
+                output_data = self._process_gridded_bin_slice(f, dims[0], dims[1])
                 self._assert_data_equality(drawfire_data[..., k], output_data)
 
             f.close()
 
     def test_fire_energy_to_atmos(self):
-        self._generic_drawfire_slice_test("fire-energy_to_atmos-",
-                                          (self.ny, self.nx, self.nz))
+        self._generic_drawfire_slice_test(
+            "fire-energy_to_atmos-", (self.ny, self.nx, self.nz)
+        )
 
     def test_windu(self):
         self._generic_drawfire_slice_test("windu", (self.ny, self.nx, self.nz))
@@ -324,12 +330,14 @@ class TestProcessGriddedBin:
     def test_groundfuelheight(self):
         fuel_depth = self._load_fastfuels_data()
         input_data = self._load_and_process_input(
-            SIMULATION_PATH / "treesfueldepth.dat")
+            SIMULATION_PATH / "treesfueldepth.dat"
+        )
 
         self._assert_data_equality(fuel_depth, input_data)
 
         output_data = self._process_gridded_bin(
-            OUTPUT_PATH / "groundfuelheight.bin", (self.ny, self.nx))
+            OUTPUT_PATH / "groundfuelheight.bin", (self.ny, self.nx)
+        )
 
         fuel_depth[0, :] = 0
         fuel_depth[-1, :] = 0
@@ -341,12 +349,14 @@ class TestProcessGriddedBin:
     def test_total_initial_fuel_height(self):
         fuel_depth = self._load_fastfuels_data()
         input_data = self._load_and_process_input(
-            SIMULATION_PATH / "treesfueldepth.dat")
+            SIMULATION_PATH / "treesfueldepth.dat"
+        )
 
         self._assert_data_equality(fuel_depth, input_data)
 
         output_data = self._process_gridded_bin(
-            OUTPUT_PATH / "totalinitialfuelheight.bin", (self.ny, self.nx))
+            OUTPUT_PATH / "totalinitialfuelheight.bin", (self.ny, self.nx)
+        )
 
         fuel_depth[0, :] = 0
         fuel_depth[-1, :] = 0
@@ -356,14 +366,15 @@ class TestProcessGriddedBin:
         self._assert_data_equality(output_data, fuel_depth)
 
     def _generic_drawfire_test(self, test_name, dims, *args):
-
         for t in (0, 300):
             drawfire_data = self._load_drawfire_data(
-                DRAWFIRE_PATH / f"{test_name}_{t}.npy")
+                DRAWFIRE_PATH / f"{test_name}_{t}.npy"
+            )
             if drawfire_data.shape[-1] != dims[-1]:
-                drawfire_data = drawfire_data[..., :dims[2]]
+                drawfire_data = drawfire_data[..., : dims[2]]
             output_data = self._process_gridded_bin(
-                OUTPUT_PATH / f"{test_name}00{t:03}.bin", dims)
+                OUTPUT_PATH / f"{test_name}00{t:03}.bin", dims
+            )
 
             self._assert_data_equality(drawfire_data, output_data)
 
@@ -371,8 +382,9 @@ class TestProcessGriddedBin:
         self._generic_drawfire_test("mburnt_integ-", (self.ny, self.nx))
 
     def test_fire_energy_to_atmos(self):
-        self._generic_drawfire_test("fire-energy_to_atmos-",
-                                    (self.ny, self.nx, self.nz))
+        self._generic_drawfire_test(
+            "fire-energy_to_atmos-", (self.ny, self.nx, self.nz)
+        )
 
     def test_windu(self):
         self._generic_drawfire_test("windu", (self.ny, self.nx, self.nz + 1))
@@ -387,8 +399,7 @@ class TestProcessCompressedBin:
     fire_indexes = sut._fire_indexes
 
     def _process_compressed_bin(self, f):
-        return outputs._process_compressed_bin(
-            f, self.dims, self.fire_indexes)
+        return outputs._process_compressed_bin(f, self.dims, self.fire_indexes)
 
     def test_fuels_dens(self):
         for t in (0, 300):
