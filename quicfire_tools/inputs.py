@@ -212,14 +212,6 @@ class SimulationInputs:
 
         # Initialize input files with required parameters
         start_time = int(time.time())
-        qu_simparams = QU_Simparams(
-            nx=nx,
-            ny=ny,
-            nz=quic_nz,
-            dx=dx,
-            dy=dy,
-            quic_domain_height=quic_height,
-        )
         quic_fire = QUIC_fire(
             nz=fire_nz,
             time_now=start_time,
@@ -238,6 +230,42 @@ class SimulationInputs:
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=fire_dz, aa1=1.0)
         wind_sensor = Sensor1(
             time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
+        )
+
+        @computed_field
+        @property
+        def quic_height(topo_flag, fire_nz, fire_dz) -> int:
+            fire_height = fire_nz * fire_dz
+            if topo_flag == 0:
+                topo_height = 0
+            elif topo_flag == 1:
+                topo_height = quic_fire.topo_type.elevation_max
+            elif topo_flag == 2:
+                topo_heigjt = quic_fire.topo_type.max_height
+            elif topo_flag == 3:
+                # something with slope_value and flat_fraction
+                pass
+            elif topo_flag == 4:
+                # don't know how to do this one either
+                pass
+            elif topo_flag == 6:
+                # maybe something with radius?
+                pass
+            elif topo_flag == 7:
+                topo_height = 2 * quic_fire.topo_type.amplitude  # probably?
+            elif topo_flag == 8:
+                topo_height = quic_fire.topo_type.height
+            elif topo_flag == 5:
+                topo_dat = _read_dat_file(qu_topo.filename)
+                topo_height = np.max(topo_height) - np.min(topo_height)
+
+        qu_simparams = QU_Simparams(
+            nx=nx,
+            ny=ny,
+            nz=quic_nz,
+            dx=dx,
+            dy=dy,
+            quic_domain_height=quic_height,
         )
 
         input_files = [
