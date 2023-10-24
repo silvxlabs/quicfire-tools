@@ -144,6 +144,7 @@ class SimulationInputs:
         ny: int = 100,
         fire_nz: int = 1,
         quic_nz: int = 22,
+        quic_height: int = 100,
         dx: float = 2,
         dy: float = 2,
         fire_dz: float = 1,
@@ -152,7 +153,6 @@ class SimulationInputs:
         simulation_time: int = 60,
         output_time: int = 30,
         ignition_flag: int = 1,
-        ignition_type: IgnitionType = RectangleIgnition.default_line(dx, dy),
         fuel_flag: int = 1,
         fuel_density: float = 0.6,
         fuel_moisture: float = 0.5,
@@ -197,6 +197,13 @@ class SimulationInputs:
             Class containing the minimum required inputs to build a QUIC-Fire
             input file deck and run a simulation.
         """
+
+        @computed_field
+        @property
+        def ignition_type(ignition_flag):
+            if ignition_flag == 1:
+                return RectangleIgnition.default_line(nx, ny, wind_direction)
+
         # Initialize default input files
         raster_origin = RasterOrigin()
         qu_bldgs = QU_Buildings()
@@ -232,32 +239,32 @@ class SimulationInputs:
             time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
         )
 
-        @computed_field
-        @property
-        def quic_height(topo_flag, fire_nz, fire_dz) -> int:
-            fire_height = fire_nz * fire_dz
-            if topo_flag == 0:
-                topo_height = 0
-            elif topo_flag == 1:
-                topo_height = quic_fire.topo_type.elevation_max
-            elif topo_flag == 2:
-                topo_heigjt = quic_fire.topo_type.max_height
-            elif topo_flag == 3:
-                # something with slope_value and flat_fraction
-                pass
-            elif topo_flag == 4:
-                # don't know how to do this one either
-                pass
-            elif topo_flag == 6:
-                # maybe something with radius?
-                pass
-            elif topo_flag == 7:
-                topo_height = 2 * quic_fire.topo_type.amplitude  # probably?
-            elif topo_flag == 8:
-                topo_height = quic_fire.topo_type.height
-            elif topo_flag == 5:
-                topo_dat = _read_dat_file(qu_topo.filename)
-                topo_height = np.max(topo_height) - np.min(topo_height)
+        # @computed_field
+        # @property
+        # def quic_height(topo_flag, fire_nz, fire_dz) -> int:
+        #     fire_height = fire_nz * fire_dz
+        #     if topo_flag == 0:
+        #         topo_height = 0
+        #     elif topo_flag == 1:
+        #         topo_height = quic_fire.topo_type.elevation_max
+        #     elif topo_flag == 2:
+        #         topo_heigjt = quic_fire.topo_type.max_height
+        #     elif topo_flag == 3:
+        #         # something with slope_value and flat_fraction
+        #         pass
+        #     elif topo_flag == 4:
+        #         # don't know how to do this one either
+        #         pass
+        #     elif topo_flag == 6:
+        #         # maybe something with radius?
+        #         pass
+        #     elif topo_flag == 7:
+        #         topo_height = 2 * quic_fire.topo_type.amplitude  # probably?
+        #     elif topo_flag == 8:
+        #         topo_height = quic_fire.topo_type.height
+        #     elif topo_flag == 5:
+        #         topo_dat = _read_dat_file(qu_topo.filename)
+        #         topo_height = np.max(topo_height) - np.min(topo_height)
 
         qu_simparams = QU_Simparams(
             nx=nx,
