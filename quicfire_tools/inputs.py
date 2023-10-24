@@ -140,18 +140,23 @@ class SimulationInputs:
     @classmethod
     def setup_simulation(
         cls,
-        nx: int,
-        ny: int,
-        fire_nz: int,
-        quic_nz: int,
-        quic_height: float,
-        dx: float,
-        dy: float,
-        fire_dz: float,
-        wind_speed: float,
-        wind_direction: float,
-        simulation_time: int,
-        output_time: int,
+        nx: int = 100,
+        ny: int = 100,
+        fire_nz: int = 1,
+        quic_nz: int = 22,
+        dx: float = 2,
+        dy: float = 2,
+        fire_dz: float = 1,
+        wind_speed: float = 5,
+        wind_direction: float = 270,
+        simulation_time: int = 60,
+        output_time: int = 30,
+        ignition_flag: int = 1,
+        ignition_type: IgnitionType = RectangleIgnition.default_line(dx, dy),
+        fuel_flag: int = 1,
+        fuel_density: float = 0.6,
+        fuel_moisture: float = 0.5,
+        fuel_height: float = 1,
     ):
         """
         Creates a SimulationInputs object with the minimum required inputs to
@@ -208,12 +213,23 @@ class SimulationInputs:
         # Initialize input files with required parameters
         start_time = int(time.time())
         qu_simparams = QU_Simparams(
-            nx=nx, ny=ny, nz=quic_nz, dx=dx, dy=dy, quic_domain_height=quic_height
+            nx=nx,
+            ny=ny,
+            nz=quic_nz,
+            dx=dx,
+            dy=dy,
+            quic_domain_height=quic_height,
         )
         quic_fire = QUIC_fire(
             nz=fire_nz,
             time_now=start_time,
             sim_time=simulation_time,
+            ignition_flag=ignition_flag,
+            ignition_type=ignition_type,
+            fuel_flag=fuel_flag,
+            fuel_density=fuel_density,
+            fuel_moisture=fuel_moisture,
+            fuel_height=fuel_height,
             out_time_fire=output_time,
             out_time_wind=output_time,
             out_time_emis_rad=output_time,
