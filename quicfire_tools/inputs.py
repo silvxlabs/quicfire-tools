@@ -198,48 +198,7 @@ class SimulationInputs:
             input file deck and run a simulation.
         """
 
-        @computed_field
-        @property
-        def line_ignition(ignition_flag):
-            if ignition_flag == 1:
-                return _default_line_ignition(nx, ny, wind_direction)
-
-        # Initialize default input files
-        raster_origin = RasterOrigin()
-        qu_bldgs = QU_Buildings()
-        qu_fileoptions = QU_Fileoptions()
-        qfire_adv_user_input = QFire_Advanced_User_Inputs()
-        qfire_bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
-        qfire_plume_inputs = QFire_Plume_Advanced_User_Inputs()
-        qu_topo = QU_TopoInputs()
-        runtime_inputs = RuntimeAdvancedUserInputs()
-        qu_movingcoords = QU_movingcoords()
-        qp_buildout = QP_buildout()
-        qu_metparams = QU_metparams()
-
-        # Initialize input files with required parameters
-        start_time = int(time.time())
-        quic_fire = QUIC_fire(
-            nz=fire_nz,
-            time_now=start_time,
-            sim_time=simulation_time,
-            ignition_flag=ignition_flag,
-            ignition_type=RectangleIgnition(*_default_line_ignition()),
-            fuel_flag=fuel_flag,
-            fuel_density=fuel_density,
-            fuel_moisture=fuel_moisture,
-            fuel_height=fuel_height,
-            out_time_fire=output_time,
-            out_time_wind=output_time,
-            out_time_emis_rad=output_time,
-            out_time_wind_avg=output_time,
-        )
-        gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=fire_dz, aa1=1.0)
-        wind_sensor = Sensor1(
-            time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
-        )
-
-        def _default_line_ignition(cls, nx, ny, wind_direction):
+        def _default_line_ignition(nx, ny, wind_direction):
             width = 10
             if 45 <= wind_direction < 135:
                 x_min = (0.9 * (nx * 2)) - width
@@ -263,6 +222,46 @@ class SimulationInputs:
                 y_length = width
 
             return x_min, y_min, x_length, y_length
+
+        # Initialize default input files
+        raster_origin = RasterOrigin()
+        qu_bldgs = QU_Buildings()
+        qu_fileoptions = QU_Fileoptions()
+        qfire_adv_user_input = QFire_Advanced_User_Inputs()
+        qfire_bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
+        qfire_plume_inputs = QFire_Plume_Advanced_User_Inputs()
+        qu_topo = QU_TopoInputs()
+        runtime_inputs = RuntimeAdvancedUserInputs()
+        qu_movingcoords = QU_movingcoords()
+        qp_buildout = QP_buildout()
+        qu_metparams = QU_metparams()
+
+        # Initialize input files with required parameters
+        start_time = int(time.time())
+        quic_fire = QUIC_fire(
+            nz=fire_nz,
+            time_now=start_time,
+            sim_time=simulation_time,
+            ignition_flag=ignition_flag,
+            ignition_type=RectangleIgnition(
+                x_min=_default_line_ignition(nx, ny, wind_direction)[0],
+                y_min=_default_line_ignition(nx, ny, wind_direction)[1],
+                x_length=_default_line_ignition(nx, ny, wind_direction)[2],
+                y_length=_default_line_ignition(nx, ny, wind_direction)[3],
+            ),
+            fuel_flag=fuel_flag,
+            fuel_density=fuel_density,
+            fuel_moisture=fuel_moisture,
+            fuel_height=fuel_height,
+            out_time_fire=output_time,
+            out_time_wind=output_time,
+            out_time_emis_rad=output_time,
+            out_time_wind_avg=output_time,
+        )
+        gridlist = Gridlist(n=nx, m=ny, l=fire_nz, dx=dx, dy=dy, dz=fire_dz, aa1=1.0)
+        wind_sensor = Sensor1(
+            time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
+        )
 
         # @computed_field
         # @property
