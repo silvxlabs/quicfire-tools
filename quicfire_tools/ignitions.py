@@ -40,12 +40,13 @@ class RectangleIgnition(IgnitionType):
     def __str__(self):
         flag_line = super().__str__()
         locations = (
-            f"{self.x_min}\t! South-west corner in the x-direction\n"
+            f"\n{self.x_min}\t! South-west corner in the x-direction\n"
             f"{self.y_min}\t! South-west corner in the y-direction\n"
             f"{self.x_length}\t! Length in the x-direction\n"
             f"{self.y_length}\t! Length in the y-direction"
         )
         return flag_line + locations
+
 
 class SquareRingIgnition(IgnitionType):
     ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(2)
@@ -59,7 +60,7 @@ class SquareRingIgnition(IgnitionType):
     def __str__(self):
         flag_line = super().__str__()
         locations = (
-            f"{self.x_min}\t! South-west corner in the x-direction\n"
+            f"\n{self.x_min}\t! South-west corner in the x-direction\n"
             f"{self.y_min}\t! South-west corner in the y-direction\n"
             f"{self.x_length}\t! Length in the x-direction\n"
             f"{self.y_length}\t! Length in the y-direction\n"
@@ -80,11 +81,10 @@ class CircularRingIgnition(IgnitionType):
     def __str__(self):
         flag_line = super().__str__()
         locations = (
-            f"{self.x_min}\t! South-west corner in the x-direction\n"
+            f"\n{self.x_min}\t! South-west corner in the x-direction\n"
             f"{self.y_min}\t! South-west corner in the y-direction\n"
             f"{self.x_length}\t! Length in the x-direction\n"
             f"{self.y_length}\t! Length in the y-direction\n"
             f"{self.ring_width}\t! Width of the ring"
         )
         return flag_line + locations
-
