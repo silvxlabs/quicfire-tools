@@ -200,9 +200,9 @@ class SimulationInputs:
 
         @computed_field
         @property
-        def ignition_type(ignition_flag):
+        def line_ignition(ignition_flag):
             if ignition_flag == 1:
-                return RectangleIgnition.default_line(nx, ny, wind_direction)
+                return _default_line_ignition(nx, ny, wind_direction)
 
         # Initialize default input files
         raster_origin = RasterOrigin()
@@ -224,7 +224,7 @@ class SimulationInputs:
             time_now=start_time,
             sim_time=simulation_time,
             ignition_flag=ignition_flag,
-            ignition_type=ignition_type,
+            ignition_type=RectangleIgnition(*_default_line_ignition()),
             fuel_flag=fuel_flag,
             fuel_density=fuel_density,
             fuel_moisture=fuel_moisture,
@@ -238,6 +238,31 @@ class SimulationInputs:
         wind_sensor = Sensor1(
             time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
         )
+
+        def _default_line_ignition(cls, nx, ny, wind_direction):
+            width = 10
+            if 45 <= wind_direction < 135:
+                x_min = (0.9 * (nx * 2)) - width
+                y_min = 0.1 * (ny * 2)
+                x_length = width
+                y_length = 0.8 * (nx * 2)
+            if 135 <= wind_direction < 225:
+                x_min = 0.1 * (nx * 2)
+                y_min = 0.1 * (ny * 2)
+                x_length = 0.8 * (nx * 2)
+                y_length = width
+            if 225 <= wind_direction < 315:
+                x_min = 0.1 * (nx * 2)
+                y_min = 0.1 * (ny * 2)
+                x_length = width
+                y_length = 0.8 * (nx * 2)
+            else:
+                x_min = 0.1 * (ny * 2)
+                y_min = (0.9 * (nx * 2)) - width
+                x_length = 0.8 * (nx * 2)
+                y_length = width
+
+            return x_min, y_min, x_length, y_length
 
         # @computed_field
         # @property

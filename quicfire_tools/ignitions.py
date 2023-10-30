@@ -88,28 +88,3 @@ class CircularRingIgnition(IgnitionType):
         )
         return flag_line + locations
 
-
-def _default_line(cls, nx, ny, wind_direction):
-    width = 10
-    if 45 <= wind_direction < 135:
-        x_min = (0.9 * (nx * 2)) - width
-        y_min = 0.1 * (ny * 2)
-        x_length = width
-        y_length = 0.8 * (nx * 2)
-    if 135 <= wind_direction < 225:
-        x_min = 0.1 * (nx * 2)
-        y_min = 0.1 * (ny * 2)
-        x_length = 0.8 * (nx * 2)
-        y_length = width
-    if 225 <= wind_direction < 315:
-        x_min = 0.1 * (nx * 2)
-        y_min = 0.1 * (ny * 2)
-        x_length = width
-        y_length = 0.8 * (nx * 2)
-    else:
-        x_min = 0.1 * (ny * 2)
-        y_min = (0.9 * (nx * 2)) - width
-        x_length = 0.8 * (nx * 2)
-        y_length = width
-
-    return x_min, y_min, x_length, y_length
