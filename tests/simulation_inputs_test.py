@@ -1,4 +1,3 @@
-import os
 import sys
 
 sys.path.insert(0, "/Users/ntutland/Documents/Projects/quicfire-tools")
