@@ -1176,7 +1176,9 @@ class QUIC_fire(InputFile):
     out_time_wind: PositiveInt = 30
     out_time_emis_rad: PositiveInt = 30
     out_time_wind_avg: PositiveInt = 30
-    ignition_type: SerializeAsAny[IgnitionType] = IgnitionType(ignition_flag=6)
+    ignition_type: SerializeAsAny[IgnitionType] = IgnitionType(
+        ignition_flag=IgnitionSources(6)
+    )
     fire_flag: Literal[0, 1] = 1
     random_seed: int = Field(ge=-1, default=-1)
     fire_time_step: PositiveInt = 1
@@ -1317,7 +1319,7 @@ class QUIC_fire(InputFile):
             dz = int(lines[14].strip().split("!")[0])
             current_line = 15
         else:
-            for i in range(14, 14 + len(nz)):
+            for i in range(14, 14 + len(dz_array)):
                 try:
                     float(lines[i].strip())
                 except ValueError:
@@ -1325,7 +1327,7 @@ class QUIC_fire(InputFile):
                         "QUIC_fire.inp: dz input value is not a float. Does the number of dz inputs match nz?"
                     )
                 dz_array.append(float(lines[i].strip()))
-            current_line = 15 + len(nz)
+            current_line = 15 + len(dz_array)
 
         current_line += 4  # skip unused lines
 
@@ -1362,16 +1364,27 @@ class QUIC_fire(InputFile):
             ignition_params.append(int(lines[i].strip().split("!")[0]))
         if ignition_flag == 1:
             x_min, y_min, x_length, y_length = ignition_params
-            ignition_type = RectangleIgnition(x_min, y_min, x_length, y_length)
+            ignition_type = RectangleIgnition(
+                x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
+            )
         elif ignition_flag == 2:
             x_min, y_min, x_length, y_length, x_width, y_width = ignition_params
             ignition_type = SquareRingIgnition(
-                x_min, y_min, x_length, y_length, x_width, y_width
+                x_min=x_min,
+                y_min=y_min,
+                x_length=x_length,
+                y_length=y_length,
+                x_width=x_width,
+                y_width=y_width,
             )
         elif ignition_flag == 3:
             x_min, y_min, x_length, y_length, ring_width = ignition_params
             ignition_type = CircularRingIgnition(
-                x_min, y_min, x_length, y_length, ring_width
+                x_min=x_min,
+                y_min=y_min,
+                x_length=x_length,
+                y_length=y_length,
+                ring_width=ring_width,
             )
         elif ignition_flag == 6:
             ignition_type = IgnitionType(ignition_flag=6)
