@@ -44,7 +44,7 @@ from quicfire_tools.topography import (
     SlopeMesaTopo,
     TopoType,
 )
-from quicfire_tools.utils import compute_parabolic_stretched_grid, read_topo_dat
+from quicfire_tools.utils import compute_parabolic_stretched_grid, calc_quic_height
 
 
 DOCS_PATH = (
@@ -242,55 +242,13 @@ class SimulationInputs:
             time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
         )
 
-        def _quic_height(
-            qu_topo: QU_TopoInputs,
-            fire_nz,
-            fire_dz,
-            topo_path: Path | str,
-        ) -> int:
-            """
-            Calculate the QUIC domain height from the tallest fuels and the maximum elevation.
-
-            Parameters
-            ----------
-            topo_path : Path | str
-                Path to directory where topo.dat file is saved.
-            qu_topo : QU_TopoInputs
-                QU_TpopoInputs InputFile class instance
-            """
-            fire_height = fire_nz * fire_dz
-            if topo_flag == 0:
-                topo_height = 0
-            elif topo_flag == 1:
-                topo_height = quic_fire.topo_type.elevation_max
-            elif topo_flag == 2:
-                topo_height = quic_fire.topo_type.max_height
-            elif topo_flag == 3:
-                # something with slope_value and flat_fraction
-                pass
-            elif topo_flag == 4:
-                # don't know how to do this one either
-                pass
-            elif topo_flag == 6:
-                # maybe something with radius?
-                pass
-            elif topo_flag == 7:
-                topo_height = 2 * quic_fire.topo_type.amplitude  # probably?
-            elif topo_flag == 8:
-                topo_height = quic_fire.topo_type.height
-            elif topo_flag == 5:
-                topo_dat = read_topo_dat(topo_path, qu_topo.filename, nx, ny)
-                topo_height = np.max(topo_dat) - np.min(topo_dat)
-
-            return int((topo_height + fire_height) * 3)
-
         qu_simparams = QU_Simparams(
             nx=nx,
             ny=ny,
             nz=quic_nz,
             dx=dx,
             dy=dy,
-            quic_domain_height=_quic_height(qu_topo, fire_nz, fire_dz),
+            quic_domain_height=calc_quic_height(qu_topo, fire_nz, fire_dz),
         )
 
         input_files = [

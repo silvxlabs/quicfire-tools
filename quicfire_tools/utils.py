@@ -6,6 +6,8 @@ from pathlib import Path
 import numpy as np
 from scipy.io import FortranFile
 
+from quicfire_tools.inputs import QU_TopoInputs
+
 
 def compute_parabolic_stretched_grid(
     dz_surf: float, n_surf_cell: int, n_tot_cells: int, domain_height: float
@@ -90,3 +92,46 @@ def read_topo_dat(
         )
 
     return arr
+
+
+def calc_quic_height(
+    qu_topo: QU_TopoInputs,
+    fire_nz,
+    fire_dz,
+    topo_path: Path | str,
+) -> int:
+    """
+    Calculate the QUIC domain height from the tallest fuels and the maximum elevation.
+
+    Parameters
+    ----------
+    topo_path : Path | str
+        Path to directory where topo.dat file is saved.
+    qu_topo : QU_TopoInputs
+        QU_TpopoInputs InputFile class instance
+    """
+    fire_height = fire_nz * fire_dz
+    if qu_topo.topo_flag.value == 0:
+        topo_height = 0
+    elif qu_topo.topo_flag.value == 1:
+        topo_height = quic_fire.topo_type.elevation_max
+    elif qu_topo.topo_flag.value == 2:
+        topo_height = quic_fire.topo_type.max_height
+    elif qu_topo.topo_flag.value == 3:
+        # something with slope_value and flat_fraction
+        pass
+    elif qu_topo.topo_flag.value == 4:
+        # don't know how to do this one either
+        pass
+    elif qu_topo.topo_flag.value == 6:
+        # maybe something with radius?
+        pass
+    elif qu_topo.topo_flag.value == 7:
+        topo_height = 2 * quic_fire.topo_type.amplitude  # probably?
+    elif qu_topo.topo_flag.value == 8:
+        topo_height = quic_fire.topo_type.height
+    elif qu_topo.topo_flag.value == 5:
+        topo_dat = read_topo_dat(topo_path, qu_topo.filename, nx, ny)
+        topo_height = np.max(topo_dat) - np.min(topo_dat)
+
+    return int((topo_height + fire_height) * 3)
