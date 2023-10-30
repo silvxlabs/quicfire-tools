@@ -145,7 +145,6 @@ class SimulationInputs:
         ny: int = 100,
         fire_nz: int = 1,
         quic_nz: int = 22,
-        quic_height: int = 100,
         dx: float = 2,
         dy: float = 2,
         fire_dz: float = 1,
@@ -158,6 +157,7 @@ class SimulationInputs:
         fuel_density: float = 0.6,
         fuel_moisture: float = 0.5,
         fuel_height: float = 1,
+        topo_path: Path | str = None,
     ):
         """
         Creates a SimulationInputs object with the minimum required inputs to
@@ -248,7 +248,9 @@ class SimulationInputs:
             nz=quic_nz,
             dx=dx,
             dy=dy,
-            quic_domain_height=calc_quic_height(qu_topo, fire_nz, fire_dz),
+            quic_domain_height=calc_quic_height(
+                qu_topo, fire_nz, fire_dz, nx, ny, topo_path
+            ),
         )
 
         input_files = [

@@ -98,6 +98,8 @@ def calc_quic_height(
     qu_topo: QU_TopoInputs,
     fire_nz,
     fire_dz,
+    nx,
+    ny,
     topo_path: Path | str,
 ) -> int:
     """
@@ -114,9 +116,9 @@ def calc_quic_height(
     if qu_topo.topo_flag.value == 0:
         topo_height = 0
     elif qu_topo.topo_flag.value == 1:
-        topo_height = quic_fire.topo_type.elevation_max
+        topo_height = qu_topo.topo_type.elevation_max
     elif qu_topo.topo_flag.value == 2:
-        topo_height = quic_fire.topo_type.max_height
+        topo_height = qu_topo.topo_type.max_height
     elif qu_topo.topo_flag.value == 3:
         # something with slope_value and flat_fraction
         pass
@@ -127,9 +129,9 @@ def calc_quic_height(
         # maybe something with radius?
         pass
     elif qu_topo.topo_flag.value == 7:
-        topo_height = 2 * quic_fire.topo_type.amplitude  # probably?
+        topo_height = 2 * qu_topo.topo_type.amplitude  # probably?
     elif qu_topo.topo_flag.value == 8:
-        topo_height = quic_fire.topo_type.height
+        topo_height = qu_topo.topo_type.height
     elif qu_topo.topo_flag.value == 5:
         topo_dat = read_topo_dat(topo_path, qu_topo.filename, nx, ny)
         topo_height = np.max(topo_dat) - np.min(topo_dat)
