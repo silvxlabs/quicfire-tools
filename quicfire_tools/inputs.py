@@ -32,6 +32,7 @@ from quicfire_tools.ignitions import (
     IgnitionType,
     RectangleIgnition,
     SquareRingIgnition,
+    default_line_ignition,
 )
 from quicfire_tools.topography import (
     CanyonTopo,
@@ -198,31 +199,6 @@ class SimulationInputs:
             input file deck and run a simulation.
         """
 
-        def _default_line_ignition(nx, ny, wind_direction):
-            width = 10
-            if 45 <= wind_direction < 135:
-                x_min = (0.9 * (nx * 2)) - width
-                y_min = 0.1 * (ny * 2)
-                x_length = width
-                y_length = 0.8 * (nx * 2)
-            if 135 <= wind_direction < 225:
-                x_min = 0.1 * (nx * 2)
-                y_min = 0.1 * (ny * 2)
-                x_length = 0.8 * (nx * 2)
-                y_length = width
-            if 225 <= wind_direction < 315:
-                x_min = 0.1 * (nx * 2)
-                y_min = 0.1 * (ny * 2)
-                x_length = width
-                y_length = 0.8 * (nx * 2)
-            else:
-                x_min = 0.1 * (ny * 2)
-                y_min = (0.9 * (nx * 2)) - width
-                x_length = 0.8 * (nx * 2)
-                y_length = width
-
-            return x_min, y_min, x_length, y_length
-
         # Initialize default input files
         raster_origin = RasterOrigin()
         qu_bldgs = QU_Buildings()
@@ -238,16 +214,19 @@ class SimulationInputs:
 
         # Initialize input files with required parameters
         start_time = int(time.time())
+        x_min_ig, y_min_ig, x_length_ig, y_length_ig = default_line_ignition(
+            nx, ny, wind_direction
+        )
         quic_fire = QUIC_fire(
             nz=fire_nz,
             time_now=start_time,
             sim_time=simulation_time,
             ignition_flag=ignition_flag,
             ignition_type=RectangleIgnition(
-                x_min=_default_line_ignition(nx, ny, wind_direction)[0],
-                y_min=_default_line_ignition(nx, ny, wind_direction)[1],
-                x_length=_default_line_ignition(nx, ny, wind_direction)[2],
-                y_length=_default_line_ignition(nx, ny, wind_direction)[3],
+                x_min=x_min_ig,
+                y_min=y_min_ig,
+                x_length=x_length_ig,
+                y_length=y_length_ig,
             ),
             fuel_flag=fuel_flag,
             fuel_density=fuel_density,
