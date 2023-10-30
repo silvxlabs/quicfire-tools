@@ -2,7 +2,9 @@
 Utility functions for quicfire-tools.
 """
 
+from pathlib import Path
 import numpy as np
+from scipy.io import FortranFile
 
 
 def compute_parabolic_stretched_grid(
@@ -67,3 +69,24 @@ def compute_parabolic_stretched_grid(
     dz[-1] += domain_height - np.sum(dz)
 
     return dz
+
+
+def read_topo_dat(
+    topo_path: Path | str, filename: str, x_dim: int, y_dim: int, order: str = "C"
+):
+    """
+    Read in a topo.dat file as a numpy array.
+    """
+    if isinstance(topo_path, str):
+        topo_path = Path(topo_path)
+
+    full_path = topo_path / filename
+
+    with open(full_path, "rb") as fin:
+        arr = (
+            FortranFile(fin)
+            .read_reals(dtype="float32")
+            .reshape((y_dim, x_dim), order=order)
+        )
+
+    return arr
