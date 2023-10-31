@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 from scipy.io import FortranFile
 
-from quicfire_tools.inputs import QU_TopoInputs
+from quicfire_tools.topography import TopoType
 
 
 def compute_parabolic_stretched_grid(
@@ -94,13 +94,14 @@ def read_topo_dat(
     return arr
 
 
-def calc_quic_height(
-    qu_topo: QU_TopoInputs,
-    fire_nz,
-    fire_dz,
-    nx,
-    ny,
-    topo_path: Path | str,
+def calculate_quic_height(
+    topo_type: TopoType,
+    fire_nz: int,
+    fire_dz: int,
+    nx: int,
+    ny: int,
+    topo_path: Path | str = None,
+    topo_name: str = "topo.dat",
 ) -> int:
     """
     Calculate the QUIC domain height from the tallest fuels and the maximum elevation.
@@ -113,27 +114,27 @@ def calc_quic_height(
         QU_TpopoInputs InputFile class instance
     """
     fire_height = fire_nz * fire_dz
-    if qu_topo.topo_flag.value == 0:
+    if topo_type.topo_flag.value == 0:
         topo_height = 0
-    elif qu_topo.topo_flag.value == 1:
-        topo_height = qu_topo.topo_type.elevation_max
-    elif qu_topo.topo_flag.value == 2:
-        topo_height = qu_topo.topo_type.max_height
-    elif qu_topo.topo_flag.value == 3:
+    elif topo_type.topo_flag.value == 1:
+        topo_height = topo_type.elevation_max
+    elif topo_type.topo_flag.value == 2:
+        topo_height = topo_type.max_height
+    elif topo_type.topo_flag.value == 3:
         # something with slope_value and flat_fraction
         pass
-    elif qu_topo.topo_flag.value == 4:
+    elif topo_type.topo_flag.value == 4:
         # don't know how to do this one either
         pass
-    elif qu_topo.topo_flag.value == 6:
+    elif topo_type.topo_flag.value == 6:
         # maybe something with radius?
         pass
-    elif qu_topo.topo_flag.value == 7:
-        topo_height = 2 * qu_topo.topo_type.amplitude  # probably?
-    elif qu_topo.topo_flag.value == 8:
-        topo_height = qu_topo.topo_type.height
-    elif qu_topo.topo_flag.value == 5:
-        topo_dat = read_topo_dat(topo_path, qu_topo.filename, nx, ny)
+    elif topo_type.topo_flag.value == 7:
+        topo_height = 2 * topo_type.amplitude  # probably?
+    elif topo_type.topo_flag.value == 8:
+        topo_height = topo_type.height
+    elif topo_type.topo_flag.value == 5:
+        topo_dat = read_topo_dat(topo_path, topo_name, nx, ny)
         topo_height = np.max(topo_dat) - np.min(topo_dat)
 
     return int((topo_height + fire_height) * 3)
