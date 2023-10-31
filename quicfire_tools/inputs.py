@@ -145,6 +145,7 @@ class SimulationInputs:
         ny: int = 100,
         fire_nz: int = 1,
         quic_nz: int = 22,
+        quic_height: float = 300,
         dx: float = 2,
         dy: float = 2,
         fire_dz: float = 1,
@@ -248,9 +249,7 @@ class SimulationInputs:
             nz=quic_nz,
             dx=dx,
             dy=dy,
-            quic_domain_height=calc_quic_height(
-                qu_topo, fire_nz, fire_dz, nx, ny, topo_path
-            ),
+            quic_domain_height=quic_height,
         )
 
         input_files = [

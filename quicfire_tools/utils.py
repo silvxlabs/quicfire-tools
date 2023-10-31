@@ -134,6 +134,10 @@ def calculate_quic_height(
     elif topo_type.topo_flag.value == 8:
         topo_height = topo_type.height
     elif topo_type.topo_flag.value == 5:
+        if topo_path is None:
+            raise ValueError(
+                "Must supply path to directory containing topography .dat file"
+            )
         topo_dat = read_topo_dat(topo_path, topo_name, nx, ny)
         topo_height = np.max(topo_dat) - np.min(topo_dat)
 
