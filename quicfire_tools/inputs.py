@@ -28,6 +28,7 @@ from pydantic import (
 
 # Internal imports
 from quicfire_tools.ignitions import (
+    IgnitionSources,
     CircularRingIgnition,
     IgnitionType,
     RectangleIgnition,
@@ -139,7 +140,7 @@ class SimulationInputs:
                 fout.write(ftemp.read())
 
     @classmethod
-    def setup_simulation(
+    def idealized_domain(
         cls,
         nx: int = 100,
         ny: int = 100,
@@ -160,8 +161,9 @@ class SimulationInputs:
         fuel_height: float = 1,
     ):
         """
-        Creates a SimulationInputs object with the minimum required inputs to
-        build a QUIC-Fire input file deck and run a simulation.
+        Creates a SimulationInputs object with default inputs to
+        build a QUIC-Fire input file deck and run a simulation
+        with flat terrain and uniform fuels and a line ignition.
 
         Parameters
         ----------
@@ -206,10 +208,162 @@ class SimulationInputs:
         Returns
         -------
         SimulationInputs
-            Class containing the minimum required inputs to build a QUIC-Fire
-            input file deck and run a simulation.
+            Class containing the default inputs to build a QUIC-Fire
+            input file deck and run a simulation on flat terrain with
+            uniform fuels and a line ignition.
         """
+        x_min_ig, y_min_ig, x_length_ig, y_length_ig = default_line_ignition(
+            nx, ny, wind_direction
+        )
+        ignition_type = RectangleIgnition(
+            x_min=x_min_ig,
+            y_min=y_min_ig,
+            x_length=x_length_ig,
+            y_length=y_length_ig,
+        )
 
+        return cls(
+            cls.setup_simulation(
+                nx,
+                ny,
+                fire_nz,
+                quic_nz,
+                quic_height,
+                dx,
+                dy,
+                fire_dz,
+                wind_speed,
+                wind_direction,
+                simulation_time,
+                output_time,
+                ignition_flag,
+                ignition_type,
+                fuel_flag,
+                fuel_density,
+                fuel_moisture,
+                fuel_height,
+            )
+        )
+
+    @classmethod
+    def custom_domain(
+        cls,
+        nx: int,
+        ny: int,
+        fire_nz: int,
+        quic_nz: int = 22,
+        quic_height: float = 300,
+        dx: float = 2,
+        dy: float = 2,
+        fire_dz: float = 1,
+        wind_speed: float = 5,
+        wind_direction: float = 270,
+        simulation_time: int = 60,
+        output_time: int = 30,
+        ignition_flag: int = 6,
+        fuel_flag: int = 4,
+        fuel_density: float = None,
+        fuel_moisture: float = None,
+        fuel_height: float = None,
+    ):
+        """
+        Creates a SimulationInputs object with default inputs to
+        build a QUIC-Fire input file deck and run a simulation on a
+        domain with custom fuels, topography, and ignitions.
+
+        Parameters
+        ----------
+        nx: int
+            Number of cells in the x-direction [-]
+        ny: int
+            Number of cells in the y-direction [-]
+        fire_nz: int
+            Number of cells in the z-direction for the fire grid [-]
+        quic_nz: int
+            Number of cells in the z-direction for the QUIC grid [-]
+        quic_height: float
+            Height of the QUIC grid [m]. Determines the cell size in the z-direction
+            for the QUIC grid. Must be 3 * the height of maximum elevation and tallest fuels.
+            See utils.calculate_quic_height
+        dx: float
+            Cell size in the x-direction [m]
+        dy: float
+            Cell size in the y-direction [m]
+        fire_dz: float
+            Cell size in the z-direction for the fire grid [m]
+        wind_speed: float
+            Wind speed [m/s]
+        wind_direction: float
+            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
+            be in range [0, 360).
+        simulation_time: int
+            Number of seconds to run the simulation for [s]
+        output_time: int
+            Number of seconds between output files [s]
+        ignition_flag: int
+            Flag defining ignition type [-]. See ignitions.IgnitionSources
+        fuel_flag: int
+            Flag defning fuel input source [-]
+        fuel_density: float
+            Fuel density for uniform fuels [kg/m**3]
+        fuel_moisture: float
+            Fuel moisture for uniform fuels [-]
+        fuel_height: float
+            Surface fuel height for uniform fuels [m]
+
+        Returns
+        -------
+        SimulationInputs
+            Class containing the default inputs to build a QUIC-Fire
+            input file deck and run a simulation on a domain with custom
+            fuels, topography, and ignitions.
+        """
+        ignition_type = IgnitionType(ignition_flag=IgnitionSources(ignition_flag))
+
+        return cls(
+            cls.setup_simulation(
+                nx,
+                ny,
+                fire_nz,
+                quic_nz,
+                quic_height,
+                dx,
+                dy,
+                fire_dz,
+                wind_speed,
+                wind_direction,
+                simulation_time,
+                output_time,
+                ignition_flag,
+                ignition_type,
+                fuel_flag,
+                fuel_density,
+                fuel_moisture,
+                fuel_height,
+            )
+        )
+
+    def setup_simulation(
+        cls,
+        nx: int,
+        ny: int,
+        fire_nz: int,
+        quic_nz: int,
+        quic_height: float,
+        dx: float,
+        dy: float,
+        fire_dz: float,
+        wind_speed: float,
+        wind_direction: float,
+        simulation_time: int,
+        output_time: int,
+        ignition_flag: int,
+        ignition_type: IgnitionType,
+        fuel_flag: int,
+        fuel_density: float,
+        fuel_moisture: float,
+        fuel_height: float,
+    ):
         # Initialize default input files
         raster_origin = RasterOrigin()
         qu_bldgs = QU_Buildings()
@@ -225,20 +379,12 @@ class SimulationInputs:
 
         # Initialize input files with required parameters
         start_time = int(time.time())
-        x_min_ig, y_min_ig, x_length_ig, y_length_ig = default_line_ignition(
-            nx, ny, wind_direction
-        )
         quic_fire = QUIC_fire(
             nz=fire_nz,
             time_now=start_time,
             sim_time=simulation_time,
             ignition_flag=ignition_flag,
-            ignition_type=RectangleIgnition(
-                x_min=x_min_ig,
-                y_min=y_min_ig,
-                x_length=x_length_ig,
-                y_length=y_length_ig,
-            ),
+            ignition_type=ignition_type,
             fuel_flag=fuel_flag,
             fuel_density=fuel_density,
             fuel_moisture=fuel_moisture,
@@ -280,7 +426,7 @@ class SimulationInputs:
             wind_sensor,
         ]
 
-        return cls(input_files)
+        return input_files
 
     @classmethod
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
@@ -1149,7 +1295,7 @@ class QUIC_fire(InputFile):
     stretch_grid_flag: Literal[0, 1] = 0
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
-    fuel_flag: Literal[1, 2, 3, 4] = 3
+    fuel_flag: Literal[1, 2, 3, 4] = 4
     fuel_density: PositiveFloat | None = None
     fuel_moisture: PositiveFloat | None = None
     fuel_height: PositiveFloat | None = None
