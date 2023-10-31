@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, "/Users/ntutland/Documents/Projects/quicfire-tools")
 import quicfire_tools as qft
 
-test = qft.SimulationInputs.setup_simulation()
+test = qft.SimulationInputs.custom_domain(nx=100, ny=100, fire_nz=40)
 
 print(test.list_inputs())
 

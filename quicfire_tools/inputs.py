@@ -36,6 +36,7 @@ from quicfire_tools.ignitions import (
     default_line_ignition,
 )
 from quicfire_tools.topography import (
+    TopoSources,
     CanyonTopo,
     CosHillTopo,
     GaussianHillTopo,
@@ -45,7 +46,7 @@ from quicfire_tools.topography import (
     SlopeMesaTopo,
     TopoType,
 )
-from quicfire_tools.utils import compute_parabolic_stretched_grid, calc_quic_height
+from quicfire_tools.utils import compute_parabolic_stretched_grid
 
 
 DOCS_PATH = (
@@ -155,6 +156,7 @@ class SimulationInputs:
         simulation_time: int = 60,
         output_time: int = 30,
         ignition_flag: int = 1,
+        topo_flag: int = 0,
         fuel_flag: int = 1,
         fuel_density: float = 0.6,
         fuel_moisture: float = 0.5,
@@ -196,6 +198,8 @@ class SimulationInputs:
             Number of seconds between output files [s]
         ignition_flag: int
             Flag defining ignition type [-]. See ignitions.IgnitionSources
+        topo_flag: int
+            Flag defining the topography type [-]. See topography.TopoSources
         fuel_flag: int
             Flag defning fuel input source [-]
         fuel_density: float
@@ -222,6 +226,8 @@ class SimulationInputs:
             y_length=y_length_ig,
         )
 
+        topo_type = TopoType(topo_flag=TopoSources(topo_flag))
+
         return cls(
             cls.setup_simulation(
                 nx,
@@ -238,6 +244,7 @@ class SimulationInputs:
                 output_time,
                 ignition_flag,
                 ignition_type,
+                topo_type,
                 fuel_flag,
                 fuel_density,
                 fuel_moisture,
@@ -261,6 +268,7 @@ class SimulationInputs:
         simulation_time: int = 60,
         output_time: int = 30,
         ignition_flag: int = 6,
+        topo_flag: int = 5,
         fuel_flag: int = 4,
         fuel_density: float = None,
         fuel_moisture: float = None,
@@ -319,6 +327,7 @@ class SimulationInputs:
             fuels, topography, and ignitions.
         """
         ignition_type = IgnitionType(ignition_flag=IgnitionSources(ignition_flag))
+        topo_type = TopoType(topo_flag=TopoSources(topo_flag))
 
         return cls(
             cls.setup_simulation(
@@ -336,6 +345,7 @@ class SimulationInputs:
                 output_time,
                 ignition_flag,
                 ignition_type,
+                topo_type,
                 fuel_flag,
                 fuel_density,
                 fuel_moisture,
@@ -344,7 +354,6 @@ class SimulationInputs:
         )
 
     def setup_simulation(
-        cls,
         nx: int,
         ny: int,
         fire_nz: int,
@@ -359,6 +368,7 @@ class SimulationInputs:
         output_time: int,
         ignition_flag: int,
         ignition_type: IgnitionType,
+        topo_type: TopoType,
         fuel_flag: int,
         fuel_density: float,
         fuel_moisture: float,
@@ -371,7 +381,6 @@ class SimulationInputs:
         qfire_adv_user_input = QFire_Advanced_User_Inputs()
         qfire_bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
         qfire_plume_inputs = QFire_Plume_Advanced_User_Inputs()
-        qu_topo = QU_TopoInputs()
         runtime_inputs = RuntimeAdvancedUserInputs()
         qu_movingcoords = QU_movingcoords()
         qp_buildout = QP_buildout()
@@ -398,7 +407,7 @@ class SimulationInputs:
         wind_sensor = Sensor1(
             time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
         )
-
+        qu_topo = QU_TopoInputs(topo_type=topo_type)
         qu_simparams = QU_Simparams(
             nx=nx,
             ny=ny,
@@ -1775,7 +1784,7 @@ class QU_TopoInputs(InputFile):
     name: str = "QU_TopoInputs"
     _extension: str = ".inp"
     filename: str = "topo.dat"
-    topo_type: SerializeAsAny[TopoType] = TopoType(topo_flag=0)
+    topo_type: SerializeAsAny[TopoType] = TopoType(topo_flag=TopoSources(0))
     smoothing_method: Literal[0, 1, 2] = 2
     smoothing_passes: PositiveInt = Field(le=500, default=500)
     sor_iterations: PositiveInt = Field(le=500, default=200)
