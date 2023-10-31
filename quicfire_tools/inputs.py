@@ -158,7 +158,6 @@ class SimulationInputs:
         fuel_density: float = 0.6,
         fuel_moisture: float = 0.5,
         fuel_height: float = 1,
-        topo_path: Path | str = None,
     ):
         """
         Creates a SimulationInputs object with the minimum required inputs to
@@ -174,15 +173,16 @@ class SimulationInputs:
             Number of cells in the z-direction for the fire grid [-]
         quic_nz: int
             Number of cells in the z-direction for the QUIC grid [-]
+        quic_height: float
+            Height of the QUIC grid [m]. Determines the cell size in the z-direction
+            for the QUIC grid. Must be 3 * the height of maximum elevation and tallest fuels.
+            See utils.calculate_quic_height
         dx: float
             Cell size in the x-direction [m]
         dy: float
             Cell size in the y-direction [m]
         fire_dz: float
             Cell size in the z-direction for the fire grid [m]
-        quic_height: float
-            QUIC domain height [m]. Determines the cell size in the z-direction
-            for the QUIC grid.
         wind_speed: float
             Wind speed [m/s]
         wind_direction: float
@@ -192,6 +192,16 @@ class SimulationInputs:
             Number of seconds to run the simulation for [s]
         output_time: int
             Number of seconds between output files [s]
+        ignition_flag: int
+            Flag defining ignition type [-]. See ignitions.IgnitionSources
+        fuel_flag: int
+            Flag defning fuel input source [-]
+        fuel_density: float
+            Fuel density for uniform fuels [kg/m**3]
+        fuel_moisture: float
+            Fuel moisture for uniform fuels [-]
+        fuel_height: float
+            Surface fuel height for uniform fuels [m]
 
         Returns
         -------

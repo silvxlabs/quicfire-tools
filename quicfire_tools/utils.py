@@ -104,14 +104,24 @@ def calculate_quic_height(
     topo_name: str = "topo.dat",
 ) -> int:
     """
-    Calculate the QUIC domain height from the tallest fuels and the maximum elevation.
+    Calculate the QUIC domain height from the fire grid height and the maximum elevation.
 
     Parameters
     ----------
+    topo_height : TopoType
+        Instance of TopoType class defining topography parameters for chosen method.
+    fire_nz : int
+        Number of cells in vertical dimension of fire grid
+    fire_dz : int
+        Cell size of fire grid in vertical direction (m)
+    nx : int
+        Number of cells in x-direction of domain
+    ny : int
+        Number of cells in y-direction of domain
     topo_path : Path | str
         Path to directory where topo.dat file is saved.
-    qu_topo : QU_TopoInputs
-        QU_TpopoInputs InputFile class instance
+    topo_name : str
+        Name of Fortran .dat file definiing topography. Defaults to "topo.dat"
     """
     fire_height = fire_nz * fire_dz
     if topo_type.topo_flag.value == 0:
