@@ -68,7 +68,7 @@ class HillPassTopo(TopoType):
     def __str__(self):
         flag_line = super().__str__()
         params = (
-            f"{self.max_height}\t! m, max height\n"
+            f"\n{self.max_height}\t! m, max height\n"
             f"{self.location_param}\t! m, location parameter"
         )
         return flag_line + params
@@ -83,7 +83,7 @@ class SlopeMesaTopo(TopoType):
     def __str__(self):
         flag_line = super().__str__()
         params = (
-            f"{self.slope_axis}\t! N/A, slope axis (0 = x, 1 = y)\n"
+            f"\n{self.slope_axis}\t! N/A, slope axis (0 = x, 1 = y)\n"
             f"{self.slope_value}\t! N/A, slope val (dh/dx)\n"
             f"{self.flat_fraction}\t! N/A, fraction of domain that is flat"
         )
@@ -101,7 +101,7 @@ class CanyonTopo(TopoType):
     def __str__(self):
         flag_line = super().__str__()
         params = (
-            f"{self.x_start}\t! m, x-start of canyon on slope\n"
+            f"\n{self.x_start}\t! m, x-start of canyon on slope\n"
             f"{self.y_center}\t! m, y-center of canyon"
             f"{self.slope_value}\t! N/A, slope\n"
             f"{self.canyon_std}\t! m, std\n"
@@ -119,7 +119,7 @@ class HalfCircleTopo(TopoType):
     def __str__(self):
         flag_line = super().__str__()
         params = (
-            f"{self.x_location}\t! m, x-location\n"
+            f"\n{self.x_location}\t! m, x-location\n"
             f"{self.y_location}\t! m, y-location\n"
             f"{self.radius}\t! m, radius of half circle"
         )
@@ -133,7 +133,7 @@ class SinusoidTopo(TopoType):
 
     def __str__(self):
         flag_line = super().__str__()
-        params = f"{self.period}\t! m, mean\n" f"{self.amplitude}\t! m, amplitude"
+        params = f"\n{self.period}\t! m, mean\n" f"{self.amplitude}\t! m, amplitude"
         return flag_line + params
 
 
@@ -144,5 +144,5 @@ class CosHillTopo(TopoType):
 
     def __str__(self):
         flag_line = super().__str__()
-        params = f"{self.aspect}\t! m, mean\n" f"{self.height}\t! m, height"
+        params = f"\n{self.aspect}\t! m, mean\n" f"{self.height}\t! m, height"
         return flag_line + params
