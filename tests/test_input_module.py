@@ -923,6 +923,23 @@ class TestQUIC_fire:
     def get_test_object():
         return QUIC_fire(nz=26, sim_time=60, time_now=1695311421)
 
+    @staticmethod
+    def get_complex_test_object():
+        return QUIC_fire(
+            nz=5,
+            sim_time=60,
+            time_now=1695311421,
+            ignition_type=RectangleIgnition(
+                x_min=20, y_min=20, x_length=10, y_length=160
+            ),
+            stretch_grid_flag=1,
+            dz_array=[1, 2, 3, 4, 5],
+            fuel_flag=1,
+            fuel_density=0.5,
+            fuel_moisture=1,
+            fuel_height=0.75,
+        )
+
     def test_init(self):
         # Test default initialization
         quic_fire = self.get_test_object()
@@ -991,14 +1008,10 @@ class TestQUIC_fire:
 
     def test_to_dict(self):
         """Test the to_dict method of a QUIC_fire object."""
-        quic_fire = self.get_test_object()
-        quic_fire.ignition_type = RectangleIgnition(
-            x_min=20, y_min=20, x_length=10, y_length=160
-        )
+        quic_fire = self.get_complex_test_object()
         result_dict = quic_fire.to_dict()
 
         assert result_dict["nz"] == quic_fire.nz
-        # TODO: revisit this one
         assert result_dict["time_now"] == quic_fire.time_now
         assert result_dict["sim_time"] == quic_fire.sim_time
         assert result_dict["fire_flag"] == quic_fire.fire_flag
@@ -1050,9 +1063,128 @@ class TestQUIC_fire:
         assert result_dict["ignition_lines"] == quic_fire.ignition_lines
         assert result_dict["fuel_lines"] == quic_fire.fuel_lines
 
-    # TODO: Add test for from_dict
-    # TODO: Add test for to_docs
-    # TODO: Add test for to_file
+    def test_from_dict(self):
+        quic_fire = self.get_test_object()
+        test_dict = quic_fire.to_dict()
+        test_object = QUIC_fire.from_dict(test_dict)
+        assert test_object == quic_fire
+
+        quic_fire = self.get_complex_test_object()
+        test_dict = quic_fire.to_dict()
+        test_object = QUIC_fire.from_dict(test_dict)
+        assert test_object == quic_fire
+
+    # TODO: Clarify to_docs test
+    # def test_to_docs(self):
+    #     quic_fire = self.get_test_object()
+    #     result_dict = quic_fire.to_dict()
+    #     result_docs = quic_fire.get_documentation()
+    #     for key in result_dict:
+    #         assert key in result_docs
+    #     for key in result_docs:
+    #         assert key in result_dict
+
+    #     quic_fire = self.get_complex_test_object()
+    #     result_dict = quic_fire.to_dict()
+    #     result_docs = quic_fire.get_documentation()
+    #     for key in result_dict:
+    #         assert key in result_docs
+    #     for key in result_docs:
+    #         assert key in result_dict
+
+    def test_to_file(self):
+        quic_fire = self.get_complex_test_object()
+        quic_fire.to_file("tmp/")
+        with open("tmp/QUIC_fire.inp", "r") as file:
+            lines = file.readlines()
+
+        assert quic_fire.fire_flag == int(lines[0].strip().split("!")[0])
+        assert quic_fire.random_seed == int(lines[1].strip().split("!")[0])
+        assert quic_fire.time_now == int(lines[3].strip().split("!")[0])
+        assert quic_fire.sim_time == int(lines[4].strip().split("!")[0])
+        assert quic_fire.fire_time_step == int(lines[5].strip().split("!")[0])
+        assert quic_fire.quic_time_step == int(lines[6].strip().split("!")[0])
+        assert quic_fire.out_time_fire == int(lines[7].strip().split("!")[0])
+        assert quic_fire.out_time_wind == int(lines[8].strip().split("!")[0])
+        assert quic_fire.out_time_emis_rad == int(lines[9].strip().split("!")[0])
+        assert quic_fire.out_time_wind_avg == int(lines[10].strip().split("!")[0])
+        assert quic_fire.nz == int(lines[12].strip().split("!")[0])
+        assert quic_fire.stretch_grid_flag == int(lines[13].strip().split("!")[0])
+        dz_array = []
+        for i in range(14, 14 + len(quic_fire.dz_array)):
+            dz_array.append(float(lines[i].strip()))
+        assert quic_fire.dz_array == dz_array
+        current_line = 15 + len(quic_fire.dz_array)
+        current_line += 4  # skip unused lines
+        current_line += 1  # header
+        assert quic_fire.fuel_flag == int(lines[current_line].strip().split("!")[0])
+        assert quic_fire.fuel_density == float(lines[current_line + 1].strip())
+        assert quic_fire.fuel_moisture == float(lines[current_line + 3].strip())
+        assert quic_fire.fuel_height == float(lines[current_line + 5].strip())
+        current_line += 6
+        current_line += 1  # header
+        ignition_flag = int(lines[current_line].strip().split("!")[0])
+        ignition_params = []
+        current_line += 1
+        for i in range(current_line, current_line + 4):
+            ignition_params.append(float(lines[i].strip().split("!")[0]))
+        x_min, y_min, x_length, y_length = ignition_params
+        assert quic_fire.ignition_type == RectangleIgnition(
+            ignition_flag=ignition_flag,
+            x_min=x_min,
+            y_min=y_min,
+            x_length=x_length,
+            y_length=y_length,
+        )
+        current_line += 4
+        assert quic_fire.ignitions_per_cell == int(
+            lines[current_line].strip().split("!")[0]
+        )
+        current_line += 1
+        current_line += 1  # header
+        assert quic_fire.firebrand_flag == int(
+            lines[current_line].strip().split("!")[0]
+        )
+        current_line += 1
+        assert quic_fire.eng_to_atm_out == int(
+            lines[current_line + 1].strip().split("!")[0]
+        )
+        assert quic_fire.react_rate_out == int(
+            lines[current_line + 2].strip().split("!")[0]
+        )
+        assert quic_fire.fuel_dens_out == int(
+            lines[current_line + 3].strip().split("!")[0]
+        )
+        assert quic_fire.QF_wind_out == int(
+            lines[current_line + 4].strip().split("!")[0]
+        )
+        assert quic_fire.QU_wind_inst_out == int(
+            lines[current_line + 5].strip().split("!")[0]
+        )
+        assert quic_fire.QU_wind_avg_out == int(
+            lines[current_line + 6].strip().split("!")[0]
+        )
+        assert quic_fire.fuel_moist_out == int(
+            lines[current_line + 8].strip().split("!")[0]
+        )
+        assert quic_fire.mass_burnt_out == int(
+            lines[current_line + 9].strip().split("!")[0]
+        )
+        assert quic_fire.firebrand_out == int(
+            lines[current_line + 10].strip().split("!")[0]
+        )
+        assert quic_fire.emissions_out == int(
+            lines[current_line + 11].strip().split("!")[0]
+        )
+        assert quic_fire.radiation_out == int(
+            lines[current_line + 12].strip().split("!")[0]
+        )
+        assert quic_fire.intensity_out == int(
+            lines[current_line + 13].strip().split("!")[0]
+        )
+        assert quic_fire.auto_kill == int(
+            lines[current_line + 15].strip().split("!")[0]
+        )
 
     def test_from_file(self):
         """Test initializing a class from a QUIC_fire.inp

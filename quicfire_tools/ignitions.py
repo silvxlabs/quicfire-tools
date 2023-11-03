@@ -40,7 +40,7 @@ class RectangleIgnition(IgnitionType):
     def __str__(self):
         flag_line = super().__str__()
         locations = (
-            f"{self.x_min}\t! South-west corner in the x-direction\n"
+            f"\n{self.x_min}\t! South-west corner in the x-direction\n"
             f"{self.y_min}\t! South-west corner in the y-direction\n"
             f"{self.x_length}\t! Length in the x-direction\n"
             f"{self.y_length}\t! Length in the y-direction"
@@ -60,7 +60,7 @@ class SquareRingIgnition(IgnitionType):
     def __str__(self):
         flag_line = super().__str__()
         locations = (
-            f"{self.x_min}\t! South-west corner in the x-direction\n"
+            f"\n{self.x_min}\t! South-west corner in the x-direction\n"
             f"{self.y_min}\t! South-west corner in the y-direction\n"
             f"{self.x_length}\t! Length in the x-direction\n"
             f"{self.y_length}\t! Length in the y-direction\n"
@@ -81,10 +81,36 @@ class CircularRingIgnition(IgnitionType):
     def __str__(self):
         flag_line = super().__str__()
         locations = (
-            f"{self.x_min}\t! South-west corner in the x-direction\n"
+            f"\n{self.x_min}\t! South-west corner in the x-direction\n"
             f"{self.y_min}\t! South-west corner in the y-direction\n"
             f"{self.x_length}\t! Length in the x-direction\n"
             f"{self.y_length}\t! Length in the y-direction\n"
             f"{self.ring_width}\t! Width of the ring"
         )
         return flag_line + locations
+
+
+def default_line_ignition(nx, ny, wind_direction):
+    width = 10
+    if 45 <= wind_direction < 135:
+        x_min = (0.9 * (nx * 2)) - width
+        y_min = 0.1 * (ny * 2)
+        x_length = width
+        y_length = 0.8 * (nx * 2)
+    if 135 <= wind_direction < 225:
+        x_min = 0.1 * (nx * 2)
+        y_min = 0.1 * (ny * 2)
+        x_length = 0.8 * (nx * 2)
+        y_length = width
+    if 225 <= wind_direction < 315:
+        x_min = 0.1 * (nx * 2)
+        y_min = 0.1 * (ny * 2)
+        x_length = width
+        y_length = 0.8 * (nx * 2)
+    else:
+        x_min = 0.1 * (ny * 2)
+        y_min = (0.9 * (nx * 2)) - width
+        x_length = 0.8 * (nx * 2)
+        y_length = width
+
+    return x_min, y_min, x_length, y_length
