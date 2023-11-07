@@ -268,7 +268,6 @@ class SimulationInputs:
         dy: float = 2,
         fire_dz: float = 1,
         output_time: int = 30,
-        ignition_flag: int = 1,
         topo_flag: int = 0,
         fuel_flag: int = 1,
         fuel_density: float = 0.6,
@@ -355,7 +354,6 @@ class SimulationInputs:
                 wind_direction,
                 simulation_time,
                 output_time,
-                ignition_flag,
                 ignition_type,
                 topo_type,
                 fuel_flag,
@@ -421,8 +419,6 @@ class SimulationInputs:
             Cell size in the z-direction for the fire grid [m]
         output_time: int
             Number of seconds between output files [s]
-        ignition_flag: int
-            Flag defining ignition type [-]. See ignitions.IgnitionSources
         fuel_flag: int
             Flag defning fuel input source [-]
         fuel_density: float
@@ -456,7 +452,6 @@ class SimulationInputs:
                 wind_direction,
                 simulation_time,
                 output_time,
-                ignition_flag,
                 ignition_type,
                 topo_type,
                 fuel_flag,
@@ -479,7 +474,6 @@ class SimulationInputs:
         wind_direction: float,
         simulation_time: int,
         output_time: int,
-        ignition_flag: int,
         ignition_type: IgnitionType,
         topo_type: TopoType,
         fuel_flag: int,
@@ -505,7 +499,6 @@ class SimulationInputs:
             nz=fire_nz,
             time_now=start_time,
             sim_time=simulation_time,
-            ignition_flag=ignition_flag,
             ignition_type=ignition_type,
             fuel_flag=fuel_flag,
             fuel_density=fuel_density,

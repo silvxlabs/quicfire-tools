@@ -32,10 +32,10 @@ class IgnitionType(BaseModel):
 
 class RectangleIgnition(IgnitionType):
     ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(1)
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
+    x_min: int
+    y_min: int
+    x_length: int
+    y_length: int
 
     def __str__(self):
         flag_line = super().__str__()
@@ -50,12 +50,12 @@ class RectangleIgnition(IgnitionType):
 
 class SquareRingIgnition(IgnitionType):
     ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(2)
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
-    x_width: float
-    y_width: float
+    x_min: int
+    y_min: int
+    x_length: int
+    y_length: int
+    x_width: int
+    y_width: int
 
     def __str__(self):
         flag_line = super().__str__()
@@ -72,11 +72,11 @@ class SquareRingIgnition(IgnitionType):
 
 class CircularRingIgnition(IgnitionType):
     ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(3)
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
-    ring_width: float
+    x_min: int
+    y_min: int
+    x_length: int
+    y_length: int
+    ring_width: int
 
     def __str__(self):
         flag_line = super().__str__()
