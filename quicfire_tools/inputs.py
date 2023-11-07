@@ -1255,12 +1255,12 @@ class QUIC_fire(InputFile):
         Output flag [0, 1]: compressed array reaction rate (fire grid)
     fuel_dens_out : int
         Output flag [0, 1]: compressed array fuel density (fire grid)
-    QF_wind_out : int
+    qf_wind_out : int
         Output flag [0, 1]: gridded wind (u,v,w,sigma) (3D fire grid)
-    QU_wind_inst_out : int
+    qu_wind_inst_out : int
         Output flag [0, 1]: gridded QU winds with fire effects, instantaneous
         (QUIC-URB grid)
-    QU_wind_avg_out : int
+    qu_wind_avg_out : int
         Output flag [0, 1]: gridded QU winds with fire effects, averaged
         (QUIC-URB grid)
     fuel_moist_out : int
@@ -1312,14 +1312,14 @@ class QUIC_fire(InputFile):
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
     # Output flags
-    eng_to_atm_out: Literal[0, 1] = 1
+    eng_to_atm_out: Literal[0, 1] = 0
     react_rate_out: Literal[0, 1] = 0
     fuel_dens_out: Literal[0, 1] = 1
-    QF_wind_out: Literal[0, 1] = 1
-    QU_wind_inst_out: Literal[0, 1] = 1
-    QU_wind_avg_out: Literal[0, 1] = 0
-    fuel_moist_out: Literal[0, 1] = 1
-    mass_burnt_out: Literal[0, 1] = 1
+    qf_wind_out: Literal[0, 1] = 1
+    qu_wind_inst_out: Literal[0, 1] = 0
+    qu_wind_avg_out: Literal[0, 1] = 0
+    fuel_moist_out: Literal[0, 1] = 0
+    mass_burnt_out: Literal[0, 1] = 0
     firebrand_out: Literal[0, 1] = 0
     emissions_out: Literal[0, 1, 2, 3, 4, 5] = 0
     radiation_out: Literal[0, 1] = 0
@@ -1521,9 +1521,9 @@ class QUIC_fire(InputFile):
         eng_to_atm_out = int(lines[current_line + 1].strip().split("!")[0])
         react_rate_out = int(lines[current_line + 2].strip().split("!")[0])
         fuel_dens_out = int(lines[current_line + 3].strip().split("!")[0])
-        QF_wind_out = int(lines[current_line + 4].strip().split("!")[0])
-        QU_wind_inst_out = int(lines[current_line + 5].strip().split("!")[0])
-        QU_wind_avg_out = int(lines[current_line + 6].strip().split("!")[0])
+        qf_wind_out = int(lines[current_line + 4].strip().split("!")[0])
+        qu_wind_inst_out = int(lines[current_line + 5].strip().split("!")[0])
+        qu_wind_avg_out = int(lines[current_line + 6].strip().split("!")[0])
         # ! Output plume trajectories
         fuel_moist_out = int(lines[current_line + 8].strip().split("!")[0])
         mass_burnt_out = int(lines[current_line + 9].strip().split("!")[0])
@@ -1559,9 +1559,9 @@ class QUIC_fire(InputFile):
             eng_to_atm_out=eng_to_atm_out,
             react_rate_out=react_rate_out,
             fuel_dens_out=fuel_dens_out,
-            QF_wind_out=QF_wind_out,
-            QU_wind_inst_out=QU_wind_inst_out,
-            QU_wind_avg_out=QU_wind_avg_out,
+            qf_wind_out=qf_wind_out,
+            qu_wind_inst_out=qu_wind_inst_out,
+            qu_wind_avg_out=qu_wind_avg_out,
             fuel_moist_out=fuel_moist_out,
             mass_burnt_out=mass_burnt_out,
             firebrand_out=firebrand_out,

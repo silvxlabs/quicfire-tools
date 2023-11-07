@@ -192,21 +192,21 @@
         "units": "[-]",
         "can_be_modified": "Y"
     },
-    "QF_wind_out": {
+    "qf_wind_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
         "description": "Flag to output (1) or not (0) the gridded wind components (u,v,w) for the fire grid. File names: winduXXXXX.bin = x-component; windvXXXXX.bin = y-component; windwXXXXX.bin = z-component",
         "units": "[-]",
         "can_be_modified": "Y"
     },
-    "QU_wind_inst_out": {
+    "qu_wind_inst_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
         "description": "Flag to output (1) or not (0) the gridded wind components (u,v,w) for the QUIC-URB grid. File names: qf_winduXXXXX.bin = x-component; qf_windvXXXXX.bin = y-component; qu_windwXXXXX.bin = z-component; qu_wplumeXXXXX.bin = w field from buoyant plumes, before mass consistency",
         "units": "[-]",
         "can_be_modified": "Y"
     },
-    "QU_wind_avg_out": {
+    "qu_wind_avg_out": {
         "values_accepted": "[0 1]",
         "tested_values_range": "0, 1",
         "description": "Flag to output (1) or not (0) the gridded average wind components (u,v,w) for the QUIC-URB grid. File names: qf_windu_aveXXXXX.bin = x-component; qu_windv_aveXXXXX.bin = y-component; qu_windw_aveXXXXX.bin = z-component. Set to 1 only if QUIC-Smoke is run for PM2.5 and CO plume transport and dispersion simulations",

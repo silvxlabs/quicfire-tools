@@ -1048,9 +1048,9 @@ class TestQUIC_fire:
         assert result_dict["eng_to_atm_out"] == quic_fire.eng_to_atm_out
         assert result_dict["react_rate_out"] == quic_fire.react_rate_out
         assert result_dict["fuel_dens_out"] == quic_fire.fuel_dens_out
-        assert result_dict["QF_wind_out"] == quic_fire.QF_wind_out
-        assert result_dict["QU_wind_inst_out"] == quic_fire.QU_wind_inst_out
-        assert result_dict["QU_wind_avg_out"] == quic_fire.QU_wind_avg_out
+        assert result_dict["qf_wind_out"] == quic_fire.qf_wind_out
+        assert result_dict["qu_wind_inst_out"] == quic_fire.qu_wind_inst_out
+        assert result_dict["qu_wind_avg_out"] == quic_fire.qu_wind_avg_out
         assert result_dict["fuel_moist_out"] == quic_fire.fuel_moist_out
         assert result_dict["mass_burnt_out"] == quic_fire.mass_burnt_out
         assert result_dict["firebrand_out"] == quic_fire.firebrand_out
@@ -1155,13 +1155,13 @@ class TestQUIC_fire:
         assert quic_fire.fuel_dens_out == int(
             lines[current_line + 3].strip().split("!")[0]
         )
-        assert quic_fire.QF_wind_out == int(
+        assert quic_fire.qf_wind_out == int(
             lines[current_line + 4].strip().split("!")[0]
         )
-        assert quic_fire.QU_wind_inst_out == int(
+        assert quic_fire.qu_wind_inst_out == int(
             lines[current_line + 5].strip().split("!")[0]
         )
-        assert quic_fire.QU_wind_avg_out == int(
+        assert quic_fire.qu_wind_avg_out == int(
             lines[current_line + 6].strip().split("!")[0]
         )
         assert quic_fire.fuel_moist_out == int(
