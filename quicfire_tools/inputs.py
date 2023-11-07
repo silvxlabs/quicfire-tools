@@ -141,19 +141,132 @@ class SimulationInputs:
                 fout.write(ftemp.read())
 
     @classmethod
-    def idealized_domain(
+    def setup_simulation(
         cls,
-        nx: int = 100,
-        ny: int = 100,
+        nx: int,
+        ny: int,
+        fire_nz: int,
+        simulation_time: int,
+        wind_speed: float,
+        wind_direction: float,
+        fuel_flag: int,
+        ignition_type: IgnitionType,
+        topo_type: TopoType,
+        fuel_density: float = None,
+        fuel_moisture: float = None,
+        fuel_height: float = None,
+        quic_nz: int = 22,
+        quic_height: float = 300,
+        dx: float = 2,
+        dy: float = 2,
+        fire_dz: float = 1,
+        output_time: int = 30,
+    ):
+        """
+        Creates a SimulationInputs object to build a QUIC-Fire input file deck
+        and run a simulation.
+
+        Parameters
+        ----------
+        nx: int
+            Number of cells in the x-direction [-]
+        ny: int
+            Number of cells in the y-direction [-]
+        fire_nz: int
+            Number of cells in the z-direction for the fire grid [-]
+        simulation_time: int
+            Number of seconds to run the simulation for [s]
+        wind_speed: float
+            Wind speed [m/s]
+        wind_direction: float
+            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
+            be in range [0, 360).
+        ignition_type: IgnitionType
+            Ignition type specified as an IgnitionsType class from ignitions.py
+            1 = rectangle
+            2 = square ring
+            3 = circular ring
+            6 = ignite.dat (Firetec file)
+        topo_type : TopoType
+            Topography type specified as a TopoType class from topography.py
+            0 = no terrain file provided, QUIC-Fire is run with flat terrain
+            1 = Gaussian hill
+            2 = hill pass
+            3 = slope mesa
+            4 = canyon
+            5 = custom
+            6 = half circle
+            7 = sinusoid
+            8 = cos hill
+            9 = terrain is provided via QP_elevation.bin (see Section 2.7)
+            10 = terrain is provided via terrainOutput.txt
+            11 = terrain.dat (firetec)
+        fuel_flag: int
+            Flag defning fuel input source [-]
+        quic_nz: int
+            Number of cells in the z-direction for the QUIC grid [-]
+        quic_height: float
+            Height of the QUIC grid [m]. Determines the cell size in the z-direction
+            for the QUIC grid. Must be 3 * the height of maximum elevation and tallest fuels.
+            See utils.calculate_quic_height
+        dx: float
+            Cell size in the x-direction [m]
+        dy: float
+            Cell size in the y-direction [m]
+        fire_dz: float
+            Cell size in the z-direction for the fire grid [m]
+        output_time: int
+            Number of seconds between output files [s]
+        fuel_density: float
+            Fuel density for uniform fuels [kg/m**3]
+        fuel_moisture: float
+            Fuel moisture for uniform fuels [-]
+        fuel_height: float
+            Surface fuel height for uniform fuels [m]
+
+        Returns
+        -------
+        SimulationInputs
+            Class containing the inputs to build a QUIC-Fire
+            input file deck and run a simulation.
+        """
+        return cls(
+            cls.initialize_inputs(
+                nx,
+                ny,
+                fire_nz,
+                quic_nz,
+                quic_height,
+                dx,
+                dy,
+                fire_dz,
+                wind_speed,
+                wind_direction,
+                simulation_time,
+                output_time,
+                ignition_type,
+                topo_type,
+                fuel_flag,
+                fuel_density,
+                fuel_moisture,
+                fuel_height,
+            )
+        )
+
+    @classmethod
+    def setup_simple_simulation(
+        cls,
+        nx: int,
+        ny: int,
+        simulation_time: int,
+        wind_speed: float,
+        wind_direction: float,
         fire_nz: int = 1,
         quic_nz: int = 22,
         quic_height: float = 300,
         dx: float = 2,
         dy: float = 2,
         fire_dz: float = 1,
-        wind_speed: float = 5,
-        wind_direction: float = 270,
-        simulation_time: int = 60,
         output_time: int = 30,
         ignition_flag: int = 1,
         topo_flag: int = 0,
@@ -173,6 +286,13 @@ class SimulationInputs:
             Number of cells in the x-direction [-]
         ny: int
             Number of cells in the y-direction [-]
+        simulation_time: int
+            Number of seconds to run the simulation for [s]
+        wind_speed: float
+            Wind speed [m/s]
+        wind_direction: float
+            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
+            be in range [0, 360).
         fire_nz: int
             Number of cells in the z-direction for the fire grid [-]
         quic_nz: int
@@ -187,13 +307,6 @@ class SimulationInputs:
             Cell size in the y-direction [m]
         fire_dz: float
             Cell size in the z-direction for the fire grid [m]
-        wind_speed: float
-            Wind speed [m/s]
-        wind_direction: float
-            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
-            be in range [0, 360).
-        simulation_time: int
-            Number of seconds to run the simulation for [s]
         output_time: int
             Number of seconds between output files [s]
         ignition_flag: int
@@ -229,7 +342,7 @@ class SimulationInputs:
         topo_type = TopoType(topo_flag=TopoSources(topo_flag))
 
         return cls(
-            cls.setup_simulation(
+            cls.initialize_inputs(
                 nx,
                 ny,
                 fire_nz,
@@ -253,19 +366,19 @@ class SimulationInputs:
         )
 
     @classmethod
-    def custom_domain(
+    def setup_custom_simulation(
         cls,
         nx: int,
         ny: int,
         fire_nz: int,
+        simulation_time: int,
+        wind_speed: float,
+        wind_direction: float,
         quic_nz: int = 22,
         quic_height: float = 300,
         dx: float = 2,
         dy: float = 2,
         fire_dz: float = 1,
-        wind_speed: float = 5,
-        wind_direction: float = 270,
-        simulation_time: int = 60,
         output_time: int = 30,
         ignition_flag: int = 6,
         topo_flag: int = 5,
@@ -287,6 +400,13 @@ class SimulationInputs:
             Number of cells in the y-direction [-]
         fire_nz: int
             Number of cells in the z-direction for the fire grid [-]
+        simulation_time: int
+            Number of seconds to run the simulation for [s]
+        wind_speed: float
+            Wind speed [m/s]
+        wind_direction: float
+            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
+            be in range [0, 360).
         quic_nz: int
             Number of cells in the z-direction for the QUIC grid [-]
         quic_height: float
@@ -299,13 +419,6 @@ class SimulationInputs:
             Cell size in the y-direction [m]
         fire_dz: float
             Cell size in the z-direction for the fire grid [m]
-        wind_speed: float
-            Wind speed [m/s]
-        wind_direction: float
-            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
-            be in range [0, 360).
-        simulation_time: int
-            Number of seconds to run the simulation for [s]
         output_time: int
             Number of seconds between output files [s]
         ignition_flag: int
@@ -330,7 +443,7 @@ class SimulationInputs:
         topo_type = TopoType(topo_flag=TopoSources(topo_flag))
 
         return cls(
-            cls.setup_simulation(
+            cls.initialize_inputs(
                 nx,
                 ny,
                 fire_nz,
@@ -353,7 +466,7 @@ class SimulationInputs:
             )
         )
 
-    def setup_simulation(
+    def initialize_inputs(
         nx: int,
         ny: int,
         fire_nz: int,
@@ -1238,7 +1351,11 @@ class QUIC_fire(InputFile):
     fuel_height : PositiveFloat
         Fuel height of surface layer (m)
     ignition_type: IgnitionType
-        Ignitions shape or source. See ignitions module.
+        Ignition type specified as an IgnitionsType class from ignitions.py
+        1 = rectangle
+        2 = square ring
+        3 = circular ring
+        6 = ignite.dat (Firetec file)
     ignitions_per_cell: int
         Number of ignition per cell of the fire model. Recommended max value
         of 100
