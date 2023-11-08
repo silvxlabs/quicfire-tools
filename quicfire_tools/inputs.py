@@ -141,21 +141,133 @@ class SimulationInputs:
                 fout.write(ftemp.read())
 
     @classmethod
-    def idealized_domain(
+    def setup_simulation(
         cls,
-        nx: int = 100,
-        ny: int = 100,
+        nx: int,
+        ny: int,
+        fire_nz: int,
+        simulation_time: int,
+        wind_speed: float,
+        wind_direction: float,
+        fuel_flag: int,
+        ignition_type: IgnitionType,
+        topo_type: TopoType,
+        fuel_density: float = None,
+        fuel_moisture: float = None,
+        fuel_height: float = None,
+        quic_nz: int = 22,
+        quic_height: float = 300,
+        dx: float = 2,
+        dy: float = 2,
+        fire_dz: float = 1,
+        output_time: int = 30,
+    ):
+        """
+        Creates a SimulationInputs object to build a QUIC-Fire input file deck
+        and run a simulation.
+
+        Parameters
+        ----------
+        nx: int
+            Number of cells in the x-direction [-]
+        ny: int
+            Number of cells in the y-direction [-]
+        fire_nz: int
+            Number of cells in the z-direction for the fire grid [-]
+        simulation_time: int
+            Number of seconds to run the simulation for [s]
+        wind_speed: float
+            Wind speed [m/s]
+        wind_direction: float
+            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
+            be in range [0, 360).
+        ignition_type: IgnitionType
+            Ignition type specified as an IgnitionsType class from ignitions.py
+            1 = rectangle
+            2 = square ring
+            3 = circular ring
+            6 = ignite.dat (Firetec file)
+        topo_type : TopoType
+            Topography type specified as a TopoType class from topography.py
+            0 = no terrain file provided, QUIC-Fire is run with flat terrain
+            1 = Gaussian hill
+            2 = hill pass
+            3 = slope mesa
+            4 = canyon
+            5 = custom
+            6 = half circle
+            7 = sinusoid
+            8 = cos hill
+            9 = terrain is provided via QP_elevation.bin (see Section 2.7)
+            10 = terrain is provided via terrainOutput.txt
+            11 = terrain.dat (firetec)
+        fuel_flag: int
+            Flag defning fuel input source [-]
+        quic_nz: int
+            Number of cells in the z-direction for the QUIC grid [-]
+        quic_height: float
+            Height of the QUIC grid [m]. Determines the cell size in the z-direction
+            for the QUIC grid. Must be 3 * the height of maximum elevation and tallest fuels.
+            See utils.calculate_quic_height
+        dx: float
+            Cell size in the x-direction [m]
+        dy: float
+            Cell size in the y-direction [m]
+        fire_dz: float
+            Cell size in the z-direction for the fire grid [m]
+        output_time: int
+            Number of seconds between output files [s]
+        fuel_density: float
+            Fuel density for uniform fuels [kg/m**3]
+        fuel_moisture: float
+            Fuel moisture for uniform fuels [-]
+        fuel_height: float
+            Surface fuel height for uniform fuels [m]
+
+        Returns
+        -------
+        SimulationInputs
+            Class containing the inputs to build a QUIC-Fire
+            input file deck and run a simulation.
+        """
+        return cls(
+            cls.initialize_inputs(
+                nx,
+                ny,
+                fire_nz,
+                quic_nz,
+                quic_height,
+                dx,
+                dy,
+                fire_dz,
+                wind_speed,
+                wind_direction,
+                simulation_time,
+                output_time,
+                ignition_type,
+                topo_type,
+                fuel_flag,
+                fuel_density,
+                fuel_moisture,
+                fuel_height,
+            )
+        )
+
+    @classmethod
+    def setup_simple_simulation(
+        cls,
+        nx: int,
+        ny: int,
+        simulation_time: int,
+        wind_speed: float,
+        wind_direction: float,
         fire_nz: int = 1,
         quic_nz: int = 22,
         quic_height: float = 300,
         dx: float = 2,
         dy: float = 2,
         fire_dz: float = 1,
-        wind_speed: float = 5,
-        wind_direction: float = 270,
-        simulation_time: int = 60,
         output_time: int = 30,
-        ignition_flag: int = 1,
         topo_flag: int = 0,
         fuel_flag: int = 1,
         fuel_density: float = 0.6,
@@ -173,6 +285,13 @@ class SimulationInputs:
             Number of cells in the x-direction [-]
         ny: int
             Number of cells in the y-direction [-]
+        simulation_time: int
+            Number of seconds to run the simulation for [s]
+        wind_speed: float
+            Wind speed [m/s]
+        wind_direction: float
+            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
+            be in range [0, 360).
         fire_nz: int
             Number of cells in the z-direction for the fire grid [-]
         quic_nz: int
@@ -187,13 +306,6 @@ class SimulationInputs:
             Cell size in the y-direction [m]
         fire_dz: float
             Cell size in the z-direction for the fire grid [m]
-        wind_speed: float
-            Wind speed [m/s]
-        wind_direction: float
-            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
-            be in range [0, 360).
-        simulation_time: int
-            Number of seconds to run the simulation for [s]
         output_time: int
             Number of seconds between output files [s]
         ignition_flag: int
@@ -229,7 +341,7 @@ class SimulationInputs:
         topo_type = TopoType(topo_flag=TopoSources(topo_flag))
 
         return cls(
-            cls.setup_simulation(
+            cls.initialize_inputs(
                 nx,
                 ny,
                 fire_nz,
@@ -242,7 +354,6 @@ class SimulationInputs:
                 wind_direction,
                 simulation_time,
                 output_time,
-                ignition_flag,
                 ignition_type,
                 topo_type,
                 fuel_flag,
@@ -253,19 +364,19 @@ class SimulationInputs:
         )
 
     @classmethod
-    def custom_domain(
+    def setup_custom_simulation(
         cls,
         nx: int,
         ny: int,
         fire_nz: int,
+        simulation_time: int,
+        wind_speed: float,
+        wind_direction: float,
         quic_nz: int = 22,
         quic_height: float = 300,
         dx: float = 2,
         dy: float = 2,
         fire_dz: float = 1,
-        wind_speed: float = 5,
-        wind_direction: float = 270,
-        simulation_time: int = 60,
         output_time: int = 30,
         ignition_flag: int = 6,
         topo_flag: int = 5,
@@ -287,6 +398,13 @@ class SimulationInputs:
             Number of cells in the y-direction [-]
         fire_nz: int
             Number of cells in the z-direction for the fire grid [-]
+        simulation_time: int
+            Number of seconds to run the simulation for [s]
+        wind_speed: float
+            Wind speed [m/s]
+        wind_direction: float
+            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
+            be in range [0, 360).
         quic_nz: int
             Number of cells in the z-direction for the QUIC grid [-]
         quic_height: float
@@ -299,17 +417,8 @@ class SimulationInputs:
             Cell size in the y-direction [m]
         fire_dz: float
             Cell size in the z-direction for the fire grid [m]
-        wind_speed: float
-            Wind speed [m/s]
-        wind_direction: float
-            Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
-            be in range [0, 360).
-        simulation_time: int
-            Number of seconds to run the simulation for [s]
         output_time: int
             Number of seconds between output files [s]
-        ignition_flag: int
-            Flag defining ignition type [-]. See ignitions.IgnitionSources
         fuel_flag: int
             Flag defning fuel input source [-]
         fuel_density: float
@@ -330,7 +439,7 @@ class SimulationInputs:
         topo_type = TopoType(topo_flag=TopoSources(topo_flag))
 
         return cls(
-            cls.setup_simulation(
+            cls.initialize_inputs(
                 nx,
                 ny,
                 fire_nz,
@@ -343,7 +452,6 @@ class SimulationInputs:
                 wind_direction,
                 simulation_time,
                 output_time,
-                ignition_flag,
                 ignition_type,
                 topo_type,
                 fuel_flag,
@@ -353,7 +461,7 @@ class SimulationInputs:
             )
         )
 
-    def setup_simulation(
+    def initialize_inputs(
         nx: int,
         ny: int,
         fire_nz: int,
@@ -366,7 +474,6 @@ class SimulationInputs:
         wind_direction: float,
         simulation_time: int,
         output_time: int,
-        ignition_flag: int,
         ignition_type: IgnitionType,
         topo_type: TopoType,
         fuel_flag: int,
@@ -392,7 +499,6 @@ class SimulationInputs:
             nz=fire_nz,
             time_now=start_time,
             sim_time=simulation_time,
-            ignition_flag=ignition_flag,
             ignition_type=ignition_type,
             fuel_flag=fuel_flag,
             fuel_density=fuel_density,
@@ -1238,7 +1344,11 @@ class QUIC_fire(InputFile):
     fuel_height : PositiveFloat
         Fuel height of surface layer (m)
     ignition_type: IgnitionType
-        Ignitions shape or source. See ignitions module.
+        Ignition type specified as an IgnitionsType class from ignitions.py
+        1 = rectangle
+        2 = square ring
+        3 = circular ring
+        6 = ignite.dat (Firetec file)
     ignitions_per_cell: int
         Number of ignition per cell of the fire model. Recommended max value
         of 100
@@ -1255,12 +1365,12 @@ class QUIC_fire(InputFile):
         Output flag [0, 1]: compressed array reaction rate (fire grid)
     fuel_dens_out : int
         Output flag [0, 1]: compressed array fuel density (fire grid)
-    QF_wind_out : int
+    qf_wind_out : int
         Output flag [0, 1]: gridded wind (u,v,w,sigma) (3D fire grid)
-    QU_wind_inst_out : int
+    qu_wind_inst_out : int
         Output flag [0, 1]: gridded QU winds with fire effects, instantaneous
         (QUIC-URB grid)
-    QU_wind_avg_out : int
+    qu_wind_avg_out : int
         Output flag [0, 1]: gridded QU winds with fire effects, averaged
         (QUIC-URB grid)
     fuel_moist_out : int
@@ -1312,14 +1422,14 @@ class QUIC_fire(InputFile):
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
     # Output flags
-    eng_to_atm_out: Literal[0, 1] = 1
+    eng_to_atm_out: Literal[0, 1] = 0
     react_rate_out: Literal[0, 1] = 0
     fuel_dens_out: Literal[0, 1] = 1
-    QF_wind_out: Literal[0, 1] = 1
-    QU_wind_inst_out: Literal[0, 1] = 1
-    QU_wind_avg_out: Literal[0, 1] = 0
-    fuel_moist_out: Literal[0, 1] = 1
-    mass_burnt_out: Literal[0, 1] = 1
+    qf_wind_out: Literal[0, 1] = 1
+    qu_wind_inst_out: Literal[0, 1] = 0
+    qu_wind_avg_out: Literal[0, 1] = 0
+    fuel_moist_out: Literal[0, 1] = 0
+    mass_burnt_out: Literal[0, 1] = 0
     firebrand_out: Literal[0, 1] = 0
     emissions_out: Literal[0, 1, 2, 3, 4, 5] = 0
     radiation_out: Literal[0, 1] = 0
@@ -1521,9 +1631,9 @@ class QUIC_fire(InputFile):
         eng_to_atm_out = int(lines[current_line + 1].strip().split("!")[0])
         react_rate_out = int(lines[current_line + 2].strip().split("!")[0])
         fuel_dens_out = int(lines[current_line + 3].strip().split("!")[0])
-        QF_wind_out = int(lines[current_line + 4].strip().split("!")[0])
-        QU_wind_inst_out = int(lines[current_line + 5].strip().split("!")[0])
-        QU_wind_avg_out = int(lines[current_line + 6].strip().split("!")[0])
+        qf_wind_out = int(lines[current_line + 4].strip().split("!")[0])
+        qu_wind_inst_out = int(lines[current_line + 5].strip().split("!")[0])
+        qu_wind_avg_out = int(lines[current_line + 6].strip().split("!")[0])
         # ! Output plume trajectories
         fuel_moist_out = int(lines[current_line + 8].strip().split("!")[0])
         mass_burnt_out = int(lines[current_line + 9].strip().split("!")[0])
@@ -1559,9 +1669,9 @@ class QUIC_fire(InputFile):
             eng_to_atm_out=eng_to_atm_out,
             react_rate_out=react_rate_out,
             fuel_dens_out=fuel_dens_out,
-            QF_wind_out=QF_wind_out,
-            QU_wind_inst_out=QU_wind_inst_out,
-            QU_wind_avg_out=QU_wind_avg_out,
+            qf_wind_out=qf_wind_out,
+            qu_wind_inst_out=qu_wind_inst_out,
+            qu_wind_avg_out=qu_wind_avg_out,
             fuel_moist_out=fuel_moist_out,
             mass_burnt_out=mass_burnt_out,
             firebrand_out=firebrand_out,
