@@ -396,8 +396,8 @@ class TestQU_Simparams:
         assert qu_simparams.surface_vertical_cell_size == 1
         assert qu_simparams.number_surface_cells == 5
         assert qu_simparams.stretch_grid_flag == 3
-        assert len(qu_simparams.dz_array) == 26
-        assert len(qu_simparams.vertical_grid_lines.split("\n")) == 29
+        assert len(qu_simparams._dz_array) == 26
+        assert len(qu_simparams._vertical_grid_lines.split("\n")) == 29
 
         # Test changing the default values
         qu_simparams.nx = 150
@@ -406,8 +406,8 @@ class TestQU_Simparams:
         # Test property setters
         qu_simparams.nz = 30
         assert qu_simparams.nz == 30
-        assert len(qu_simparams.dz_array) == 30
-        assert len(qu_simparams.vertical_grid_lines.split("\n")) == 33
+        assert len(qu_simparams._dz_array) == 30
+        assert len(qu_simparams._vertical_grid_lines.split("\n")) == 33
 
         # Test data type casting
         qu_simparams = QU_Simparams(
@@ -416,12 +416,12 @@ class TestQU_Simparams:
         assert isinstance(qu_simparams.nx, int)
         assert qu_simparams.nx == 100
 
-        # Test with custom dz_array
+        # Test with custom _dz_array
         # TODO: Come back to this tests
         # qu_simparams = QU_Simparams(nx=100, ny=100, nz=26, dx=2, dy=2,
         #                             custom_dz_array=[1] * 26,
         #                             quic_domain_height=250)
-        # assert qu_simparams.dz_array == [
+        # assert qu_simparams._dz_array == [
         #     qu_simparams.surface_vertical_cell_size] * 26
 
         # Test invalid stretch_grid_flags
@@ -434,7 +434,7 @@ class TestQU_Simparams:
         qu_simparams = self.get_test_object()
         qu_simparams.stretch_grid_flag = 0
         assert (
-            qu_simparams.dz_array
+            qu_simparams._dz_array
             == [qu_simparams.surface_vertical_cell_size] * qu_simparams.nz
         )
 
@@ -442,11 +442,11 @@ class TestQU_Simparams:
         qu_simparams = self.get_test_object()
         qu_simparams.stretch_grid_flag = 1
         qu_simparams.custom_dz_array = [0.5] * qu_simparams.nz
-        assert qu_simparams.dz_array == [0.5] * qu_simparams.nz
+        assert qu_simparams._dz_array == [0.5] * qu_simparams.nz
 
         # Test with stretch_grid_flag = 3
         qu_simparams = self.get_test_object()
-        assert len(qu_simparams.dz_array) == qu_simparams.nz
+        assert len(qu_simparams._dz_array) == qu_simparams.nz
 
     def test_stretch_grid_flag_0(self):
         qu_simparams = self.get_test_object()
@@ -460,7 +460,7 @@ class TestQU_Simparams:
         qu_simparams = self.get_test_object()
         qu_simparams.stretch_grid_flag = 1
 
-        # Test with no dz_array input
+        # Test with no _dz_array input
         with pytest.raises(ValueError):
             qu_simparams._stretch_grid_flag_1()
 
@@ -496,20 +496,20 @@ class TestQU_Simparams:
         qu_simparams.stretch_grid_flag = 0
         with open("data/test-inputs/stretchgrid_0.txt") as f:
             expected_lines = f.readlines()
-        assert qu_simparams.vertical_grid_lines == "".join(expected_lines)
+        assert qu_simparams._vertical_grid_lines == "".join(expected_lines)
 
         # Test stretch_grid_flag = 1
         qu_simparams.stretch_grid_flag = 1
         qu_simparams.custom_dz_array = [1] * qu_simparams.nz
         with open("data/test-inputs/stretchgrid_1.txt") as f:
             expected_lines = f.readlines()
-        assert qu_simparams.vertical_grid_lines == "".join(expected_lines)
+        assert qu_simparams._vertical_grid_lines == "".join(expected_lines)
 
         # Test stretch_grid_flag = 3
         qu_simparams.stretch_grid_flag = 3
         with open("data/test-inputs/stretchgrid_3.txt") as f:
             expected_lines = f.readlines()
-        assert qu_simparams.vertical_grid_lines == "".join(expected_lines)
+        assert qu_simparams._vertical_grid_lines == "".join(expected_lines)
 
     def test_generate_wind_times(self):
         # Test valid wind_step_times
@@ -551,7 +551,7 @@ class TestQU_Simparams:
         )
         assert result_dict["number_surface_cells"] == qu_simparams.number_surface_cells
         assert result_dict["stretch_grid_flag"] == qu_simparams.stretch_grid_flag
-        assert result_dict["dz_array"] == qu_simparams.dz_array
+        assert result_dict["_dz_array"] == qu_simparams._dz_array
         assert result_dict["utc_offset"] == qu_simparams.utc_offset
         assert result_dict["wind_times"] == qu_simparams.wind_times
         assert result_dict["sor_iter_max"] == qu_simparams.sor_iter_max
@@ -587,7 +587,7 @@ class TestQU_Simparams:
         result_dict = qu_simparams.to_dict()
         result_docs = qu_simparams.get_documentation()
         for key in result_dict:
-            if key in ["vertical_grid_lines", "wind_time_lines", "custom_dz_array"]:
+            if key in ["_vertical_grid_lines", "_wind_time_lines", "custom_dz_array"]:
                 continue
             assert key in result_docs
         for key in result_docs:
@@ -620,11 +620,11 @@ class TestQU_Simparams:
         )
         assert int(lines[8].strip().split("!")[0]) == qu_simparams.number_surface_cells
 
-        # Check dz_array
+        # Check _dz_array
         assert lines[9] == "! DZ array [m]\n"
         for i in range(qu_simparams.nz):
             index = i + 10
-            dz = qu_simparams.dz_array[i]
+            dz = qu_simparams._dz_array[i]
             assert float(lines[index].strip()) == dz
 
         # Update lines index
@@ -957,12 +957,12 @@ class TestQUIC_fire:
 
         # Test stretch grid input
         assert quic_fire.stretch_grid_flag == 0
-        assert quic_fire.stretch_grid_input == "1"
+        assert quic_fire._stretch_grid_input == "1"
         assert quic_fire.dz == 1
         quic_fire.nz = 5
         quic_fire.dz_array = [1, 2, 3, 4, 5]
         quic_fire.stretch_grid_flag = 1
-        assert quic_fire.stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
+        assert quic_fire._stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
 
         # Test invalid dz array
         quic_fire = QUIC_fire(
@@ -973,7 +973,7 @@ class TestQUIC_fire:
             dz_array=[1, 2, 3, 4, 5],
         )
         with pytest.raises(ValueError):
-            assert quic_fire.stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
+            assert quic_fire._stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
 
         # Test invalid random_seed
         quic_fire = self.get_test_object()
@@ -984,11 +984,19 @@ class TestQUIC_fire:
         quic_fire = QUIC_fire(nz=26, sim_time=60, time_now=1695311421)
         assert quic_fire.fuel_density is None
 
+        # Change fuel flag
         quic_fire.fuel_flag = 1
+
+        # Writing QUIC_fire to file at this point should throw an error because
+        # fuel_density, fuel_moisture, and fuel_height are not set
+        with pytest.raises(ValueError):
+            quic_fire.to_file("tmp/")
+
+        # Set fuel_density, fuel_moisture, and fuel_height
         quic_fire.fuel_density = 0.5
         quic_fire.fuel_moisture = 1
         quic_fire.fuel_height = 0.75
-        assert quic_fire.fuel_lines == (
+        assert quic_fire._fuel_lines == (
             f"{quic_fire.fuel_flag}\t! fuel density flag: 1 = uniform; "
             f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
             f" files for quic grid, 4 = Firetech files for "
@@ -1024,12 +1032,12 @@ class TestQUIC_fire:
         assert result_dict["out_time_wind_avg"] == quic_fire.out_time_wind_avg
         assert result_dict["stretch_grid_flag"] == quic_fire.stretch_grid_flag
         assert result_dict["dz"] == quic_fire.dz
-        assert result_dict["dz_array"] == quic_fire.dz_array
+        assert result_dict["_dz_array"] == quic_fire.dz_array
         assert result_dict["fuel_flag"] == quic_fire.fuel_flag
         assert result_dict["fuel_density"] == quic_fire.fuel_density
         assert result_dict["fuel_moisture"] == quic_fire.fuel_moisture
         assert result_dict["fuel_height"] == quic_fire.fuel_height
-        assert result_dict["fuel_lines"] == quic_fire.fuel_lines
+        assert result_dict["_fuel_lines"] == quic_fire._fuel_lines
         assert (
             result_dict["ignition_type"]["ignition_flag"]
             == quic_fire.ignition_type.ignition_flag
@@ -1059,9 +1067,9 @@ class TestQUIC_fire:
         assert result_dict["intensity_out"] == quic_fire.intensity_out
 
         # Computed fields
-        assert result_dict["stretch_grid_input"] == quic_fire.stretch_grid_input
-        assert result_dict["ignition_lines"] == quic_fire.ignition_lines
-        assert result_dict["fuel_lines"] == quic_fire.fuel_lines
+        assert result_dict["_stretch_grid_input"] == quic_fire._stretch_grid_input
+        assert result_dict["_ignition_lines"] == quic_fire._ignition_lines
+        assert result_dict["_fuel_lines"] == quic_fire._fuel_lines
 
     def test_from_dict(self):
         quic_fire = self.get_test_object()
@@ -1541,7 +1549,7 @@ class TestQUTopoInputs:
     def test_complex_inputs(self):
         topoinputs = self.get_complex_test_object()
         assert topoinputs.topo_type.topo_flag.value == 1
-        assert topoinputs.topo_lines == (
+        assert topoinputs._topo_lines == (
             "1\t\t! N/A, "
             "topo flag: 0 = flat, 1 = Gaussian hill, "
             "2 = hill pass, 3 = slope mesa, 4 = canyon, "

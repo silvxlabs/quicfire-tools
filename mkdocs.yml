@@ -1,0 +1,32 @@
+# mkdocs.yml
+site_name: quicfire-tools Documentation
+
+theme:
+  name: "material"
+
+nav:
+  - Home: index.md
+  # - Explanation: explanation.md
+  # - Tutorials: tutorials.md
+  # - How-To Guides: how-to-guides.md
+  - Reference: reference.md
+
+repo_url: https://github.com/silvxlabs/quicfire-tools
+repo_name: quicfire-tools
+
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            docstring_section_style: table
+            ignore_init_summary: true
+            show_root_heading: true
+            show_source: false
+            members_order: source
+            annotations_path: brief
+            separate_signature: true
+            show_signature_annotations: true

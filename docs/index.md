@@ -1,8 +1,4 @@
-# quicfire-tools
-
-## Quick-Links
-
-[Documentation](https://silvxlabs.github.io/quicfire-tools/) - [PyPi Package](https://pypi.org/project/quicfire-tools/)
+# Welcome to the quicfire-tools Documentation!
 
 ## What is quicfire-tools?
 
@@ -34,5 +30,5 @@ Conda support is coming soon!
 
 ## Issues
 
-If you encounter any issues with the quicfire-tools package, please submit an issue on the quicfire-tools GitHub
-repository [issues page](https://github.com/silvxlabs/fastfuels-sdk-python/issues).
+If you encounter any issues with the FastFuels Python SDK, please submit an
+issue on the [GitHub repository](https://github.com/silvxlabs/fastfuels-sdk-python/issues).

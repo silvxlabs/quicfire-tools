@@ -12,15 +12,15 @@ $out_time_wind_avg  ! After how many quic updates to print out averaged wind-rel
 ! FIRE GRID
 $nz					! Number of vertical layers of fire grid cells (integer)
 $stretch_grid_flag  ! Vertical stretching flag: 0 = uniform dz, 1 = custom
-$stretch_grid_input ! m, dz
+$_stretch_grid_input ! m, dz
 ! FILE PATH
 ""
 1                   ! Fuel types are in separate files
 2                   ! File is stream (1) or headers (2)
 ! FUEL
-$fuel_lines
+$_fuel_lines
 ! IGNITION LOCATIONS
-$ignition_lines
+$_ignition_lines
 $ignitions_per_cell ! number of ignitions
 ! FIREBRANDS
 $firebrand_flag		! 0 = off, 1 = on

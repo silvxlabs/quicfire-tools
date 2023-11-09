@@ -1,10 +1,4 @@
-from quicfire_tools.outputs import OutputFile, SimulationOutputs
-from quicfire_tools.parameters import SimulationParameters
 from quicfire_tools.inputs import SimulationInputs
+from quicfire_tools.outputs import SimulationOutputs
 
-__all__ = [
-    "SimulationParameters",
-    "SimulationInputs",
-    "SimulationOutputs",
-    "OutputFile",
-]
+__all__ = ["SimulationInputs", "SimulationOutputs"]
