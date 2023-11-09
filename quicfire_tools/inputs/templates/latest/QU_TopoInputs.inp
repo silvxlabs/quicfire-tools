@@ -1,6 +1,6 @@
 Specify file name for custom topo (full path)
 $filename
-$topo_lines
+$_topo_lines
 $smoothing_method   ! N/A, smoothing method (0 = none (default for idealized terrain), 1 = blur, 2 = David's)
 $smoothing_passes   ! N/A, number of smoothing passes
 $sor_iterations     ! N/A, number of initial SOR iterations (only if fire is run)

@@ -18,6 +18,10 @@ class IgnitionSources(int, Enum):
 
 
 class IgnitionType(BaseModel):
+    """
+    Test docs
+    """
+
     ignition_flag: SerializeAsAny[IgnitionSources]
 
     def __str__(self):
@@ -31,6 +35,21 @@ class IgnitionType(BaseModel):
 
 
 class RectangleIgnition(IgnitionType):
+    """
+    Represents a rectangle ignition source in QUIC-Fire.
+
+    Parameters
+    ----------
+    x_min : float
+        South-west corner in the x-direction [m]
+    y_min : float
+        South-west corner in the y-direction [m]
+    x_length : float
+        Length in the x-direction [m]
+    y_length : float
+        Length in the y-direction [m]
+    """
+
     ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(1)
     x_min: int
     y_min: int
@@ -49,6 +68,25 @@ class RectangleIgnition(IgnitionType):
 
 
 class SquareRingIgnition(IgnitionType):
+    """
+    Represents a square ring ignition source in QUIC-Fire.
+
+    Parameters
+    ----------
+    x_min : float
+        South-west corner in the x-direction [m]
+    y_min : float
+        South-west corner in the y-direction [m]
+    x_length : float
+        Length in the x-direction [m]
+    y_length : float
+        Length in the y-direction [m]
+    x_width : float
+        Width in the x-direction [m]
+    y_width : float
+        Width in the y-direction [m]
+    """
+
     ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(2)
     x_min: int
     y_min: int
@@ -71,6 +109,23 @@ class SquareRingIgnition(IgnitionType):
 
 
 class CircularRingIgnition(IgnitionType):
+    """
+    Represents a circular ring ignition source in QUIC-Fire.
+
+    Parameters
+    ----------
+    x_min : float
+        South-west corner in the x-direction [m]
+    y_min : float
+        South-west corner in the y-direction [m]
+    x_length : float
+        Length in the x-direction [m]
+    y_length : float
+        Length in the y-direction [m]
+    ring_width : float
+        Width of the ring [m]
+    """
+
     ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(3)
     x_min: int
     y_min: int
@@ -97,12 +152,12 @@ def default_line_ignition(nx, ny, wind_direction):
         y_min = 0.1 * (ny * 2)
         x_length = width
         y_length = 0.8 * (nx * 2)
-    if 135 <= wind_direction < 225:
+    elif 135 <= wind_direction < 225:
         x_min = 0.1 * (nx * 2)
         y_min = 0.1 * (ny * 2)
         x_length = 0.8 * (nx * 2)
         y_length = width
-    if 225 <= wind_direction < 315:
+    elif 225 <= wind_direction < 315:
         x_min = 0.1 * (nx * 2)
         y_min = 0.1 * (ny * 2)
         x_length = width

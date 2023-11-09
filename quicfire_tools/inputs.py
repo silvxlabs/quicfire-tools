@@ -129,7 +129,16 @@ class SimulationInputs:
         if not directory.exists():
             raise NotADirectoryError(f"{directory} does not exist")
 
+        # Skip writing gridlist and rasterorigin if fuel_flag == 1
+        skip_inputs = []
+        quic_fire: QUIC_fire = self.get_input("QUIC_fire")
+        if quic_fire.fuel_flag == 1:
+            skip_inputs.extend(["gridlist", "rasterorigin"])
+
+        # Write each input file to the output directory
         for input_name in self.list_inputs():
+            if input_name in skip_inputs:
+                continue
             input_file = self.get_input(input_name)
             input_file.to_file(directory, version=version)
 
@@ -923,7 +932,7 @@ class QU_Simparams(InputFile):
 
     @computed_field
     @property
-    def dz_array(self) -> list[float]:
+    def _dz_array(self) -> list[float]:
         if self._from_file:
             return self._from_file_dz_array
         elif self.stretch_grid_flag == 0:
@@ -940,7 +949,7 @@ class QU_Simparams(InputFile):
 
     @computed_field
     @property
-    def vertical_grid_lines(self) -> str:
+    def _vertical_grid_lines(self) -> str:
         """
         Parses the vertical grid stretching flag and dz_array to generate the
         vertical grid as a string for the QU_simparams.inp file.
@@ -956,7 +965,7 @@ class QU_Simparams(InputFile):
 
     @computed_field
     @property
-    def wind_time_lines(self) -> str:
+    def _wind_time_lines(self) -> str:
         return self._generate_wind_time_lines()
 
     def _stretch_grid_flag_0(self):
@@ -980,7 +989,7 @@ class QU_Simparams(InputFile):
         file.
         """
         # Verify that dz_array is not empty
-        if not self.dz_array:
+        if not self._dz_array:
             raise ValueError(
                 "dz_array must not be empty if stretch_grid_flag "
                 "is 1. Please provide a custom_dz_array with nz "
@@ -988,15 +997,15 @@ class QU_Simparams(InputFile):
             )
 
         # Verify that nz is equal to the length of dz_array
-        if self.nz != len(self.dz_array):
+        if self.nz != len(self._dz_array):
             raise ValueError(
                 f"nz must be equal to the length of dz_array. "
-                f"{self.nz} != {len(self.dz_array)}"
+                f"{self.nz} != {len(self._dz_array)}"
             )
 
         # Verify that the first number_surface_cells_line elements of dz_array
         # are equal to the surface_vertical_cell_size
-        for dz in self.dz_array[: self.number_surface_cells]:
+        for dz in self._dz_array[: self.number_surface_cells]:
             if dz != self.surface_vertical_cell_size:
                 raise ValueError(
                     "The first number_surface_cells_line "
@@ -1014,7 +1023,7 @@ class QU_Simparams(InputFile):
 
         # Write dz_array lines
         dz_array_lines_list = []
-        for dz in self.dz_array:
+        for dz in self._dz_array:
             dz_array_lines_list.append(f"{float(dz)}")
         dz_array_lines = "\n".join(dz_array_lines_list)
 
@@ -1040,7 +1049,7 @@ class QU_Simparams(InputFile):
         header_line = "! DZ array [m]"
 
         # Write dz_array lines
-        dz_lines = "\n".join([f"{float(dz)}" for dz in self.dz_array])
+        dz_lines = "\n".join([f"{float(dz)}" for dz in self._dz_array])
 
         return (
             f"{surface_dz_line}\n{number_surface_cells_line}\n{header_line}"
@@ -1293,14 +1302,21 @@ class QUIC_fire(InputFile):
 
     Parameters
     ----------
-    nz : int
-        Number of fire grid cells in the z-direction.
-    time_now : int
+    fire_flag : Literal[0, 1]
+        Fire flag, 1 = run fire; 0 = no fire
+    random_seed : int
+        Random number generator, -1: use time and date, any other integer > 0
+    time_now : PositiveInt
         When the fire is ignited in Unix Epoch time (integer seconds since
         1970/1/1 00:00:00). Must be greater or equal to the time of the first
         wind
-    sim_time : int
+    sim_time : PositiveInt
         Total simulation time for the fire [s]
+    fire_time_step : PositiveInt
+        Time step for the fire simulation [s]
+    quic_time_step : PositiveInt
+        Number of fire time steps done before updating the quic wind field
+        (integer, >= 1)
     out_time_fire : PositiveInt
         After how many fire time steps to print out fire-related files (excluding emissions and radiation)
     out_time_wind : PositiveInt
@@ -1309,27 +1325,16 @@ class QUIC_fire(InputFile):
         After how many fire time steps to average emissions and radiation
     out_time_wind_avg : PositiveInt
         After how many quic updates to print out averaged wind-related files
-    fire_flag : int
-        Fire flag, 1 = run fire; 0 = no fire
-    random_seed : int
-        Random number generator, -1: use time and date, any other integer > 0
-        is used as the seed
-    fire_time_step : int
-        time step for the fire simulation [s]
-    quic_time_step : int
-        Number of fire time steps done before updating the quic wind field
-        (integer, >= 1)
-    stretch_grid_flag : int
+    nz : PositiveInt
+        Number of fire grid cells in the z-direction.
+    stretch_grid_flag : Literal[0, 1]
         Vertical stretching flag: 0 = uniform dz, 1 = custom
-    file_path : str
-        Path to files defining fuels, ignitions, and topography, with file
-        separator at the end. Defaults to "", indicating files are in the same directory as all other input files
-    dz : int
+    dz : PositiveInt
         Cell size in the z-direction [m] of the fire grid. Recommended value: 1m
-    dz_array : list[float]
-        custom dz, one dz per line must be specified, from the ground to the
+    dz_array : List[PositiveFloat]
+        Custom dz, one dz per line must be specified, from the ground to the
         top of the domain
-    fuel_flag : int
+    fuel_flag : Literal[1, 2, 3, 4]
         Flag for fuel inputs:
             - density
             - moisture
@@ -1349,38 +1354,38 @@ class QUIC_fire(InputFile):
         2 = square ring
         3 = circular ring
         6 = ignite.dat (Firetec file)
-    ignitions_per_cell: int
+    ignitions_per_cell : PositiveInt
         Number of ignition per cell of the fire model. Recommended max value
         of 100
-    firebrand_flag : int
-        Firebrand flag, 0 = off; 1 = on. Recommended value = 0 ; firebrands
+    firebrand_flag : Literal[0, 1]
+        Firebrand flag, 0 = off; 1 = on. Recommended value = 0; firebrands
         are untested for small scale problems
-    auto_kill : int
+    auto_kill : Literal[0, 1]
         Kill if the fire is out and there are no more ignitions or firebrands
         (0 = no, 1 = yes)
-    eng_to_atm_out : int
+    eng_to_atm_out : Literal[0, 1]
         Output flag [0, 1]: gridded energy-to-atmosphere
         (3D fire grid + extra layers)
-    react_rate_out : int
+    react_rate_out : Literal[0, 1]
         Output flag [0, 1]: compressed array reaction rate (fire grid)
-    fuel_dens_out : int
+    fuel_dens_out : Literal[0, 1]
         Output flag [0, 1]: compressed array fuel density (fire grid)
-    qf_wind_out : int
+    qf_wind_out : Literal[0, 1]
         Output flag [0, 1]: gridded wind (u,v,w,sigma) (3D fire grid)
-    qu_wind_inst_out : int
+    qu_wind_inst_out : Literal[0, 1]
         Output flag [0, 1]: gridded QU winds with fire effects, instantaneous
         (QUIC-URB grid)
-    qu_wind_avg_out : int
+    qu_wind_avg_out : Literal[0, 1]
         Output flag [0, 1]: gridded QU winds with fire effects, averaged
         (QUIC-URB grid)
-    fuel_moist_out : int
+    fuel_moist_out : Literal[0, 1]
         Output flag [0, 1]: compressed array fuel moisture (fire grid)
-    mass_burnt_out : int
+    mass_burnt_out : Literal[0, 1]
         Output flag [0, 1]: vertically-integrated % mass burnt (fire grid)
-    firebrand_out : int
+    firebrand_out : Literal[0, 1]
         Output flag [0, 1]: firebrand trajectories. Must be 0 when firebrand
         flag is 0
-    emissions_out : int
+    emissions_out : Literal[0, 1, 2, 3, 4, 5]
         Output flag [0, 5]: compressed array emissions (fire grid):
             0 = do not output any emission related variables
             1 = output emissions files and simulate CO in QUIC-SMOKE
@@ -1389,28 +1394,25 @@ class QUIC_fire(InputFile):
                 QUIC-SMOKE
             4 = output emissions files but use library approach in QUIC-SMOKE
             5 = output emissions files and simulate both water in QUIC-SMOKE
-    radiation_out : int
+    radiation_out : Literal[0, 1]
         Output flag [0, 1]: gridded thermal radiation (fire grid)
-    intensity_out : int
+    intensity_out : Literal[0, 1]
         Output flag [0, 1]: surface fire intensity at every fire time step
     """
 
     name: str = "QUIC_fire"
     _extension: str = ".inp"
-    nz: PositiveInt
+    fire_flag: Literal[0, 1] = 1
+    random_seed: int = Field(ge=-1, default=-1)
     time_now: PositiveInt
     sim_time: PositiveInt
+    fire_time_step: PositiveInt = 1
+    quic_time_step: PositiveInt = 1
     out_time_fire: PositiveInt = 30
     out_time_wind: PositiveInt = 30
     out_time_emis_rad: PositiveInt = 30
     out_time_wind_avg: PositiveInt = 30
-    ignition_type: SerializeAsAny[IgnitionType] = IgnitionType(
-        ignition_flag=IgnitionSources(6)
-    )
-    fire_flag: Literal[0, 1] = 1
-    random_seed: int = Field(ge=-1, default=-1)
-    fire_time_step: PositiveInt = 1
-    quic_time_step: PositiveInt = 1
+    nz: PositiveInt
     stretch_grid_flag: Literal[0, 1] = 0
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
@@ -1418,10 +1420,12 @@ class QUIC_fire(InputFile):
     fuel_density: PositiveFloat | None = None
     fuel_moisture: PositiveFloat | None = None
     fuel_height: PositiveFloat | None = None
+    ignition_type: SerializeAsAny[IgnitionType] = IgnitionType(
+        ignition_flag=IgnitionSources(6)
+    )
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
-    # Output flags
     eng_to_atm_out: Literal[0, 1] = 0
     react_rate_out: Literal[0, 1] = 0
     fuel_dens_out: Literal[0, 1] = 1
@@ -1444,7 +1448,7 @@ class QUIC_fire(InputFile):
 
     @computed_field
     @property
-    def stretch_grid_input(self) -> str:
+    def _stretch_grid_input(self) -> str:
         """
         Writes a custom stretch grid to QUIC_fire.inp, if provided.
         """
@@ -1476,12 +1480,12 @@ class QUIC_fire(InputFile):
 
     @computed_field
     @property
-    def ignition_lines(self) -> str:
+    def _ignition_lines(self) -> str:
         return str(self.ignition_type)
 
     @computed_field
     @property
-    def fuel_lines(self) -> str:
+    def _fuel_lines(self) -> str:
         flag_line = (
             " 1 = uniform; "
             "2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
@@ -1903,7 +1907,7 @@ class QU_TopoInputs(InputFile):
 
     @computed_field
     @property
-    def topo_lines(self) -> str:
+    def _topo_lines(self) -> str:
         return str(self.topo_type)
 
     @classmethod
@@ -2100,7 +2104,7 @@ class QU_metparams(InputFile):
 
     @computed_field
     @property
-    def sensor_lines(self) -> str:
+    def _sensor_lines(self) -> str:
         return (
             f"{self.sensor_name} !Site Name\n" f"!File name\n" f"{self.sensor_name}.inp"
         )
@@ -2146,7 +2150,7 @@ class Sensor1(InputFile):
 
     @computed_field
     @property
-    def wind_lines(self) -> str:
+    def _wind_lines(self) -> str:
         """
         This is meant to support wind shifts in the future.
         This computed field could be altered to reproduce the lines below

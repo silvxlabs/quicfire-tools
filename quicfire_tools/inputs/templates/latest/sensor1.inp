@@ -4,4 +4,4 @@ sensor1 !Site Name
 1 !Site Coordinate Flag (1=QUIC, 2=UTM, 3=Lat/Lon)
 1 !X coordinate (meters)
 1 !Y coordinate (meters)
-$wind_lines
+$_wind_lines
