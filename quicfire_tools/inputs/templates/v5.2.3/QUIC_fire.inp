@@ -1,0 +1,42 @@
+$fire_flag         ! Fire flag: 1 = run fire; 0 = no fire
+$random_seed               ! Random number generator: -1: use time and date, any other integer > 0 is used as the seed
+! FIRE TIMES
+$time_now		    ! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
+$sim_time			! Total simulation time for the fire [s]
+$fire_time_step		! time step for the fire simulation [s]
+$quic_time_step		! Number of fire time steps done before updating the quic wind field (integer, >= 1)
+$out_time_fire      ! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
+$out_time_wind      ! After how many quic updates to print out wind-related files
+$out_time_emis_rad  ! After how many fire time steps to average emissions and radiation
+$out_time_wind_avg  ! After how many quic updates to print out averaged wind-related files
+! FIRE GRID
+$nz					! Number of vertical layers of fire grid cells (integer)
+$stretch_grid_flag  ! Vertical stretching flag: 0 = uniform dz, 1 = custom
+$_stretch_grid_input ! m, dz
+! FILE PATH
+""
+1                   ! Fuel types are in separate files
+2                   ! File is stream (1) or headers (2)
+! FUEL
+$_fuel_lines
+! IGNITION LOCATIONS
+$_ignition_lines
+$ignitions_per_cell ! number of ignitions
+! FIREBRANDS
+$firebrand_flag		! 0 = off, 1 = on
+! OUTPUT FILES (formats depend on the grid type flag)
+$eng_to_atm_out		! Output gridded energy-to-atmosphere (3D fire grid + extra layers)
+$react_rate_out		! Output compressed array reaction rate (fire grid)
+$fuel_dens_out		! Output compressed array fuel density (fire grid)
+$QF_wind_out	    ! Output gridded wind (u,v,w,sigma) (3D fire grid)
+$QU_wind_inst_out	! Output gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
+$QU_wind_avg_out		! Output gridded QU winds with fire effects, averaged (QUIC-URB grid)
+0					! Output plume trajectories (ONLY FOR DEBUG)
+$fuel_moist_out		! Output compressed array fuel moisture (fire grid)
+$mass_burnt_out		! Output vertically-integrated % mass burnt (fire grid)
+$firebrand_out		! Output trajectories firebrands
+$emissions_out		! Output compressed array emissions (fire grid)
+$radiation_out		! Output gridded thermal radiation (fire grid)
+$intensity_out      ! Output surface fire intensity at every fire time step
+! AUTOKILL
+$auto_kill          ! Kill if the fire is out and there are no more ignitions or firebrands (0 = no, 1 = yes)

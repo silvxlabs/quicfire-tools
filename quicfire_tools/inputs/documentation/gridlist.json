@@ -1,0 +1,46 @@
+{
+  "n": {
+      "values_accepted": "> 0",
+      "tested_values_range": "> 0",
+      "description": "Number of cells in the x-direction",
+      "units": "[-]"
+  },
+  "m": {
+      "values_accepted": "> 0",
+      "tested_values_range": "> 0",
+      "description": "Number of cells in the y-direction",
+      "units": "[-]"
+  },
+  "l": {
+      "values_accepted": "> 0",
+      "tested_values_range": "> 0",
+      "description": "Number of cells in the z-direction",
+      "units": "[-]"
+  },
+  "dx": {
+      "values_accepted": "> 0",
+      "tested_values_range": "> 0",
+      "recommended_value": "2m",
+      "description": "Cell size in the x-direction",
+      "units": "[m]"
+  },
+  "dy": {
+      "values_accepted": "> 0",
+      "tested_values_range": "> 0",
+      "recommended_value": "2m",
+      "description": "Cell size in the y-direction",
+      "units": "[m]"
+  },
+  "dz": {
+      "values_accepted": "> 0",
+      "tested_values_range": "> 0",
+      "description": "Number that multiplied by the number of cells  in the z-direction would provide the height of the domain",
+      "units": "[m]"
+  },
+  "aa1": {
+      "values_accepted": "> 0",
+      "tested_values_range": "> 0",
+      "description": "Stretching factor for the vertical grid spacing",
+      "units": "[-]"
+  }
+}

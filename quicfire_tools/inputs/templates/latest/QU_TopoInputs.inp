@@ -1,0 +1,11 @@
+Specify file name for custom topo (full path)
+$filename
+$_topo_lines
+$smoothing_method   ! N/A, smoothing method (0 = none (default for idealized terrain), 1 = blur, 2 = David's)
+$smoothing_passes   ! N/A, number of smoothing passes
+$sor_iterations     ! N/A, number of initial SOR iterations (only if fire is run)
+$sor_cycles         ! N/A, sor cycles
+$sor_relax          ! N/A, sor relaxation parameter (default for flat is 1.78, ignored if there is no terrain)
+0                   ! N/A, add slope flow correction (0 = no, 1 = yes)
+Command to run slope flow code (system specific)
+""

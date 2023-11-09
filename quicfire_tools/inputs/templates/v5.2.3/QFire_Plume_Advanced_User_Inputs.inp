@@ -1,0 +1,16 @@
+150000				! N/A, max number of plume at each time step
+0.1				! m/s, minimum vertical velocity of a plume. If wc is below minimum, the plume is eliminated (default 0.1 m/s)
+100				! m/s, maximum vertical velocity of a plume (default 100 m/s)
+0.1				! N/A, minimum speed ratio (plume vertical velocity/wind speed). If below, the plume is eliminated (default 0.1)
+0.					! 1/s2, brunt vaisala frequency squared
+1					! N/A creeping flag: 0 = off, 1 = on
+0					! Flag time step (0 = constant, 1 = adaptive)
+1              ! s, flag = 0: plumes time step plume, flag = 1: minimum plumes time step
+1              ! sor option (0 = reset lambda at each call, 1 = keep)
+10             ! alpha 2 - plume centerline
+2              ! alpha 2 - plume edges
+30.            ! deg, max angle between plumes to merging
+0.7            ! N/A, fraction of overlap of plumes for merging
+1              ! N/A, which wplume-to-grid scheme: 0 = new, 1 = old
+10             ! N/A, number of points per edge for new scheme (only new scheme)
+1              ! N/A, w computation: 1 = max(w), 0 = sum(w^3)

@@ -1,0 +1,7 @@
+sensor1 !Site Name
+0 !Upper level flag (1 = use this profile for upper level winds)
+50 !Upper level height (meters)
+1 !Site Coordinate Flag (1=QUIC, 2=UTM, 3=Lat/Lon)
+1 !X coordinate (meters)
+1 !Y coordinate (meters)
+$_wind_lines

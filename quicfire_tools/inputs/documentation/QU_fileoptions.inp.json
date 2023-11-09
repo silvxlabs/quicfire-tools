@@ -1,0 +1,51 @@
+{
+  "output_data_file_format_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0 3]",
+    "tested_values_range": "[0 3]",
+    "description": "Output data file format flag: 1 = ascii, 2 = binary, 3 = both",
+    "values": {
+      "1": "ascii",
+      "2": "binary",
+      "3": "both"
+    },
+    "units": "[-]",
+    "can_be_modified": "N",
+    "recommended_value": "2"
+  },
+  "non_mass_conserved_initial_field_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0 1]",
+    "tested_values_range": "[0 1]",
+    "description": "Flag to write out non-mass conserved initial field (uofield.dat): 0 = do not write, 1 = write",
+    "units": "[-]",
+    "can_be_modified": "N",
+    "recommended_value": "0"
+  },
+  "initial_sensor_velocity_field_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0 1]",
+    "tested_values_range": "[0 1]",
+    "description": "Flag to write out the file uosensorfield.dat, the initial sensor velocity field: 0 = do not write, 1 = write",
+    "units": "[-]",
+    "can_be_modified": "N",
+    "recommended_value": "0"
+  },
+  "qu_staggered_velocity_file_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0 1]",
+    "tested_values_range": "[0 1]",
+    "description": "Flag to write out the file QU_staggered_velocity.bin used by QUIC-Pressure: 0 = do not write, 1 = write",
+    "units": "[-]",
+    "can_be_modified": "N",
+    "recommended_value": "0"
+  },
+  "generate_wind_startup_files_flag": {
+    "data_type": "INT",
+    "values_accepted": "[0 1]",
+    "tested_values_range": "[0 1]",
+    "description": "Generate wind startup files for ensemble simulations: 0 = do not write, 1 = write",
+    "units": "[-]",
+    "can_be_modified": "Y"
+  }
+}

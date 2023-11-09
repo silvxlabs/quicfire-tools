@@ -1,0 +1,8 @@
+n=$nx
+m=$ny
+l=$nz
+aa1=$dz
+nv=8
+dx=$dx
+dy=$dy
+dz=$dz

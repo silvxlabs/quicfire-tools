@@ -1,0 +1,277 @@
+{
+    "fire_flag": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "0 = only QUIC-URB simulation, no other input required",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "random_seed": {
+        "values_accepted": "[-1 +Inf)",
+        "tested_values_range": "Any",
+        "description": "accepted: -1 = use time and date to define the random number seed, >0 = use specified value to initialize random number generator",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "Any integer > 0"
+    },
+    "time_now": {
+        "values_accepted": ">= 0",
+        "tested_values_range": "Any",
+        "description": "When the fire is ignited in Unix Epoch time, i.e., integer seconds since 1/1/1970 00:00:00 (fire must start at or after the first wind, see QU_simparams.inp)",
+        "units": "[s]",
+        "can_be_modified": "N"
+    },
+    "sim_time": {
+        "values_accepted": "> 0",
+        "tested_values_range": "(0 10800]",
+        "description": "Total simulation time for the fire model. Higher value = longer simulation",
+        "units": "[s]",
+        "can_be_modified": "Y"
+    },
+    "fire_time_step": {
+        "values_accepted": "> 0",
+        "tested_values_range": "1-10",
+        "description": "Time step for the simulation for the fire model. Higher value = less accurate simulation",
+        "units": "[s]",
+        "can_be_modified": "N",
+        "recommended_value": "1 s"
+    },
+    "quic_time_step": {
+        "values_accepted": ">= 1",
+        "tested_values_range": "1-5",
+        "description": "Number of fire time steps done before updating the wind field. Higher value = less accurate simulation (less coupling between winds and fire)",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "1 to 5"
+    },
+    "out_time_fire": {
+        "values_accepted": ">= 1 or -1",
+        "tested_values_range": "1-100 and -1",
+        "description": "Number of updates of the fire before printing the output files for the fire model (all but emissions and thermal radiation). Higher value = less output. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "4 or higher."
+    },
+    "out_time_wind": {
+        "values_accepted": ">= 1 or -1",
+        "tested_values_range": "1-100 and -1",
+        "description": "Number of updates of the wind field before printing the output files for the instantaneous QUIC-URB winds. Higher value = less output. Recommended value 2 or higher. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "2 or higher."
+    },
+    "out_time_emis_rad": {
+        "values_accepted": ">= 1 or -1",
+        "tested_values_range": "1-100 and -1",
+        "description": "Number of updates of the fire before printing the output files for the emissions and thermal radiation. Higher value = less output. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "out_time_wind_avg": {
+        "values_accepted": ">= 1 or -1",
+        "tested_values_range": "1-100 and -1",
+        "description": "Number of updates of the wind field before printing the output files for the average QUIC- URB winds (needed for smoke calculations). Higher value = less output. Use -1 to provide custom times in file QFire_ListOutputTimes.inp",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "nz": {
+        "values_accepted": ">= 1",
+        "tested_values_range": "1-100",
+        "description": "Number of cells in the vertical direction for the fire model. See below how to determine the number of cells.",
+        "units": "[-]",
+        "can_be_modified": "N"
+    },
+    "stretch_grid_flag": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0",
+        "description": "Vertical spacing model: 0 = constant dz, only one value must follow",
+        "units": "[-]",
+        "can_be_modified": "N",
+        "recommended_value": "0"
+    },
+    "dz_array": {
+        "values_accepted": "> 0",
+        "tested_values_range": "1-10",
+        "description": "Fire model cell size in the vertical direction. If stretchflag == 0: defaults to 1 m. If stretchflag == 1: list of values. Number of values must equal number of cells in the vertical direction. Higher value = less accurate fire and fuel description",
+        "units": "[m]",
+        "can_be_modified": "Y",
+        "recommended_value": "1 m"
+    },
+    "file_path": {
+        "values_accepted": "-",
+        "tested_values_range": "Any",
+        "description": "Files it refers to: treesrhof.dat; treesmoist.dat; treesfueldepth.dat; ignite.dat; rasterorigin.txt; gridlist. Empty quotes '': Firetec files are in the same folders of all other inputs. Path within quotes, with folder separator at the end: Firetec files are in teh specified folder",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "fuel_file_type": {
+        "values_accepted": "[1-2]",
+        "tested_values_range": "1-2",
+        "description": "Format of the trees* files: 1 = all fuel types are in one file; 2 = files are broken down by fuel type and named with '_#' to reduce peak RAM use",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "fuel_file_format": {
+        "values_accepted": "[1-2]",
+        "tested_values_range": "1-2",
+        "description": "Format of the trees* files: 1 = binary files have stream format (ARA format); 2 = binary files have Fortran headers",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "1"
+    },
+    "fuel_flag": {
+        "values_accepted": "[1-4]",
+        "tested_values_range": "1-4",
+        "description": "Flag for fuel density, moisture, and height: 1 = density/moisture/height is uniform over the domain and provided with the next line input; 2 = density/moisture/height is provided through QF_FuelDensity.inp/QF_FuelMoisture.inp/QF_FuelHeight.inp; 3 = density/moisture/height is provided through Firetec file (treesrhof.dat/treesmoist.dat/treesdepth.dat) matching QUIC-Fire grid; 4 = density/moisture/height is provided through Firetec files for an arbitrary grid. The files gridlist and rasterorigin.txt must also be provided",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "fuel_density": {
+        "values_accepted": "> 0",
+        "tested_values_range": "0.2-3",
+        "description": "Fuel density",
+        "units": "[kg/m**3]",
+        "can_be_modified": "Y"
+    },
+    "fuel_moisture": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0-1",
+        "description": "Fuel moisture = mass of water/mass of dry fuel",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "fuel_height": {
+        "values_accepted": "> 0",
+        "tested_values_range": "0.7-3.0",
+        "description": "Fuel height",
+        "units": "[m]",
+        "can_be_modified": "Y"
+    },
+    "ignition_flag": {
+        "values_accepted": "[1 6]",
+        "tested_values_range": "1-6",
+        "description": "Ignition source shape flag: 1 = rectangle; 2 = square ring; 3 = circular ring; 4 = initial ignition locations provided through file QF_Ignitions.inp; 5 = time- and space-dependent ignition locations provided through file QF_IgnitionPattern.inp; 6 = ignite.dat (Firetec file); (NOTE: Flag of 7 seems to work better for ignite.dat - NJT)",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "6 (NJT recommendation: 7)"
+    },
+    "ignitions_per_cell": {
+        "values_accepted": "> 0",
+        "tested_values_range": "10-10000",
+        "description": "Number of ignition per cell of the fire model",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "100 (seems to have no effect). (CHANGED RECOMMENDATION PER QF MEETINGS: 2)"
+    },
+    "firebrand_flag": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag: 0 = firrebrands are off; 1 = firebrands are on",
+        "units": "[-]",
+        "can_be_modified": "N",
+        "recommended_value": "0 (firebrands are untested for small scale problems)"
+    },
+    "eng_to_atm_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the gridded energy-to-atmoshpere. File name: fire-energy_to_atmos-XXXXX.bin",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "react_rate_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the gridded reaction rate. File name: fire-reaction_rate-XXXXX.bin",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "fuel_dens_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the gridded fuel density. File name: fuels-dens-XXXXX.bin. NOTE: if 'emissions_out' is set to 4, this flag is set to 1 independently from the user choice",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "qf_wind_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the gridded wind components (u,v,w) for the fire grid. File names: winduXXXXX.bin = x-component; windvXXXXX.bin = y-component; windwXXXXX.bin = z-component",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "qu_wind_inst_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the gridded wind components (u,v,w) for the QUIC-URB grid. File names: qf_winduXXXXX.bin = x-component; qf_windvXXXXX.bin = y-component; qu_windwXXXXX.bin = z-component; qu_wplumeXXXXX.bin = w field from buoyant plumes, before mass consistency",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "qu_wind_avg_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the gridded average wind components (u,v,w) for the QUIC-URB grid. File names: qf_windu_aveXXXXX.bin = x-component; qu_windv_aveXXXXX.bin = y-component; qu_windw_aveXXXXX.bin = z-component. Set to 1 only if QUIC-Smoke is run for PM2.5 and CO plume transport and dispersion simulations",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "0"
+    },
+    "plume_traj_out": {
+        "values_accepted": "[0 2]",
+        "tested_values_range": "0, 2",
+        "description": "Flag to output the plume trajectories: 0 = do not output; 1 = use csv format; 2 = use binary format. File names: plume_trajectory.bin or csv; plume_mergetrajectory.bin or csv",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "0 (Files will be huge, used for debugging only)"
+    },
+    "fuel_moist_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the fuel moisture. File name: fuels-moist-XXXXX.bin",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "mass_burnt_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the vertically-integrated % mass burnt. File name: mburnt_integ-XXXXX.bin",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "firebrand_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the firebrands trajectories. File name: firebrabrands_traj.bin",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "0"
+    },
+    "emissions_out": {
+        "values_accepted": "[0 4]",
+        "tested_values_range": "[0 4]",
+        "description": "Flag for emissions: 0 = do not output any emission related variables; 1 = output emissions fiiles and simulate CO in QUIC-SMOKE; 2 = output emissions files and simulate PM2.5 in QUIC-SMOKE; 3 = output emissions files and simulate both CO and PM2.5 in QUIC-SMOKE; 4 = output emissions files but use library approach in QUIC-SMOKE; 5 = output emissions files and simulate both water in QUIC-SMOKE. File names: pm_emissions-XXXXX.bin; emissions_distribution-XXXXX.bin; co_emissions-XXXXX.bin; water_emissions-XXXXX.bin. Note; to run smoke transport and dispersion, the 'QU_winds_avg_out' must be set to 1 too",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    },
+    "radiation_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) the thermal radiation. File names: thermalradiation-XXXXX.bin; thermaldose-XXXXX.bin",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "0"
+    },
+    "intensity_out": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to output (1) or not (0) surface fire intensity at every fire time step",
+        "units": "[-]",
+        "can_be_modified": "Y",
+        "recommended_value": "0"
+    },
+    "auto_kill": {
+        "values_accepted": "[0 1]",
+        "tested_values_range": "0, 1",
+        "description": "Flag to kill (1) or not (0) the simulation oif the fire goes out and there are no more ignitions or firebrands or plumes. The fuel and winds will be dumped at this last time step",
+        "units": "[-]",
+        "can_be_modified": "Y"
+    }
+}

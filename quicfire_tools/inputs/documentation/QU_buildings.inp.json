@@ -1,0 +1,25 @@
+{
+  "wall_roughness_length": {
+        "values_accepted": "> 0",
+        "tested_values_range": "> 0",
+        "description": "Wall roughness length",
+        "units": "[m]",
+        "can_be_modified": "N"
+    },
+    "number_of_buildings": {
+        "values_accepted": "> 0",
+        "tested_values_range": "[1, 30000]",
+        "description": "Number of buildings",
+        "units": "[-]",
+        "can_be_modified": "N",
+        "recommended_value": "0 (building algorithms are not part of QUIC-Fire)"
+    },
+    "number_of_polygon_nodes": {
+        "values_accepted": "> 0",
+        "tested_values_range": "[1, 500]",
+        "description": "Number of polygon building nodes",
+        "units": "[-]",
+        "can_be_modified": "N",
+        "recommended_value": "0"
+    }
+}

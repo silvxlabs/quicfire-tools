@@ -1,0 +1,27 @@
+projectdir=LineFire/
+legacyVersion=0
+Plotting=sub
+Interactive=1
+framerate=1
+title=Hitchiti500.mp4
+outdir=vistaVids/
+quivers=1
+quiverScale=1.0
+quiverDensity=0.25
+WindSlices=0
+sliceAxis=y
+sliceWind=w
+nSlices=3
+sliceOpacity=0.45
+plumeViz=1
+xyView=0
+fireTracking=0
+trackingOffset=<-250.0,-250.0,250.0>
+trackHistory=10
+#camPosition=<1900.0,500.0,500.0>
+#camFocus=<1300.0,800.0,100.0>
+#camNormal=<0,0.0,1.0>
+camOrbit=0
+windBarNormalized=none
+windBarBounds=[-10.0,10.0]
+compile=0 run=1 compiler='gfortran' compiler_mode='release' testcase='LineFire' ./adv_compile_and_run.sh

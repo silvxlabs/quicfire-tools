@@ -1,0 +1,95 @@
+&compresslist
+       irst=0 nt=60000 nts=10 ntp=10
+       nprocx=10 nprocy=20
+       n=$nx m=$ny l=$nz aa1=$dz
+       nv=8
+       dx=$dx dy=$dy dz=$dz
+       dts=0.001  ! small time step
+       ih=3   ! ghost cells
+       iord=2 idiv=1 ! advection order, divergent flows, old non oscilator is defautl
+
+       ! bc and dampers
+       ibcx=0 ibcy=0 irlx=1 irly=1         !irlx>=1 and irly>=1 diff=erent relaxation options
+       ibclatopen=0 ibctopopen=0          !openoutlet, freeslip at top (maybe not fully operational)
+       nr=5                                ! number of cell for lateral relaxation (irlx,irly)
+       iab=1 tow=10.                 ! different relaxation option at top and magnitude parameter
+       zab=450. zabt=450.0               ! dampers bottom (m), zabt is zab for theta for iab=3
+
+       !topo params
+       topofile=''
+       ipotflow=0               ! potflow can be used for correcting xe in case of topography
+       slopeangle=0.0                   ! slope angle in degree for rotated gravity
+       slopeazimuth=0.0                 ! slope azimuth for rotated gravity: 0 slope is along x axis, 90 is along y
+
+       ! drag and turbulence parameters
+       irod=1 iturb=2                      ! iturb=1 ka only, iturb=2 ka and kb
+       idrag=2                             ! idrag=1 rrl drag, idrag=2 inra drag
+       isa=2                               ! isa=1 sa fixed, isa=2, sa is dxdydz**0.33, isa=3 : saxy different from saz
+       rturbprandtl = 2.0  !(2.0 in inra's version)    ! inverse of turb prandtl number for scalar diffusion (theta, O2, etc.)
+       ilapdo=0                            ! oxygen diffusion
+
+       !radiation parameters
+       irad=2 icallrad=10 irandseed=0 iseed=0     ! radiation mode, frequency, and seed (for montecarlo irad=2)
+       isootmodel=0 ! 0 is rrl's soot model, 1 is inra's soot model
+       crad=50.0 ! for isootmodel=0 (inra uses 20, lanl uses 50)
+       iradeastflux=0 ! specific radiative flux ouput through a vertical hard coded target in the east (x>0) direction
+
+       ! ambient conditions (temp, pres, wind) and env forces (corio, lspgf)
+       u0=5.36 uramp=0.0 uramptime=0.0 uswitch=2 zu=24.0
+       v0=0.0 vramp=0.0 vramptime=0.0 vswitch=0
+       ius=0 iue=0 jus=0 jue=0  !indices of reference zone for lai computation (when 0 whole domain is used) for uswitch=2
+       tambient=300.      ! Ambient temperature (K)
+       iperturb=0   ! perturbation for cyclic runs: 1 theta, 2 and 3 : pinwheel
+       itheta = 0  ! stable layer at the domain top
+       pressground=1.0e5  ! Pa
+       zgroundref=0.   ! reference elevation for tambient and pressground
+       icorio=0            ! coriolis 1  (xe have already coriolis effect), 2 (geostrophic wind)
+       ilspgf=0 frqlspgf=1000  ! large scale pgf mode 1 to 3
+       izlspgf = 1  ! reference for max flux is whole domaine (0) or a slice at height zu (1)
+
+       ! fuel and fire
+       ifuel=1         ! flag for the pdf choice
+       ivegread=1       ! flag for reading fuel files
+       rhomicrovalue=500.0  ! (kg/m3)  inra uses 700 (except for grass, 500); lanl uses 500
+       cpwood=2500.0        ! (J/kg/K) inra uses 1800 (albini and stocks); lanl uses 2500
+       ifuelinra=0      ! inra default fuels for inra's test suite
+       fuelinranumber=0
+       ffparam = 1.0       ! reaction rate factor
+       ignfile=''
+
+       ! io
+       frqoutput=100
+       outname=''
+       restartfile=''
+       ioextra=0                           ! this entails to have extra io : rnetsol, convht, tempg..
+       iwallclock=0                ! flag for walltimers
+
+       ! windfield in or out parameters
+       icfmeflag=0
+       windfieldstartfile=''
+       xvbdataname=''
+       iwindfieldout=0             ! Windfield output switch: 1->interpolate, 2-> one file
+       iwindfieldin=1              ! Windfield input switch: 1->interpolate, 2-> one file
+       windspeedupfactor=1         ! factor of speed up between wind run and fire run (should be an integer)
+       itwindfield=60000              ! Timestep to start saving data
+       itinterp=20                 ! # of interpolation timesteps
+       ibcells=5                   ! # of x cells saved on boundary
+       jbcells=5                   ! # of y cells saved on boundary
+       is=0 ie=0 js=0 je=0 ! indices for production of xvdata file on a subdomain (when 0 the whole domain is used) for iwindfieldout=1
+
+       ! personal flags
+       ifp=0                 ! francois 's personal flag
+
+       ! parameters below are not supposed to change (other choice in option removed)
+       isoturb=1            ! flag for isotrope turbulence; unsotrope has not been used for a long time...
+       ibctopbot=1          ! bc at the bottom and top of mesh (edges instead of cell center)
+       islip=0
+       iunstable=0
+       idirt=0          ! flag for rhodirt
+       isplit=0
+       irhovapor=0
+       isor=0
+       nonos=1 nfct=1 nonosold=1
+       inonlocal=0 isubgridgas=0
+       !st=1.0e-05
+/

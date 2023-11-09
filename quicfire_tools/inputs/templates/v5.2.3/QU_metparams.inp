@@ -1,0 +1,5 @@
+!QUIC 6.26
+0 !Met input flag (0=QUIC,1=WRF,2=ITT MM5,3=HOTMAC)
+$num_sensors    !Number of measuring sites
+1 !Maximum size of data points profiles
+$_sensor_lines
