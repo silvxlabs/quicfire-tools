@@ -34,5 +34,5 @@ Conda support is coming soon!
 
 ## Issues
 
-If you encounter any issues with the quicfire-tools package, please submit an issue on the quicfire-tools GitHub 
+If you encounter any issues with the quicfire-tools package, please submit an issue on the quicfire-tools GitHub
 repository [issues page](https://github.com/silvxlabs/fastfuels-sdk-python/issues).
