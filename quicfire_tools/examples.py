@@ -1,14 +1,15 @@
-from pathlib import Path
 from quicfire_tools.inputs import SimulationInputs, QUIC_fire
 from quicfire_tools.ignitions import RectangleIgnition
 
 
 def create_line_fire() -> SimulationInputs:
     # Set up the basic simulation inputs
-    sim_inputs = SimulationInputs.custom_domain(
+    sim_inputs = SimulationInputs.setup_simple_simulation(
         nx=200,
         ny=200,
-        fire_nz=1,
+        simulation_time=600,
+        wind_speed=1.7,
+        wind_direction=90,
     )
 
     # Make modifications to the QUIC_Fire input file
@@ -32,6 +33,7 @@ def create_line_fire() -> SimulationInputs:
         x_length=100,
         y_length=100,
     )
+    quic_fire.ignition_type = line_ignition
     quic_fire.ignitions_per_cell = 100
 
     # Write the input file deck to a directory
