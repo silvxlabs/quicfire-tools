@@ -2157,7 +2157,7 @@ class Sensor1(InputFile):
         for a series of times, speeds, and directions.
         """
         return (
-            f"{self.time_now} !Begining of time step in Unix Epoch time"
+            f"{self.time_now} !Begining of time step in Unix Epoch time\n"
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban "
             f"canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
