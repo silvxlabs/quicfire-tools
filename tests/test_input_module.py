@@ -1,5 +1,5 @@
 """
-Test module for the inputs module of the quicfire_tools package.
+Test module for the data module of the quicfire_tools package.
 """
 import pytest
 from pydantic import ValidationError
@@ -464,12 +464,12 @@ class TestQU_Simparams:
         with pytest.raises(ValueError):
             qu_simparams._stretch_grid_flag_1()
 
-        # Test with 19 custom_dz_array inputs
+        # Test with 19 custom_dz_array data
         qu_simparams.custom_dz_array = [1] * (qu_simparams.nz - 1)
         with pytest.raises(ValueError):
             qu_simparams._stretch_grid_flag_1()
 
-        # Test with dz inputs that don't match the surface values
+        # Test with dz data that don't match the surface values
         qu_simparams.custom_dz_array = [1] * qu_simparams.nz
         qu_simparams.custom_dz_array[0] = 2
         with pytest.raises(ValueError):
@@ -980,7 +980,7 @@ class TestQUIC_fire:
         with pytest.raises(ValidationError):
             quic_fire.random_seed = 0
 
-        # Test fuel inputs
+        # Test fuel data
         quic_fire = QUIC_fire(nz=26, sim_time=60, time_now=1695311421)
         assert quic_fire.fuel_density is None
 
@@ -997,17 +997,17 @@ class TestQUIC_fire:
         quic_fire.fuel_moisture = 1
         quic_fire.fuel_height = 0.75
         assert quic_fire._fuel_lines == (
-            f"{quic_fire.fuel_flag}\t! fuel density flag: 1 = uniform; "
+            f"{quic_fire.fuel_flag}\t! fuel density flag: 1 = uniform, "
             f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
             f" files for quic grid, 4 = Firetech files for "
             f"different grid (need interpolation)"
             f"\n0.5"
-            f"\n{quic_fire.fuel_flag}\t! fuel moisture flag: 1 = uniform; "
+            f"\n{quic_fire.fuel_flag}\t! fuel moisture flag: 1 = uniform, "
             f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
             f" files for quic grid, 4 = Firetech files for "
             f"different grid (need interpolation)"
             f"\n1.0"
-            f"\n{quic_fire.fuel_flag}\t! fuel height flag: 1 = uniform; "
+            f"\n{quic_fire.fuel_flag}\t! fuel height flag: 1 = uniform, "
             f"2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
             f" files for quic grid, 4 = Firetech files for "
             f"different grid (need interpolation)"
