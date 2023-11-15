@@ -48,9 +48,7 @@ setup(
     ],
     package_dir={"": "."},
     packages=find_packages(exclude=["docs", "tests"]),
-    package_data={
-        "quicfire_tools": ["data/*/*/*"],
-    },
+    package_data={"quicfire_tools": ["data/templates/*/*", "data/documentation/*"]},
     include_package_data=True,
     install_requires=[
         "numpy<2",
