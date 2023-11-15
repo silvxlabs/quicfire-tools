@@ -147,15 +147,15 @@ class SimulationInputs:
 
         # Skip writing gridlist and rasterorigin if fuel_flag == 1
         skip_inputs = []
-        quic_fire: QUIC_fire = self.get_input("QUIC_fire")
-        if quic_fire.fuel_flag == 1:
+        if self.quic_fire.fuel_flag == 1:
             skip_inputs.extend(["gridlist", "rasterorigin"])
 
         # Write each input file to the output directory
-        for input_name in self.list_inputs():
+        #TODO: Again, verify the self.__dict__ method
+        for input_name in self.__dict__.keys():
             if input_name in skip_inputs:
                 continue
-            input_file = self.get_input(input_name)
+            input_file = self.__dict__[input_name]
             input_file.to_file(directory, version=version)
 
         # Copy QU_landuse from the template directory to the output directory
