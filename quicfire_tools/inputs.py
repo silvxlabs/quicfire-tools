@@ -105,16 +105,22 @@ class SimulationInputs:
             input file deck and run a simulation using default parameters.
         """
         start_time = int(time.time)
-        self.initialize_inputs(nx,ny,fire_nz,wind_speed,wind_direction,simulation_time,start_time)
+        self.initialize_inputs(
+            nx,
+            ny,
+            fire_nz,
+            wind_speed,
+            wind_direction,
+            simulation_time,
+            start_time
+            )
         
         # Validate that all required input files are present
-        input_file_names = [input_file.name for input_file in input_files]
+        #TODO: verify that self.__dict__.values() method works
+        input_file_names = [input_file.name for input_file in self.__dict__.values()]
         for required_input in self._required_inputs:
             if required_input not in input_file_names:
                 raise ValueError(f"Missing required input file: {required_input}")
-
-        # Initialize a dictionary of input files
-        self._inputs = {i.name: i for i in input_files}
 
 
     def write_inputs(self, directory: str | Path, version: str = "latest") -> None:
