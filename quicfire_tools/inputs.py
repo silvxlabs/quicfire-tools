@@ -68,6 +68,7 @@ class SimulationInputs:
     used to read in existing QUIC-Fire input file decks.
     """
 
+    #TODO: why aren't all the input files in _required_inputs?
     _required_inputs: list[str] = ["QUIC_fire", "QU_simparams", "gridlist"]
 
     def __init__(self, 
@@ -176,12 +177,15 @@ class SimulationInputs:
         """
         if isinstance(directory, str):
             directory = Path(directory)
-        input_files = []
+            # TODO: verify that setattr method works
+        input_files = {}
         for input_file_name in cls._required_inputs:
             input_obj = globals()[input_file_name]
             input_file = input_obj.from_file(directory)
-            input_files.append(input_file)
-        return cls(input_files)
+            input_files[input_file.name.lower()] = input_file
+        for k, v in input_files.items():
+            setattr(cls, k, v)
+        return cls
 
     def initialize_inputs(
         self,
