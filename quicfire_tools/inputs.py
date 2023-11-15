@@ -51,11 +51,11 @@ from quicfire_tools.utils import compute_parabolic_stretched_grid
 
 DOCS_PATH = (
     importlib.resources.files("quicfire_tools")
-    .joinpath("inputs")
+    .joinpath("data")
     .joinpath("documentation")
 )
 TEMPLATES_PATH = (
-    importlib.resources.files("quicfire_tools").joinpath("inputs").joinpath("templates")
+    importlib.resources.files("quicfire_tools").joinpath("data").joinpath("templates")
 )
 
 
@@ -63,7 +63,7 @@ class SimulationInputs:
     """
     Class representing a QUIC-Fire input file deck.
 
-    This is the fundamental class in the quicfire_tools.inputs module. It is
+    This is the fundamental class in the quicfire_tools.data module. It is
     used to create, modify, and write QUIC-Fire input file decks. It is also
     used to read in existing QUIC-Fire input file decks.
     """
@@ -236,7 +236,7 @@ class SimulationInputs:
         Returns
         -------
         SimulationInputs
-            Class containing the inputs to build a QUIC-Fire
+            Class containing the data to build a QUIC-Fire
             input file deck and run a simulation.
         """
         return cls(
@@ -284,7 +284,7 @@ class SimulationInputs:
         fuel_height: float = 1,
     ):
         """
-        Creates a SimulationInputs object with default inputs to
+        Creates a SimulationInputs object with default data to
         build a QUIC-Fire input file deck and run a simulation
         with flat terrain and uniform fuels and a line ignition.
 
@@ -333,7 +333,7 @@ class SimulationInputs:
         Returns
         -------
         SimulationInputs
-            Class containing the default inputs to build a QUIC-Fire
+            Class containing the default data to build a QUIC-Fire
             input file deck and run a simulation on flat terrain with
             uniform fuels and a line ignition.
         """
@@ -395,7 +395,7 @@ class SimulationInputs:
         fuel_height: float = None,
     ):
         """
-        Creates a SimulationInputs object with default inputs to
+        Creates a SimulationInputs object with default data to
         build a QUIC-Fire input file deck and run a simulation on a
         domain with custom fuels, topography, and ignitions.
 
@@ -440,7 +440,7 @@ class SimulationInputs:
         Returns
         -------
         SimulationInputs
-            Class containing the default inputs to build a QUIC-Fire
+            Class containing the default data to build a QUIC-Fire
             input file deck and run a simulation on a domain with custom
             fuels, topography, and ignitions.
         """
@@ -1335,7 +1335,7 @@ class QUIC_fire(InputFile):
         Custom dz, one dz per line must be specified, from the ground to the
         top of the domain
     fuel_flag : Literal[1, 2, 3, 4]
-        Flag for fuel inputs:
+        Flag for fuel data:
             - density
             - moisture
             - height
@@ -1492,9 +1492,9 @@ class QUIC_fire(InputFile):
             " files for quic grid, 4 = Firetech files for "
             "different grid (need interpolation)"
         )
-        fuel_density_flag_line = f"{self.fuel_flag}\t! fuel density flag:" + flag_line
-        fuel_moist_flag_line = f"\n{self.fuel_flag}\t! fuel moisture flag:" + flag_line
-        fuel_height_flag_line = f"\n{self.fuel_flag}\t! fuel height flag:" + flag_line
+        fuel_density_flag_line = f"{self.fuel_flag}\t! fuel density flag: " + flag_line
+        fuel_moist_flag_line = f"\n{self.fuel_flag}\t! fuel moisture flag: " + flag_line
+        fuel_height_flag_line = f"\n{self.fuel_flag}\t! fuel height flag: " + flag_line
         if self.fuel_flag == 1:
             try:
                 assert self.fuel_density is not None
@@ -1556,14 +1556,14 @@ class QUIC_fire(InputFile):
                     float(lines[i].strip())
                 except ValueError:
                     print(
-                        "QUIC_fire.inp: dz input value is not a float. Does the number of dz inputs match nz?"
+                        "QUIC_fire.inp: dz input value is not a float. Does the number of dz data match nz?"
                     )
                 dz_array.append(float(lines[i].strip()))
             current_line = 15 + len(dz_array)
 
         current_line += 4  # skip unused lines
 
-        # Read fuel inputs
+        # Read fuel data
         # current_line = ! FUEL
         current_line += 1  # header
         fuel_flag = int(lines[current_line].strip().split("!")[0])
@@ -1584,7 +1584,7 @@ class QUIC_fire(InputFile):
             fuel_height = None
             current_line += 2
 
-            # Read ignition inputs
+            # Read ignition data
         # current_line = ! IGNITION LOCATIONS
         current_line += 1  # header
         ignition_flag = int(lines[current_line].strip().split("!")[0])
@@ -1862,7 +1862,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
 class QU_TopoInputs(InputFile):
     """
     Class representing the QU_TopoInputs.inp input file. This file
-    contains advanced inputs pertaining to topography.
+    contains advanced data pertaining to topography.
 
     filename : str
         Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp
@@ -2158,12 +2158,11 @@ class Sensor1(InputFile):
         """
         return (
             f"{self.time_now} !Begining of time step in Unix Epoch time"
-            f"(integer seconds since 1970/1/1 00:00:00)\n"
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban "
             f"canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
-            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
             f"{self.sensor_height} {self.wind_speed} {self.wind_direction}"
         )
 

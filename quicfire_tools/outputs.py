@@ -303,9 +303,7 @@ class SimulationOutputs:
         required_files = ["fire_indexes.bin"]
         for f in required_files:
             if not (outputs_directory / f).exists():
-                raise FileNotFoundError(
-                    f"Required file {f} not found in outputs directory"
-                )
+                raise FileNotFoundError(f"Required file {f} not in outputs directory")
 
     def _build_output_files_map(self):
         """

@@ -3,7 +3,7 @@ from quicfire_tools.ignitions import RectangleIgnition
 
 
 def create_line_fire() -> SimulationInputs:
-    # Set up the basic simulation inputs
+    # Set up the basic simulation data
     sim_inputs = SimulationInputs.setup_simple_simulation(
         nx=200,
         ny=200,
