@@ -66,18 +66,50 @@ class SimulationInputs:
     This is the fundamental class in the quicfire_tools.data module. It is
     used to create, modify, and write QUIC-Fire input file decks. It is also
     used to read in existing QUIC-Fire input file decks.
+
+    Attributes
+    ----------
+    rasterorigin: RasterOrigin
+        Object representing the rasterorigin.txt file.
+    qu_buildings: QU_Buildings
+        Object representing the QU_buildings.inp file.
+    qu_fileoptions: QU_Fileoptions
+        Object representing the QU_fileoptions.inp file.
+    qfire_advanced_user_inputs: QFire_Advanced_User_Inputs
+        Object representing the qfire_advanced_user_inputs.inp file.
+    qfire_bldg_advanced_user_inputs: QFire_Bldg_Advanced_User_Inputs
+        Object representing the qfire_bldg_advanced_user_inputs.inp file.
+    qfire_plume_advanced_user_inputs: QFire_Plume_Advanced_User_Inputs
+        Object representing the qfire_plume_advanced_user_inputs.inp file.
+    runtime_advanced_user_inputs: RuntimeAdvancedUserInputs
+        Object representing the runtime_advanced_user_inputs.inp file.
+    qu_movingcoords: QU_movingcoords
+        Object representing the QU_movingcoords.inp file.
+    qp_buildout: QP_buildout
+        Object representing the qp_buildout.inp file.
+    qu_metparams: QU_metparams
+        Object representing the QU_metparams.inp file.
+    quic_fire: QUIC_fire
+        Object representing the QUIC_fire.inp file.
+    gridlist: Gridlist
+        Object representing the gridlist.txt file.
+    sensor1: Sensor1
+        Object representing the sensor1.inp file.
+    qu_topoinputs: QU_TopoInputs
+        Object representing the QU_topoinputs.inp file.
+    qu_simparams: QU_Simparams
+        Object representing the QU_simparams.inp file.
     """
 
-    #TODO: why aren't all the input files in _required_inputs?
-    _required_inputs: list[str] = ["QUIC_fire", "QU_simparams", "gridlist"]
-
-    def __init__(self, 
-                 nx: int, 
-                 ny: int, 
-                 fire_nz: int,
-                 wind_speed: float,
-                 wind_direction: int,
-                 simulation_time: int):
+    def __init__(
+        self,
+        nx: int,
+        ny: int,
+        fire_nz: int,
+        wind_speed: float,
+        wind_direction: int,
+        simulation_time: int,
+    ):
         """
         Creates a SimulationInputs object to build a QUIC-Fire input file deck
         and run a simulation.
@@ -104,23 +136,52 @@ class SimulationInputs:
             Class containing the data to build a QUIC-Fire
             input file deck and run a simulation using default parameters.
         """
-        start_time = int(time.time())
-        self.initialize_inputs(
-            nx,
-            ny,
-            fire_nz,
-            wind_speed,
-            wind_direction,
-            simulation_time,
-            start_time
-            )
-        
-        # Validate that all required input files are present
-        input_file_names = [input_file.name for input_file in self.__dict__.values()]
-        for required_input in self._required_inputs:
-            if required_input not in input_file_names:
-                raise ValueError(f"Missing required input file: {required_input}")
+        # Initialize default input files
+        self.rasterorigin = RasterOrigin()
+        self.qu_buildings = QU_Buildings()
+        self.qu_fileoptions = QU_Fileoptions()
+        self.qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        self.qfire_bldg_advanced_user_inputs = QFire_Bldg_Advanced_User_Inputs()
+        self.qfire_plume_advanced_user_inputs = QFire_Plume_Advanced_User_Inputs()
+        self.runtime_advanced_user_inputs = RuntimeAdvancedUserInputs()
+        self.qu_movingcoords = QU_movingcoords()
+        self.qp_buildout = QP_buildout()
+        self.qu_metparams = QU_metparams()
 
+        # Initialize input files with required parameters
+        start_time = int(time.time())
+        ignition_type = default_line_ignition(nx, ny, wind_direction)
+        self.quic_fire = QUIC_fire(
+            nz=fire_nz,
+            time_now=start_time,
+            sim_time=simulation_time,
+            ignition_type=ignition_type,
+        )
+        self.gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
+        self.sensor1 = Sensor1(
+            time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
+        )
+        self.qu_topoinputs = QU_TopoInputs()
+        self.qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
+
+        # Store the input files in a list
+        self._input_files = [
+            self.rasterorigin,
+            self.qu_buildings,
+            self.qu_fileoptions,
+            self.qfire_advanced_user_inputs,
+            self.qfire_bldg_advanced_user_inputs,
+            self.qfire_plume_advanced_user_inputs,
+            self.runtime_advanced_user_inputs,
+            self.qu_movingcoords,
+            self.qp_buildout,
+            self.qu_metparams,
+            self.quic_fire,
+            self.gridlist,
+            self.sensor1,
+            self.qu_topoinputs,
+            self.qu_simparams,
+        ]
 
     def write_inputs(self, directory: str | Path, version: str = "latest") -> None:
         """
@@ -143,7 +204,7 @@ class SimulationInputs:
 
         if not directory.exists():
             raise NotADirectoryError(f"{directory} does not exist")
-        
+
         self._update_shared_attributes()
 
         # Skip writing gridlist and rasterorigin if fuel_flag == 1
@@ -166,58 +227,57 @@ class SimulationInputs:
                 fout.write(ftemp.read())
 
     def set_custom_simulation(
-            self,
-            fuel: bool = True,
-            ignition: bool = True,
-            topo: bool = True,
+        self,
+        fuel: bool = True,
+        ignition: bool = True,
+        topo: bool = True,
     ):
-        if fuel: 
+        if fuel:
             self.quic_fire.fuel_flag = 3
             self.quic_fire.fuel_density = None
             self.quic_fire.fuel_moisture = None
             self.quic_fire.fuel_height = None
-        if ignition: self.quic_fire.ignition_type = IgnitionType(ignition_flag = IgnitionSources(6))
-        if topo: self.qu_topoinputs.topo_type = TopoType(topo_flag = TopoSources(5))
+        if ignition:
+            self.quic_fire.ignition_type = IgnitionType(
+                ignition_flag=IgnitionSources(6)
+            )
+        if topo:
+            self.qu_topoinputs.topo_type = TopoType(topo_flag=TopoSources(5))
 
     def set_uniform_fuels(
-            self,
-            fuel_density: float,
-            fuel_moisture: float,
-            fuel_height: float,
+        self,
+        fuel_density: float,
+        fuel_moisture: float,
+        fuel_height: float,
     ):
         self.quic_fire.fuel_flag = 1
         self.quic_fire.fuel_density = fuel_density
         self.quic_fire.fuel_moisture = fuel_moisture
         self.quic_fire.fuel_height = fuel_height
-    
+
     def set_rectangle_ignition(
-            self,
-            x_min: int,
-            y_min: int,
-            x_length: int,
-            y_length: int
+        self, x_min: int, y_min: int, x_length: int, y_length: int
     ):
-        ignition = RectangleIgnition(x_min=x_min,
-                                    y_min=y_min,
-                                    x_length=x_length,
-                                    y_length=y_length)
+        ignition = RectangleIgnition(
+            x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
+        )
         self.quic_fire.ignition_type = ignition
-    
+
     def set_output_files(
-            self,
-            eng_to_atm: bool = False,
-            react_rate: bool = False,
-            fuel_dens: bool = False,
-            qf_wind: bool = False,
-            qu_wind_inst: bool = False,
-            qu_wind_avg: bool = False,
-            fuel_moist: bool = False,
-            mass_burnt: bool = False,
-            co_emissions: bool = False,
-            pm_emissions: bool = False,
-            water_emissions: bool = False,
-            radiation: bool = False,
-            intensity: bool = False,
+        self,
+        eng_to_atm: bool = False,
+        react_rate: bool = False,
+        fuel_dens: bool = False,
+        qf_wind: bool = False,
+        qu_wind_inst: bool = False,
+        qu_wind_avg: bool = False,
+        fuel_moist: bool = False,
+        mass_burnt: bool = False,
+        co_emissions: bool = False,
+        pm_emissions: bool = False,
+        water_emissions: bool = False,
+        radiation: bool = False,
+        intensity: bool = False,
     ):
         self.quic_fire.eng_to_atm_out = int(eng_to_atm)
         self.quic_fire.react_rate_out = int(react_rate)
@@ -239,7 +299,6 @@ class SimulationInputs:
             self.quic_fire.emissions_out = 1
         else:
             self.quic_fire.emissions_out = 0
-
 
     @classmethod
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
@@ -268,78 +327,26 @@ class SimulationInputs:
             setattr(cls, k, v)
         return cls
 
-    def initialize_inputs(
-        self,
-        nx: int,
-        ny: int,
-        fire_nz: int,
-        wind_speed: float,
-        wind_direction: int,
-        simulation_time: int,
-        start_time: int,
-    ):
-        # Initialize default input files
-        rasterorigin = RasterOrigin()
-        qu_buildings = QU_Buildings()
-        qu_fileoptions = QU_Fileoptions()
-        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
-        qfire_bldg_advanced_user_inputs = QFire_Bldg_Advanced_User_Inputs()
-        qfire_plume_advanced_user_inputs = QFire_Plume_Advanced_User_Inputs()
-        runtime_advanced_user_inputs = RuntimeAdvancedUserInputs()
-        qu_movingcoords = QU_movingcoords()
-        qp_buildout = QP_buildout()
-        qu_metparams = QU_metparams()
-
-        # Initialize input files with required parameters
-        start_time = int(time.time())
-        ignition_type = default_line_ignition(nx,ny,wind_direction)
-        quic_fire = QUIC_fire(
-            nz=fire_nz,
-            time_now=start_time,
-            sim_time=simulation_time,
-            ignition_type=ignition_type,
-        )
-        gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
-        sensor1 = Sensor1(
-            time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
-        )
-        qu_topoinputs = QU_TopoInputs()
-        qu_simparams = QU_Simparams(
-            nx=nx,
-            ny=ny,
-            wind_times = [start_time]
-        )
-
-        self.rasterorigin = rasterorigin
-        self.qu_buildings = qu_buildings
-        self.qu_fileoptions = qu_fileoptions
-        self.qfire_advanced_user_inputs = qfire_advanced_user_inputs
-        self.qfire_bldg_advanced_user_inputs = qfire_bldg_advanced_user_inputs
-        self.qfire_plume_advanced_user_inputs = qfire_plume_advanced_user_inputs
-        self.qu_topoinputs = qu_topoinputs
-        self.runtime_advanced_user_inputs = runtime_advanced_user_inputs
-        self.qu_movingcoords = qu_movingcoords
-        self.qp_buildout = qp_buildout
-        self.qu_metparams = qu_metparams
-        self.qu_simparams = qu_simparams
-        self.quic_fire = quic_fire
-        self.gridlist = gridlist
-        self.sensor1 = sensor1
-    
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
         self.gridlist.m = self.qu_simparams.ny
         self.gridlist.l = self.quic_fire.nz
         self.gridlist.dx = self.qu_simparams.dx
         self.gridlist.dy = self.qu_simparams.dy
-        if not self.sensor1.time_now == self.quic_fire.time_now == self.qu_simparams.wind_times[0]:
-            #TODO: How to handle conflicts
-            print(f"WARNING: fire start time must be the same for all input files.\n"
-                  f"Times:\n"
-                  f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
-                  f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
-                  f"\tsensor1.inp: {self.sensor1.time_now}\n"
-                  f"Setting all values to {self.quic_fire.time_now}")
+        if (
+            not self.sensor1.time_now
+            == self.quic_fire.time_now
+            == self.qu_simparams.wind_times[0]
+        ):
+            # TODO: How to handle conflicts
+            print(
+                f"WARNING: fire start time must be the same for all input files.\n"
+                f"Times:\n"
+                f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
+                f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
+                f"\tsensor1.inp: {self.sensor1.time_now}\n"
+                f"Setting all values to {self.quic_fire.time_now}"
+            )
             self.sensor1.time_now = self.quic_fire.time_now
             self.qu_simparams.wind_times[0] = self.quic_fire.time_now
 
@@ -441,7 +448,9 @@ class InputFile(BaseModel, validate_assignment=True):
     def from_dict(cls, data: dict):
         return cls(**data)
 
-#TODO: Unify class naming
+
+# TODO: Unify class naming
+
 
 class Gridlist(InputFile):
     """
