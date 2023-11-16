@@ -144,6 +144,8 @@ class SimulationInputs:
 
         if not directory.exists():
             raise NotADirectoryError(f"{directory} does not exist")
+        
+        self._update_shared_attributes()
 
         # Skip writing gridlist and rasterorigin if fuel_flag == 1
         skip_inputs = []
@@ -249,6 +251,22 @@ class SimulationInputs:
         self.quic_fire = quic_fire
         self.gridlist = gridlist
         self.sensor1 = sensor1
+    
+    def _update_shared_attributes(self):
+        self.gridlist.n = self.qu_simparams.nx
+        self.gridlist.m = self.qu_simparams.ny
+        self.gridlist.l = self.quic_fire.nz
+        self.gridlist.dx = self.qu_simparams.dx
+        self.gridlist.dy = self.qu_simparams.dy
+        if not self.sensor1.time_now == self.quic_fire.time_now == self.qu_simparams.wind_times[0]:
+            print(f"WARNING: fire start time must be the same for all input files.\n"
+                  f"Times:\n"
+                  f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
+                  f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
+                  f"\tsensor1.inp: {self.sensor1.time_now}\n"
+                  f"Setting all values to {self.quic_fire.time_now}")
+            self.sensor1.time_now = self.quic_fire.time_now
+            self.qu_simparams.wind_times[0] = self.quic_fire.time_now
 
 
 class InputFile(BaseModel, validate_assignment=True):
