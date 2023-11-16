@@ -406,7 +406,7 @@ class SimulationInputs:
             # TODO: How to handle conflicts
             print(
                 f"WARNING: fire start time must be the same for all input files.\n"
-                f"Times:\n"
+                f"Times: \n"
                 f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
                 f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
                 f"\tsensor1.inp: {self.sensor1.time_now}\n"
