@@ -220,10 +220,12 @@ class SimulationInputs:
         # TODO: set defaults for all parameters not used in initialize_inputs in their respective classes
         # Initialize input files with required parameters
         start_time = int(time.time())
+        ignition_type = default_line_ignition(nx,ny,wind_direction)
         quic_fire = QUIC_fire(
             nz=fire_nz,
             time_now=start_time,
-            sim_time=simulation_time
+            sim_time=simulation_time,
+            ignition_type=ignition_type,
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
         sensor1 = Sensor1(
@@ -259,6 +261,7 @@ class SimulationInputs:
         self.gridlist.dx = self.qu_simparams.dx
         self.gridlist.dy = self.qu_simparams.dy
         if not self.sensor1.time_now == self.quic_fire.time_now == self.qu_simparams.wind_times[0]:
+            #TODO: How to handle conflictsx
             print(f"WARNING: fire start time must be the same for all input files.\n"
                   f"Times:\n"
                   f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
@@ -1111,9 +1114,7 @@ class QUIC_fire(InputFile):
     fuel_density: PositiveFloat | None = 0.5
     fuel_moisture: PositiveFloat | None = 0.1
     fuel_height: PositiveFloat | None = 1.0
-    ignition_type: SerializeAsAny[IgnitionType] = IgnitionType(
-        ignition_flag=IgnitionSources(6)
-    )
+    ignition_type: SerializeAsAny[IgnitionType]
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
