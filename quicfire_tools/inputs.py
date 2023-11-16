@@ -116,7 +116,6 @@ class SimulationInputs:
             )
         
         # Validate that all required input files are present
-        #TODO: verify that self.__dict__.values() method works
         input_file_names = [input_file.name for input_file in self.__dict__.values()]
         for required_input in self._required_inputs:
             if required_input not in input_file_names:
@@ -153,7 +152,6 @@ class SimulationInputs:
             skip_inputs.extend(["gridlist", "rasterorigin"])
 
         # Write each input file to the output directory
-        #TODO: Again, verify the self.__dict__ method
         for input_name in self.__dict__.keys():
             if input_name in skip_inputs:
                 continue
@@ -167,7 +165,6 @@ class SimulationInputs:
             with open(output_file_path, "wb") as fout:
                 fout.write(ftemp.read())
 
-    #TODO: set_ methods
     def set_custom_simulation(
             self,
             fuel: bool = True,
@@ -262,7 +259,6 @@ class SimulationInputs:
         """
         if isinstance(directory, str):
             directory = Path(directory)
-            # TODO: verify that setattr method works
         input_files = {}
         for input_file_name in cls._required_inputs:
             input_obj = globals()[input_file_name]
@@ -294,7 +290,6 @@ class SimulationInputs:
         qp_buildout = QP_buildout()
         qu_metparams = QU_metparams()
 
-        # TODO: set defaults for all parameters not used in initialize_inputs in their respective classes
         # Initialize input files with required parameters
         start_time = int(time.time())
         ignition_type = default_line_ignition(nx,ny,wind_direction)
@@ -338,7 +333,7 @@ class SimulationInputs:
         self.gridlist.dx = self.qu_simparams.dx
         self.gridlist.dy = self.qu_simparams.dy
         if not self.sensor1.time_now == self.quic_fire.time_now == self.qu_simparams.wind_times[0]:
-            #TODO: How to handle conflictsx
+            #TODO: How to handle conflicts
             print(f"WARNING: fire start time must be the same for all input files.\n"
                   f"Times:\n"
                   f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
