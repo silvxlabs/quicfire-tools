@@ -1920,13 +1920,16 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.ignition_type == IgnitionType(ignition_flag = IgnitionSources(6))
         assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag = TopoSources(5))
 
+        sim_inputs = self.get_test_object()
         sim_inputs.set_custom_simulation(topo = False)
         assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag = TopoSources(0))
 
-        sim_inputs.setup_custom_simulation(ignition = False)
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_custom_simulation(ignition = False)
         assert sim_inputs.quic_fire.ignition_type == default_line_ignition(150,150,90)
 
-        sim_inputs.setup_custom_simulation(fuel = False)
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_custom_simulation(fuel = False)
         assert sim_inputs.quic_fire.fuel_flag == 1
         assert sim_inputs.quic_fire.fuel_density == 0.5
         assert sim_inputs.quic_fire.fuel_moisture == 0.1
