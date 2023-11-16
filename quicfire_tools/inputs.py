@@ -377,10 +377,10 @@ class Gridlist(InputFile):
     n: PositiveInt
     m: PositiveInt
     l: PositiveInt
-    dx: PositiveFloat
-    dy: PositiveFloat
-    dz: PositiveFloat
-    aa1: PositiveFloat
+    dx: PositiveFloat = 2
+    dy: PositiveFloat = 2
+    dz: PositiveFloat = 1
+    aa1: PositiveFloat = 1.0
 
 
 class RasterOrigin(InputFile):
@@ -579,9 +579,9 @@ class QU_Simparams(InputFile):
     nx: PositiveInt
     ny: PositiveInt
     nz: PositiveInt
-    dx: PositiveFloat
-    dy: PositiveFloat
-    quic_domain_height: PositiveFloat
+    dx: PositiveFloat = 2
+    dy: PositiveFloat = 2
+    quic_domain_height: PositiveFloat = 300
     wind_times: list[int]
     surface_vertical_cell_size: PositiveFloat = 1.0
     number_surface_cells: PositiveInt = 5
@@ -1089,10 +1089,10 @@ class QUIC_fire(InputFile):
     stretch_grid_flag: Literal[0, 1] = 0
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
-    fuel_flag: Literal[1, 2, 3, 4] = 4
-    fuel_density: PositiveFloat | None = None
-    fuel_moisture: PositiveFloat | None = None
-    fuel_height: PositiveFloat | None = None
+    fuel_flag: Literal[1, 2, 3, 4] = 1
+    fuel_density: PositiveFloat | None = 0.5
+    fuel_moisture: PositiveFloat | None = 0.1
+    fuel_height: PositiveFloat | None = 1.0
     ignition_type: SerializeAsAny[IgnitionType] = IgnitionType(
         ignition_flag=IgnitionSources(6)
     )
@@ -1817,7 +1817,7 @@ class Sensor1(InputFile):
     name: str = "sensor1"
     _extension: str = ".inp"
     time_now: PositiveInt
-    sensor_height: PositiveFloat = 6.1  # 20ft
+    sensor_height: PositiveFloat = 10
     wind_speed: PositiveFloat
     wind_direction: NonNegativeInt = Field(lt=360)
 
