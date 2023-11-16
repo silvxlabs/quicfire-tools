@@ -104,7 +104,7 @@ class SimulationInputs:
             Class containing the data to build a QUIC-Fire
             input file deck and run a simulation using default parameters.
         """
-        start_time = int(time.time)
+        start_time = int(time.time())
         self.initialize_inputs(
             nx,
             ny,
@@ -672,7 +672,7 @@ class QU_Simparams(InputFile):
     _extension: str = ".inp"
     nx: PositiveInt
     ny: PositiveInt
-    nz: PositiveInt
+    nz: PositiveInt = 22
     dx: PositiveFloat = 2
     dy: PositiveFloat = 2
     quic_domain_height: PositiveFloat = 300
