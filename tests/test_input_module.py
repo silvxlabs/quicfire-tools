@@ -23,8 +23,8 @@ from quicfire_tools.inputs import (
     Sensor1,
     SimulationInputs,
 )
-from quicfire_tools.ignitions import RectangleIgnition
-from quicfire_tools.topography import TopoType, GaussianHillTopo
+from quicfire_tools.ignitions import IgnitionType, IgnitionSources, RectangleIgnition, default_line_ignition
+from quicfire_tools.topography import TopoType, TopoSources, GaussianHillTopo
 
 # Create a tmp/ directory to store the temporary test files
 Path("tmp/").mkdir(exist_ok=True)
@@ -1813,87 +1813,148 @@ class TestSensor1:
 class TestSimulationInputs:
     @staticmethod
     def get_test_object():
-        topo = GaussianHillTopo(
-            x_hilltop=50, y_hilltop=50, elevation_max=100, elevation_std=20
-        )
-        ignite = RectangleIgnition(x_min=20, y_min=20, x_length=10, y_length=160)
-        return SimulationInputs.setup_simulation(
-            nx=100,
-            ny=100,
-            fire_nz=40,
-            quic_nz=26,
-            quic_height=180,
-            dx=2,
-            dy=2,
-            fire_dz=1,
-            wind_speed=2.7,
-            wind_direction=270,
-            simulation_time=600,
-            output_time=60,
-            topo_type=topo,
-            ignition_type=ignite,
-            fuel_flag=1,
-            fuel_density=0.6,
-            fuel_moisture=0.5,
-            fuel_height=1.0,
-        )
-
-    @staticmethod
-    def get_simple_test_object():
-        return SimulationInputs.setup_simple_simulation(
-            nx=100,
-            ny=100,
-            simulation_time=600,
-            wind_speed=2.7,
-            wind_direction=270,
-        )
-
-    @staticmethod
-    def get_custom_test_object():
-        return SimulationInputs.setup_custom_simulation(
-            nx=100,
-            ny=100,
-            fire_nz=40,
-            simulation_time=600,
-            wind_speed=2.7,
-            wind_direction=270,
+        return SimulationInputs(
+            nx = 150,
+            ny = 150,
+            fire_nz = 1,
+            wind_speed = 5.0,
+            wind_direction = 90,
+            simulation_time = 65,
         )
 
     def test_basic_inputs(self):
         sim_inputs = self.get_test_object()
         assert isinstance(sim_inputs, SimulationInputs)
 
-    def test_simple(self):
-        sim_inputs = self.get_simple_test_object()
-        assert isinstance(sim_inputs, SimulationInputs)
-        quic_fire = sim_inputs.get_input("QUIC_fire")
-        topo_inputs = sim_inputs.get_input("QU_TopoInputs")
-        assert quic_fire.fuel_flag == 1
-        assert topo_inputs.topo_type.topo_flag.value == 0
-        assert quic_fire.ignition_type.ignition_flag.value == 1
-
-    def test_custum(self):
-        sim_inputs = self.get_custom_test_object()
-        assert isinstance(sim_inputs, SimulationInputs)
-        quic_fire = sim_inputs.get_input("QUIC_fire")
-        topo_inputs = sim_inputs.get_input("QU_TopoInputs")
-        assert quic_fire.fuel_flag == 4
-        assert topo_inputs.topo_type.topo_flag.value == 5
-        assert quic_fire.ignition_type.ignition_flag.value == 6
-
-    def test_list_inputs(self):
+    def test_input_files(self):
         sim_inputs = self.get_test_object()
-        inputs = sim_inputs.list_inputs()
-        assert "rasterorigin" in inputs
-
-    def test_get_input(self):
+        assert isinstance(sim_inputs.gridlist, Gridlist)
+        assert isinstance(sim_inputs.rasterorigin, RasterOrigin)
+        assert isinstance(sim_inputs.qu_buildings, QU_Buildings)
+        assert isinstance(sim_inputs.qu_fileoptions, QU_Fileoptions)
+        assert isinstance(sim_inputs.qu_simparams, QU_Simparams)
+        assert isinstance(sim_inputs.qfire_advanced_user_inputs, QFire_Advanced_User_Inputs)
+        assert isinstance(sim_inputs.quic_fire, QUIC_fire)
+        assert isinstance(sim_inputs.qfire_bldg_advanced_user_inputs, QFire_Bldg_Advanced_User_Inputs)
+        assert isinstance(sim_inputs.qfire_plume_advanced_user_inputs, QFire_Plume_Advanced_User_Inputs)
+        assert isinstance(sim_inputs.qu_topoinputs, QU_TopoInputs)
+        assert isinstance(sim_inputs.runtime_advanced_user_inputs, RuntimeAdvancedUserInputs)
+        assert isinstance(sim_inputs.qu_movingcoords, QU_movingcoords)
+        assert isinstance(sim_inputs.qp_buildout, QP_buildout)
+        assert isinstance(sim_inputs.qu_metparams, QU_metparams)
+        assert isinstance(sim_inputs.sensor1, Sensor1)
+        
+        assert sim_inputs.quic_fire.nz == 1
+        assert sim_inputs.quic_fire.sim_time == 65
+        assert sim_inputs.qu_simparams.nx == 150
+        assert sim_inputs.qu_simparams.ny == 150
+        assert sim_inputs.quic_fire.time_now == sim_inputs.sensor1.time_now
+        assert sim_inputs.qu_simparams.wind_times[0] == sim_inputs.sensor1.time_now
+        assert sim_inputs.sensor1.wind_speed == 5.0
+        assert sim_inputs.sensor1.wind_direction == 90
+        
+    def test_set_uniform_fuels(self):
         sim_inputs = self.get_test_object()
-        rasterorigin = sim_inputs.get_input("rasterorigin")
-        assert isinstance(rasterorigin, RasterOrigin)
+        sim_inputs.set_uniform_fuels(
+            fuel_density=0.6,fuel_moisture=0.05,fuel_height=0.9
+        )
+        assert sim_inputs.quic_fire.fuel_flag == 1
+        assert sim_inputs.quic_fire.fuel_density == 0.6
+        assert sim_inputs.quic_fire.fuel_moisture == 0.05
+        assert sim_inputs.quic_fire.fuel_height == 0.9
+
+    def test_set_rectangle_ignition(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_rectangle_ignition(
+            x_min = 20,
+            y_min = 20,
+            x_length = 10,
+            y_length = 110,
+        )
+        assert sim_inputs.quic_fire.ignition_type == RectangleIgnition(
+            x_min = 20,
+            y_min = 20,
+            x_length = 10,
+            y_length = 110,
+        )
+    
+    def test_set_output_files(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_output_files(
+            mass_burnt = True, co_emissions = True, pm_emissions = True
+        )
+        assert sim_inputs.quic_fire.eng_to_atm_out == 0
+        assert sim_inputs.quic_fire.react_rate_out == 0
+        assert sim_inputs.quic_fire.fuel_dens_out == 0
+        assert sim_inputs.quic_fire.qf_wind_out == 0
+        assert sim_inputs.quic_fire.qu_wind_inst_out == 0
+        assert sim_inputs.quic_fire.qu_wind_avg_out == 0
+        assert sim_inputs.quic_fire.fuel_moist_out == 0
+        assert sim_inputs.quic_fire.mass_burnt_out == 1
+        assert sim_inputs.quic_fire.radiation_out == 0
+        assert sim_inputs.quic_fire.intensity_out == 0
+        assert sim_inputs.quic_fire.emissions_out == 3
+
+        sim_inputs.set_output_files(
+            water_emissions = True
+        )
+        assert sim_inputs.emissions_out == 5
+
+        sim_inputs.set_output_files(
+            co_emissions = True, water_emissions = True
+        )
+        assert sim_inputs.emissions_out == 5
+
+        sim_inputs.set_output_files(
+            co_emissions = True
+        )
+        assert sim_inputs.emissions_out == 1
+    
+    def test_set_custom_simulation(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_custom_simulation()
+        assert sim_inputs.quic_fire.fuel_flag == 3
+        assert sim_inputs.quic_fire.fuel_density == None
+        assert sim_inputs.quic_fire.fuel_moisture == None
+        assert sim_inputs.quic_fire.fuel_height == None
+        assert sim_inputs.quic_fire.ignition_type == IgnitionType(ignition_flag = IgnitionSources(6))
+        assert sim_inputs.qu_topoinputs.topotype == TopoType(topo_flag = TopoSources(5))
+
+        sim_inputs.set_custom_simulation(topo = False)
+        assert sim_inputs.qu_topoinputs == TopoType(topo_flag = TopoSources(0))
+
+        sim_inputs.setup_custom_simulation(ignition = False)
+        assert sim_inputs.quic_fire.ignition_type == default_line_ignition(150,150,90)
+
+        sim_inputs.setup_custom_simulation(fuel = False)
+        assert sim_inputs.quic_fire.fuel_flag == 1
+        assert sim_inputs.quic_fire.fuel_density == 0.5
+        assert sim_inputs.quic_fire.fuel_moisture == 0.1
+        assert sim_inputs.quic_fire.fuel_height == 1.0
 
     def test_write_inputs(self):
         sim_inputs = self.get_test_object()
         sim_inputs.write_inputs("tmp/")
+
+    def test_update_shared_inputs(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.qu_simparams.nx = 100
+        sim_inputs.qu_simparams.ny = 100
+        sim_inputs.quic_fire.nz = 2
+        sim_inputs.quic_fire.time_now = 12345667
+        assert sim_inputs.qu_simparams.nx != sim_inputs.gridlist.n
+        assert sim_inputs.qu_simparams.ny != sim_inputs.gridlist.m
+        assert sim_inputs.quic_fire.nz != sim_inputs.gridlist.l
+        assert sim_inputs.quic_fire.time_now != sim_inputs.sensor1.time_now
+        assert sim_inputs.quic_fire.time_now != sim_inputs.qu_simparams.wind_times[0]
+
+        sim_inputs.write_inputs("tmp/")
+        assert sim_inputs.qu_simparams.nx == sim_inputs.gridlist.n
+        assert sim_inputs.qu_simparams.ny == sim_inputs.gridlist.m
+        assert sim_inputs.quic_fire.nz == sim_inputs.gridlist.l
+        assert sim_inputs.quic_fire.time_now == sim_inputs.sensor1.time_now
+        assert sim_inputs.quic_fire.time_now == sim_inputs.qu_simparams.wind_times[0]
+
 
     def test_from_directory(self):
         sim_inputs = SimulationInputs.from_directory("tmp/")

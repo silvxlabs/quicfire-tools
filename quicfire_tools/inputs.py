@@ -174,7 +174,11 @@ class SimulationInputs:
             ignition: bool = True,
             topo: bool = True,
     ):
-        if fuel: self.quic_fire.fuel_flag = 3
+        if fuel: 
+            self.quic_fire.fuel_flag = 3
+            self.quic_fire.fuel_density = None
+            self.quic_fire.fuel_moisture = None
+            self.quic_fire.fuel_height = None
         if ignition: self.quic_fire.ignition_type = IgnitionType(ignition_flag = IgnitionSources(6))
         if topo: self.qu_topoinputs.topo_type = TopoType(topo_flag = TopoSources(5))
 
@@ -442,6 +446,7 @@ class InputFile(BaseModel, validate_assignment=True):
     def from_dict(cls, data: dict):
         return cls(**data)
 
+#TODO: Unify class naming
 
 class Gridlist(InputFile):
     """
