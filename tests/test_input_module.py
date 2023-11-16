@@ -1898,17 +1898,17 @@ class TestSimulationInputs:
         sim_inputs.set_output_files(
             water_emissions = True
         )
-        assert sim_inputs.emissions_out == 5
+        assert sim_inputs.quic_fire.emissions_out == 5
 
         sim_inputs.set_output_files(
             co_emissions = True, water_emissions = True
         )
-        assert sim_inputs.emissions_out == 5
+        assert sim_inputs.quic_fire.emissions_out == 5
 
         sim_inputs.set_output_files(
             co_emissions = True
         )
-        assert sim_inputs.emissions_out == 1
+        assert sim_inputs.quic_fire.emissions_out == 1
     
     def test_set_custom_simulation(self):
         sim_inputs = self.get_test_object()
@@ -1918,10 +1918,10 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.fuel_moisture == None
         assert sim_inputs.quic_fire.fuel_height == None
         assert sim_inputs.quic_fire.ignition_type == IgnitionType(ignition_flag = IgnitionSources(6))
-        assert sim_inputs.qu_topoinputs.topotype == TopoType(topo_flag = TopoSources(5))
+        assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag = TopoSources(5))
 
         sim_inputs.set_custom_simulation(topo = False)
-        assert sim_inputs.qu_topoinputs == TopoType(topo_flag = TopoSources(0))
+        assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag = TopoSources(0))
 
         sim_inputs.setup_custom_simulation(ignition = False)
         assert sim_inputs.quic_fire.ignition_type == default_line_ignition(150,150,90)

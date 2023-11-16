@@ -222,16 +222,16 @@ class SimulationInputs:
             radiation: bool = False,
             intensity: bool = False,
     ):
-        self.quic_fire.eng_to_atm_out = eng_to_atm
-        self.quic_fire.react_rate_out = react_rate
-        self.quic_fire.fuel_dens_out = fuel_dens
-        self.quic_fire.qf_wind_out = qf_wind
-        self.quic_fire.qu_wind_inst_out = qu_wind_inst
-        self.quic_fire.qu_wind_avg_out = qu_wind_avg
-        self.quic_fire.fuel_moist_out = fuel_moist
-        self.quic_fire.mass_burnt_out = mass_burnt
-        self.quic_fire.radiation_out = radiation
-        self.quic_fire.intensity_out = intensity
+        self.quic_fire.eng_to_atm_out = int(eng_to_atm)
+        self.quic_fire.react_rate_out = int(react_rate)
+        self.quic_fire.fuel_dens_out = int(fuel_dens)
+        self.quic_fire.qf_wind_out = int(qf_wind)
+        self.quic_fire.qu_wind_inst_out = int(qu_wind_inst)
+        self.quic_fire.qu_wind_avg_out = int(qu_wind_avg)
+        self.quic_fire.fuel_moist_out = int(fuel_moist)
+        self.quic_fire.mass_burnt_out = int(mass_burnt)
+        self.quic_fire.radiation_out = int(radiation)
+        self.quic_fire.intensity_out = int(intensity)
         if water_emissions:
             self.quic_fire.emissions_out = 5
         elif co_emissions and pm_emissions:
@@ -283,7 +283,7 @@ class SimulationInputs:
         start_time: int,
     ):
         # Initialize default input files
-        raster_origin = RasterOrigin()
+        rasterorigin = RasterOrigin()
         qu_buildings = QU_Buildings()
         qu_fileoptions = QU_Fileoptions()
         qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
@@ -315,7 +315,7 @@ class SimulationInputs:
             wind_times = [start_time]
         )
 
-        self.raster_origin = raster_origin
+        self.rasterorigin = rasterorigin
         self.qu_buildings = qu_buildings
         self.qu_fileoptions = qu_fileoptions
         self.qfire_advanced_user_inputs = qfire_advanced_user_inputs
