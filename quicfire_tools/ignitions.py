@@ -168,4 +168,6 @@ def default_line_ignition(nx, ny, wind_direction):
         x_length = 0.8 * (nx * 2)
         y_length = width
 
-    return RectangleIgnition(x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length)
+    return RectangleIgnition(
+        x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
+    )
