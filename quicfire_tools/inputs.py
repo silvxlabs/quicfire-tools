@@ -103,6 +103,61 @@ class SimulationInputs:
 
     def __init__(
         self,
+        rasterorigin: RasterOrigin,
+        qu_buildings: QU_Buildings,
+        qu_fileoptions: QU_Fileoptions,
+        qfire_advanced_user_inputs: QFire_Advanced_User_Inputs,
+        qfire_bldg_advanced_user_inputs: QFire_Bldg_Advanced_User_Inputs,
+        qfire_plume_advanced_user_inputs: QFire_Plume_Advanced_User_Inputs,
+        runtime_advanced_user_inputs: RuntimeAdvancedUserInputs,
+        qu_movingcoords: QU_movingcoords,
+        qp_buildout: QP_buildout,
+        qu_metparams: QU_metparams,
+        quic_fire: QUIC_fire,
+        gridlist: Gridlist,
+        sensor1: Sensor1,
+        qu_topoinputs: QU_TopoInputs,
+        qu_simparams: QU_Simparams,
+    ):
+        # Store the input files in a list
+        self._input_files = [
+            rasterorigin,
+            qu_buildings,
+            qu_fileoptions,
+            qfire_advanced_user_inputs,
+            qfire_bldg_advanced_user_inputs,
+            qfire_plume_advanced_user_inputs,
+            runtime_advanced_user_inputs,
+            qu_movingcoords,
+            qp_buildout,
+            qu_metparams,
+            quic_fire,
+            gridlist,
+            sensor1,
+            qu_topoinputs,
+            qu_simparams,
+        ]
+
+        # Store the input files as attributes
+        self.rasterorigin = rasterorigin
+        self.qu_buildings = qu_buildings
+        self.qu_fileoptions = qu_fileoptions
+        self.qfire_advanced_user_inputs = qfire_advanced_user_inputs
+        self.qfire_bldg_advanced_user_inputs = qfire_bldg_advanced_user_inputs
+        self.qfire_plume_advanced_user_inputs = qfire_plume_advanced_user_inputs
+        self.runtime_advanced_user_inputs = runtime_advanced_user_inputs
+        self.qu_movingcoords = qu_movingcoords
+        self.qp_buildout = qp_buildout
+        self.qu_metparams = qu_metparams
+        self.quic_fire = quic_fire
+        self.gridlist = gridlist
+        self.sensor1 = sensor1
+        self.qu_topoinputs = qu_topoinputs
+        self.qu_simparams = qu_simparams
+
+    @classmethod
+    def create_simulation(
+        cls,
         nx: int,
         ny: int,
         fire_nz: int,
@@ -137,51 +192,51 @@ class SimulationInputs:
             input file deck and run a simulation using default parameters.
         """
         # Initialize default input files
-        self.rasterorigin = RasterOrigin()
-        self.qu_buildings = QU_Buildings()
-        self.qu_fileoptions = QU_Fileoptions()
-        self.qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
-        self.qfire_bldg_advanced_user_inputs = QFire_Bldg_Advanced_User_Inputs()
-        self.qfire_plume_advanced_user_inputs = QFire_Plume_Advanced_User_Inputs()
-        self.runtime_advanced_user_inputs = RuntimeAdvancedUserInputs()
-        self.qu_movingcoords = QU_movingcoords()
-        self.qp_buildout = QP_buildout()
-        self.qu_metparams = QU_metparams()
+        rasterorigin = RasterOrigin()
+        qu_buildings = QU_Buildings()
+        qu_fileoptions = QU_Fileoptions()
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
+        qfire_bldg_advanced_user_inputs = QFire_Bldg_Advanced_User_Inputs()
+        qfire_plume_advanced_user_inputs = QFire_Plume_Advanced_User_Inputs()
+        runtime_advanced_user_inputs = RuntimeAdvancedUserInputs()
+        qu_movingcoords = QU_movingcoords()
+        qp_buildout = QP_buildout()
+        qu_metparams = QU_metparams()
 
         # Initialize input files with required parameters
         start_time = int(time.time())
         ignition_type = default_line_ignition(nx, ny, wind_direction)
-        self.quic_fire = QUIC_fire(
+        quic_fire = QUIC_fire(
             nz=fire_nz,
             time_now=start_time,
             sim_time=simulation_time,
             ignition_type=ignition_type,
         )
-        self.gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
-        self.sensor1 = Sensor1(
+        gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
+        sensor1 = Sensor1(
             time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
         )
-        self.qu_topoinputs = QU_TopoInputs()
-        self.qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
+        qu_topoinputs = QU_TopoInputs()
+        qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
 
-        # Store the input files in a list
-        self._input_files = [
-            self.rasterorigin,
-            self.qu_buildings,
-            self.qu_fileoptions,
-            self.qfire_advanced_user_inputs,
-            self.qfire_bldg_advanced_user_inputs,
-            self.qfire_plume_advanced_user_inputs,
-            self.runtime_advanced_user_inputs,
-            self.qu_movingcoords,
-            self.qp_buildout,
-            self.qu_metparams,
-            self.quic_fire,
-            self.gridlist,
-            self.sensor1,
-            self.qu_topoinputs,
-            self.qu_simparams,
-        ]
+        # Create the SimulationInputs object
+        return cls(
+            rasterorigin=rasterorigin,
+            qu_buildings=qu_buildings,
+            qu_fileoptions=qu_fileoptions,
+            qfire_advanced_user_inputs=qfire_advanced_user_inputs,
+            qfire_bldg_advanced_user_inputs=qfire_bldg_advanced_user_inputs,
+            qfire_plume_advanced_user_inputs=qfire_plume_advanced_user_inputs,
+            runtime_advanced_user_inputs=runtime_advanced_user_inputs,
+            qu_movingcoords=qu_movingcoords,
+            qp_buildout=qp_buildout,
+            qu_metparams=qu_metparams,
+            quic_fire=quic_fire,
+            gridlist=gridlist,
+            sensor1=sensor1,
+            qu_topoinputs=qu_topoinputs,
+            qu_simparams=qu_simparams,
+        )
 
     def write_inputs(self, directory: str | Path, version: str = "latest") -> None:
         """
