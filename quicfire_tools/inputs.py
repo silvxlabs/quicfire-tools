@@ -256,7 +256,7 @@ class SimulationInputs:
         """
         if isinstance(directory, str):
             directory = Path(directory)
-        cls(
+        return cls(
             rasterorigin=RasterOrigin.from_file(directory),
             qu_buildings=QU_Buildings.from_file(directory),
             qu_fileoptions=QU_Fileoptions.from_file(directory),
@@ -549,6 +549,27 @@ class Gridlist(InputFile):
     dy: PositiveFloat = 2
     dz: PositiveFloat = 1
     aa1: PositiveFloat = 1.0
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        """
+        Initializes a Gridlist object from a directory containing a
+        gridlist.txt file.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        with open(directory / "gridlist", "r") as f:
+            lines = f.read()
+
+        return cls(
+            n=int(lines.split("n=")[1].split()[0]),
+            m=int(lines.split("m=")[1].split()[0]),
+            l=int(lines.split("l=")[1].split()[0]),
+            dx=float(lines.split("dx=")[1].split()[0]),
+            dy=float(lines.split("dy=")[1].split()[0]),
+            dz=float(lines.split("dz=")[1].split()[0]),
+            aa1=float(lines.split("aa1=")[1].split()[0]),
+        )
 
 
 class RasterOrigin(InputFile):
@@ -2013,7 +2034,7 @@ class Sensor1(InputFile):
             lines = f.readlines()
         return cls(
             time_now=int(lines[6].strip().split("!")[0]),
-            sensor_height=float(lines[11].split(" ")[0]),
-            wind_speed=float(lines[11].split(" ")[1]),
-            wind_direction=int(lines[11].split(" ")[2]),
+            sensor_height=float(lines[10].split(" ")[0]),
+            wind_speed=float(lines[10].split(" ")[1]),
+            wind_direction=int(lines[10].split(" ")[2]),
         )
