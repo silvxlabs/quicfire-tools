@@ -934,7 +934,14 @@ class TestQFire_Advanced_User_Inputs:
 class TestQUIC_fire:
     @staticmethod
     def get_test_object():
-        return QUIC_fire(nz=26, sim_time=60, time_now=1695311421)
+        return QUIC_fire(
+            nz=26,
+            sim_time=60,
+            time_now=1695311421,
+            ignition_type=RectangleIgnition(
+                x_min=20, y_min=20, x_length=10, y_length=160
+            ),
+        )
 
     @staticmethod
     def get_complex_test_object():
@@ -1835,6 +1842,13 @@ class TestSimulationInputs:
             simulation_time=65,
         )
 
+    @staticmethod
+    def compare_simulation_inputs(a: SimulationInputs, b: SimulationInputs):
+        for a_input_file, b_input_file in zip(
+            a._input_files_dict.values(), b._input_files_dict.values()
+        ):
+            assert a_input_file == b_input_file
+
     def test_basic_inputs(self):
         sim_inputs = self.get_test_object()
         assert isinstance(sim_inputs, SimulationInputs)
@@ -1982,8 +1996,31 @@ class TestSimulationInputs:
         test_object = SimulationInputs.from_directory("tmp/")
         assert isinstance(test_object, SimulationInputs)
 
-        # Assert that the test object is the same as the original
-        for original_file, test_file in zip(
-            sim_inputs._input_files, test_object._input_files
-        ):
-            assert original_file == test_file
+        # Check that the inputs are the same
+        self.compare_simulation_inputs(sim_inputs, test_object)
+
+    def test_to_dict(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.to_dict()
+
+    def test_from_dict(self):
+        sim_inputs = self.get_test_object()
+        sim_dict = sim_inputs.to_dict()
+        test_obj = SimulationInputs.from_dict(sim_dict)
+        assert isinstance(test_obj, SimulationInputs)
+
+        # Check that the inputs are the same
+        self.compare_simulation_inputs(sim_inputs, test_obj)
+
+    def test_to_json(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.to_json("tmp/test.json")
+
+    def test_from_json(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.to_json("tmp/test.json")
+        test_obj = SimulationInputs.from_json("tmp/test.json")
+        assert isinstance(test_obj, SimulationInputs)
+
+        # Check that the inputs are the same
+        self.compare_simulation_inputs(sim_inputs, test_obj)

@@ -119,25 +119,6 @@ class SimulationInputs:
         qu_topoinputs: QU_TopoInputs,
         qu_simparams: QU_Simparams,
     ):
-        # Store the input files in a list
-        self._input_files = [
-            rasterorigin,
-            qu_buildings,
-            qu_fileoptions,
-            qfire_advanced_user_inputs,
-            qfire_bldg_advanced_user_inputs,
-            qfire_plume_advanced_user_inputs,
-            runtime_advanced_user_inputs,
-            qu_movingcoords,
-            qp_buildout,
-            qu_metparams,
-            quic_fire,
-            gridlist,
-            sensor1,
-            qu_topoinputs,
-            qu_simparams,
-        ]
-
         # Store the input files as attributes
         self.rasterorigin = rasterorigin
         self.qu_buildings = qu_buildings
@@ -154,6 +135,25 @@ class SimulationInputs:
         self.sensor1 = sensor1
         self.qu_topoinputs = qu_topoinputs
         self.qu_simparams = qu_simparams
+
+        # Create a dictionary from the local variables
+        self._input_files_dict = {
+            "rasterorigin": rasterorigin,
+            "qu_buildings": qu_buildings,
+            "qu_fileoptions": qu_fileoptions,
+            "qfire_advanced_user_inputs": qfire_advanced_user_inputs,
+            "qfire_bldg_advanced_user_inputs": qfire_bldg_advanced_user_inputs,
+            "qfire_plume_advanced_user_inputs": qfire_plume_advanced_user_inputs,
+            "runtime_advanced_user_inputs": runtime_advanced_user_inputs,
+            "qu_movingcoords": qu_movingcoords,
+            "qp_buildout": qp_buildout,
+            "qu_metparams": qu_metparams,
+            "quic_fire": quic_fire,
+            "gridlist": gridlist,
+            "sensor1": sensor1,
+            "qu_topoinputs": qu_topoinputs,
+            "qu_simparams": qu_simparams,
+        }
 
     @classmethod
     def create_simulation(
@@ -278,6 +278,59 @@ class SimulationInputs:
             qu_simparams=QU_Simparams.from_file(directory),
         )
 
+    @classmethod
+    def from_dict(cls, data: dict) -> SimulationInputs:
+        """
+        Initializes a SimulationInputs object from a dictionary containing
+        input file data.
+
+        Parameters
+        ----------
+        data: dict
+            Dictionary containing input file data.
+        """
+        return cls(
+            rasterorigin=RasterOrigin.from_dict(data["rasterorigin"]),
+            qu_buildings=QU_Buildings.from_dict(data["qu_buildings"]),
+            qu_fileoptions=QU_Fileoptions.from_dict(data["qu_fileoptions"]),
+            qfire_advanced_user_inputs=QFire_Advanced_User_Inputs.from_dict(
+                data["qfire_advanced_user_inputs"]
+            ),
+            qfire_bldg_advanced_user_inputs=QFire_Bldg_Advanced_User_Inputs.from_dict(
+                data["qfire_bldg_advanced_user_inputs"]
+            ),
+            qfire_plume_advanced_user_inputs=QFire_Plume_Advanced_User_Inputs.from_dict(
+                data["qfire_plume_advanced_user_inputs"]
+            ),
+            runtime_advanced_user_inputs=RuntimeAdvancedUserInputs.from_dict(
+                data["runtime_advanced_user_inputs"]
+            ),
+            qu_movingcoords=QU_movingcoords.from_dict(data["qu_movingcoords"]),
+            qp_buildout=QP_buildout.from_dict(data["qp_buildout"]),
+            qu_metparams=QU_metparams.from_dict(data["qu_metparams"]),
+            quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
+            gridlist=Gridlist.from_dict(data["gridlist"]),
+            sensor1=Sensor1.from_dict(data["sensor1"]),
+            qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
+            qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
+        )
+
+    @classmethod
+    def from_json(cls, path: str | Path) -> SimulationInputs:
+        """
+        Initializes a SimulationInputs object from a JSON file.
+
+        Parameters
+        ----------
+        path: str | Path
+            Path to the JSON file.
+        """
+        if isinstance(path, str):
+            path = Path(path)
+        with open(path, "r") as f:
+            data = json.load(f)
+        return cls.from_dict(data)
+
     def write_inputs(self, directory: str | Path, version: str = "latest") -> None:
         """
         Write all input files in the SimulationInputs object to a specified
@@ -308,7 +361,7 @@ class SimulationInputs:
             skip_inputs.extend(["gridlist", "rasterorigin"])
 
         # Write each input file to the output directory
-        for input_file in self._input_files:
+        for input_file in self._input_files_dict.values():
             input_file.to_file(directory, version=version)
 
         # Copy QU_landuse from the template directory to the output directory
@@ -317,6 +370,33 @@ class SimulationInputs:
         with open(template_file_path, "rb") as ftemp:
             with open(output_file_path, "wb") as fout:
                 fout.write(ftemp.read())
+
+    def to_dict(self) -> dict:
+        """
+        Convert the object to a dictionary representation. The SimulationInputs
+        object is represented as a nest dictionary, with the name of each
+        input file as a key to that input file's dictionary representation.
+
+        Returns:
+        --------
+        dict
+            Dictionary representation of the object.
+        """
+        return {key: value.to_dict() for key, value in self._input_files_dict.items()}
+
+    def to_json(self, path: str | Path):
+        """
+        Write the object to a JSON file.
+
+        Parameters
+        ----------
+        path : str | Path
+            Path to write the JSON file to.
+        """
+        if isinstance(path, str):
+            path = Path(path)
+        with open(path, "w") as f:
+            json.dump(self.to_dict(), f, indent=4)
 
     def set_custom_simulation(
         self,

@@ -1,5 +1,4 @@
-from quicfire_tools.inputs import SimulationInputs, QUIC_fire
-from quicfire_tools.ignitions import RectangleIgnition
+from quicfire_tools.inputs import SimulationInputs
 
 
 def create_line_fire() -> SimulationInputs:
@@ -14,24 +13,24 @@ def create_line_fire() -> SimulationInputs:
 
     # Set uniform fuel values
     sim_inputs.set_uniform_fuels(
-        fuel_density = 0.7,
-        fuel_moisture = 0.05,
-        fuel_height = 1.0,
+        fuel_density=0.7,
+        fuel_moisture=0.05,
+        fuel_height=1.0,
     )
 
     # Set a line ignitions
     sim_inputs.set_rectangle_ignition(
         x_min=150,
         y_min=100,
-        x_length = 10,
-        y_length = 100,
+        x_length=10,
+        y_length=100,
     )
 
     # Select which binary files to output
     sim_inputs.set_output_files(
-        fuel_dens = True,
-        pm_emissions = True,
-        radiation = True,
+        fuel_dens=True,
+        pm_emissions=True,
+        radiation=True,
     )
 
     # Make modifications to the QUIC_Fire input file
