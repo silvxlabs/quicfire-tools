@@ -238,6 +238,46 @@ class SimulationInputs:
             qu_simparams=qu_simparams,
         )
 
+    @classmethod
+    def from_directory(cls, directory: str | Path) -> SimulationInputs:
+        """
+        Initializes a SimulationInputs object from a directory containing a
+        QUIC-Fire input file deck.
+
+        Parameters
+        ----------
+        directory: str | Path
+            Directory containing a QUIC-Fire input file deck.
+
+        Returns
+        -------
+        SimulationInputs
+            Class containing the input files in the QUIC-Fire input file deck.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        cls(
+            rasterorigin=RasterOrigin.from_file(directory),
+            qu_buildings=QU_Buildings.from_file(directory),
+            qu_fileoptions=QU_Fileoptions.from_file(directory),
+            qfire_advanced_user_inputs=QFire_Advanced_User_Inputs.from_file(directory),
+            qfire_bldg_advanced_user_inputs=QFire_Bldg_Advanced_User_Inputs.from_file(
+                directory
+            ),
+            qfire_plume_advanced_user_inputs=QFire_Plume_Advanced_User_Inputs.from_file(
+                directory
+            ),
+            runtime_advanced_user_inputs=RuntimeAdvancedUserInputs.from_file(directory),
+            qu_movingcoords=QU_movingcoords.from_file(directory),
+            qp_buildout=QP_buildout.from_file(directory),
+            qu_metparams=QU_metparams.from_file(directory),
+            quic_fire=QUIC_fire.from_file(directory),
+            gridlist=Gridlist.from_file(directory),
+            sensor1=Sensor1.from_file(directory),
+            qu_topoinputs=QU_TopoInputs.from_file(directory),
+            qu_simparams=QU_Simparams.from_file(directory),
+        )
+
     def write_inputs(self, directory: str | Path, version: str = "latest") -> None:
         """
         Write all input files in the SimulationInputs object to a specified
@@ -268,10 +308,7 @@ class SimulationInputs:
             skip_inputs.extend(["gridlist", "rasterorigin"])
 
         # Write each input file to the output directory
-        for input_name in self.__dict__.keys():
-            if input_name in skip_inputs:
-                continue
-            input_file = self.__dict__[input_name]
+        for input_file in self._input_files:
             input_file.to_file(directory, version=version)
 
         # Copy QU_landuse from the template directory to the output directory
@@ -354,33 +391,6 @@ class SimulationInputs:
             self.quic_fire.emissions_out = 1
         else:
             self.quic_fire.emissions_out = 0
-
-    @classmethod
-    def from_directory(cls, directory: str | Path) -> SimulationInputs:
-        """
-        Initializes a SimulationInputs object from a directory containing a
-        QUIC-Fire input file deck.
-
-        Parameters
-        ----------
-        directory: str | Path
-            Directory containing a QUIC-Fire input file deck.
-
-        Returns
-        -------
-        SimulationInputs
-            Class containing the input files in the QUIC-Fire input file deck.
-        """
-        if isinstance(directory, str):
-            directory = Path(directory)
-        input_files = {}
-        for input_file_name in cls._required_inputs:
-            input_obj = globals()[input_file_name]
-            input_file = input_obj.from_file(directory)
-            input_files[input_file.name.lower()] = input_file
-        for k, v in input_files.items():
-            setattr(cls, k, v)
-        return cls
 
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
