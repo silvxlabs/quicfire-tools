@@ -167,6 +167,79 @@ class SimulationInputs:
             with open(output_file_path, "wb") as fout:
                 fout.write(ftemp.read())
 
+    #TODO: set_ methods
+    def set_custom_simulation(
+            self,
+            fuel: bool = True,
+            ignition: bool = True,
+            topo: bool = True,
+    ):
+        if fuel: self.quic_fire.fuel_flag = 3
+        if ignition: self.quic_fire.ignition_type = IgnitionType(ignition_flag = IgnitionSources(6))
+        if topo: self.qu_topoinputs.topo_type = TopoType(topo_flag = TopoSources(5))
+
+    def set_uniform_fuels(
+            self,
+            fuel_density: float,
+            fuel_moisture: float,
+            fuel_height: float,
+    ):
+        self.quic_fire.fuel_flag = 1
+        self.quic_fire.fuel_density = fuel_density
+        self.quic_fire.fuel_moisture = fuel_moisture
+        self.quic_fire.fuel_height = fuel_height
+    
+    def set_rectangle_ignition(
+            self,
+            x_min: int,
+            y_min: int,
+            x_length: int,
+            y_length: int
+    ):
+        ignition = RectangleIgnition(x_min=x_min,
+                                    y_min=y_min,
+                                    x_length=x_length,
+                                    y_length=y_length)
+        self.quic_fire.ignition_type = ignition
+    
+    def set_output_files(
+            self,
+            eng_to_atm: bool = False,
+            react_rate: bool = False,
+            fuel_dens: bool = False,
+            qf_wind: bool = False,
+            qu_wind_inst: bool = False,
+            qu_wind_avg: bool = False,
+            fuel_moist: bool = False,
+            mass_burnt: bool = False,
+            co_emissions: bool = False,
+            pm_emissions: bool = False,
+            water_emissions: bool = False,
+            radiation: bool = False,
+            intensity: bool = False,
+    ):
+        self.quic_fire.eng_to_atm_out = eng_to_atm
+        self.quic_fire.react_rate_out = react_rate
+        self.quic_fire.fuel_dens_out = fuel_dens
+        self.quic_fire.qf_wind_out = qf_wind
+        self.quic_fire.qu_wind_inst_out = qu_wind_inst
+        self.quic_fire.qu_wind_avg_out = qu_wind_avg
+        self.quic_fire.fuel_moist_out = fuel_moist
+        self.quic_fire.mass_burnt_out = mass_burnt
+        self.quic_fire.radiation_out = radiation
+        self.quic_fire.intensity_out = intensity
+        if water_emissions:
+            self.quic_fire.emissions_out = 5
+        elif co_emissions and pm_emissions:
+            self.quic_fire.emissions_out = 3
+        elif pm_emissions:
+            self.quic_fire.emissions_out = 2
+        elif co_emissions:
+            self.quic_fire.emissions_out = 1
+        else:
+            self.quic_fire.emissions_out = 0
+
+
     @classmethod
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
         """
