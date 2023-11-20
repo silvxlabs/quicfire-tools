@@ -9,7 +9,7 @@ import time
 import importlib.resources
 from pathlib import Path
 from string import Template
-from typing import Literal
+from typing import Literal, Union
 
 # External Imports
 import numpy as np
@@ -1367,10 +1367,12 @@ class QUIC_fire(InputFile):
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
     fuel_flag: Literal[1, 2, 3, 4] = 1
-    fuel_density: PositiveFloat | None = 0.5
-    fuel_moisture: PositiveFloat | None = 0.1
-    fuel_height: PositiveFloat | None = 1.0
-    ignition_type: RectangleIgnition | SquareRingIgnition | CircularRingIgnition | IgnitionType
+    fuel_density: Union[PositiveFloat, None] = 0.5
+    fuel_moisture: Union[PositiveFloat, None] = 0.1
+    fuel_height: Union[PositiveFloat, None] = 1.0
+    ignition_type: Union[
+        RectangleIgnition, SquareRingIgnition, CircularRingIgnition, IgnitionType
+    ]
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
