@@ -12,7 +12,8 @@ from pathlib import Path
 from quicfire_tools import outputs
 
 
-DATA_PATH = Path("data")
+TEST_DIR = Path(__file__).parent
+DATA_PATH = TEST_DIR / "data"
 OUTPUT_PATH = DATA_PATH / "test-output"
 DRAWFIRE_PATH = OUTPUT_PATH / "drawfire"
 

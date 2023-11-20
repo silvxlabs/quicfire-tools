@@ -33,8 +33,11 @@ from quicfire_tools.ignitions import (
 )
 from quicfire_tools.topography import TopoType, TopoSources, GaussianHillTopo
 
+TEST_DIR = Path(__file__).parent
+
 # Create a tmp/ directory to store the temporary test files
-Path("tmp/").mkdir(exist_ok=True)
+tmp_dir = TEST_DIR / "tmp"
+tmp_dir.mkdir(exist_ok=True)
 
 
 class TestGridList:
@@ -461,7 +464,7 @@ class TestQU_Simparams:
         qu_simparams = self.get_test_object()
         qu_simparams.stretch_grid_flag = 0
         vertical_grid_lines = qu_simparams._stretch_grid_flag_0()
-        with open("data/test-inputs/stretchgrid_0.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/stretchgrid_0.txt") as f:
             expected_lines = f.readlines()
         assert vertical_grid_lines == "".join(expected_lines)
 
@@ -487,14 +490,14 @@ class TestQU_Simparams:
         # Test valid case
         qu_simparams.custom_dz_array = [1] * qu_simparams.nz
         vertical_grid_lines = qu_simparams._stretch_grid_flag_1()
-        with open("data/test-inputs/stretchgrid_1.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/stretchgrid_1.txt") as f:
             expected_lines = f.readlines()
         assert vertical_grid_lines == "".join(expected_lines)
 
     def test_stretch_grid_flag_3(self):
         qu_simparams = self.get_test_object()
         vertical_grid_lines = qu_simparams._stretch_grid_flag_3()
-        with open("data/test-inputs/stretchgrid_3.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/stretchgrid_3.txt") as f:
             expected_lines = f.readlines()
         assert vertical_grid_lines == "".join(expected_lines)
 
@@ -503,20 +506,20 @@ class TestQU_Simparams:
 
         # Test stretch_grid_flag = 0
         qu_simparams.stretch_grid_flag = 0
-        with open("data/test-inputs/stretchgrid_0.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/stretchgrid_0.txt") as f:
             expected_lines = f.readlines()
         assert qu_simparams._vertical_grid_lines == "".join(expected_lines)
 
         # Test stretch_grid_flag = 1
         qu_simparams.stretch_grid_flag = 1
         qu_simparams.custom_dz_array = [1] * qu_simparams.nz
-        with open("data/test-inputs/stretchgrid_1.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/stretchgrid_1.txt") as f:
             expected_lines = f.readlines()
         assert qu_simparams._vertical_grid_lines == "".join(expected_lines)
 
         # Test stretch_grid_flag = 3
         qu_simparams.stretch_grid_flag = 3
-        with open("data/test-inputs/stretchgrid_3.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/stretchgrid_3.txt") as f:
             expected_lines = f.readlines()
         assert qu_simparams._vertical_grid_lines == "".join(expected_lines)
 
@@ -525,7 +528,7 @@ class TestQU_Simparams:
         qu_simparams = self.get_test_object()
         qu_simparams.wind_times = [0]
         wind_times_lines = qu_simparams._generate_wind_time_lines()
-        with open("data/test-inputs/wind_times.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/wind_times.txt") as f:
             expected_lines = f.readlines()
         assert wind_times_lines == "".join(expected_lines)
 
@@ -994,7 +997,7 @@ class TestQUIC_fire:
         quic_fire.fuel_density = 0.5
         quic_fire.fuel_moisture = 1
         quic_fire.fuel_height = 0.75
-        with open("data/test-inputs/fuel_lines.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/fuel_lines.txt") as f:
             expected_lines = f.readlines()
         assert quic_fire._fuel_lines == "".join(expected_lines)
 
