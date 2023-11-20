@@ -2125,6 +2125,7 @@ class Sensor1(InputFile):
             directory = Path(directory)
         with open(directory / "sensor1.inp", "r") as f:
             lines = f.readlines()
+        print(lines)
         return cls(
             time_now=int(lines[6].strip().split("!")[0]),
             sensor_height=float(lines[10].split(" ")[0]),
