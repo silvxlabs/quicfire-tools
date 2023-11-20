@@ -91,7 +91,7 @@ class TestGridList:
         gridlist.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/gridlist", "r") as file:
+        with open(TMP_DIR / "gridlist", "r") as file:
             lines = file.readlines()
             assert lines[0].split("=")[1].strip() == "10"
             assert lines[1].split("=")[1].strip() == "10"
@@ -174,7 +174,7 @@ class TestRasterOrigin:
         raster_origin.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/rasterorigin.txt", "r") as file:
+        with open(TMP_DIR / "rasterorigin.txt", "r") as file:
             lines = file.readlines()
             assert float(lines[0].strip()) == raster_origin.utm_x
             assert float(lines[1].strip()) == raster_origin.utm_y
@@ -270,7 +270,7 @@ class TestQU_Buildings:
         qu_buildings.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/QU_buildings.inp", "r") as file:
+        with open(TMP_DIR / "QU_buildings.inp", "r") as file:
             lines = file.readlines()
             assert (
                 float(lines[1].strip().split("\t")[0])
@@ -375,7 +375,7 @@ class TestQU_Fileoptions:
         qu_fileoptions.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/QU_fileoptions.inp", "r") as file:
+        with open(TMP_DIR / "QU_fileoptions.inp", "r") as file:
             lines = file.readlines()
             assert int(lines[1].strip().split("!")[0]) == 2
             assert int(lines[2].strip().split("!")[0]) == 0
@@ -618,7 +618,7 @@ class TestQU_Simparams:
         qu_simparams.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/QU_simparams.inp", "r") as file:
+        with open(TMP_DIR / "QU_simparams.inp", "r") as file:
             lines = file.readlines()
 
         # Check nx, ny, nz, dx, dy
@@ -860,7 +860,7 @@ class TestQFire_Advanced_User_Inputs:
         qfire_advanced_user_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/QFIRE_advanced_user_inputs.inp", "r") as file:
+        with open(TMP_DIR / "QFIRE_advanced_user_inputs.inp", "r") as file:
             lines = file.readlines()
             assert (
                 float(lines[0].strip().split("!")[0])
@@ -1082,7 +1082,7 @@ class TestQUIC_fire:
     def test_to_file(self):
         quic_fire = self.get_complex_test_object()
         quic_fire.to_file(TMP_DIR)
-        with open("tmp/QUIC_fire.inp", "r") as file:
+        with open(TMP_DIR / "QUIC_fire.inp", "r") as file:
             lines = file.readlines()
 
         assert quic_fire.fire_flag == int(lines[0].strip().split("!")[0])
@@ -1275,7 +1275,7 @@ class Test_QFire_Bldg_Advanced_User_Inputs:
         bldg_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/QFIRE_bldg_advanced_user_inputs.inp", "r") as file:
+        with open(TMP_DIR / "QFIRE_bldg_advanced_user_inputs.inp", "r") as file:
             lines = file.readlines()
         assert (
             int(lines[0].strip().split("!")[0])
@@ -1447,7 +1447,7 @@ class Test_QFire_Plume_Advanced_User_Inputs:
         plume_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/QFIRE_plume_advanced_user_inputs.inp", "r") as file:
+        with open(TMP_DIR / "QFIRE_plume_advanced_user_inputs.inp", "r") as file:
             lines = file.readlines()
         assert (
             int(lines[0].strip().split("!")[0]) == plume_inputs.max_plumes_per_timestep
@@ -1580,7 +1580,7 @@ class TestQUTopoInputs:
     def test_to_file(self):
         topoinputs = self.get_default_test_object()
         topoinputs.to_file(TMP_DIR)
-        with open("tmp/QU_TopoInputs.inp", "r") as file:
+        with open(TMP_DIR / "QU_TopoInputs.inp", "r") as file:
             lines = file.readlines()
         topo_flag = int(lines[2].strip().split("!")[0])
         assert topo_flag == topoinputs.topo_type.topo_flag.value
@@ -1621,7 +1621,7 @@ class TestQUTopoInputs:
 
         topoinputs = self.get_complex_test_object()
         topoinputs.to_file(TMP_DIR)
-        with open("tmp/QU_TopoInputs.inp", "r") as file:
+        with open(TMP_DIR / "QU_TopoInputs.inp", "r") as file:
             lines = file.readlines()
         topo_flag = int(lines[2].strip().split("!")[0])
         assert topo_flag == topoinputs.topo_type.topo_flag.value
@@ -1753,7 +1753,7 @@ class Test_QU_metparams:
         qu_metparams.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open("tmp/QU_metparams.inp", "r") as file:
+        with open(TMP_DIR / "QU_metparams.inp", "r") as file:
             lines = file.readlines()
         assert int(lines[2].strip().split("!")[0]) == qu_metparams.num_sensors
         assert str(lines[4].strip().split("!")[0].strip()) == qu_metparams.sensor_name
@@ -1973,12 +1973,12 @@ class TestSimulationInputs:
 
     def test_to_json(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.to_json("tmp/test.json")
+        sim_inputs.to_json(TMP_DIR / "test.json")
 
     def test_from_json(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.to_json("tmp/test.json")
-        test_obj = SimulationInputs.from_json("tmp/test.json")
+        sim_inputs.to_json(TMP_DIR / "test.json")
+        test_obj = SimulationInputs.from_json(TMP_DIR / "test.json")
         assert isinstance(test_obj, SimulationInputs)
 
         # Check that the inputs are the same
