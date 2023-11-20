@@ -21,6 +21,15 @@ class TestSimulationOutputs:
     nx = 100
     sut = outputs.SimulationOutputs(OUTPUT_PATH, nz, ny, nx)
 
+    def test_get_output(self):
+        for output_name in self.sut.outputs:
+            output = self.sut.get_output(output_name)
+            assert isinstance(output, outputs.OutputFile)
+
+    def test_get_output_invalid(self):
+        with pytest.raises(ValueError):
+            self.sut.get_output("invalid")
+
     def test_to_dask(self):
         for output in self.sut.outputs:
             dask_array = self.sut.to_dask(output)
