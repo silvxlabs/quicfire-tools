@@ -34,10 +34,8 @@ from quicfire_tools.ignitions import (
 from quicfire_tools.topography import TopoType, TopoSources, GaussianHillTopo
 
 TEST_DIR = Path(__file__).parent
-
-# Create a tmp/ directory to store the temporary test files
-tmp_dir = TEST_DIR / "tmp"
-tmp_dir.mkdir(exist_ok=True)
+TMP_DIR = TEST_DIR / "tmp"
+TMP_DIR.mkdir(exist_ok=True)
 
 
 class TestGridList:
@@ -90,7 +88,7 @@ class TestGridList:
     def test_to_file(self):
         """Test the write_file method of a Gridlist object."""
         gridlist = Gridlist(n=10, m=10, l=10, dx=1.0, dy=1.0, dz=1.0, aa1=1.0)
-        gridlist.to_file("tmp/")
+        gridlist.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/gridlist", "r") as file:
@@ -110,8 +108,8 @@ class TestGridList:
     def test_from_file(self):
         """Test initializing a class from a gridlist file."""
         gridlist = Gridlist(n=10, m=10, l=10, dx=1.0, dy=1.0, dz=1.0, aa1=1.0)
-        gridlist.to_file("tmp/")
-        test_object = Gridlist.from_file("tmp/")
+        gridlist.to_file(TMP_DIR)
+        test_object = Gridlist.from_file(TMP_DIR)
         assert isinstance(test_object, Gridlist)
         assert gridlist == test_object
 
@@ -173,7 +171,7 @@ class TestRasterOrigin:
     def test_to_file(self):
         """Test the to_file method of a RasterOrigin object."""
         raster_origin = RasterOrigin(utm_x=500.0, utm_y=1000.0)
-        raster_origin.to_file("tmp/")
+        raster_origin.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/rasterorigin.txt", "r") as file:
@@ -188,8 +186,8 @@ class TestRasterOrigin:
     def test_from_file(self):
         """Test initializing a class from a rasterorigin.txt file."""
         raster_origin = RasterOrigin()
-        raster_origin.to_file("tmp/")
-        test_object = RasterOrigin.from_file("tmp/")
+        raster_origin.to_file(TMP_DIR)
+        test_object = RasterOrigin.from_file(TMP_DIR)
         assert isinstance(test_object, RasterOrigin)
         assert raster_origin == test_object
 
@@ -269,7 +267,7 @@ class TestQU_Buildings:
     def test_to_file(self):
         """Test the to_file method of a QU_Buildings object."""
         qu_buildings = QU_Buildings()
-        qu_buildings.to_file("tmp/")
+        qu_buildings.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/QU_buildings.inp", "r") as file:
@@ -293,8 +291,8 @@ class TestQU_Buildings:
     def test_from_file(self):
         """Test initializing a class from a QU_buildings.inp file."""
         qu_buildings = QU_Buildings()
-        qu_buildings.to_file("tmp/")
-        test_object = QU_Buildings.from_file("tmp/")
+        qu_buildings.to_file(TMP_DIR)
+        test_object = QU_Buildings.from_file(TMP_DIR)
         assert isinstance(test_object, QU_Buildings)
         assert qu_buildings == test_object
 
@@ -374,7 +372,7 @@ class TestQU_Fileoptions:
     def test_to_file(self):
         """Test the to_file method of a QU_Buildings object."""
         qu_fileoptions = QU_Fileoptions()
-        qu_fileoptions.to_file("tmp/")
+        qu_fileoptions.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/QU_fileoptions.inp", "r") as file:
@@ -392,8 +390,8 @@ class TestQU_Fileoptions:
     def test_from_file(self):
         """Test initializing a class from a QU_fileoptions.inp file."""
         qu_fileoptions = QU_Fileoptions()
-        qu_fileoptions.to_file("tmp/")
-        test_object = QU_Fileoptions.from_file("tmp/")
+        qu_fileoptions.to_file(TMP_DIR)
+        test_object = QU_Fileoptions.from_file(TMP_DIR)
         assert isinstance(test_object, QU_Fileoptions)
         assert qu_fileoptions == test_object
 
@@ -617,7 +615,7 @@ class TestQU_Simparams:
         Test the to_file method of a QU_Simparams object.
         """
         qu_simparams = self.get_test_object()
-        qu_simparams.to_file("tmp/")
+        qu_simparams.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/QU_simparams.inp", "r") as file:
@@ -719,16 +717,16 @@ class TestQU_Simparams:
         """
         # Test stretch grid flag = 3
         qu_simparams = self.get_test_object()
-        qu_simparams.to_file("tmp/")
-        test_object = QU_Simparams.from_file("tmp/")
+        qu_simparams.to_file(TMP_DIR)
+        test_object = QU_Simparams.from_file(TMP_DIR)
         assert isinstance(test_object, QU_Simparams)
         assert qu_simparams == test_object
 
         # # Test stretch grid flag = 0
         # qu_simparams = self.get_test_object()
         # qu_simparams.stretch_grid_flag = 0
-        # qu_simparams.to_file("tmp/")
-        # test_object = QU_Simparams.from_file("tmp/")
+        # qu_simparams.to_file(TMP_DIR)
+        # test_object = QU_Simparams.from_file(TMP_DIR)
         # assert isinstance(test_object, QU_Simparams)
         # assert qu_simparams == test_object
 
@@ -736,8 +734,8 @@ class TestQU_Simparams:
         # qu_simparams = self.get_test_object()
         # qu_simparams.stretch_grid_flag = 1
         # qu_simparams.custom_dz_array = [1] * qu_simparams.nz
-        # qu_simparams.to_file("tmp/")
-        # test_object = QU_Simparams.from_file("tmp/")
+        # qu_simparams.to_file(TMP_DIR)
+        # test_object = QU_Simparams.from_file(TMP_DIR)
         # assert isinstance(test_object, QU_Simparams)
         # assert qu_simparams == test_object
 
@@ -859,7 +857,7 @@ class TestQFire_Advanced_User_Inputs:
         qfire_advanced_user_inputs = QFire_Advanced_User_Inputs(
             fraction_cells_launch_firebrands=0.1
         )
-        qfire_advanced_user_inputs.to_file("tmp/")
+        qfire_advanced_user_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/QFIRE_advanced_user_inputs.inp", "r") as file:
@@ -931,8 +929,8 @@ class TestQFire_Advanced_User_Inputs:
         """Test initializing a class from a QFIRE_advanced_user_inputs.inp
         file."""
         qfire_advanced_user_inputs = QFire_Advanced_User_Inputs()
-        qfire_advanced_user_inputs.to_file("tmp/")
-        test_object = QFire_Advanced_User_Inputs.from_file("tmp/")
+        qfire_advanced_user_inputs.to_file(TMP_DIR)
+        test_object = QFire_Advanced_User_Inputs.from_file(TMP_DIR)
         assert isinstance(test_object, QFire_Advanced_User_Inputs)
         assert qfire_advanced_user_inputs == test_object
 
@@ -1083,7 +1081,7 @@ class TestQUIC_fire:
 
     def test_to_file(self):
         quic_fire = self.get_complex_test_object()
-        quic_fire.to_file("tmp/")
+        quic_fire.to_file(TMP_DIR)
         with open("tmp/QUIC_fire.inp", "r") as file:
             lines = file.readlines()
 
@@ -1179,8 +1177,8 @@ class TestQUIC_fire:
         """Test initializing a class from a QUIC_fire.inp
         file."""
         quic_fire = self.get_test_object()
-        quic_fire.to_file("tmp/")
-        test_object = QUIC_fire.from_file("tmp/")
+        quic_fire.to_file(TMP_DIR)
+        test_object = QUIC_fire.from_file(TMP_DIR)
         assert isinstance(test_object, QUIC_fire)
         assert quic_fire == test_object
 
@@ -1274,7 +1272,7 @@ class Test_QFire_Bldg_Advanced_User_Inputs:
 
     def test_to_file(self):
         bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
-        bldg_inputs.to_file("tmp/")
+        bldg_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/QFIRE_bldg_advanced_user_inputs.inp", "r") as file:
@@ -1317,8 +1315,8 @@ class Test_QFire_Bldg_Advanced_User_Inputs:
 
     def test_from_file(self):
         bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
-        bldg_inputs.to_file("tmp/")
-        test_object = QFire_Bldg_Advanced_User_Inputs.from_file("tmp/")
+        bldg_inputs.to_file(TMP_DIR)
+        test_object = QFire_Bldg_Advanced_User_Inputs.from_file(TMP_DIR)
         assert isinstance(test_object, QFire_Bldg_Advanced_User_Inputs)
         assert bldg_inputs == test_object
 
@@ -1446,7 +1444,7 @@ class Test_QFire_Plume_Advanced_User_Inputs:
 
     def test_to_file(self):
         plume_inputs = QFire_Plume_Advanced_User_Inputs()
-        plume_inputs.to_file("tmp/")
+        plume_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/QFIRE_plume_advanced_user_inputs.inp", "r") as file:
@@ -1502,8 +1500,8 @@ class Test_QFire_Plume_Advanced_User_Inputs:
 
     def test_from_file(self):
         plume_inputs = QFire_Plume_Advanced_User_Inputs()
-        plume_inputs.to_file("tmp/")
-        test_object = QFire_Plume_Advanced_User_Inputs.from_file("tmp/")
+        plume_inputs.to_file(TMP_DIR)
+        test_object = QFire_Plume_Advanced_User_Inputs.from_file(TMP_DIR)
         assert isinstance(test_object, QFire_Plume_Advanced_User_Inputs)
         assert plume_inputs == test_object
 
@@ -1581,7 +1579,7 @@ class TestQUTopoInputs:
 
     def test_to_file(self):
         topoinputs = self.get_default_test_object()
-        topoinputs.to_file("tmp/")
+        topoinputs.to_file(TMP_DIR)
         with open("tmp/QU_TopoInputs.inp", "r") as file:
             lines = file.readlines()
         topo_flag = int(lines[2].strip().split("!")[0])
@@ -1622,7 +1620,7 @@ class TestQUTopoInputs:
         )
 
         topoinputs = self.get_complex_test_object()
-        topoinputs.to_file("tmp/")
+        topoinputs.to_file(TMP_DIR)
         with open("tmp/QU_TopoInputs.inp", "r") as file:
             lines = file.readlines()
         topo_flag = int(lines[2].strip().split("!")[0])
@@ -1670,14 +1668,14 @@ class TestQUTopoInputs:
 
     def test_from_file(self):
         topoinputs = self.get_default_test_object()
-        topoinputs.to_file("tmp/")
-        test_object = QU_TopoInputs.from_file("tmp/")
+        topoinputs.to_file(TMP_DIR)
+        test_object = QU_TopoInputs.from_file(TMP_DIR)
         assert isinstance(test_object, QU_TopoInputs)
         assert topoinputs == test_object
 
         topoinputs = self.get_complex_test_object()
-        topoinputs.to_file("tmp/")
-        test_object = QU_TopoInputs.from_file("tmp/")
+        topoinputs.to_file(TMP_DIR)
+        test_object = QU_TopoInputs.from_file(TMP_DIR)
         assert isinstance(test_object, QU_TopoInputs)
         assert topoinputs == test_object
 
@@ -1694,8 +1692,8 @@ class TestRuntimeAdvancedUserInputs:
 
     def test_from_file(self):
         raui = self.get_test_object()
-        raui.to_file("tmp/")
-        test_object = RuntimeAdvancedUserInputs.from_file("tmp/")
+        raui.to_file(TMP_DIR)
+        test_object = RuntimeAdvancedUserInputs.from_file(TMP_DIR)
         assert raui == test_object
 
 
@@ -1709,8 +1707,8 @@ class TestQUmovingcoords:
 
     def test_from_file(self):
         qu_moving = self.get_test_object()
-        qu_moving.to_file("tmp/")
-        test_object = QU_movingcoords.from_file("tmp/")
+        qu_moving.to_file(TMP_DIR)
+        test_object = QU_movingcoords.from_file(TMP_DIR)
         assert qu_moving == test_object
 
 
@@ -1724,8 +1722,8 @@ class TestQUbuildout:
 
     def test_from_file(self):
         qp_buildout = self.get_test_object()
-        qp_buildout.to_file("tmp/")
-        test_object = QP_buildout.from_file("tmp/")
+        qp_buildout.to_file(TMP_DIR)
+        test_object = QP_buildout.from_file(TMP_DIR)
         assert qp_buildout == test_object
 
 
@@ -1752,7 +1750,7 @@ class Test_QU_metparams:
 
     def test_to_file(self):
         qu_metparams = self.get_test_object()
-        qu_metparams.to_file("tmp/")
+        qu_metparams.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
         with open("tmp/QU_metparams.inp", "r") as file:
@@ -1762,8 +1760,8 @@ class Test_QU_metparams:
 
     def test_from_file(self):
         qu_metparams = self.get_test_object()
-        qu_metparams.to_file("tmp/")
-        test_object = QU_metparams.from_file("tmp/")
+        qu_metparams.to_file(TMP_DIR)
+        test_object = QU_metparams.from_file(TMP_DIR)
         assert isinstance(test_object, QU_metparams)
         assert qu_metparams == test_object
 
@@ -1786,8 +1784,8 @@ class TestSensor1:
 
     def test_from_file(self):
         sensor1 = self.get_test_object()
-        sensor1.to_file("tmp/")
-        test_object = Sensor1.from_file("tmp/")
+        sensor1.to_file(TMP_DIR)
+        test_object = Sensor1.from_file(TMP_DIR)
         assert sensor1 == test_object
 
 
@@ -1930,7 +1928,7 @@ class TestSimulationInputs:
 
     def test_write_inputs(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.write_inputs("tmp/")
+        sim_inputs.write_inputs(TMP_DIR)
 
     def test_update_shared_inputs(self):
         sim_inputs = self.get_test_object()
@@ -1944,7 +1942,7 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.time_now != sim_inputs.sensor1.time_now
         assert sim_inputs.quic_fire.time_now != sim_inputs.qu_simparams.wind_times[0]
 
-        sim_inputs.write_inputs("tmp/")
+        sim_inputs.write_inputs(TMP_DIR)
         assert sim_inputs.qu_simparams.nx == sim_inputs.gridlist.n
         assert sim_inputs.qu_simparams.ny == sim_inputs.gridlist.m
         assert sim_inputs.quic_fire.nz == sim_inputs.gridlist.l
@@ -1953,8 +1951,8 @@ class TestSimulationInputs:
 
     def test_from_directory(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.write_inputs("tmp/")
-        test_object = SimulationInputs.from_directory("tmp/")
+        sim_inputs.write_inputs(TMP_DIR)
+        test_object = SimulationInputs.from_directory(TMP_DIR)
         assert isinstance(test_object, SimulationInputs)
 
         # Check that the inputs are the same
