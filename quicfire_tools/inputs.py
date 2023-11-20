@@ -3,7 +3,6 @@ QUIC-Fire Tools Simulation Input Module
 """
 from __future__ import annotations
 
-
 # Core Imports
 import json
 import time

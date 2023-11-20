@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import zarr
 import pytest
 import numpy as np

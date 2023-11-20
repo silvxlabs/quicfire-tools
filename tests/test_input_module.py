@@ -1,6 +1,8 @@
 """
 Test module for the data module of the quicfire_tools package.
 """
+from __future__ import annotations
+
 import pytest
 from pydantic import ValidationError
 from pathlib import Path
