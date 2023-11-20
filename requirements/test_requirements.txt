@@ -1,4 +1,6 @@
-dask
+pytest
+requests
 numpy<2
+dask
 pydantic>=2
 zarr>=2

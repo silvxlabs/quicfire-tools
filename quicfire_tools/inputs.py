@@ -551,7 +551,7 @@ class InputFile(BaseModel, validate_assignment=True):
             key = key.replace("_", " ").capitalize()
             print(f"- {key}: {value}")
 
-    def to_dict(self):
+    def to_dict(self, include_private: bool = False):
         """
         Convert the object to a dictionary, excluding attributes that start
         with an underscore.
@@ -561,9 +561,14 @@ class InputFile(BaseModel, validate_assignment=True):
         dict
             Dictionary representation of the object.
         """
-        return self.model_dump(
+        all_fields = self.model_dump(
             exclude={"name", "_extension", "_filename", "param_info"}
         )
+        if include_private:
+            return all_fields
+        return {
+            key: value for key, value in all_fields.items() if not key.startswith("_")
+        }
 
     def to_file(self, directory: Path, version: str = "latest"):
         """
@@ -583,7 +588,7 @@ class InputFile(BaseModel, validate_assignment=True):
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
 
-        result = src.substitute(self.to_dict())
+        result = src.substitute(self.to_dict(include_private=True))
 
         output_file_path = directory / self._filename
         with open(output_file_path, "w") as fout:
@@ -1065,12 +1070,14 @@ class QU_Simparams(InputFile):
         if stretch_grid_flag == 0:
             surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
             number_surface_cells = int(lines[8].strip().split("!")[0])
+            quic_domain_height = surface_vertical_cell_size * number_surface_cells
             current_line = 9
         elif stretch_grid_flag == 1:
             surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
             number_surface_cells = 5
             for i in range(9, 9 + nz):
                 custom_dz_array.append(float(lines[i].strip().split("!")[0]))
+            quic_domain_height = round(sum(custom_dz_array), 2)
             current_line = 9 + nz
         elif stretch_grid_flag == 3:
             surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
@@ -1078,6 +1085,7 @@ class QU_Simparams(InputFile):
             _ = lines[9].strip().split("!")[0]
             for i in range(10, 10 + nz):
                 _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
+            quic_domain_height = round(sum(_from_file_dz_array), 2)
             current_line = 10 + nz
         else:
             raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
@@ -1114,6 +1122,7 @@ class QU_Simparams(InputFile):
             nz=nz,
             dx=dx,
             dy=dy,
+            quic_domain_height=quic_domain_height,
             surface_vertical_cell_size=surface_vertical_cell_size,
             number_surface_cells=number_surface_cells,
             stretch_grid_flag=stretch_grid_flag,
@@ -1362,7 +1371,7 @@ class QUIC_fire(InputFile):
     fuel_density: PositiveFloat | None = 0.5
     fuel_moisture: PositiveFloat | None = 0.1
     fuel_height: PositiveFloat | None = 1.0
-    ignition_type: SerializeAsAny[IgnitionType]
+    ignition_type: RectangleIgnition | SquareRingIgnition | CircularRingIgnition | IgnitionType
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
@@ -2084,7 +2093,7 @@ class Sensor1(InputFile):
     name: str = "sensor1"
     _extension: str = ".inp"
     time_now: PositiveInt
-    sensor_height: PositiveFloat = 10
+    sensor_height: PositiveFloat = 6.1
     wind_speed: PositiveFloat
     wind_direction: NonNegativeInt = Field(lt=360)
 
