@@ -1570,6 +1570,9 @@ class QUIC_fire(InputFile):
             )
         elif ignition_flag == 6:
             ignition_type = IgnitionType(ignition_flag=6)
+        else:
+            ignition_type = IgnitionType(ignition_flag=ignition_flag)
+
         current_line += add
         ignitions_per_cell = int(lines[current_line].strip().split("!")[0])
         current_line += 1
