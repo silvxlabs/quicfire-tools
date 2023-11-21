@@ -1793,7 +1793,7 @@ class TestSensor1:
         sensor1.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open(TMP_DIR / "Sensor1.inp", "r") as file:
+        with open(TMP_DIR / "sensor1.inp", "r") as file:
             lines = file.readlines()
         time_now = (int(lines[6].strip().split("!")[0]),)
         sensor_height = (float(lines[10].split(" ")[0]),)
