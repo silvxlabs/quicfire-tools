@@ -8,11 +8,6 @@ Requirements for PyPi package.
 pip list --format=freeze > requirements.txt
 ```
 
-## docs.txt
+## test_requirements.txt
 
-Requirements for building documentation.
-
-## tests-3*.yml
-
-Requirements for testing with different Python versions. Uses conda environment
-yaml files.
+Requirements for testing.
