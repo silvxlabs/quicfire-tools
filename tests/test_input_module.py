@@ -618,7 +618,7 @@ class TestQU_Simparams:
         qu_simparams.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open(TMP_DIR / "QU_simparams.inp", "r") as file:
+        with open(TMP_DIR / "QU_Simparams.inp", "r") as file:
             lines = file.readlines()
 
         # Check nx, ny, nz, dx, dy
@@ -860,7 +860,7 @@ class TestQFire_Advanced_User_Inputs:
         qfire_advanced_user_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open(TMP_DIR / "QFIRE_advanced_user_inputs.inp", "r") as file:
+        with open(TMP_DIR / "QFire_Advanced_User_Inputs.inp", "r") as file:
             lines = file.readlines()
             assert (
                 float(lines[0].strip().split("!")[0])
@@ -1275,7 +1275,7 @@ class Test_QFire_Bldg_Advanced_User_Inputs:
         bldg_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open(TMP_DIR / "QFIRE_bldg_advanced_user_inputs.inp", "r") as file:
+        with open(TMP_DIR / "QFire_Bldg_Advanced_User_Inputs.inp", "r") as file:
             lines = file.readlines()
         assert (
             int(lines[0].strip().split("!")[0])
@@ -1310,7 +1310,7 @@ class Test_QFire_Bldg_Advanced_User_Inputs:
         # Test writing to a non-existent directory
         with pytest.raises(FileNotFoundError):
             bldg_inputs.to_file(
-                "/non_existent_path/QFIRE_bldg_advanced_user_inputs.inp"
+                "/non_existent_path/QFire_Bldg_Advanced_User_Inputs.inp"
             )
 
     def test_from_file(self):
@@ -1447,7 +1447,7 @@ class Test_QFire_Plume_Advanced_User_Inputs:
         plume_inputs.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open(TMP_DIR / "QFIRE_plume_advanced_user_inputs.inp", "r") as file:
+        with open(TMP_DIR / "QFire_Plume_Advanced_User_Inputs.inp", "r") as file:
             lines = file.readlines()
         assert (
             int(lines[0].strip().split("!")[0]) == plume_inputs.max_plumes_per_timestep
@@ -1497,6 +1497,12 @@ class Test_QFire_Plume_Advanced_User_Inputs:
             int(lines[15].strip().split("!")[0])
             == plume_inputs.plume_to_grid_intersection_flag
         )
+
+        # Test writing to a non-existent directory
+        with pytest.raises(FileNotFoundError):
+            plume_inputs.to_file(
+                "/non_existent_path/QFire_Plume_Advanced_User_Inputs.inp"
+            )
 
     def test_from_file(self):
         plume_inputs = QFire_Plume_Advanced_User_Inputs()
