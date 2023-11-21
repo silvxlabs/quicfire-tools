@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from quicfire_tools.inputs import SimulationInputs
 
 

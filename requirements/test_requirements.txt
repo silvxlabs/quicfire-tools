@@ -1,0 +1,8 @@
+pytest
+requests
+numpy<2
+dask
+pydantic>=2
+scipy
+xarray
+zarr>=2

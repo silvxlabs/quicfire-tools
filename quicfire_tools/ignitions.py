@@ -7,7 +7,7 @@ from __future__ import annotations
 from enum import Enum
 
 # External Imports
-from pydantic import BaseModel, SerializeAsAny
+from pydantic import BaseModel
 
 
 class IgnitionSources(int, Enum):
@@ -22,7 +22,7 @@ class IgnitionType(BaseModel):
     Test docs
     """
 
-    ignition_flag: SerializeAsAny[IgnitionSources]
+    ignition_flag: IgnitionSources
 
     def __str__(self):
         return (
@@ -50,7 +50,7 @@ class RectangleIgnition(IgnitionType):
         Length in the y-direction [m]
     """
 
-    ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(1)
+    ignition_flag: IgnitionSources = IgnitionSources(1)
     x_min: int
     y_min: int
     x_length: int
@@ -87,7 +87,7 @@ class SquareRingIgnition(IgnitionType):
         Width in the y-direction [m]
     """
 
-    ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(2)
+    ignition_flag: IgnitionSources = IgnitionSources(2)
     x_min: int
     y_min: int
     x_length: int
@@ -126,7 +126,7 @@ class CircularRingIgnition(IgnitionType):
         Width of the ring [m]
     """
 
-    ignition_flag: SerializeAsAny[IgnitionSources] = IgnitionSources(3)
+    ignition_flag: IgnitionSources = IgnitionSources(3)
     x_min: int
     y_min: int
     x_length: int

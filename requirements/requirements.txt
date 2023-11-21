@@ -1,4 +1,4 @@
 dask
-numpy
-pydantic
-zarr
+numpy<2
+pydantic>=2
+zarr>=2

@@ -3,14 +3,13 @@ QUIC-Fire Tools Simulation Input Module
 """
 from __future__ import annotations
 
-
 # Core Imports
 import json
 import time
 import importlib.resources
 from pathlib import Path
 from string import Template
-from typing import Literal
+from typing import Literal, Union
 
 # External Imports
 import numpy as np
@@ -551,7 +550,7 @@ class InputFile(BaseModel, validate_assignment=True):
             key = key.replace("_", " ").capitalize()
             print(f"- {key}: {value}")
 
-    def to_dict(self):
+    def to_dict(self, include_private: bool = False):
         """
         Convert the object to a dictionary, excluding attributes that start
         with an underscore.
@@ -561,9 +560,14 @@ class InputFile(BaseModel, validate_assignment=True):
         dict
             Dictionary representation of the object.
         """
-        return self.model_dump(
+        all_fields = self.model_dump(
             exclude={"name", "_extension", "_filename", "param_info"}
         )
+        if include_private:
+            return all_fields
+        return {
+            key: value for key, value in all_fields.items() if not key.startswith("_")
+        }
 
     def to_file(self, directory: Path, version: str = "latest"):
         """
@@ -583,7 +587,7 @@ class InputFile(BaseModel, validate_assignment=True):
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
 
-        result = src.substitute(self.to_dict())
+        result = src.substitute(self.to_dict(include_private=True))
 
         output_file_path = directory / self._filename
         with open(output_file_path, "w") as fout:
@@ -1065,12 +1069,14 @@ class QU_Simparams(InputFile):
         if stretch_grid_flag == 0:
             surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
             number_surface_cells = int(lines[8].strip().split("!")[0])
+            quic_domain_height = surface_vertical_cell_size * number_surface_cells
             current_line = 9
         elif stretch_grid_flag == 1:
             surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
             number_surface_cells = 5
             for i in range(9, 9 + nz):
                 custom_dz_array.append(float(lines[i].strip().split("!")[0]))
+            quic_domain_height = round(sum(custom_dz_array), 2)
             current_line = 9 + nz
         elif stretch_grid_flag == 3:
             surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
@@ -1078,6 +1084,7 @@ class QU_Simparams(InputFile):
             _ = lines[9].strip().split("!")[0]
             for i in range(10, 10 + nz):
                 _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
+            quic_domain_height = round(sum(_from_file_dz_array), 2)
             current_line = 10 + nz
         else:
             raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
@@ -1114,6 +1121,7 @@ class QU_Simparams(InputFile):
             nz=nz,
             dx=dx,
             dy=dy,
+            quic_domain_height=quic_domain_height,
             surface_vertical_cell_size=surface_vertical_cell_size,
             number_surface_cells=number_surface_cells,
             stretch_grid_flag=stretch_grid_flag,
@@ -1359,10 +1367,12 @@ class QUIC_fire(InputFile):
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
     fuel_flag: Literal[1, 2, 3, 4] = 1
-    fuel_density: PositiveFloat | None = 0.5
-    fuel_moisture: PositiveFloat | None = 0.1
-    fuel_height: PositiveFloat | None = 1.0
-    ignition_type: SerializeAsAny[IgnitionType]
+    fuel_density: Union[PositiveFloat, None] = 0.5
+    fuel_moisture: Union[PositiveFloat, None] = 0.1
+    fuel_height: Union[PositiveFloat, None] = 1.0
+    ignition_type: Union[
+        RectangleIgnition, SquareRingIgnition, CircularRingIgnition, IgnitionType
+    ]
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
@@ -1560,6 +1570,9 @@ class QUIC_fire(InputFile):
             )
         elif ignition_flag == 6:
             ignition_type = IgnitionType(ignition_flag=6)
+        else:
+            ignition_type = IgnitionType(ignition_flag=ignition_flag)
+
         current_line += add
         ignitions_per_cell = int(lines[current_line].strip().split("!")[0])
         current_line += 1
@@ -2084,7 +2097,7 @@ class Sensor1(InputFile):
     name: str = "sensor1"
     _extension: str = ".inp"
     time_now: PositiveInt
-    sensor_height: PositiveFloat = 10
+    sensor_height: PositiveFloat = 6.1
     wind_speed: PositiveFloat
     wind_direction: NonNegativeInt = Field(lt=360)
 
@@ -2097,9 +2110,8 @@ class Sensor1(InputFile):
         for a series of times, speeds, and directions.
         """
         return (
-            f"{self.time_now} !Begining of time step in Unix Epoch time"
-            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban "
-            f"canopy, 4 = discrete data points)\n"
+            f"{self.time_now} !Begining of time step in Unix Epoch time\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
             f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
@@ -2112,9 +2124,10 @@ class Sensor1(InputFile):
             directory = Path(directory)
         with open(directory / "sensor1.inp", "r") as f:
             lines = f.readlines()
+        print("\n".join(lines))
         return cls(
             time_now=int(lines[6].strip().split("!")[0]),
-            sensor_height=float(lines[10].split(" ")[0]),
-            wind_speed=float(lines[10].split(" ")[1]),
-            wind_direction=int(lines[10].split(" ")[2]),
+            sensor_height=float(lines[11].split(" ")[0]),
+            wind_speed=float(lines[11].split(" ")[1]),
+            wind_direction=int(lines[11].split(" ")[2]),
         )
