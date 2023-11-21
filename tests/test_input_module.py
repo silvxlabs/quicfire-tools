@@ -1788,6 +1788,22 @@ class TestSensor1:
         with pytest.raises(ValidationError):
             sensor1.wind_direction = 360
 
+    def test_to_file(self):
+        sensor1 = self.get_test_object()
+        sensor1.to_file(TMP_DIR)
+
+        # Read the content of the file and check for correctness
+        with open(TMP_DIR / "Sensor1.inp", "r") as file:
+            lines = file.readlines()
+        time_now = (int(lines[6].strip().split("!")[0]),)
+        sensor_height = (float(lines[10].split(" ")[0]),)
+        wind_speed = (float(lines[10].split(" ")[1]),)
+        wind_direction = (int(lines[10].split(" ")[2]),)
+        assert time_now == sensor1.time_now
+        assert sensor_height == sensor1.sensor_height
+        assert wind_speed == sensor1.wind_speed
+        assert wind_direction == sensor1.wind_direction
+
     def test_from_file(self):
         sensor1 = self.get_test_object()
         sensor1.to_file(TMP_DIR)
