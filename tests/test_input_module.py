@@ -618,7 +618,7 @@ class TestQU_Simparams:
         qu_simparams.to_file(TMP_DIR)
 
         # Read the content of the file and check for correctness
-        with open(TMP_DIR / "QU_Simparams.inp", "r") as file:
+        with open(TMP_DIR / "QU_simparams.inp", "r") as file:
             lines = file.readlines()
 
         # Check nx, ny, nz, dx, dy
