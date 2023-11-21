@@ -2110,9 +2110,8 @@ class Sensor1(InputFile):
         for a series of times, speeds, and directions.
         """
         return (
-            f"{self.time_now} !Begining of time step in Unix Epoch time"
-            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban "
-            f"canopy, 4 = discrete data points)\n"
+            f"{self.time_now} !Begining of time step in Unix Epoch time\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
             f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
@@ -2128,7 +2127,7 @@ class Sensor1(InputFile):
         print("\n".join(lines))
         return cls(
             time_now=int(lines[6].strip().split("!")[0]),
-            sensor_height=float(lines[10].split(" ")[0]),
-            wind_speed=float(lines[10].split(" ")[1]),
-            wind_direction=int(lines[10].split(" ")[2]),
+            sensor_height=float(lines[11].split(" ")[0]),
+            wind_speed=float(lines[11].split(" ")[1]),
+            wind_direction=int(lines[11].split(" ")[2]),
         )

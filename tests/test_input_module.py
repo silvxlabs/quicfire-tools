@@ -1795,10 +1795,10 @@ class TestSensor1:
         # Read the content of the file and check for correctness
         with open(TMP_DIR / "sensor1.inp", "r") as file:
             lines = file.readlines()
-        time_now = (int(lines[6].strip().split("!")[0]),)
-        sensor_height = (float(lines[10].split(" ")[0]),)
-        wind_speed = (float(lines[10].split(" ")[1]),)
-        wind_direction = (int(lines[10].split(" ")[2]),)
+        time_now = int(lines[6].strip().split("!")[0])
+        sensor_height = float(lines[11].split(" ")[0])
+        wind_speed = float(lines[11].split(" ")[1])
+        wind_direction = int(lines[11].split(" ")[2])
         assert time_now == sensor1.time_now
         assert sensor_height == sensor1.sensor_height
         assert wind_speed == sensor1.wind_speed
