@@ -444,9 +444,7 @@ class SimulationInputs:
         qu_wind_avg: bool = False,
         fuel_moist: bool = False,
         mass_burnt: bool = False,
-        co_emissions: bool = False,
-        pm_emissions: bool = False,
-        water_emissions: bool = False,
+        emissions: bool = False,
         radiation: bool = False,
         intensity: bool = False,
     ):
@@ -460,16 +458,7 @@ class SimulationInputs:
         self.quic_fire.mass_burnt_out = int(mass_burnt)
         self.quic_fire.radiation_out = int(radiation)
         self.quic_fire.intensity_out = int(intensity)
-        if water_emissions:
-            self.quic_fire.emissions_out = 5
-        elif co_emissions and pm_emissions:
-            self.quic_fire.emissions_out = 3
-        elif pm_emissions:
-            self.quic_fire.emissions_out = 2
-        elif co_emissions:
-            self.quic_fire.emissions_out = 1
-        else:
-            self.quic_fire.emissions_out = 0
+        self.quic_fire.emissions_out = 2 if emissions else 0
 
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
