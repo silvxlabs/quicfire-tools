@@ -1897,9 +1897,7 @@ class TestSimulationInputs:
 
     def test_set_output_files(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.set_output_files(
-            mass_burnt=True, co_emissions=True, pm_emissions=True
-        )
+        sim_inputs.set_output_files(mass_burnt=True, emissions=True)
         assert sim_inputs.quic_fire.eng_to_atm_out == 0
         assert sim_inputs.quic_fire.react_rate_out == 0
         assert sim_inputs.quic_fire.fuel_dens_out == 0
@@ -1910,16 +1908,7 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.mass_burnt_out == 1
         assert sim_inputs.quic_fire.radiation_out == 0
         assert sim_inputs.quic_fire.intensity_out == 0
-        assert sim_inputs.quic_fire.emissions_out == 3
-
-        sim_inputs.set_output_files(water_emissions=True)
-        assert sim_inputs.quic_fire.emissions_out == 5
-
-        sim_inputs.set_output_files(co_emissions=True, water_emissions=True)
-        assert sim_inputs.quic_fire.emissions_out == 5
-
-        sim_inputs.set_output_files(co_emissions=True)
-        assert sim_inputs.quic_fire.emissions_out == 1
+        assert sim_inputs.quic_fire.emissions_out == 2
 
     def test_set_custom_simulation(self):
         sim_inputs = self.get_test_object()
