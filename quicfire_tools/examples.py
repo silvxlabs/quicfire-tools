@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from quicfire_tools.inputs import SimulationInputs
+from pathlib import Path
 
 
 def create_line_fire() -> SimulationInputs:
@@ -31,7 +32,7 @@ def create_line_fire() -> SimulationInputs:
     # Select which binary files to output
     sim_inputs.set_output_files(
         fuel_dens=True,
-        pm_emissions=True,
+        emissions=True,
         radiation=True,
     )
 
@@ -46,7 +47,9 @@ def create_line_fire() -> SimulationInputs:
     sim_inputs.quic_fire.ignitions_per_cell = 100
 
     # Write the input file deck to a directory
-    sim_inputs.write_inputs("/tmp")
+    qf_path = Path(__file__).parent / 'linefire_example'
+    qf_path.mkdir(parents=True, exist_ok=True)
+    sim_inputs.write_inputs(qf_path)
 
 
 line_fire_simulation = create_line_fire()
