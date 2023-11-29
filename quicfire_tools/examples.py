@@ -47,7 +47,7 @@ def create_line_fire() -> SimulationInputs:
     sim_inputs.quic_fire.ignitions_per_cell = 100
 
     # Write the input file deck to a directory
-    qf_path = Path(__file__).parent / 'linefire_example'
+    qf_path = Path(__file__).parent / "linefire_example"
     qf_path.mkdir(parents=True, exist_ok=True)
     sim_inputs.write_inputs(qf_path)
 
