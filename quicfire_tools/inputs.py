@@ -446,7 +446,7 @@ class SimulationInputs:
         mass_burnt: bool = False,
         emissions: bool = False,
         radiation: bool = False,
-        intensity: bool = False,
+        surf_eng: bool = False,
     ):
         self.quic_fire.eng_to_atm_out = int(eng_to_atm)
         self.quic_fire.react_rate_out = int(react_rate)
@@ -457,7 +457,7 @@ class SimulationInputs:
         self.quic_fire.fuel_moist_out = int(fuel_moist)
         self.quic_fire.mass_burnt_out = int(mass_burnt)
         self.quic_fire.radiation_out = int(radiation)
-        self.quic_fire.intensity_out = int(intensity)
+        self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
     def _update_shared_attributes(self):
@@ -1376,7 +1376,7 @@ class QUIC_fire(InputFile):
     firebrand_out: Literal[0, 1] = 0
     emissions_out: Literal[0, 1, 2, 3, 4, 5] = 0
     radiation_out: Literal[0, 1] = 0
-    intensity_out: Literal[0, 1] = 0
+    surf_eng_out: Literal[0, 1] = 0
 
     @field_validator("random_seed")
     @classmethod
