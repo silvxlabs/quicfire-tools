@@ -8,6 +8,7 @@ def create_line_fire() -> SimulationInputs:
     sim_inputs = SimulationInputs.create_simulation(
         nx=200,
         ny=200,
+        fire_nz=1,
         simulation_time=60,
         wind_speed=1.7,
         wind_direction=270,
@@ -31,7 +32,6 @@ def create_line_fire() -> SimulationInputs:
     # Select which binary files to output
     sim_inputs.set_output_files(
         fuel_dens=True,
-        qu_winds_inst=True,
         fuel_moist=True,
         emissions=True,
     )
@@ -45,6 +45,8 @@ def create_line_fire() -> SimulationInputs:
     sim_inputs.quic_fire.out_time_emis_rad = 50
     sim_inputs.quic_fire.out_time_wind_avg = 50
     sim_inputs.quic_fire.ignitions_per_cell = 100
+
+    return sim_inputs
 
 
 line_fire_simulation = create_line_fire()
