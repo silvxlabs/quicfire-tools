@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from quicfire_tools.inputs import SimulationInputs
-from pathlib import Path
 
 
 def create_line_fire() -> SimulationInputs:
@@ -9,15 +8,15 @@ def create_line_fire() -> SimulationInputs:
     sim_inputs = SimulationInputs.create_simulation(
         nx=200,
         ny=200,
-        simulation_time=600,
+        simulation_time=60,
         wind_speed=1.7,
-        wind_direction=90,
+        wind_direction=270,
     )
 
     # Set uniform fuel values
     sim_inputs.set_uniform_fuels(
-        fuel_density=0.7,
-        fuel_moisture=0.05,
+        fuel_density=0.5,
+        fuel_moisture=0.10,
         fuel_height=1.0,
     )
 
