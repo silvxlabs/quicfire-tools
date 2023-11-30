@@ -137,6 +137,7 @@ dmypy.json
 dev/
 tests/dev/
 tests/tmp/
+tests/data/test-output-zarr/
 
 # macOS
 .DS_Store
