@@ -123,7 +123,7 @@ WIND_OUTPUTS = {
     },
 }
 EMISSIONS_OUTPUTS = {
-    "co-emissions": {
+    "co_emissions": {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
@@ -133,7 +133,7 @@ EMISSIONS_OUTPUTS = {
         "times in grams",
         "units": "g",
     },
-    "pm-emissions": {
+    "pm_emissions": {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
