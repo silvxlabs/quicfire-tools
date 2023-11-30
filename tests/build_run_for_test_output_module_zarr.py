@@ -3,6 +3,7 @@ from __future__ import annotations
 from quicfire_tools.inputs import SimulationInputs
 from pathlib import Path
 
+
 def create_line_fire() -> SimulationInputs:
     # Set up the basic simulation data
     sim_inputs = SimulationInputs.create_simulation(
@@ -41,7 +42,7 @@ def create_line_fire() -> SimulationInputs:
         mass_burnt=True,
         emissions=True,
         radiation=True,
-        intensity=True
+        intensity=True,
     )
 
     # Make modifications to the QUIC_Fire input file
@@ -55,8 +56,9 @@ def create_line_fire() -> SimulationInputs:
     sim_inputs.quic_fire.ignitions_per_cell = 100
 
     # Write the input file deck to a directory
-    qf_path = Path(__file__).parent / 'data' / 'test-output-zarr' / 'linefire_example'
+    qf_path = Path(__file__).parent / "data" / "test-output-zarr" / "linefire_example"
     qf_path.mkdir(parents=True, exist_ok=True)
     sim_inputs.write_inputs(qf_path)
+
 
 line_fire_simulation = create_line_fire()

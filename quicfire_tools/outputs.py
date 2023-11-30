@@ -78,7 +78,7 @@ FUELS_OUTPUTS = {
         "delimiter": None,
         "extension": ".bin",
         "description": "Array contains total energy output by each surface cell "
-                       "on a per second interval.",
+        "on a per second interval.",
         "units": "kW/m^2",
     },
 }
@@ -546,10 +546,13 @@ class SimulationOutputs:
 
         return dask_array
 
-    #ZCC Changes
+    # ZCC Changes
     def to_zarr(
-        self, fpath: str | Path, outputs: str | list[str] = None, over_write:bool=False
-        ): 
+        self,
+        fpath: str | Path,
+        outputs: str | list[str] = None,
+        over_write: bool = False,
+    ):
         """
         Write the outputs to a zarr file.
 
@@ -560,14 +563,14 @@ class SimulationOutputs:
         outputs: str | list[str]
             The name of the output(s) to write to the zarr file. If None, then
             all outputs are written to the zarr file.
-        over_write: bool 
+        over_write: bool
             Whether or not to over_write zarr if it already exists
 
         Builds
         -------
         zarr files to disk
         """
-        #Hard coding dimentions. Will want to add dimensions to one of the classes.
+        # Hard coding dimentions. Will want to add dimensions to one of the classes.
         dz = 1
         dy = 2
         dx = 2
@@ -578,7 +581,7 @@ class SimulationOutputs:
         if not fpath.exists():
             fpath.mkdir(parents=True)
 
-        self.zarr_folder_path = fpath #store folder location of zarrs to object
+        self.zarr_folder_path = fpath  # store folder location of zarrs to object
 
         # Get a list of outputs to write to the zarr file
         if outputs is None:
@@ -590,20 +593,24 @@ class SimulationOutputs:
         for output_name in outputs:
             # Get the output object and verify it exists
             output = self.get_output(output_name)
-            
+
             # Build zarr path and store to output object
-            zarr_path = fpath / (output_name+'.zarr')
-            output.zarr_path = zarr_path #store zarr_path to output object
+            zarr_path = fpath / (output_name + ".zarr")
+            output.zarr_path = zarr_path  # store zarr_path to output object
 
             write_zarr_to_disk = True
             if zarr_path.exists():
-                if not over_write:                        
+                if not over_write:
                     write_zarr_to_disk = False
-                    print("A dataset for {} already exists in the zarr file.\n".format(output_name),
-                        "Set over_write flag to True if you would like to rebuild the zarr.")
+                    print(
+                        "A dataset for {} already exists in the zarr file.\n".format(
+                            output_name
+                        ),
+                        "Set over_write flag to True if you would like to rebuild the zarr.",
+                    )
                 else:
                     rmtree(zarr_path)
-            
+
             if write_zarr_to_disk:
                 # Create the zarr file
                 zarr_file = zarr.open(str(zarr_path), mode="w")
@@ -611,12 +618,13 @@ class SimulationOutputs:
                 # Create a zarr dataset for the output
                 shape = (len(output.times), *output.shape)
                 chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
-                
+
                 ##Output to zarr dataset
-                DATA_NAME = 'data'
+                DATA_NAME = "data"
                 zarr_dataset = zarr_file.create_dataset(
                     DATA_NAME, shape=shape, chunks=chunks, dtype=float
                 )
+
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["time", "z", "y", "x"]
                 zarr_dataset.attrs["long_name"] = output_name
@@ -625,11 +633,11 @@ class SimulationOutputs:
                 for time_step in range(len(output.times)):
                     data = self.to_numpy(output_name, time_step)
                     zarr_dataset[time_step, ...] = data[0, ...]
-                
+
                 ##Build datasets for coordinates
-                #Build time coordinate
+                # Build time coordinate
                 zarr_dataset = zarr_file.create_dataset(
-                'time', shape=len(output.times), dtype=int
+                    "time", shape=len(output.times), dtype=int
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["time"]
@@ -638,41 +646,47 @@ class SimulationOutputs:
                 # Store Values
                 zarr_dataset[...] = np.array(output.times)
 
-                #Build z coordinate
+                # Build z coordinate
                 zarr_dataset = zarr_file.create_dataset(
-                'z', shape=output.shape[0], dtype=int
+                    "z", shape=output.shape[0], dtype=int
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["z"]
-                zarr_dataset.attrs["long_name"] = "cell height: bottom of cell from ground"
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "cell height: bottom of cell from ground"
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
-                zarr_dataset[...] = np.array(range(output.shape[0]))*dz
+                zarr_dataset[...] = np.array(range(output.shape[0])) * dz
 
-                #Build y coordinate
+                # Build y coordinate
                 zarr_dataset = zarr_file.create_dataset(
-                'y', shape=output.shape[1], dtype=int
+                    "y", shape=output.shape[1], dtype=int
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["y"]
-                zarr_dataset.attrs["long_name"] = "Latitude: cell dist north from southern edge of domain"
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "Latitude: cell dist north from southern edge of domain"
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
-                zarr_dataset[...] = np.array(range(output.shape[1]))*dy
+                zarr_dataset[...] = np.array(range(output.shape[1])) * dy
 
-                #Build x coordinate
+                # Build x coordinate
                 zarr_dataset = zarr_file.create_dataset(
-                'x', shape=output.shape[2], dtype=int
+                    "x", shape=output.shape[2], dtype=int
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["x"]
-                zarr_dataset.attrs["long_name"] = "Longitude: cell dist east from western edge of domain"
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "Longitude: cell dist east from western edge of domain"
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
-                zarr_dataset[...] = np.array(range(0,output.shape[2]))*dx
+                zarr_dataset[...] = np.array(range(0, output.shape[2])) * dx
 
                 zarr.convenience.consolidate_metadata(zarr_path)
-        return 
+        return
 
     ##Anthony's method
     # def to_zarr(
