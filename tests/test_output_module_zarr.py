@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import zarr
-import pytest
-import numpy as np
+
+# import pytest
+# import numpy as np
 import xarray as xr
-import dask.array as da
+
+# import dask.array as da
 
 # from scipy.io import FortranFile
 from pathlib import Path
@@ -22,7 +24,7 @@ def main():
     tso.test_zarr_single_output()
     tso.test_zarr_multiple_outputs()
     tso.test_zarr_all_outputs()
-    ds = tso.test_zarr_xarray_connection_single_output()
+    tso.test_zarr_xarray_connection_single_output()
 
 
 class TestSimulationOutputs:

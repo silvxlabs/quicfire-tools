@@ -619,7 +619,7 @@ class SimulationOutputs:
                 shape = (len(output.times), *output.shape)
                 chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
 
-                ##Output to zarr dataset
+                # Output to zarr dataset
                 DATA_NAME = "data"
                 zarr_dataset = zarr_file.create_dataset(
                     DATA_NAME, shape=shape, chunks=chunks, dtype=float
@@ -634,7 +634,7 @@ class SimulationOutputs:
                     data = self.to_numpy(output_name, time_step)
                     zarr_dataset[time_step, ...] = data[0, ...]
 
-                ##Build datasets for coordinates
+                # Build datasets for coordinates
                 # Build time coordinate
                 zarr_dataset = zarr_file.create_dataset(
                     "time", shape=len(output.times), dtype=int
@@ -688,7 +688,7 @@ class SimulationOutputs:
                 zarr.convenience.consolidate_metadata(zarr_path)
         return
 
-    ##Anthony's method
+    # #Anthony's method
     # def to_zarr(
     #     self, fpath: str | Path, outputs: str | list[str] = None
     # ) -> zarr.hierarchy.Group:
