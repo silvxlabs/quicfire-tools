@@ -619,7 +619,7 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["time", "z", "y", "x"]
-                zarr_dataset.attrs["name"] = output_name
+                zarr_dataset.attrs["long_name"] = output_name
                 zarr_dataset.attrs["units"] = output.units
                 # Write each timestep to the output's zarr dataset
                 for time_step in range(len(output.times)):

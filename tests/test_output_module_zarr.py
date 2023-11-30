@@ -87,6 +87,7 @@ class TestSimulationOutputs:
     def test_zarr_xarray_connection_single_output(self, single_output_name="fuels-dens"):
         output = self.sut.get_output(single_output_name)
         ds = xr.open_zarr(output.zarr_path, decode_times=False) #zarr path will only exist if you run .to_zarr()
+        assert ds.data.long_name == single_output_name
         ds.info()
         return ds
 
