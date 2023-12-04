@@ -103,7 +103,7 @@ Please see the [`QUIC_fire`](reference.md#quicfire_tools.inputs.QUIC_fire) class
 
 #### How to set custom fuels, ignitions, and topography from .dat files
 
-For more advanced simulations, it may be necessary to specify custom fuel parameters, ignition patterns, or topography using .dat files. These files must be created and provided by the user, but the [`set_cunstom_simulation`](reference.md#quicfire_tools.inputs.SimulationInputs.set_custom_simualtion) method can be used to specify which custom .dat files should be used in the simulation.
+For more advanced simulations, it may be necessary to specify custom fuel parameters, ignition patterns, or topography using .dat files. These files must be created and provided by the user, but the [`set_custom_simulation`](reference.md#quicfire_tools.inputs.SimulationInputs.set_custom_simulation) method can be used to specify which custom .dat files should be used in the simulation.
 
 ```python
 simulation.set_custom_simulation(
