@@ -206,11 +206,17 @@ Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of 
 
 ### Set weather conditions
 
-### Modify simulation outputs
+What goes here?
 
-### Write a simulation to JSON
+### Read and write input file decks
 
-### Load a simulation from a JSON file
+#### Write a SimulationInputs object to an input deck
+
+#### Read in an existing input deck
+
+#### Write a simulation to JSON
+
+#### Load a simulation from a JSON file
 
 ## Outputs
 
