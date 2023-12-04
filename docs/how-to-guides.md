@@ -58,7 +58,7 @@ simulation.set_uniform_fuels(
 - **fuel_moisture** sets the surface fuel moisture content as a fraction of the fuel's dry weight.
 - **fuel_height** sets the surface fuel height in meters.
 
-#### Set custom ignition patterns
+#### Set rectangle ignition pattern
 
 By default, ignitions are set up perpendicular to the wind direction specified in `create_simulation`, spanning 80% of the domain
 edge length, 10% from either side. A different igntion line can be created using the [`set_rectangle_ignition`](reference.md#quicfire_tools.inputs.SimulationInputs.set_rectangle_ignition) method.
@@ -75,7 +75,7 @@ simulation.set_rectangle_ignition(
 - **x_min** and **y_min** set the coordinates of the bottom left corner of the ignition zone. These coordinates are specified in meters, not grid cells.
 - **x_length** and **y_length** set the length of the ignition zone in the x and y directions in meters.
 
-Ignition patterns other than rectangular can be specified using the `ignitions` module.
+Ignition patterns other than rectangular can be specified using the [ignitions module](how-to-guides.md#define-ignitions-using-ignitionspy).
 Please see [ignitions](reference.md#quicfire_tools.ignitions) for a full list of available ignition patterns.
 
 #### Specify output files
@@ -140,7 +140,7 @@ Please see [`QUIC_fire`](reference.md#quicfire_tools.inputs.QUIC_fire) for a ful
 
 #### QU_TopoInputs.inp
 
-The [`QU_TopoInputs`](reference.md#quicfire_tools.inputs.QU_TopoInputs) input file class contains parameters relating to the underlying topography of the simulation. Once a simulation is created, these parameters can be accessed and modified throught [`QU_TopoInputs`](reference.md#quicfire_tools.inputs.SimulationInputs.qu_topoinputs). For information on setting custom topography using built-in methods in the [topography](reference.md#quicfire_tools.topography) module, see [Set custom topography](how-to-guides.md#set-custom-topography). In the following example, some parameters not accessed by the `set_*` methods or the `topography` module are modified.
+The [`QU_TopoInputs`](reference.md#quicfire_tools.inputs.QU_TopoInputs) input file class contains parameters relating to the underlying topography of the simulation. Once a simulation is created, these parameters can be accessed and modified throught [`QU_TopoInputs`](reference.md#quicfire_tools.inputs.SimulationInputs.qu_topoinputs). For information on setting custom topography using built-in methods in the [topography](reference.md#quicfire_tools.topography) module, see [Set custom topography](how-to-guides.md#define-topography-using-topographypy). In the following example, some parameters not accessed by the `set_*` methods or the `topography` module are modified.
 
 ```python
 simulation.qu_topoinputs.smoothing_passes = 500
@@ -167,9 +167,42 @@ simulation.runtime_advanced_user_inputs.num_cpus = 1
 simulation.runtime_advanced_user_inputs.use_acw = 1
 ```
 
-### Set custom topography
+### Define topography using topography.py
 
-### Set custom ignitions
+In addition to flat topography (the default) and [custom topography](how-to-guides.md#set-custom-fuels-ignitions-and-topography-from-dat-files), there are various built-in topography types, all of which can be set using classes in the [topopgraphy](reference.md#quicfire_tools.topography) module. The following example creates and sets Gaussian hill topography.
+
+```python
+from quicfire_tools.topography import GaussianHillTopo
+
+topo = GaussianHillTopo(
+    x_hilltop = 100,
+    y_hilltop = 150,
+    elevation_max = 50,
+    elevation_std = 15
+)
+
+simulation.qu_topoinputs.topo_type = topo
+```
+
+Please see [topopgraphy](reference.md#quicfire_tools.topography) for a full list of topography types.
+
+### Define ignitions using ignitions.py
+
+In addition to [rectangle ignitions](how-to-guides.md#set-rectangle-ignition-patterns) (the default) and [custom ignitions](how-to-guides.md#set-custom-fuels-ignitions-and-topography-from-dat-files), there are various build-in ignition patterns, all of which can be set using class in the [ignnitions](reference.md#quicfire_tools.ignitions) module. The following example creates and sets a circular ring ignition.
+
+```python
+from quicfire_tools.ignitions import CurcularRingIgnition
+
+ignition = CircularRingIgnition(
+    x_min = 50,
+    y_min = 50,
+    x_length = 20,
+    y_length = 20,
+    ring_width = 10
+)
+```
+
+Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of ignition patterns.
 
 ### Set weather conditions
 
