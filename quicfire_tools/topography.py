@@ -9,7 +9,7 @@ from enum import Enum
 # External Imports
 from typing import Literal
 
-from pydantic import BaseModel, Field, PositiveFloat, PositiveInt, SerializeAsAny
+from pydantic import BaseModel, Field, PositiveFloat, SerializeAsAny
 
 
 class TopoSources(int, Enum):

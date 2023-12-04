@@ -114,7 +114,7 @@ simulation.write_inputs("path/to/directory")
 
 ### Finished Code
 
-The following code block combines all of the steps in this tutorial to create a basic QUIC-Fire simulation using 
+The following code block combines all of the steps in this tutorial to create a basic QUIC-Fire simulation using
 quicfire-tools.
 
 ```python
