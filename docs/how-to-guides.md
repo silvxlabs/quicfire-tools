@@ -2,10 +2,10 @@
 
 QUIC-Fire is controlled by a deck of input files that specify fuel parameters, wind conditions, ignitions, topography, etc. 
 The inputs module provides a simple interface to programatically create and modify new input file decks or read existing decks.
-The following guide provides step-by-step instructions for working with simple QUIC-Fire input decks. 
+The following guides provide step-by-step instructions for working with simple QUIC-Fire input decks. 
 Please see [inputs](reference.md%quicfire_tools.inputs) for full documentation.
 
-### Create a QUIC-Fire simulation
+### How to create a basic QUIC-Fire simulation
 
 QUIC-Fire input decks are created and modified using the [`SimulationInputs`](reference.md#quicfire_tools.inputs.SimulationInputs) class.
 
@@ -37,11 +37,12 @@ simulation = SimulationInputs.create_simulation(
 This creates a basic input deck with default values for fuels, ignitions, and topography. This simulation can be run as-is, or modified using 
 methods described below.
 
-### Use set_* methods for common simulation parameters
+### How to use set_* methods for common simulation parameters
 
-Once a simulation is created, it can be modified directly through methods in the `SimulationInputs` class. For common modifications, convenience methods starting with `set_*` are available. Guides for all `set_*` methods are below.
+Once a simulation is created, it can be modified directly through methods in the `SimulationInputs` class. 
+For common modifications, convenience methods starting with `set_*` are available. Guides for all `set_*` methods are below.
 
-#### Set uniform fuel conditions
+#### How to set uniform fuel conditions
 
 To set and modify fuel parameters for uniform fuels, use the [`set_uniform_fuels`](reference.md#quicfire_tools.inputs.SimulationInputs.set_uniform_fuels) method.
 In the following example, we are setting surface fuel density to 0.7 kg/m^3, fuel moisture to 5% of its dry weight, and fuel height to 1 meter.
@@ -58,10 +59,12 @@ simulation.set_uniform_fuels(
 - **fuel_moisture** sets the surface fuel moisture content as a fraction of the fuel's dry weight.
 - **fuel_height** sets the surface fuel height in meters.
 
-#### Set rectangle ignition pattern
+#### How to set a rectangle ignition pattern
 
 By default, ignitions are set up perpendicular to the wind direction specified in `create_simulation`, spanning 80% of the domain
 edge length, 10% from either side. A different igntion line can be created using the [`set_rectangle_ignition`](reference.md#quicfire_tools.inputs.SimulationInputs.set_rectangle_ignition) method.
+In the following example, ignitions start 150m from the western edge of the domain (x=0) and 100m from the southern edge of the domain (y=0). The rectangle extends 10 meters east in the x-direction,
+and 100m north in the y-direction.
 
 ```python
 simulation.set_rectangle_ignition(
@@ -78,7 +81,7 @@ simulation.set_rectangle_ignition(
 Ignition patterns other than rectangular can be specified using the [ignitions module](how-to-guides.md#define-ignitions-using-ignitionspy).
 Please see [ignitions](reference.md#quicfire_tools.ignitions) for a full list of available ignition patterns.
 
-#### Specify output files
+#### How to specify which files to output
 
 Depending on the desired analyses, different files (.bin) may need to be output. To specify with files should be written, use the [`set_output_files`](reference.md#quicfire_tools.inputs.SimulationInputs.set_output_files) method and set the desired files to true. In the following example, we are specifying outputs for fuel density, various emissions, and wind grid components.
 
@@ -98,7 +101,7 @@ By default, an unmodified simulation will output fuel density and QUIC winds. Af
 
 Please see the [`QUIC_fire`](reference.md#quicfire_tools.inputs.QUIC_fire) class for a full list of available output files.
 
-#### Set custom fuels, ignitions, and topography from .dat files
+#### How to set custom fuels, ignitions, and topography from .dat files
 
 For more advanced simulations, it may be necessary to specify custom fuel parameters, ignition patterns, or topography using .dat files. These files must be created and provided by the user, but the [`set_cunstom_simulation`](reference.md#quicfire_tools.inputs.SimulationInputs.set_custom_simualtion) method can be used to specify which custom .dat files should be used in the simulation.
 
@@ -116,7 +119,7 @@ simulation.set_custom_simulation(
 
 Any parameter not set to `True` will not be specified by a custom .dat file.
 
-### Directly modify input files
+### How to directly modify input files
 
 Every QUIC-Fire input file is represented in an `InputFile` class in the [inputs](reference.md#quicfire_tools.inputs) module. These classes can be accessed as attributes of the `SimulationInputs` class, where their parameters can be modified. Some of the more commonly modified input files are below:
 
@@ -167,13 +170,14 @@ simulation.runtime_advanced_user_inputs.num_cpus = 1
 simulation.runtime_advanced_user_inputs.use_acw = 1
 ```
 
-### Define topography using topography.py
+### How to define topography using topography.py
 
 In addition to flat topography (the default) and [custom topography](how-to-guides.md#set-custom-fuels-ignitions-and-topography-from-dat-files), there are various built-in topography types, all of which can be set using classes in the [topopgraphy](reference.md#quicfire_tools.topography) module. The following example creates and sets Gaussian hill topography.
 
 ```python
 from quicfire_tools.topography import GaussianHillTopo
 
+# First, create an TopoType class
 topo = GaussianHillTopo(
     x_hilltop = 100,
     y_hilltop = 150,
@@ -181,18 +185,20 @@ topo = GaussianHillTopo(
     elevation_std = 15
 )
 
+# Next, assign it to the topo_type attribute of the qu_topoinputs InputFile
 simulation.qu_topoinputs.topo_type = topo
 ```
 
 Please see [topopgraphy](reference.md#quicfire_tools.topography) for a full list of topography types.
 
-### Define ignitions using ignitions.py
+### How to define ignitions using ignitions.py
 
 In addition to [rectangle ignitions](how-to-guides.md#set-rectangle-ignition-patterns) (the default) and [custom ignitions](how-to-guides.md#set-custom-fuels-ignitions-and-topography-from-dat-files), there are various build-in ignition patterns, all of which can be set using class in the [ignnitions](reference.md#quicfire_tools.ignitions) module. The following example creates and sets a circular ring ignition.
 
 ```python
 from quicfire_tools.ignitions import CurcularRingIgnition
 
+# First, create an IgnitionType class
 ignition = CircularRingIgnition(
     x_min = 50,
     y_min = 50,
@@ -200,6 +206,9 @@ ignition = CircularRingIgnition(
     y_length = 20,
     ring_width = 10
 )
+
+# Next, assign it to the ignition_type attribute of the quic_fire InputFile
+simulation.quic_fire.ignition_type
 ```
 
 Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of ignition patterns.
