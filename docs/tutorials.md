@@ -36,13 +36,12 @@ First, we initialize the simulation with the grid size, simulation time, and win
 simulation = SimulationInputs.create_simulation(
     nx=200,
     ny=200,
-    fire_nz=20,
+    fire_nz=1,
     wind_speed=1.7,
     wind_direction=90,
     simulation_time=600
 )
 ```
-
 
 - **nx** and **ny** define the number of cells in the x and y axis of the simulation grid.
 - **fire_nz** determines the number of cells in the z-axis for the fire grid.
@@ -57,7 +56,7 @@ method sets the fuel density, moisture, and height uniformly across the simulati
 ```python
 simulation.set_uniform_fuels(
     fuel_density=0.7,
-    fuel_moisture=0.05,
+    fuel_moisture=0.10,
     fuel_height=1.0
 )
 ```

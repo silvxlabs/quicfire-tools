@@ -16,7 +16,7 @@ def create_line_fire() -> SimulationInputs:
     # Set uniform fuel values
     sim_inputs.set_uniform_fuels(
         fuel_density=0.7,
-        fuel_moisture=0.05,
+        fuel_moisture=0.10,
         fuel_height=1.0,
     )
 

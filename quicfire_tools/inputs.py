@@ -1368,8 +1368,8 @@ class QUIC_fire(InputFile):
     eng_to_atm_out: Literal[0, 1] = 0
     react_rate_out: Literal[0, 1] = 0
     fuel_dens_out: Literal[0, 1] = 1
-    qf_wind_out: Literal[0, 1] = 1
-    qu_wind_inst_out: Literal[0, 1] = 0
+    qf_wind_out: Literal[0, 1] = 0
+    qu_wind_inst_out: Literal[0, 1] = 1
     qu_wind_avg_out: Literal[0, 1] = 0
     fuel_moist_out: Literal[0, 1] = 0
     mass_burnt_out: Literal[0, 1] = 0
