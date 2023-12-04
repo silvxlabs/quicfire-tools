@@ -1918,7 +1918,7 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.fuel_moisture is None
         assert sim_inputs.quic_fire.fuel_height is None
         assert sim_inputs.quic_fire.ignition_type == IgnitionType(
-            ignition_flag=IgnitionSources(6)
+            ignition_flag=IgnitionSources(7)
         )
         assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag=TopoSources(5))
 
