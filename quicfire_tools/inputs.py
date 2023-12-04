@@ -189,6 +189,11 @@ class SimulationInputs:
         SimulationInputs
             Class containing the data to build a QUIC-Fire
             input file deck and run a simulation using default parameters.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
         """
         # Initialize default input files
         rasterorigin = RasterOrigin()
@@ -241,7 +246,10 @@ class SimulationInputs:
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
         """
         Initializes a SimulationInputs object from a directory containing a
-        QUIC-Fire input file deck.
+        QUIC-Fire input file deck. The function looks for each input file in the
+        QUIC-Fire input file deck, reads in the file to an object, and compiles
+        the objects to a SimulationInputs object that represents the complete
+        state of the QUIC-Fire simulation.
 
         Parameters
         ----------
@@ -252,6 +260,12 @@ class SimulationInputs:
         -------
         SimulationInputs
             Class containing the input files in the QUIC-Fire input file deck.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> simulation_path = "path/to/simulation/directory"
+        >>> sim_inputs = SimulationInputs.from_directory(simulation_path)
         """
         if isinstance(directory, str):
             directory = Path(directory)
@@ -287,6 +301,14 @@ class SimulationInputs:
         ----------
         data: dict
             Dictionary containing input file data.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> json_path = "path/to/json/object"
+        >>> sim_inputs = SimulationInputs.from_json(json_path)
+        >>> sim_dict = sim_inputs.to_dict()
+        >>> new_sim_inputs = SimulationInputs.from_dict(sim_dict)
         """
         return cls(
             rasterorigin=RasterOrigin.from_dict(data["rasterorigin"]),
@@ -323,6 +345,12 @@ class SimulationInputs:
         ----------
         path: str | Path
             Path to the JSON file.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> json_path = "path/to/json/object"
+        >>> sim_inputs = SimulationInputs.from_json(json_path)
         """
         if isinstance(path, str):
             path = Path(path)
@@ -335,7 +363,7 @@ class SimulationInputs:
         Write all input files in the SimulationInputs object to a specified
         directory.
 
-        This method is the core method of the SimulationInputs class. It
+        This method is a core method of the SimulationInputs class. It
         is the principle way to translate a SimulationInputs object into a
         QUIC-Fire input file deck.
 
@@ -345,6 +373,12 @@ class SimulationInputs:
             Directory to write the input files to.
         version: str
             Version of the input files to write. Default is "latest".
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.write_inputs("path/to/simulation/directory")
         """
         if isinstance(directory, str):
             directory = Path(directory)
@@ -376,10 +410,14 @@ class SimulationInputs:
         object is represented as a nest dictionary, with the name of each
         input file as a key to that input file's dictionary representation.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary representation of the object.
+
+        Examples
+        --------
+
         """
         return {key: value.to_dict() for key, value in self._input_files_dict.items()}
 
@@ -403,6 +441,30 @@ class SimulationInputs:
         ignition: bool = True,
         topo: bool = True,
     ):
+        """
+        Configures a custom simulation in QUIC-Fire by setting parameters for
+        fuel, ignition, and topography inputs.
+
+        This method allows users to enable or disable custom configurations for
+        different, customizable components of the simulation domain. If enabled,
+        the respective parameters for each aspect (fuel, ignition, and
+        topography) are set to predefined values that point QUIC-Fire to custom
+        input files. This function can be useful for setting up simulations
+        that use .dat files to define custom fuel, topography, or ignition
+        inputs.
+
+        Parameters
+        ----------
+        fuel : bool, optional
+            If True, sets the simulation to use custom fuel settings.
+            Default is True.
+        ignition : bool, optional
+            If True, sets the simulation to use a custom ignition source.
+            Default is True.
+        topo : bool, optional
+            If True, sets the simulation to use custom topography settings.
+            Default is True.
+        """
         if fuel:
             self.quic_fire.fuel_flag = 3
             self.quic_fire.fuel_density = None
@@ -772,6 +834,8 @@ class QU_Simparams(InputFile):
     Class representing the QU_simparams.inp file. This file contains the
     simulation parameters for the QUIC-Fire simulation.
 
+    Attributes
+    ----------
     nx : int
         Number of cells in the x-direction [-]. Recommended value: > 100
     ny : int
@@ -1806,6 +1870,8 @@ class QU_TopoInputs(InputFile):
     Class representing the QU_TopoInputs.inp input file. This file
     contains advanced data pertaining to topography.
 
+    Attributes
+    ----------
     filename : str
         Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp
     topo_type : TopoType
