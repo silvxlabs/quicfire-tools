@@ -18,10 +18,6 @@ class IgnitionSources(int, Enum):
 
 
 class IgnitionType(BaseModel):
-    """
-    Test docs
-    """
-
     ignition_flag: IgnitionSources
 
     def __str__(self):
