@@ -1,8 +1,8 @@
 ## Inputs
 
-QUIC-Fire is controlled by a deck of input files that specify fuel parameters, wind conditions, ignitions, topography, etc. 
+QUIC-Fire is controlled by a deck of input files that specify fuel parameters, wind conditions, ignitions, topography, etc.
 The inputs module provides a simple interface to programatically create and modify new input file decks or read existing decks.
-The following guides provide step-by-step instructions for working with simple QUIC-Fire input decks. 
+The following guides provide step-by-step instructions for working with simple QUIC-Fire input decks.
 Please see [inputs](reference.md%quicfire_tools.inputs) for full documentation.
 
 ### How to create a basic QUIC-Fire simulation
@@ -15,7 +15,7 @@ from quicfire_tools.inputs import SimulationInputs
 
 To create a simulation, use the [`create_simulation`](reference.md#quicfire_tools.inputs.SimulationInputs.create_simulation) method, and
 input basic information about the burn domain, initial weather conditions, and simulation parameters. In the following example, we are
-setting up a simulation that is 200x200 grid cells, with one vertical layer of fuels. The wind is blowing from the east at 1.7 m/s, and 
+setting up a simulation that is 200x200 grid cells, with one vertical layer of fuels. The wind is blowing from the east at 1.7 m/s, and
 the simulation will run for 600 seconds of simulation time.
 
 ```python
@@ -34,7 +34,7 @@ simulation = SimulationInputs.create_simulation(
 - **wind_speed** and **wind_direction** set the initial wind conditions.
 - **simulation_time** specifies how long the simulation will run in seconds.
 
-This creates a basic input deck with default values for fuels, ignitions, and topography. This simulation can be run as-is, or modified using 
+This creates a basic input deck with default values for fuels, ignitions, and topography. This simulation can be run as-is, or modified using
 methods described below.
 
 ### How to use set_* methods for common simulation parameters
