@@ -39,7 +39,7 @@ methods described below.
 
 ### How to use set_* methods for common simulation parameters
 
-Once a simulation is created, it can be modified directly through methods in the `SimulationInputs` class. 
+Once a simulation is created, it can be modified directly through methods in the `SimulationInputs` class.
 For common modifications, convenience methods starting with `set_*` are available. Guides for all `set_*` methods are below.
 
 #### How to set uniform fuel conditions
@@ -217,15 +217,41 @@ Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of 
 
 What goes here?
 
-### Read and write input file decks
+### How to read and write input file decks
 
-#### Write a SimulationInputs object to an input deck
+#### How to write a SimulationInputs object to an input deck
 
-#### Read in an existing input deck
+Once a `SimulationInputs` object has been created and modified, it can be used to write all the necessary input files to a directory containing the QUIC-Fire executable.
+This is done using the [`write_inputs`](reference.md#quicfire_tools.inputs.SimulationInputs.write_inputs) method.
 
-#### Write a simulation to JSON
+```python
+simulation.write_inputs("path/to/directory")
+```
 
-#### Load a simulation from a JSON file
+#### How to load an existing input deck
+
+Input decks that already exist may be read in as a `SimulationInputs` object. The [`from_directory`](reference.md#quicfire_tools.inputs.SimulationInputs.from_directory) method
+is used for this purpose.
+
+```python
+simulation = SimulationInputs.from_directory("path/to/directory")
+```
+
+#### How to write a simulation to JSON
+
+All the information in a `SimulationInputs` object may be saved in JSON format using the [`to_json`](reference.md#quicire_tools.inputs.SimulationInputs.to_json) method.
+
+```python
+simulation.to_json("path/to/directory")
+```
+
+#### How to load a simulation from a JSON file
+
+Input decks saved in JSON format by quicfire-tools can be loaded into a `SimulationInputs` oject using the [`from_json`](reference.md#quicfire_tools.inputs.SimulationInputs.from_json) method.
+
+```python
+simulation = SimulationInputs.from_json("path/to/directory")
+```
 
 ## Outputs
 
