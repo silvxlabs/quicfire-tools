@@ -410,7 +410,7 @@ class SimulationInputs:
             self.quic_fire.fuel_height = None
         if ignition:
             self.quic_fire.ignition_type = IgnitionType(
-                ignition_flag=IgnitionSources(6)
+                ignition_flag=IgnitionSources(7)
             )
         if topo:
             self.qu_topoinputs.topo_type = TopoType(topo_flag=TopoSources(5))
@@ -1557,8 +1557,6 @@ class QUIC_fire(InputFile):
                 y_length=y_length,
                 ring_width=ring_width,
             )
-        elif ignition_flag == 6:
-            ignition_type = IgnitionType(ignition_flag=6)
         else:
             ignition_type = IgnitionType(ignition_flag=ignition_flag)
 

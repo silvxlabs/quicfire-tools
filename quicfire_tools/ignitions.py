@@ -14,7 +14,7 @@ class IgnitionSources(int, Enum):
     rectangle = 1
     square_ring = 2
     circular_ring = 3
-    ignite_dat_file = 6
+    ignite_dat_file = 7
 
 
 class IgnitionType(BaseModel):
@@ -30,7 +30,7 @@ class IgnitionType(BaseModel):
             f"2 = square ring, 3 = circular ring, "
             f"4 = file (QF_Ignitions.inp), "
             f"5 = time-dependent ignitions (QF_IgnitionPattern.inp), "
-            f"6 = ignite.dat (firetech)"
+            f"7 = ignite.dat (firetech)"
         )
 
 
