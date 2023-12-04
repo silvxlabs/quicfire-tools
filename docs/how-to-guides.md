@@ -116,7 +116,60 @@ simulation.set_custom_simulation(
 
 Any parameter not set to `True` will not be specified by a custom .dat file.
 
+### Directly modify input files
+
+Every QUIC-Fire input file is represented in an `InputFile` class in the [inputs](reference.md#quicfire_tools.inputs) module. These classes can be accessed as attributes of the `SimulationInputs` class, where their parameters can be modified. Some of the more commonly modified input files are below:
+
+- **QUIC_fire** contains parameters relating to the fire simulation, including the fire grid, fuels, ignitions, and output files.
+- **QU_TopoInputs** contains parameters relating to the underlying topography of the simulation, including topography type and smoothing parameters.
+- **Sensor1** contains parameters relating to the wind conditions throughout the simulation.
+- **Runtime_Adananced_User_Inputs** contains parameters relating to the internal processing of the simulation.
+
+#### QUIC_fire.inp
+
+The [`QUIC_fire`](reference.md#quicfire_tools.inputs.QUIC_fire) input file class contains many parameters relating to the fire simulation. Once a simulation is created, these parameters can be accessed and modified through [`SimulationInputs.quic_fire`](reference.md#quicfire_tools.inputs.SimulationInputs.quic_fire). In the following example, some parameters not accessed by the `set_*` methods are modified.
+
+```python
+simulation.quic_fire.random_seed = 47
+simulation.quic_fire.out_time_fire = 60
+simulation.quic_fire.ignitions_per_cell = 5
+simulation.quic_fire.auto_kill = 1
+```
+
+Please see [`QUIC_fire`](reference.md#quicfire_tools.inputs.QUIC_fire) for a full list of parameters associated with the QUIC_fire.inp input file.
+
+#### QU_TopoInputs.inp
+
+The [`QU_TopoInputs`](reference.md#quicfire_tools.inputs.QU_TopoInputs) input file class contains parameters relating to the underlying topography of the simulation. Once a simulation is created, these parameters can be accessed and modified throught [`QU_TopoInputs`](reference.md#quicfire_tools.inputs.SimulationInputs.qu_topoinputs). For information on setting custom topography using built-in methods in the [topography](reference.md#quicfire_tools.topography) module, see [Set custom topography](how-to-guides.md#set-custom-topography). In the following example, some parameters not accessed by the `set_*` methods or the `topography` module are modified.
+
+```python
+simulation.qu_topoinputs.smoothing_passes = 500
+simulation.qu_topoinputs.sor_iteration = 300
+```
+
+Please see [`QU_TopoInputs`](reference.md#quicfire_tools.inputs.QU_TopoInputs) for a full list of parameters associated with the QUIC_fire.inp input file.
+
+#### sensor1.inp
+The ['Sensor1](reference.md#quicfire_tools.inputs.Sensor1) input file class contains parameters defining wind conditions throughout the simulation. Once a simulation is created, these parameters can be accessed and modified through [`SimulationInputs.sensor1`](reference.md#quicfire_tools.inputs.SimulationInputs.sensor1).
+
+```python
+simulation.sensor1.sensor_height = 10
+```
+
+Please see [`Sensor1`](reference.md#quicfire_tools.inputs.Senor1) for a full list of parameters associated with the sensor1.inp input file.
+
+#### Runtime_Advanced_User_Inputs.inp
+
+The [`Runtime_Advanced_User_Inputs`](reference.md#quicfire_tools.inputs.Runtime_Advanced_User_Inputs) input file class condtains two parameters relating to the internal processing of the simulation. Once a simulation is created, these parameters can be accessed and modified throught [`Runtime_Advanced_User_Inputs`](reference.md#quicfire_tools.inputs.SimulationInputs.runtime_advanced_user_inputs). In the following example, the number of CPUs/threads is specifed, along with whether or not to use the adaptive computational window.
+
+```python
+simulation.runtime_advanced_user_inputs.num_cpus = 1
+simulation.runtime_advanced_user_inputs.use_acw = 1
+```
+
 ### Set custom topography
+
+### Set custom ignitions
 
 ### Set weather conditions
 
