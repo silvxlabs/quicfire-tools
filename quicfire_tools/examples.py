@@ -31,8 +31,8 @@ def create_line_fire() -> SimulationInputs:
     # Select which binary files to output
     sim_inputs.set_output_files(
         fuel_dens=True,
-        pm_emissions=True,
-        radiation=True,
+        emissions=True,
+        qu_wind_inst=True,
     )
 
     # Make modifications to the QUIC_Fire input file

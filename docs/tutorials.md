@@ -80,7 +80,7 @@ simulation.set_rectangle_ignition(
 )
 ```
 
-- **x_min** and **y_min** set the coordinates of the bottom left corner of the ignition zone.
+- **x_min** and **y_min** set the coordinates of the bottom left corner of the ignition zone. These coordinates are specified in meters, not grid cells.
 - **x_length** and **y_length** set the length of the ignition zone in the x and y directions in meters.
 
 #### Step 2.4: Specify Output Files
@@ -92,10 +92,15 @@ method allows you to choose which data to output.
 ```python
 simulation.set_output_files(
     fuel_dens=True,
-    pm_emissions=True,
-    radiation=True
+    emissions=True,
+    qu_wind_inst=True
 )
 ```
+
+In this example:
+- **fuel_dens** specifies a compressed array fuel density output.
+- **emissions** specifies CO, PM2.5, and water emissions outputs.
+- **qu_wind_inst** specifies gridded wind components (u, v, w) for the QUIC (wind) grid.
 
 ### Step 3: Write the Simulation to a Directory
 
