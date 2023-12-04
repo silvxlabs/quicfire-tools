@@ -112,6 +112,45 @@ method of is used for this purpose.
 simulation.write_inputs("path/to/directory")
 ```
 
+### Finished Code
+
+The following code block combines all of the steps in this tutorial to create a basic QUIC-Fire simulation using 
+quicfire-tools.
+
+```python
+from quicfire_tools.inputs import SimulationInputs
+
+simulation = SimulationInputs.create_simulation(
+    nx=200,
+    ny=200,
+    fire_nz=1,
+    wind_speed=1.7,
+    wind_direction=90,
+    simulation_time=600
+)
+
+simulation.set_uniform_fuels(
+    fuel_density=0.7,
+    fuel_moisture=0.10,
+    fuel_height=1.0
+)
+
+simulation.set_rectangle_ignition(
+    x_min=150,
+    y_min=100,
+    x_length=10,
+    y_length=100
+)
+
+simulation.set_output_files(
+    fuel_dens=True,
+    emissions=True,
+    qu_wind_inst=True
+)
+
+simulation.write_inputs("path/to/directory")
+```
+
 ### Conclusion
 
 In this tutorial, we have learned how to create a basic QUIC-Fire simulation using the SimulationInputs class from the
