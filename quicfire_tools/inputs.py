@@ -2088,14 +2088,18 @@ class QU_metparams(InputFile):
     name: str = "QU_metparams"
     _extension: str = ".inp"
     num_sensors: PositiveInt = 1
-    sensor_name: str = "sensor1"
 
     @computed_field
     @property
     def _sensor_lines(self) -> str:
-        return (
-            f"{self.sensor_name} !Site Name\n" f"!File name\n" f"{self.sensor_name}.inp"
-        )
+        sensor_lines = []
+        for i in range(1,self.num_sensors+1):
+            sensor_lines.append(
+                f"sensor{str(i)} !Site Name\n" 
+                f"!File name\n" 
+                f"sensor{str(i)}.inp"
+            )
+        return "\n".join(sensor_lines)
 
     @classmethod
     def from_file(cls, directory):
