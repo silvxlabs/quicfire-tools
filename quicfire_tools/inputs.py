@@ -154,6 +154,9 @@ class SimulationInputs:
             "qu_simparams": qu_simparams,
         }
 
+        # Store the number of wind sensors
+        self._num_sensors = 1
+
     @classmethod
     def create_simulation(
         cls,
@@ -461,6 +464,31 @@ class SimulationInputs:
         self.quic_fire.radiation_out = int(radiation)
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
+    
+    def add_wind_sensor(
+            self,
+            x_location: PositiveInt,
+            y_location: PositiveInt,
+            wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
+            wind_directions: Union[PositiveInt, list(PositiveInt)],
+            wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0,
+            sensor_height: PositiveFloat = 6.1,
+    ):
+        """
+        Add an additional wind sensor
+        """
+        self._num_sensors += 1
+        add_sensor = Sensor(
+            sensor_number=self._num_sensors,
+            time_now = self.quic_fire.time_now,
+            wind_times=wind_times,
+            wind_speeds=wind_speeds,
+            wind_directions=wind_directions,
+            sensor_height=sensor_height,
+            x_location=x_location,
+            y_location=y_location,
+        )
+        setattr(self,add_sensor.name,add_sensor)
 
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
