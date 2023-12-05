@@ -465,6 +465,23 @@ class SimulationInputs:
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
     
+    def set_wind_shifts(
+            self,
+            wind_times: list(NonNegativeInt),
+            wind_speeds: list(PositiveInt),
+            wind_directions: list(PositiveInt),
+            sensor_number: PositiveInt = 1,
+    ):
+        """
+        Sets wind shifts based on lists of times, speeds, and directions
+        """
+        sensor_name = "sensor"+str(sensor_number)
+        sensor = getattr(self,sensor_name)
+        sensor.wind_times = wind_times
+        sensor.wind_speeds = wind_speeds
+        sensor.wind_directions = wind_directions
+        setattr(self, sensor_name, sensor)
+    
     def add_wind_sensor(
             self,
             x_location: PositiveInt,
@@ -2134,7 +2151,7 @@ class Sensor(InputFile):
     @computed_field
     @property
     def name(self) -> str:
-        return "sensor" + self.sensor_number
+        return "sensor" + str(self.sensor_number)
     
     @field_validator("wind_times","wind_speeds","wind_directions")
     @classmethod
