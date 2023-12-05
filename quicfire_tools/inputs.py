@@ -92,7 +92,7 @@ class SimulationInputs:
         Object representing the QUIC_fire.inp file.
     gridlist: Gridlist
         Object representing the gridlist.txt file.
-    sensor1: Sensor1
+    sensor1: Sensor
         Object representing the sensor1.inp file.
     qu_topoinputs: QU_TopoInputs
         Object representing the QU_topoinputs.inp file.
@@ -114,7 +114,7 @@ class SimulationInputs:
         qu_metparams: QU_metparams,
         quic_fire: QUIC_fire,
         gridlist: Gridlist,
-        sensor1: Sensor1,
+        sensor1: Sensor,
         qu_topoinputs: QU_TopoInputs,
         qu_simparams: QU_Simparams,
     ):
@@ -212,8 +212,8 @@ class SimulationInputs:
             ignition_type=ignition_type,
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
-        sensor1 = Sensor1(
-            time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
+        sensor1 = Sensor(
+            time_now=start_time, wind_speeds=wind_speed, wind_directions=wind_direction
         )
         qu_topoinputs = QU_TopoInputs()
         qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
@@ -272,7 +272,8 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_file(directory),
             quic_fire=QUIC_fire.from_file(directory),
             gridlist=Gridlist.from_file(directory),
-            sensor1=Sensor1.from_file(directory),
+            #TODO: update for multiple sensors
+            sensor1=Sensor.from_file(directory),
             qu_topoinputs=QU_TopoInputs.from_file(directory),
             qu_simparams=QU_Simparams.from_file(directory),
         )
@@ -309,7 +310,8 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_dict(data["qu_metparams"]),
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
             gridlist=Gridlist.from_dict(data["gridlist"]),
-            sensor1=Sensor1.from_dict(data["sensor1"]),
+            #TODO update for multiple sensors
+            sensor1=Sensor.from_dict(data["sensor1"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
             qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
         )
@@ -2094,12 +2096,12 @@ class Sensor(InputFile):
     sensor_number: PositiveInt = 1
     _extension: str = ".inp"
     time_now: PositiveInt
-    wind_times: Union[NonNegativeFloat,list(NonNegativeFloat)]
+    wind_times: Union[NonNegativeFloat,list(NonNegativeFloat)] = 0
     wind_speeds: Union[PositiveFloat, list(PositiveFloat)]
     wind_directions: Union[PositiveFloat, list(PositiveFloat)]
     sensor_height: PositiveFloat = 6.1
-    x_location: PositiveInt
-    y_location: PositiveInt
+    x_location: PositiveInt = 1
+    y_location: PositiveInt = 1
 
     @computed_field
     @property
@@ -2128,7 +2130,6 @@ class Sensor(InputFile):
     @computed_field
     @property
     def _wind_lines(self) -> str:
-        self._validate_wind_lists()
         location_lines = (f"{self.x_location} !X coordinate (meters)\n",
                           f"{self.y_location} !Y coordinate (meters)\n")
         windshifts = []
