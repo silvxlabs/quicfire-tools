@@ -2246,16 +2246,3 @@ class Sensor(InputFile):
                 )
 
     # TODO write from_csv method
-    @classmethod
-    def from_csv(cls, filename: Union[str, Path]):
-        """
-        Create windshifts from a .csv file.
-
-        """
-        if isinstance(filename, str):
-            filename = Path(filename)
-
-        with open(filename, "r") as f:
-            matrix = list(csv.reader(f))
-
-        # TODO: add function for calculating windspeed/direction from U,V winds. Put in quicfire_tools.utils
