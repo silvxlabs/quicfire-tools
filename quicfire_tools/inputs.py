@@ -240,7 +240,7 @@ class SimulationInputs:
             qu_simparams=qu_simparams,
         )
 
-    #TODO: Figure out from_directory method for multiple wind sensor files
+    # TODO: Figure out from_directory method for multiple wind sensor files
     @classmethod
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
         """
@@ -276,7 +276,7 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_file(directory),
             quic_fire=QUIC_fire.from_file(directory),
             gridlist=Gridlist.from_file(directory),
-            #TODO: update for multiple sensors
+            # TODO: update for multiple sensors
             sensor1=Sensor.from_file(directory),
             qu_topoinputs=QU_TopoInputs.from_file(directory),
             qu_simparams=QU_Simparams.from_file(directory),
@@ -314,7 +314,7 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_dict(data["qu_metparams"]),
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
             gridlist=Gridlist.from_dict(data["gridlist"]),
-            #TODO update for multiple sensors
+            # TODO update for multiple sensors
             sensor1=Sensor.from_dict(data["sensor1"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
             qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
@@ -336,6 +336,7 @@ class SimulationInputs:
             data = json.load(f)
         return cls.from_dict(data)
 
+    # TODO: How to write multiple wind sensors?
     def write_inputs(self, directory: str | Path, version: str = "latest") -> None:
         """
         Write all input files in the SimulationInputs object to a specified
@@ -465,32 +466,32 @@ class SimulationInputs:
         self.quic_fire.radiation_out = int(radiation)
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
-    
+
     def set_wind_shifts(
-            self,
-            wind_times: list(NonNegativeInt),
-            wind_speeds: list(PositiveInt),
-            wind_directions: list(PositiveInt),
-            sensor_number: PositiveInt = 1,
+        self,
+        wind_times: list(NonNegativeInt),
+        wind_speeds: list(PositiveInt),
+        wind_directions: list(PositiveInt),
+        sensor_number: PositiveInt = 1,
     ):
         """
         Sets wind shifts based on lists of times, speeds, and directions
         """
-        sensor_name = "sensor"+str(sensor_number)
-        sensor = getattr(self,sensor_name)
+        sensor_name = "sensor" + str(sensor_number)
+        sensor = getattr(self, sensor_name)
         sensor.wind_times = wind_times
         sensor.wind_speeds = wind_speeds
         sensor.wind_directions = wind_directions
         setattr(self, sensor_name, sensor)
-    
+
     def add_wind_sensor(
-            self,
-            x_location: PositiveInt,
-            y_location: PositiveInt,
-            wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
-            wind_directions: Union[PositiveInt, list(PositiveInt)],
-            wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0,
-            sensor_height: PositiveFloat = 6.1,
+        self,
+        x_location: PositiveInt,
+        y_location: PositiveInt,
+        wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
+        wind_directions: Union[PositiveInt, list(PositiveInt)],
+        wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0,
+        sensor_height: PositiveFloat = 6.1,
     ):
         """
         Add an additional wind sensor
@@ -498,7 +499,7 @@ class SimulationInputs:
         self._num_sensors += 1
         add_sensor = Sensor(
             sensor_number=self._num_sensors,
-            time_now = self.quic_fire.time_now,
+            time_now=self.quic_fire.time_now,
             wind_times=wind_times,
             wind_speeds=wind_speeds,
             wind_directions=wind_directions,
@@ -506,7 +507,7 @@ class SimulationInputs:
             x_location=x_location,
             y_location=y_location,
         )
-        setattr(self,add_sensor.name,add_sensor)
+        setattr(self, add_sensor.name, add_sensor)
 
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
@@ -2093,11 +2094,9 @@ class QU_metparams(InputFile):
     @property
     def _sensor_lines(self) -> str:
         sensor_lines = []
-        for i in range(1,self.num_sensors+1):
+        for i in range(1, self.num_sensors + 1):
             sensor_lines.append(
-                f"sensor{str(i)} !Site Name\n" 
-                f"!File name\n" 
-                f"sensor{str(i)}.inp"
+                f"sensor{str(i)} !Site Name\n" f"!File name\n" f"sensor{str(i)}.inp"
             )
         return "\n".join(sensor_lines)
 
@@ -2109,8 +2108,10 @@ class QU_metparams(InputFile):
             lines = f.readlines()
         sensor_name = str(lines[4].strip().split()[0].strip())
         if sensor_name != "sensor1":
-            print(f"WARNING: wind sensor files must be named 'sensor*.inp'\n"
-                  f"Current sensor namne = {sensor_name}")
+            print(
+                f"WARNING: wind sensor files must be named 'sensor*.inp'\n"
+                f"Current sensor namne = {sensor_name}"
+            )
         return cls(
             num_sensors=int(lines[2].strip().split()[0]),
         )
@@ -2120,7 +2121,7 @@ class Sensor(InputFile):
     """
     Class representing a sensor*.inp input file.
     This file contains information on winds, and serves as the
-    primary source for wind speed(s) and direction(s). 
+    primary source for wind speed(s) and direction(s).
     Multiple sensor*.inp files may be created.
 
     Attributes
@@ -2149,7 +2150,7 @@ class Sensor(InputFile):
     sensor_number: PositiveInt = 1
     _extension: str = ".inp"
     time_now: PositiveInt
-    wind_times: Union[NonNegativeFloat,list(NonNegativeFloat)] = 0
+    wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0
     wind_speeds: Union[PositiveFloat, list(PositiveFloat)]
     wind_directions: Union[PositiveFloat, list(PositiveFloat)]
     sensor_height: PositiveFloat = 6.1
@@ -2160,19 +2161,22 @@ class Sensor(InputFile):
     @property
     def name(self) -> str:
         return "sensor" + str(self.sensor_number)
-    
-    @field_validator("wind_times","wind_speeds","wind_directions")
+
+    @field_validator("wind_times", "wind_speeds", "wind_directions")
     @classmethod
     def validate_wind_lists(cls, v: list) -> list:
         for arg in v:
-            if isinstance(arg, float): arg = [arg]
+            if isinstance(arg, float):
+                arg = [arg]
         if not all(len(arg) == len(v[0]) for arg in v):
-            raise ValueError(f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
-                             f"len(wind_times) = {len(v[0])}\n"
-                             f"len(wind_speeds) = {len(v[1])}\n"
-                             f"len(win_directions) = {len(v[2])}")
+            raise ValueError(
+                f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
+                f"len(wind_times) = {len(v[0])}\n"
+                f"len(wind_speeds) = {len(v[1])}\n"
+                f"len(win_directions) = {len(v[2])}"
+            )
         return v
-    
+
     @field_validator("wind_times")
     @classmethod
     def validate_wind_start(cls, v: list) -> list:
@@ -2183,26 +2187,30 @@ class Sensor(InputFile):
     @computed_field
     @property
     def _wind_lines(self) -> str:
-        location_lines = (f"{self.x_location} !X coordinate (meters)\n",
-                          f"{self.y_location} !Y coordinate (meters)\n")
+        location_lines = (
+            f"{self.x_location} !X coordinate (meters)\n",
+            f"{self.y_location} !Y coordinate (meters)\n",
+        )
         windshifts = []
         for i in len(self.wind_times):
-            shift = (f"\n{self.time_now + self.wind_times[i]} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
-                     f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
-                     f"0.1 !site zo\n"
-                     f"0. ! 1/L (default = 0)\n"
-                     f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
-                     f"{self.sensor_height} {self.wind_speeds[i]} {self.wind_directions[i]}")
+            shift = (
+                f"\n{self.time_now + self.wind_times[i]} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+                f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+                f"0.1 !site zo\n"
+                f"0. ! 1/L (default = 0)\n"
+                f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+                f"{self.sensor_height} {self.wind_speeds[i]} {self.wind_directions[i]}"
+            )
             windshifts.append(shift)
-        
+
         return location_lines + "".join(windshifts)
 
-    #TODO: make this work for multiple wind sensors
+    # TODO: make this work for multiple wind sensors
     @classmethod
     def from_file(cls, directory: str | Path):
         if isinstance(directory, str):
             directory = Path(directory)
-        for i in range(10): # check for up to 10 sensors (this doesn't work right now)
+        for i in range(10):  # check for up to 10 sensors (this doesn't work right now)
             file_name = "sensor" + str(i) + ".inp"
             path = directory / file_name
             if path.exists():
@@ -2212,20 +2220,22 @@ class Sensor(InputFile):
                 wind_times = [0]
                 wind_speeds = []
                 wind_directions = []
-                x_location=int(lines[4].strip().split("!")[0])
-                y_location=int(lines[5].strip().split("!")[0])
-                time_now=int(lines[6].strip().split("!")[0])
-                sensor_height=float(lines[11].split(" ")[0])
+                x_location = int(lines[4].strip().split("!")[0])
+                y_location = int(lines[5].strip().split("!")[0])
+                time_now = int(lines[6].strip().split("!")[0])
+                sensor_height = float(lines[11].split(" ")[0])
                 wind_speeds.append(float(lines[11].split(" ")[1]))
                 wind_directions.append(int(lines[11].split(" ")[2]))
                 next_shift = 12
-                while (next_shift+6) <= len(lines):
-                    wind_times.append(int(lines[next_shift].strip().split("!")[0] - time_now))
-                    wind_speeds.append(float(lines[next_shift+5].split(" ")[1]))
-                    wind_directions.append(int(lines[next_shift+5].split(" ")[2]))
+                while (next_shift + 6) <= len(lines):
+                    wind_times.append(
+                        int(lines[next_shift].strip().split("!")[0] - time_now)
+                    )
+                    wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
+                    wind_directions.append(int(lines[next_shift + 5].split(" ")[2]))
                     next_shift += 6
                 return cls(
-                    sensor_number = i,
+                    sensor_number=i,
                     time_now=time_now,
                     sensor_height=sensor_height,
                     wind_times=wind_times,
@@ -2235,18 +2245,17 @@ class Sensor(InputFile):
                     y_location=y_location,
                 )
 
-    #TODO write from_csv method
+    # TODO write from_csv method
     @classmethod
-    def from_csv(cls,
-                 filename: Union[str,Path]):
+    def from_csv(cls, filename: Union[str, Path]):
         """
         Create windshifts from a .csv file.
-        
+
         """
         if isinstance(filename, str):
             filename = Path(filename)
-       
-        with open(filename,"r") as f:
+
+        with open(filename, "r") as f:
             matrix = list(csv.reader(f))
-        
+
         # TODO: add function for calculating windspeed/direction from U,V winds. Put in quicfire_tools.utils
