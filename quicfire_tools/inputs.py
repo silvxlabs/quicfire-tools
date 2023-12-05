@@ -240,6 +240,7 @@ class SimulationInputs:
             qu_simparams=qu_simparams,
         )
 
+    #TODO: Figure out from_directory method for multiple wind sensor files
     @classmethod
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
         """
@@ -2189,20 +2190,43 @@ class Sensor(InputFile):
         
         return location_lines + "".join(windshifts)
 
-    # TODO Update from_file
+    #TODO: make this work for multiple wind sensors
     @classmethod
     def from_file(cls, directory: str | Path):
         if isinstance(directory, str):
             directory = Path(directory)
-        with open(directory / "sensor1.inp", "r") as f:
-            lines = f.readlines()
-        print("\n".join(lines))
-        return cls(
-            time_now=int(lines[6].strip().split("!")[0]),
-            sensor_height=float(lines[11].split(" ")[0]),
-            wind_speed=float(lines[11].split(" ")[1]),
-            wind_direction=int(lines[11].split(" ")[2]),
-        )
+        for i in range(10): # check for up to 10 sensors (this doesn't work right now)
+            file_name = "sensor" + str(i) + ".inp"
+            path = directory / file_name
+            if path.exists():
+                with open(directory / file_name, "r") as f:
+                    lines = f.readlines()
+                # print("\n".join(lines))
+                wind_times = [0]
+                wind_speeds = []
+                wind_directions = []
+                x_location=int(lines[4].strip().split("!")[0])
+                y_location=int(lines[5].strip().split("!")[0])
+                time_now=int(lines[6].strip().split("!")[0])
+                sensor_height=float(lines[11].split(" ")[0])
+                wind_speeds.append(float(lines[11].split(" ")[1]))
+                wind_directions.append(int(lines[11].split(" ")[2]))
+                next_shift = 12
+                while (next_shift+6) <= len(lines):
+                    wind_times.append(int(lines[next_shift].strip().split("!")[0] - time_now))
+                    wind_speeds.append(float(lines[next_shift+5].split(" ")[1]))
+                    wind_directions.append(int(lines[next_shift+5].split(" ")[2]))
+                    next_shift += 6
+                return cls(
+                    sensor_number = i,
+                    time_now=time_now,
+                    sensor_height=sensor_height,
+                    wind_times=wind_times,
+                    wind_speeds=wind_speeds,
+                    wind_directions=wind_directions,
+                    x_location=x_location,
+                    y_location=y_location,
+                )
 
     #TODO write from_csv method
     @classmethod
