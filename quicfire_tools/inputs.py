@@ -2107,9 +2107,12 @@ class QU_metparams(InputFile):
             directory = Path(directory)
         with open(directory / "QU_metparams.inp", "r") as f:
             lines = f.readlines()
+        sensor_name = str(lines[4].strip().split()[0].strip())
+        if sensor_name != "sensor1":
+            print(f"WARNING: wind sensor files must be named 'sensor*.inp'\n"
+                  f"Current sensor namne = {sensor_name}")
         return cls(
             num_sensors=int(lines[2].strip().split()[0]),
-            sensor_name=str(lines[4].strip().split()[0].strip()),
         )
 
 
@@ -2164,9 +2167,9 @@ class Sensor(InputFile):
         for arg in v:
             if isinstance(arg, float): arg = [arg]
         if not all(len(arg) == len(v[0]) for arg in v):
-            raise ValueError(f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n",
-                             f"len(wind_times) = {len(v[0])}\n",
-                             f"len(wind_speeds) = {len(v[1])}\n",
+            raise ValueError(f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
+                             f"len(wind_times) = {len(v[0])}\n"
+                             f"len(wind_speeds) = {len(v[1])}\n"
                              f"len(win_directions) = {len(v[2])}")
         return v
     
@@ -2184,9 +2187,9 @@ class Sensor(InputFile):
                           f"{self.y_location} !Y coordinate (meters)\n")
         windshifts = []
         for i in len(self.wind_times):
-            shift = (f"\n{self.time_now + self.wind_times[i]} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n",
-                     f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n",
-                     f"0.1 !site zo\n",
+            shift = (f"\n{self.time_now + self.wind_times[i]} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+                     f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+                     f"0.1 !site zo\n"
                      f"0. ! 1/L (default = 0)\n"
                      f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
                      f"{self.sensor_height} {self.wind_speeds[i]} {self.wind_directions[i]}")
