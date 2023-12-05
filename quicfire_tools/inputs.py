@@ -2076,12 +2076,19 @@ class Sensor(InputFile):
         Begining of time step in Unix Epoch time (integer seconds since
         1970/1/1 00:00:00). Must match time at beginning of fire
         (QU_Simparams.inp and QUIC_fire.inp)
+    wind_times : NonNegativeFloat | list(NonNegativeFloat)
+        Time in seconds since the start of the fire for each wind shift.
+        First time must be zero.
+    wind_speeds : PositiveFloat | list(PositiveFloat)
+        Wind speed or list of wind speeds (m/s)
+    wind_directions : NonNegativeInt < 360 | list(NonNegativeInt < 360)
+        Wind direction or list of directions (degrees). Use 0° for North
     sensor_height : PositiveFloat
         Wind measurement height (m). Default is 6.1m (20ft)
-    wind_speed : PositiveFloat
-        Wind speed (m/s)
-    wind_direction : NonNegativeInt < 360
-        Wind direction (degrees). Use 0° for North
+    x_location : PositiveInt
+        Location of the sensor in the x-direction
+    y_location : PositiveInt
+        Location of the sensor in the y-direction
     """
 
     sensor_number: PositiveInt = 1
@@ -2099,15 +2106,24 @@ class Sensor(InputFile):
     def name(self) -> str:
         return "sensor" + self.sensor_number
     
-    def _validate_wind_lists(self):
-        if isinstance(self.wind_times,float): self.wind_times = [self.wind_times]
-        if isinstance(self.wind_speeds, float): self.wind_speeds = [self.wind_speeds]
-        if isinstance(self.wind_directions, float): self.wind_directions = [self.wind_directions]
-        if len(self.wind_times) != len(self.wind_speeds) != len(self.wind_directions): #TODO figure out how to do this right
+    @field_validator("wind_times","wind_speeds","wind_directions")
+    @classmethod
+    def validate_wind_lists(cls, v: list) -> list:
+        for arg in v:
+            if isinstance(arg, float): arg = [arg]
+        if not all(len(arg) == len(v[0]) for arg in v):
             raise ValueError(f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n",
-                             f"len(wind_times) = {len(self.wind_times)}\n",
-                             f"len(wind_speeds) = {len(self.wind_speeds)}\n",
-                             f"len(win_directions) = {len(self.wind_directions)}")
+                             f"len(wind_times) = {len(v[0])}\n",
+                             f"len(wind_speeds) = {len(v[1])}\n",
+                             f"len(win_directions) = {len(v[2])}")
+        return v
+    
+    @field_validator("wind_times")
+    @classmethod
+    def validate_wind_start(cls, v: list) -> list:
+        if v[0] != 0:
+            raise ValueError("wind_times: first element of sensor.wind_times must be 0")
+        return v
 
     @computed_field
     @property
@@ -2142,6 +2158,7 @@ class Sensor(InputFile):
             wind_direction=int(lines[11].split(" ")[2]),
         )
 
+    #TODO write from_csv method
     @classmethod
     def from_csv(cls,
                  filename: Union[str,Path]):
