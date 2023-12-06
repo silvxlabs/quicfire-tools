@@ -114,7 +114,7 @@ class SimulationInputs:
         qu_metparams: QU_metparams,
         quic_fire: QUIC_fire,
         gridlist: Gridlist,
-        sensor1: Sensor,
+        sensor1: WindSensor,
         qu_topoinputs: QU_TopoInputs,
         qu_simparams: QU_Simparams,
     ):
@@ -215,7 +215,7 @@ class SimulationInputs:
             ignition_type=ignition_type,
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
-        sensor1 = Sensor(
+        sensor1 = WindSensor(
             time_now=start_time, wind_speeds=wind_speed, wind_directions=wind_direction
         )
         qu_topoinputs = QU_TopoInputs()
@@ -277,7 +277,7 @@ class SimulationInputs:
             quic_fire=QUIC_fire.from_file(directory),
             gridlist=Gridlist.from_file(directory),
             # TODO: update for multiple sensors
-            sensor1=Sensor.from_file(directory),
+            sensor1=WindSensor.from_file(directory),
             qu_topoinputs=QU_TopoInputs.from_file(directory),
             qu_simparams=QU_Simparams.from_file(directory),
         )
@@ -315,7 +315,7 @@ class SimulationInputs:
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
             gridlist=Gridlist.from_dict(data["gridlist"]),
             # TODO update for multiple sensors
-            sensor1=Sensor.from_dict(data["sensor1"]),
+            sensor1=WindSensor.from_dict(data["sensor1"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
             qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
         )
@@ -497,7 +497,7 @@ class SimulationInputs:
         Add an additional wind sensor
         """
         self._num_sensors += 1
-        add_sensor = Sensor(
+        add_sensor = WindSensor(
             sensor_number=self._num_sensors,
             time_now=self.quic_fire.time_now,
             wind_times=wind_times,
@@ -2117,7 +2117,7 @@ class QU_metparams(InputFile):
         )
 
 
-class Sensor(InputFile):
+class WindSensor(InputFile):
     """
     Class representing a sensor*.inp input file.
     This file contains information on winds, and serves as the
