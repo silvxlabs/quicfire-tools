@@ -114,7 +114,7 @@ simulation.write_inputs("path/to/directory")
 
 ### Finished Code
 
-The following code block combines all of the steps in this tutorial to create a basic QUIC-Fire simulation using
+The following code block combines all the steps in this tutorial to create a basic QUIC-Fire simulation using
 quicfire-tools.
 
 ```python
@@ -164,3 +164,91 @@ responsibility of the user.
 For more information about setting up a QUIC-Fire simulation, please see the [How-to-Guide](how-to-guides.md)
 for more examples of working with the inputs module,
 and the [Reference](reference.md#quicfire_tools.inputs) page for a complete list of available methods and attributes.
+
+## Reading QUIC-Fire Output Files with quicfire-tools.
+
+In this tutorial, we will learn how to read QUIC-Fire output files using quicfire-tools, a Python package designed to
+streamline the process of managing QUIC-Fire input file decks and processing output files. This tutorial will take you
+through the necessary steps to read a QUIC-Fire output file into a numpy array, focusing on using the OutputFile class 
+from the outputs module.
+
+### Prerequisites
+
+Before starting this tutorial, ensure that you have:
+
+- Python 3.8 or higher installed on your system.
+- The quicfire-tools package installed on your system. If you do not have quicfire-tools installed, please see the
+  [installation instructions](index.md#installation) in the documentation.
+- An Outputs directory containing the output files from a QUIC-Fire simulation. quicfire-tools does not handle running 
+  QUIC-Fire simulations and it is the responsibility of the user to run the fire model and understand the relevant 
+  inputs.
+
+### Step 1: Import the necessary modules
+
+Start by importing the SimulationInputs class from the quicfire_tools.outputs module:
+
+```python
+from quicfire_tools.outputs import SimulationOutputs
+```
+
+### Step 2: Create a SimulationOutputs object
+
+Next, create a SimulationOutputs object. The SimulationOutputs class is used to read and process QUIC-Fire outputs.
+You can create a SimulationOutputs object by passing the path to the Outputs directory containing the output files to
+the constructor.
+
+In addition to the path to the Outputs directory, you also need to specify the number of cells in the z, y, and x
+directions of the simulation grid. This information is used to reshape the output files into a 3D numpy array.
+
+```python
+output_directory = "/path/to/output/directory"
+nz = 56  # number of z cells
+ny = 100  # number of y cells
+nx = 100  # number of x cells
+
+simulation_outputs = SimulationOutputs(output_directory, nz, ny, nx)
+```
+
+### Step 3: Get an Output File
+
+You can use the SimulationOutputs object to get the `OutputFile` object for the output that you want to read data from.
+To do this, use the [`get_output_file`](reference.md#quicfire_tools.outputs.SimulationOutputs.get_output_file)
+method of the SimulationOutputs class.
+
+```python
+output_name = "fire-energy_to_atmos"  # replace with the name of the output you are interested in
+output_file = simulation_outputs.get_output(output_name)
+```
+
+### Step 4: Get the output data as a numpy array
+
+Finally, you can get a numpy array for the output data using the
+[`to_numpy`](reference.md#quicfire_tools.outputs.OutputFile.to_numpy) method of the `OutputFile` instance. You can 
+specify the timestep(s) you are interested in. If you don't provide a timestep, all timesteps will be returned:
+
+```python
+timestep = 0  # replace with the timestep you are interested in
+output_data = output_file.to_numpy(timestep)
+```
+
+### Finished Code
+
+The following code block combines all the steps in this tutorial to read a QUIC-Fire output file into a numpy array
+using quicfire-tools.
+
+```python
+from quicfire_tools.outputs import SimulationOutputs
+
+output_directory = "/path/to/output/directory"
+nz = 56  # number of z cells
+ny = 100  # number of y cells
+nx = 100  # number of x cells
+
+simulation_outputs = SimulationOutputs(output_directory, nz, ny, nx)
+
+output_name = "fire-energy_to_atmos"  # replace with the name of the output you are interested in
+output_file = simulation_outputs.get_output(output_name)
+
+timestep = 0  # replace with the timestep you are interested in
+output_data = output_file.to_numpy(timestep)
+```
