@@ -255,8 +255,83 @@ simulation = SimulationInputs.from_json("path/to/directory")
 
 ## Outputs
 
-### Load a numpy array from a QUIC-Fire output file
+### How to create a SimulationOutputs object from a directory containing QUIC-Fire output files
 
-### Load a time slice from a QUIC-Fire output file
+To read and process QUIC-Fire output files, use the [`SimulationOutputs`](reference.md#quicfire_tools.outputs.SimulationOutputs) class.
+You need to specify the path to the directory containing the output files, as well as the number of cells in the z, y, and x directions of the simulation grid.
 
-### Load a dask array from a QUIC-Fire output file
+```python
+from quicfire_tools.outputs import SimulationOutputs
+
+output_directory = "/path/to/output/directory"
+nz = 56  # number of z cells
+ny = 100  # number of y cells
+nx = 100  # number of x cells
+
+simulation_outputs = SimulationOutputs(output_directory, nz, ny, nx)
+```
+
+### How to get an OutputFile object from a SimulationOutputs object
+
+Once you have a `SimulationOutputs` object, you can use it to get an [`OutputFile`](reference.md#quicfire_tools.outputs.OutputFile) object for a specific output file.
+To do this, use the [`get_output_file`](reference.md#quicfire_tools.outputs.SimulationOutputs.get_output_file) method of the `SimulationOutputs` class.
+
+```python
+from quicfire_tools.outputs import SimulationOutputs
+simulation_outputs = SimulationOutputs("/path/to/output/directory", 56, 100, 100)
+
+output_name = "fire-energy_to_atmos"  # replace with the name of the output you are interested in
+output_file = simulation_outputs.get_output(output_name)
+```
+
+### How to get a numpy array from an OutputFile object at a specific timestep
+
+Once you have an `OutputFile` object, you can use it to get a numpy array for the output data using the
+[`to_numpy`](reference.md#quicfire_tools.outputs.OutputFile.to_numpy) method of the `OutputFile` instance. You can
+specify the timestep(s) you are interested in. If you don't provide a timestep, all timesteps will be returned:
+
+```python
+from quicfire_tools.outputs import SimulationOutputs
+simulation_outputs = SimulationOutputs("/path/to/output/directory", 56, 100, 100)
+output_file = simulation_outputs.get_output("fire-energy_to_atmos")
+
+timestep = 0  # replace with the timestep you are interested in
+output_data = output_file.to_numpy(timestep)
+```
+
+#### How to get the data across all timesteps
+
+By not specifying a timestep, you can get the data across all timesteps. This will return a 4D numpy array with the
+shape (nt, nz, ny, nx), where nt is the number of timesteps.
+
+_caution:_ please be aware of the memory requirements your data. This approach may not be appropriate for large simulations
+or for computers with limited memory.
+
+```python
+from quicfire_tools.outputs import SimulationOutputs
+simulation_outputs = SimulationOutputs("/path/to/output/directory", 56, 100, 100)
+output_file = simulation_outputs.get_output("fire-energy_to_atmos")
+
+output_data = output_file.to_numpy()
+```
+
+### How to get a dask array from a QUIC-Fire output file
+
+You can use the [`to_dask`](reference.md#quicfire_tools.outputs.SimulationOutputs.to_dask) method of the `SimulationOutputs` class to
+get a dask array for the desired output file. This method returns a
+[`dask.array`](https://docs.dask.org/en/latest/array.html) object, which can be used to read and process data in parallel,
+perform lazy computations, and work with data that is too large to fit in memory.
+
+Note that this method returns a dask array, not a numpy array. To get a numpy array, you can use the
+[`compute`](https://docs.dask.org/en/latest/array-api.html#dask.array.Array.compute) method of the dask array to perform
+the computations and load data into memory.
+
+The dask array returned by this method has the same format as the numpy array returned by the
+[`to_numpy`](reference.md#quicfire_tools.outputs.OutputFile.to_numpy) method, a 4D array with the shape
+(nt, nz, ny, nx), where nt is the number of timesteps.
+
+```python
+from quicfire_tools.outputs import SimulationOutputs
+simulation_outputs = SimulationOutputs("/path/to/output/directory", 56, 100, 100)
+dask_array = simulation_outputs.to_dask("fire-energy_to_atmos")
+```

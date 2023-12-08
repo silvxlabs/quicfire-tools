@@ -169,7 +169,7 @@ and the [Reference](reference.md#quicfire_tools.inputs) page for a complete list
 
 In this tutorial, we will learn how to read QUIC-Fire output files using quicfire-tools, a Python package designed to
 streamline the process of managing QUIC-Fire input file decks and processing output files. This tutorial will take you
-through the necessary steps to read a QUIC-Fire output file into a numpy array, focusing on using the OutputFile class 
+through the necessary steps to read a QUIC-Fire output file into a numpy array, focusing on using the OutputFile class
 from the outputs module.
 
 ### Prerequisites
@@ -179,8 +179,8 @@ Before starting this tutorial, ensure that you have:
 - Python 3.8 or higher installed on your system.
 - The quicfire-tools package installed on your system. If you do not have quicfire-tools installed, please see the
   [installation instructions](index.md#installation) in the documentation.
-- An Outputs directory containing the output files from a QUIC-Fire simulation. quicfire-tools does not handle running 
-  QUIC-Fire simulations and it is the responsibility of the user to run the fire model and understand the relevant 
+- An Outputs directory containing the output files from a QUIC-Fire simulation. quicfire-tools does not handle running
+  QUIC-Fire simulations and it is the responsibility of the user to run the fire model and understand the relevant
   inputs.
 
 ### Step 1: Import the necessary modules
@@ -223,7 +223,7 @@ output_file = simulation_outputs.get_output(output_name)
 ### Step 4: Get the output data as a numpy array
 
 Finally, you can get a numpy array for the output data using the
-[`to_numpy`](reference.md#quicfire_tools.outputs.OutputFile.to_numpy) method of the `OutputFile` instance. You can 
+[`to_numpy`](reference.md#quicfire_tools.outputs.OutputFile.to_numpy) method of the `OutputFile` instance. You can
 specify the timestep(s) you are interested in. If you don't provide a timestep, all timesteps will be returned:
 
 ```python
