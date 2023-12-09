@@ -141,3 +141,7 @@ tests/data/test-output-zarr/
 
 # macOS
 .DS_Store
+
+# Test files
+test-simulation-line-fire/
+test-simulation-custom-fuels/
