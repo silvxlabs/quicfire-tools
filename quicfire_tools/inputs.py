@@ -158,7 +158,7 @@ class SimulationInputs:
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
         }
-        for k,v in windsensor.items():
+        for k, v in windsensor.items():
             self._input_files_dict[k] = v
 
     @classmethod
@@ -219,9 +219,13 @@ class SimulationInputs:
             ignition_type=ignition_type,
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
-        windsensor = {'sensor1' : WindSensor(
-            time_now=start_time, wind_speeds=wind_speed, wind_directions=wind_direction
-        )}
+        windsensor = {
+            "sensor1": WindSensor(
+                time_now=start_time,
+                wind_speeds=wind_speed,
+                wind_directions=wind_direction,
+            )
+        }
         qu_topoinputs = QU_TopoInputs()
         qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
 
@@ -284,7 +288,7 @@ class SimulationInputs:
             qu_simparams=QU_Simparams.from_file(directory),
         )
 
-    #TODO: figure out from_dict for windsensor
+    # TODO: figure out from_dict for windsensor
     @classmethod
     def from_dict(cls, data: dict) -> SimulationInputs:
         """
@@ -494,11 +498,10 @@ class SimulationInputs:
         self.windsensor[sensor_name].wind_times = wind_times
         self.windsensor[sensor_name].wind_speeds = wind_speeds
         self.windsensor[sensor_name].wind_directions = wind_directions
-    
-    def set_windshifts_from_csv(self, 
-                                sensor_number: int,
-                                directory: str | Path, 
-                                filename: str):
+
+    def set_windshifts_from_csv(
+        self, sensor_number: int, directory: str | Path, filename: str
+    ):
         """
         Set wind shifts from a csv file.
 
@@ -510,7 +513,7 @@ class SimulationInputs:
             Directory containing the csv to read
         filename : str
             Name of the csv file
-        
+
         Columns
         -------
         wind_times : int >= 0
@@ -524,17 +527,19 @@ class SimulationInputs:
         if isinstance(directory, str):
             directory = Path(directory)
         filepath = directory / filename
-        sensor_name = "".join("sensor",sensor_number)
+        sensor_name = "".join("sensor", sensor_number)
         df = pd.read_csv(filepath)
-        validate = DataFrameSchema({
-            "wind_times": Column(int, checks=Check.ge(0)),
-            "wind_speeds": Column(float, checks=Check.gt(0)), #can windspeed be 0?
-            "wind_directions": Column(int, checks=Check.lt(360)),
-        })
+        validate = DataFrameSchema(
+            {
+                "wind_times": Column(int, checks=Check.ge(0)),
+                "wind_speeds": Column(float, checks=Check.gt(0)),  # can windspeed be 0?
+                "wind_directions": Column(int, checks=Check.lt(360)),
+            }
+        )
         validated_df = validate(df)
-        self.windsensor[sensor_name].wind_times = validated_df['wind_times']
-        self.windsensor[sensor_name].wind_speeds = validated_df['wind_speeds']
-        self.windsensor[sensor_name].wind_directions = validated_df['wind_directions']
+        self.windsensor[sensor_name].wind_times = validated_df["wind_times"]
+        self.windsensor[sensor_name].wind_speeds = validated_df["wind_speeds"]
+        self.windsensor[sensor_name].wind_directions = validated_df["wind_directions"]
 
     def add_wind_sensor(
         self,
@@ -549,7 +554,7 @@ class SimulationInputs:
         """
         Add an additional wind sensor
         """
-        sensor_name = "".join("sensor",sensor_number)
+        sensor_name = "".join("sensor", sensor_number)
         self.windsensor[sensor_name] = WindSensor(
             sensor_number=sensor_number,
             time_now=self.quic_fire.time_now,
@@ -559,14 +564,20 @@ class SimulationInputs:
             sensor_height=sensor_height,
             x_location=x_location,
             y_location=y_location,
-        )          
+        )
 
     def _validate_wind_times(self):
         if len(self.windsensor.keys()) > 1:
             sensors = self.windsensor.values()
-            if not all(getattr(sensor, 'wind_times') == getattr(next(iter(sensors)), 'wind_times') for sensor in sensors):
-                raise ValueError("SimulationInputs: wind_times lists in all WindSensor input files must be identical")
-    
+            if not all(
+                getattr(sensor, "wind_times")
+                == getattr(next(iter(sensors)), "wind_times")
+                for sensor in sensors
+            ):
+                raise ValueError(
+                    "SimulationInputs: wind_times lists in all WindSensor input files must be identical"
+                )
+
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
         self.gridlist.m = self.qu_simparams.ny
@@ -575,7 +586,7 @@ class SimulationInputs:
         self.gridlist.dy = self.qu_simparams.dy
         self._validate_wind_times()
         if (
-            not self.windsensor['sensor1'].time_now
+            not self.windsensor["sensor1"].time_now
             == self.quic_fire.time_now
             == self.qu_simparams.wind_times[0]
         ):
@@ -2276,16 +2287,16 @@ class WindSensor(InputFile):
                 if file.stem.startswith("sensor") and file.name.endswith(".inp"):
                     sensor_list.append(file.stem)
         windsensor = {}
-        for sensor_number in range(1,len(sensor_list)+1):
-            sensor_name = "".join("sensor",sensor_number)
-            windsensor[sensor_name] = WindSensor._from_file(directory,sensor_number)
-        return windsensor 
-    
+        for sensor_number in range(1, len(sensor_list) + 1):
+            sensor_name = "".join("sensor", sensor_number)
+            windsensor[sensor_name] = WindSensor._from_file(directory, sensor_number)
+        return windsensor
+
     @classmethod
     def _from_file(cls, directory: str | Path, sensor_number: int):
         if isinstance(directory, str):
             directory = Path(directory)
-        sensor_name = "".join("sensor",sensor_number,".inp")
+        sensor_name = "".join("sensor", sensor_number, ".inp")
         path = directory / sensor_name
         if path.exists():
             with open(directory / sensor_name, "r") as f:
@@ -2317,4 +2328,4 @@ class WindSensor(InputFile):
                 wind_directions=wind_directions,
                 x_location=x_location,
                 y_location=y_location,
-            ) 
+            )
