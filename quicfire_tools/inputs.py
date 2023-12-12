@@ -92,8 +92,8 @@ class SimulationInputs:
         Object representing the QUIC_fire.inp file.
     gridlist: Gridlist
         Object representing the gridlist.txt file.
-    sensor1: Sensor
-        Object representing the sensor1.inp file.
+    windsensor: dict[str, WindSensor]
+        Object representing the all wind sensor input files, e.g. sensor1.inp.
     qu_topoinputs: QU_TopoInputs
         Object representing the QU_topoinputs.inp file.
     qu_simparams: QU_Simparams
@@ -114,7 +114,7 @@ class SimulationInputs:
         qu_metparams: QU_metparams,
         quic_fire: QUIC_fire,
         gridlist: Gridlist,
-        sensor1: WindSensor,
+        windsensor: dict[str, WindSensor],
         qu_topoinputs: QU_TopoInputs,
         qu_simparams: QU_Simparams,
     ):
@@ -131,7 +131,7 @@ class SimulationInputs:
         self.qu_metparams = qu_metparams
         self.quic_fire = quic_fire
         self.gridlist = gridlist
-        self.sensor1 = sensor1
+        self.windsensor = windsensor
         self.qu_topoinputs = qu_topoinputs
         self.qu_simparams = qu_simparams
 
@@ -149,13 +149,10 @@ class SimulationInputs:
             "qu_metparams": qu_metparams,
             "quic_fire": quic_fire,
             "gridlist": gridlist,
-            "sensor1": sensor1,
+            "windsensor": windsensor,
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
         }
-
-        # Store the number of wind sensors
-        self._num_sensors = 1
 
     @classmethod
     def create_simulation(
@@ -215,9 +212,9 @@ class SimulationInputs:
             ignition_type=ignition_type,
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
-        sensor1 = WindSensor(
+        windsensor = {'sensor1' : WindSensor(
             time_now=start_time, wind_speeds=wind_speed, wind_directions=wind_direction
-        )
+        )}
         qu_topoinputs = QU_TopoInputs()
         qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
 
@@ -235,7 +232,7 @@ class SimulationInputs:
             qu_metparams=qu_metparams,
             quic_fire=quic_fire,
             gridlist=gridlist,
-            sensor1=sensor1,
+            windsensor=windsensor,
             qu_topoinputs=qu_topoinputs,
             qu_simparams=qu_simparams,
         )
@@ -277,7 +274,7 @@ class SimulationInputs:
             quic_fire=QUIC_fire.from_file(directory),
             gridlist=Gridlist.from_file(directory),
             # TODO: update for multiple sensors
-            sensor1=WindSensor.from_file(directory),
+            windsensor=WindSensor.from_file(directory),
             qu_topoinputs=QU_TopoInputs.from_file(directory),
             qu_simparams=QU_Simparams.from_file(directory),
         )
@@ -314,8 +311,7 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_dict(data["qu_metparams"]),
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
             gridlist=Gridlist.from_dict(data["gridlist"]),
-            # TODO update for multiple sensors
-            sensor1=WindSensor.from_dict(data["sensor1"]),
+            windsensor=WindSensor.from_dict(data["windsensor"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
             qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
         )
@@ -478,14 +474,14 @@ class SimulationInputs:
         Sets wind shifts based on lists of times, speeds, and directions
         """
         sensor_name = "sensor" + str(sensor_number)
-        sensor = getattr(self, sensor_name)
-        sensor.wind_times = wind_times
-        sensor.wind_speeds = wind_speeds
-        sensor.wind_directions = wind_directions
-        setattr(self, sensor_name, sensor)
+        self.windsensor[sensor_name].wind_times = wind_times
+        self.windsensor[sensor_name].wind_speeds = wind_speeds
+        self.windsensor[sensor_name].wind_directions = wind_directions
+
 
     def add_wind_sensor(
         self,
+        sensor_number: PositiveInt,
         x_location: PositiveInt,
         y_location: PositiveInt,
         wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
@@ -496,8 +492,8 @@ class SimulationInputs:
         """
         Add an additional wind sensor
         """
-        self._num_sensors += 1
-        add_sensor = WindSensor(
+        sensor_name = "".join("sensor",sensor_number)
+        self.windsensor[sensor_name] = WindSensor(
             sensor_number=self._num_sensors,
             time_now=self.quic_fire.time_now,
             wind_times=wind_times,
@@ -507,16 +503,22 @@ class SimulationInputs:
             x_location=x_location,
             y_location=y_location,
         )
-        setattr(self, add_sensor.name, add_sensor)
 
+    def _validate_wind_times(self):
+        if len(self.windsensor.keys()) > 1:
+            sensors = self.windsensor.values()
+            if not all(getattr(sensor, 'wind_times') == getattr(next(iter(sensors)), 'wind_times') for sensor in sensors):
+                raise ValueError("SimulationInputs: wind_times lists in all WindSensor input files must be identical")
+    
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
         self.gridlist.m = self.qu_simparams.ny
         self.gridlist.l = self.quic_fire.nz
         self.gridlist.dx = self.qu_simparams.dx
         self.gridlist.dy = self.qu_simparams.dy
+        self._validate_wind_times()
         if (
-            not self.sensor1.time_now
+            not self.windsensor['sensor1'].time_now
             == self.quic_fire.time_now
             == self.qu_simparams.wind_times[0]
         ):
@@ -526,10 +528,11 @@ class SimulationInputs:
                 f"Times: \n"
                 f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
                 f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
-                f"\tsensor1.inp: {self.sensor1.time_now}\n"
+                f"\twindsensor.inp: {self.windsensor['sensor1'].time_now}\n"
                 f"Setting all values to {self.quic_fire.time_now}"
             )
-            self.sensor1.time_now = self.quic_fire.time_now
+            for key in self.windsensor.keys():
+                self.windsensor[key].time_now = self.quic_fire.time_now
             self.qu_simparams.wind_times[0] = self.quic_fire.time_now
 
 
@@ -2110,7 +2113,7 @@ class QU_metparams(InputFile):
         if sensor_name != "sensor1":
             print(
                 f"WARNING: wind sensor files must be named 'sensor*.inp'\n"
-                f"Current sensor namne = {sensor_name}"
+                f"Current sensor name = {sensor_name}"
             )
         return cls(
             num_sensors=int(lines[2].strip().split()[0]),
