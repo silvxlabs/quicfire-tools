@@ -498,7 +498,7 @@ class SimulationInputs:
         self.windsensor[sensor_name].wind_times = wind_times
         self.windsensor[sensor_name].wind_speeds = wind_speeds
         self.windsensor[sensor_name].wind_directions = wind_directions
-        self.qu_simparams.wind_times = [x+self.quic_fire.time_now for x in wind_times]
+        self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in wind_times]
 
     def set_windshifts_from_csv(
         self, sensor_number: int, directory: str | Path, filename: str
@@ -540,8 +540,12 @@ class SimulationInputs:
         validated_df = validate(df)
         self.windsensor[sensor_name].wind_times = list(validated_df["wind_times"])
         self.windsensor[sensor_name].wind_speeds = list(validated_df["wind_speeds"])
-        self.windsensor[sensor_name].wind_directions = list(validated_df["wind_directions"])
-        self.qu_simparams.wind_times = [x+self.quic_fire.time_now for x in list(validated_df["wind_times"])]
+        self.windsensor[sensor_name].wind_directions = list(
+            validated_df["wind_directions"]
+        )
+        self.qu_simparams.wind_times = [
+            x + self.quic_fire.time_now for x in list(validated_df["wind_times"])
+        ]
 
     def add_wind_sensor(
         self,
@@ -573,7 +577,9 @@ class SimulationInputs:
         """
         sensor_name = "".join("sensor", sensor_number)
         if sensor_name in self.windsensor.keys():
-            raise ValueError(f"{sensor_name} already exists. Set a different sensor number or modify the existing sensor directly")
+            raise ValueError(
+                f"{sensor_name} already exists. Set a different sensor number or modify the existing sensor directly"
+            )
         self.windsensor[sensor_name] = WindSensor(
             sensor_number=sensor_number,
             time_now=self.quic_fire.time_now,
@@ -584,7 +590,7 @@ class SimulationInputs:
             x_location=x_location,
             y_location=y_location,
         )
-        self.qu_simparams.wind_times = [x+self.quic_fire.time_now for x in wind_times]
+        self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in wind_times]
         self.qu_metparams.num_sensors = sensor_number
 
     def _validate_wind_times(self):
