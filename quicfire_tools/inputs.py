@@ -273,7 +273,6 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_file(directory),
             quic_fire=QUIC_fire.from_file(directory),
             gridlist=Gridlist.from_file(directory),
-            # TODO: update for multiple sensors
             windsensor=WindSensor.from_file(directory),
             qu_topoinputs=QU_TopoInputs.from_file(directory),
             qu_simparams=QU_Simparams.from_file(directory),
@@ -471,13 +470,12 @@ class SimulationInputs:
         sensor_number: PositiveInt = 1,
     ):
         """
-        Sets wind shifts based on lists of times, speeds, and directions
+        Sets wind shifts based on lists of wind times, speeds, and directions
         """
         sensor_name = "sensor" + str(sensor_number)
         self.windsensor[sensor_name].wind_times = wind_times
         self.windsensor[sensor_name].wind_speeds = wind_speeds
         self.windsensor[sensor_name].wind_directions = wind_directions
-
 
     def add_wind_sensor(
         self,
@@ -494,7 +492,7 @@ class SimulationInputs:
         """
         sensor_name = "".join("sensor",sensor_number)
         self.windsensor[sensor_name] = WindSensor(
-            sensor_number=self._num_sensors,
+            sensor_number=sensor_number,
             time_now=self.quic_fire.time_now,
             wind_times=wind_times,
             wind_speeds=wind_speeds,
@@ -502,7 +500,7 @@ class SimulationInputs:
             sensor_height=sensor_height,
             x_location=x_location,
             y_location=y_location,
-        )
+        )          
 
     def _validate_wind_times(self):
         if len(self.windsensor.keys()) > 1:
@@ -2208,44 +2206,58 @@ class WindSensor(InputFile):
 
         return location_lines + "".join(windshifts)
 
-    # TODO: make this work for multiple wind sensors
+    def from_file(directory: Path):
+        """
+        Wrapper for _from_file() classmethod returning dict of available WindSensor objects
+        """
+        # look for wind sensors
+        sensor_list = []
+        for file in directory.iterdir():
+            if file.is_file():
+                if file.stem.startswith("sensor") and file.name.endswith(".inp"):
+                    sensor_list.append(file.stem)
+        windsensor = {}
+        for sensor_number in range(1,len(sensor_list)+1):
+            sensor_name = "".join("sensor",sensor_number)
+            windsensor[sensor_name] = WindSensor._from_file(directory,sensor_number)
+        return windsensor 
+    
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def _from_file(cls, directory: str | Path, sensor_number: int):
         if isinstance(directory, str):
             directory = Path(directory)
-        for i in range(10):  # check for up to 10 sensors (this doesn't work right now)
-            file_name = "sensor" + str(i) + ".inp"
-            path = directory / file_name
-            if path.exists():
-                with open(directory / file_name, "r") as f:
-                    lines = f.readlines()
-                # print("\n".join(lines))
-                wind_times = [0]
-                wind_speeds = []
-                wind_directions = []
-                x_location = int(lines[4].strip().split("!")[0])
-                y_location = int(lines[5].strip().split("!")[0])
-                time_now = int(lines[6].strip().split("!")[0])
-                sensor_height = float(lines[11].split(" ")[0])
-                wind_speeds.append(float(lines[11].split(" ")[1]))
-                wind_directions.append(int(lines[11].split(" ")[2]))
-                next_shift = 12
-                while (next_shift + 6) <= len(lines):
-                    wind_times.append(
-                        int(lines[next_shift].strip().split("!")[0] - time_now)
-                    )
-                    wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
-                    wind_directions.append(int(lines[next_shift + 5].split(" ")[2]))
-                    next_shift += 6
-                return cls(
-                    sensor_number=i,
-                    time_now=time_now,
-                    sensor_height=sensor_height,
-                    wind_times=wind_times,
-                    wind_speeds=wind_speeds,
-                    wind_directions=wind_directions,
-                    x_location=x_location,
-                    y_location=y_location,
+        sensor_name = "".join("sensor",sensor_number,".inp")
+        path = directory / sensor_name
+        if path.exists():
+            with open(directory / sensor_name, "r") as f:
+                lines = f.readlines()
+            # print("\n".join(lines))
+            wind_times = [0]
+            wind_speeds = []
+            wind_directions = []
+            x_location = int(lines[4].strip().split("!")[0])
+            y_location = int(lines[5].strip().split("!")[0])
+            time_now = int(lines[6].strip().split("!")[0])
+            sensor_height = float(lines[11].split(" ")[0])
+            wind_speeds.append(float(lines[11].split(" ")[1]))
+            wind_directions.append(int(lines[11].split(" ")[2]))
+            next_shift = 12
+            while (next_shift + 6) <= len(lines):
+                wind_times.append(
+                    int(lines[next_shift].strip().split("!")[0] - time_now)
                 )
+                wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
+                wind_directions.append(int(lines[next_shift + 5].split(" ")[2]))
+                next_shift += 6
+            return cls(
+                sensor_number=sensor_number,
+                time_now=time_now,
+                sensor_height=sensor_height,
+                wind_times=wind_times,
+                wind_speeds=wind_speeds,
+                wind_directions=wind_directions,
+                x_location=x_location,
+                y_location=y_location,
+            ) 
 
     # TODO write from_csv method
