@@ -498,6 +498,7 @@ class SimulationInputs:
         self.windsensor[sensor_name].wind_times = wind_times
         self.windsensor[sensor_name].wind_speeds = wind_speeds
         self.windsensor[sensor_name].wind_directions = wind_directions
+        self.qu_simparams.wind_times = [x+self.quic_fire.time_now for x in wind_times]
 
     def set_windshifts_from_csv(
         self, sensor_number: int, directory: str | Path, filename: str
@@ -537,9 +538,10 @@ class SimulationInputs:
             }
         )
         validated_df = validate(df)
-        self.windsensor[sensor_name].wind_times = validated_df["wind_times"]
-        self.windsensor[sensor_name].wind_speeds = validated_df["wind_speeds"]
-        self.windsensor[sensor_name].wind_directions = validated_df["wind_directions"]
+        self.windsensor[sensor_name].wind_times = list(validated_df["wind_times"])
+        self.windsensor[sensor_name].wind_speeds = list(validated_df["wind_speeds"])
+        self.windsensor[sensor_name].wind_directions = list(validated_df["wind_directions"])
+        self.qu_simparams.wind_times = [x+self.quic_fire.time_now for x in list(validated_df["wind_times"])]
 
     def add_wind_sensor(
         self,
@@ -553,8 +555,25 @@ class SimulationInputs:
     ):
         """
         Add an additional wind sensor
+
+        Parameters
+        ----------
+        sensor_number : PositiveInt
+            Number representing the wind sensor
+        x_location : PositiveInt
+            Location of the wind sensor in the x-direction (m)
+        y_location : PositiveInt
+            Location of the wind sensor in the y-direction (m)
+        wind_speeds : PositiveFloat | list(PositiveFloat)
+            Wind speed or list of wind speeds in m/s
+        wind_directions: PositiveInt | list(PositiveInt)
+            Wind direction or list of wind directions in degrees. Use 0 for north.
+        wind_times : NonNegativeInt | list(NonNegativeInt)
+            List of times for each windshift. Use 0 for single windshift. First value must be 0.
         """
         sensor_name = "".join("sensor", sensor_number)
+        if sensor_name in self.windsensor.keys():
+            raise ValueError(f"{sensor_name} already exists. Set a different sensor number or modify the existing sensor directly")
         self.windsensor[sensor_name] = WindSensor(
             sensor_number=sensor_number,
             time_now=self.quic_fire.time_now,
@@ -565,6 +584,8 @@ class SimulationInputs:
             x_location=x_location,
             y_location=y_location,
         )
+        self.qu_simparams.wind_times = [x+self.quic_fire.time_now for x in wind_times]
+        self.qu_metparams.num_sensors = sensor_number
 
     def _validate_wind_times(self):
         if len(self.windsensor.keys()) > 1:
@@ -1113,14 +1134,14 @@ class QU_Simparams(InputFile):
 
     def _generate_wind_time_lines(self):
         """
-        Parses the utc_offset and wind_step_times to generate the wind times
+        Parses the utc_offset and wind_times to generate the wind times
         as a string for the QU_simparams.inp file.
         """
         # Verify that wind_step_times is not empty
         if not self.wind_times:
             raise ValueError(
-                "wind_step_times must not be empty. Please "
-                "provide a wind_step_times with num_wind_steps "
+                "wind_times must not be empty. Please "
+                "provide a wind_times with num_wind_steps "
                 "elements or use a different num_wind_steps."
             )
 
