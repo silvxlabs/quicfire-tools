@@ -155,10 +155,11 @@ class SimulationInputs:
             "qu_metparams": qu_metparams,
             "quic_fire": quic_fire,
             "gridlist": gridlist,
-            "windsensor": windsensor,
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
         }
+        for k,v in windsensor.items():
+            self._input_files_dict[k] = v
 
     @classmethod
     def create_simulation(
