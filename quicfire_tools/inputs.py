@@ -244,7 +244,6 @@ class SimulationInputs:
             qu_simparams=qu_simparams,
         )
 
-    # TODO: Figure out from_directory method for multiple wind sensor files
     @classmethod
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
         """
@@ -285,6 +284,7 @@ class SimulationInputs:
             qu_simparams=QU_Simparams.from_file(directory),
         )
 
+    #TODO: figure out from_dict for windsensor
     @classmethod
     def from_dict(cls, data: dict) -> SimulationInputs:
         """
@@ -338,7 +338,6 @@ class SimulationInputs:
             data = json.load(f)
         return cls.from_dict(data)
 
-    # TODO: How to write multiple wind sensors?
     def write_inputs(self, directory: str | Path, version: str = "latest") -> None:
         """
         Write all input files in the SimulationInputs object to a specified
@@ -2188,7 +2187,7 @@ class WindSensor(InputFile):
     Attributes
     ----------
     sensor_number : PositiveInt
-        Which numbered sensor does this class represent #TODO better description
+        Number representing the wind sensor
     time_now : PositiveInt
         Begining of time step in Unix Epoch time (integer seconds since
         1970/1/1 00:00:00). Must match time at beginning of fire
