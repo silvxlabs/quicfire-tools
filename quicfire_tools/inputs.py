@@ -13,6 +13,12 @@ from typing import Literal, Union
 
 # External Imports
 import numpy as np
+import pandas as pd
+from pandera import (
+    DataFrameSchema,
+    Column,
+    Check,
+)
 from pydantic import (
     BaseModel,
     Field,
@@ -462,20 +468,73 @@ class SimulationInputs:
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
-    def set_wind_shifts(
+    def set_windshifts_manual(
         self,
         wind_times: list(NonNegativeInt),
-        wind_speeds: list(PositiveInt),
-        wind_directions: list(PositiveInt),
+        wind_speeds: list(PositiveFloat),
+        wind_directions: list(Field(PositiveInt, lt=360)),
         sensor_number: PositiveInt = 1,
     ):
         """
-        Sets wind shifts based on lists of wind times, speeds, and directions
+        Set wind shifts based on lists of wind times, speeds, and directions.
+        Lists must be of the same length.
+
+        Parameters
+        ----------
+        wind_times : list(NonNegativeInt)
+            List of times in seconds for each windshift from the start of the simulation.
+            First entry must be 0.
+        wind_speeds : list(PositiveFloat)
+            List of wind speeds for each windshift in m/s
+        wind_directions : list(PositiveInt < 360)
+            List of wind directions for each windshift in degrees.
+
         """
         sensor_name = "sensor" + str(sensor_number)
         self.windsensor[sensor_name].wind_times = wind_times
         self.windsensor[sensor_name].wind_speeds = wind_speeds
         self.windsensor[sensor_name].wind_directions = wind_directions
+    
+    def set_windshifts_from_csv(self, 
+                                sensor_number: int,
+                                directory: str | Path, 
+                                filename: str):
+        """
+        Set wind shifts from a csv file.
+
+        Parameters
+        ----------
+        sensor_number : int
+            Number representing which sensor to modify
+        directory : str | Path
+            Directory containing the csv to read
+        filename : str
+            Name of the csv file
+        
+        Columns
+        -------
+        wind_times : int >= 0
+            Time in seconds that each windshift occurs from the start of the simulation.
+            First entry must be 0.
+        wind_speeds : float > 0
+            Wind speed of each windshift in m/s.
+        wind_directions : 0 <= int < 360
+            Wind direction of each windshift in degrees.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        filepath = directory / filename
+        sensor_name = "".join("sensor",sensor_number)
+        df = pd.read_csv(filepath)
+        validate = DataFrameSchema({
+            "wind_times": Column(int, checks=Check.ge(0)),
+            "wind_speeds": Column(float, checks=Check.gt(0)), #can windspeed be 0?
+            "wind_directions": Column(int, checks=Check.lt(360)),
+        })
+        validated_df = validate(df)
+        self.windsensor[sensor_name].wind_times = validated_df['wind_times']
+        self.windsensor[sensor_name].wind_speeds = validated_df['wind_speeds']
+        self.windsensor[sensor_name].wind_directions = validated_df['wind_directions']
 
     def add_wind_sensor(
         self,
@@ -2259,5 +2318,3 @@ class WindSensor(InputFile):
                 x_location=x_location,
                 y_location=y_location,
             ) 
-
-    # TODO write from_csv method
