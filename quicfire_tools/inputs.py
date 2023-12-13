@@ -120,7 +120,7 @@ class SimulationInputs:
         qu_metparams: QU_metparams,
         quic_fire: QUIC_fire,
         gridlist: Gridlist,
-        windsensor: dict[str, WindSensor],
+        windsensors: WindSensorArray,
         qu_topoinputs: QU_TopoInputs,
         qu_simparams: QU_Simparams,
     ):
@@ -137,7 +137,7 @@ class SimulationInputs:
         self.qu_metparams = qu_metparams
         self.quic_fire = quic_fire
         self.gridlist = gridlist
-        self.windsensor = windsensor
+        self.windsensors = windsensors
         self.qu_topoinputs = qu_topoinputs
         self.qu_simparams = qu_simparams
 
@@ -158,8 +158,9 @@ class SimulationInputs:
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
         }
-        for k, v in windsensor.items():
-            self._input_files_dict[k] = v
+        for k, v in windsensors.__dict__.items():
+            if k.startswith("sensor"):
+                self._input_files_dict[k] = v
 
     @classmethod
     def create_simulation(
@@ -219,13 +220,13 @@ class SimulationInputs:
             ignition_type=ignition_type,
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
-        windsensor = {
-            "sensor1": WindSensor(
-                time_now=start_time,
-                wind_speeds=wind_speed,
-                wind_directions=wind_direction,
+        windsensors = WindSensorArray(
+            time_now=start_time,wind_times=[0]
             )
-        }
+        windsensors._add_sensor(
+            wind_speeds=[wind_speed],
+            wind_directions=[wind_direction],
+            )
         qu_topoinputs = QU_TopoInputs()
         qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
 
@@ -365,6 +366,7 @@ class SimulationInputs:
             raise NotADirectoryError(f"{directory} does not exist")
 
         self._update_shared_attributes()
+        self.windsensors._harmonize_wind_times()
 
         # Skip writing gridlist and rasterorigin if fuel_flag == 1
         skip_inputs = []
@@ -2245,8 +2247,8 @@ class WindSensor(InputFile):
         Location of the sensor in the y-direction
     """
 
-    sensor_number: PositiveInt = 1
     _extension: str = ".inp"
+    sensor_number: PositiveInt = 1
     time_now: PositiveInt
     wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0
     wind_speeds: Union[PositiveFloat, list(PositiveFloat)]
@@ -2302,57 +2304,112 @@ class WindSensor(InputFile):
             windshifts.append(shift)
 
         return location_lines + "".join(windshifts)
+    
+    def _interpolate_windspeeds(self):
 
-    def from_file(directory: Path):
+
+    @classmethod
+    def from_file(cls, directory: str | Path, sensor_number: int):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        sensor_name = "".join("sensor", sensor_number, ".inp")
+        with open(directory / sensor_name, "r") as f:
+            lines = f.readlines()
+        # print("\n".join(lines))
+        wind_times = [0]
+        wind_speeds = []
+        wind_directions = []
+        x_location = int(lines[4].strip().split("!")[0])
+        y_location = int(lines[5].strip().split("!")[0])
+        time_now = int(lines[6].strip().split("!")[0])
+        sensor_height = float(lines[11].split(" ")[0])
+        wind_speeds.append(float(lines[11].split(" ")[1]))
+        wind_directions.append(int(lines[11].split(" ")[2]))
+        next_shift = 12
+        while (next_shift + 6) <= len(lines):
+            wind_times.append(
+                int(lines[next_shift].strip().split("!")[0] - time_now)
+            )
+            wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
+            wind_directions.append(int(lines[next_shift + 5].split(" ")[2]))
+            next_shift += 6
+        return cls(
+            sensor_number=sensor_number,
+            time_now=time_now,
+            sensor_height=sensor_height,
+            wind_times=wind_times,
+            wind_speeds=wind_speeds,
+            wind_directions=wind_directions,
+            x_location=x_location,
+            y_location=y_location,
+        )
+
+class WindSensorArray(BaseModel, extra = 'allow'):
+    """
+    Class containing all WindSensor input files and shared attributes.
+    """
+    time_now: PositiveInt
+    wind_times: Union[NonNegativeInt,list(NonNegativeInt)]
+
+    @classmethod
+    def from_file(cls, directory: str | Path):
         """
-        Wrapper for _from_file() classmethod returning dict of available WindSensor objects
+        Wrapper for WindSensor.from_file() classmethod returning dict of available WindSensor objects
         """
+        if isinstance(directory, str):
+            directory = Path(directory)
         # look for wind sensors
         sensor_list = []
         for file in directory.iterdir():
             if file.is_file():
                 if file.stem.startswith("sensor") and file.name.endswith(".inp"):
                     sensor_list.append(file.stem)
-        windsensor = {}
         for sensor_number in range(1, len(sensor_list) + 1):
             sensor_name = "".join("sensor", sensor_number)
-            windsensor[sensor_name] = WindSensor._from_file(directory, sensor_number)
-        return windsensor
+            sensor = WindSensor.from_file(directory, sensor_number)
+            setattr(cls,sensor_name,sensor)
+    
+    def _harmonize_wind_times(self):
+        """
+        Merge wind_times from all WindSensor objects and interpolate wind
+        speed and direction entries in WindSensor objects if necessary.
 
-    @classmethod
-    def _from_file(cls, directory: str | Path, sensor_number: int):
-        if isinstance(directory, str):
-            directory = Path(directory)
-        sensor_name = "".join("sensor", sensor_number, ".inp")
-        path = directory / sensor_name
-        if path.exists():
-            with open(directory / sensor_name, "r") as f:
-                lines = f.readlines()
-            # print("\n".join(lines))
-            wind_times = [0]
-            wind_speeds = []
-            wind_directions = []
-            x_location = int(lines[4].strip().split("!")[0])
-            y_location = int(lines[5].strip().split("!")[0])
-            time_now = int(lines[6].strip().split("!")[0])
-            sensor_height = float(lines[11].split(" ")[0])
-            wind_speeds.append(float(lines[11].split(" ")[1]))
-            wind_directions.append(int(lines[11].split(" ")[2]))
-            next_shift = 12
-            while (next_shift + 6) <= len(lines):
-                wind_times.append(
-                    int(lines[next_shift].strip().split("!")[0] - time_now)
-                )
-                wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
-                wind_directions.append(int(lines[next_shift + 5].split(" ")[2]))
-                next_shift += 6
-            return cls(
-                sensor_number=sensor_number,
-                time_now=time_now,
-                sensor_height=sensor_height,
-                wind_times=wind_times,
-                wind_speeds=wind_speeds,
-                wind_directions=wind_directions,
-                x_location=x_location,
-                y_location=y_location,
-            )
+        This will happen in the write_inputs phase
+        """
+        times_lists = []
+        for k,v in self.__dict__.items():
+            if k.startswith("sensor"):
+                times_lists.append(v.wind_times)
+        combined_times = sorted(set(value for sublist in times_lists for value in sublist))
+        """
+        pseudocode:
+        find any "gaps" in the wind_times for each sensor and fill in the missing speed and direction values
+        compare the combined_times list to the sensor's wind_times list to figure out which indices in combined_list
+        need to be "filled in" for the speeds and directions.
+        Insert values in the speed and direction lists at those indices, between the values that are already there
+        Hs to be different for speeds vs directions to account for cyclical degrees.
+        """
+
+
+    
+    def _add_sensor(self,
+                    wind_speeds: list(float),
+                    wind_directions: list(int),
+                    sensor_number: int = 1,
+                    x_location: int = 1,
+                    y_location: int = 1,
+                    wind_times: list(int) = [0],
+                    sensor_height: float = 6.1,
+                    ):
+        sensor = WindSensor(sensor_number=sensor_number,
+                            time_now = self.time_now,
+                            x_location=x_location,
+                            y_location=y_location,
+                            wind_times=wind_times,
+                            sensor_height=sensor_height,
+                            wind_speeds=wind_speeds,
+                            wind_directions=wind_directions)
+        sensor_name = "".join("sensor",sensor_number)
+        if hasattr(self,sensor_name):
+            print(f"WARNING: {sensor_name} already exists and will be overwritten")
+        setattr(self,sensor_name,sensor)
