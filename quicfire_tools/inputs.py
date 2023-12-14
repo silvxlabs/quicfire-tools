@@ -2256,6 +2256,7 @@ class WindSensor(InputFile):
     sensor_height: PositiveFloat = 6.1
     x_location: PositiveInt = 1
     y_location: PositiveInt = 1
+    _gloabl_times: list(NonNegativeInt) = [0]
 
     @computed_field
     @property
@@ -2347,9 +2348,20 @@ class WindSensor(InputFile):
 class WindSensorArray(BaseModel, extra = 'allow'):
     """
     Class containing all WindSensor input files and shared attributes.
+
+    Wind times updateing notes:
+    Have a global wind times list that gets updated every time a sensor is added.
+    EAch sensor has its own wind times list and own lists of speeds and directions.
+    When the global wind times list gets updated, it also updates an "global_times" attribute
+    in all the wind sensors.
+    When writing to a file, the wind lines are written by iterating through global_times, and
+    if a global time is not in the sensor times list, the previous values for speed and direction
+    are written.
+
+    Is wind_times even necessary with the way _update_wind_times is currently written?
     """
     time_now: PositiveInt
-    wind_times: Union[NonNegativeInt,list(NonNegativeInt)]
+    wind_times: Union[NonNegativeInt,list(NonNegativeInt)]  = [0]
 
     @classmethod
     def from_file(cls, directory: str | Path):
@@ -2369,28 +2381,25 @@ class WindSensorArray(BaseModel, extra = 'allow'):
             sensor = WindSensor.from_file(directory, sensor_number)
             setattr(cls,sensor_name,sensor)
     
-    def _harmonize_wind_times(self):
+    def _update_wind_times(self):
         """
-        Merge wind_times from all WindSensor objects and interpolate wind
-        speed and direction entries in WindSensor objects if necessary.
-
-        This will happen in the write_inputs phase
+        Creates a global wind times list by combining the wind times lists of each sensor.
+        
+        Returns
+        -------
+        None
+            Sets the _global_times attribute of each WindSensor to the resulting global times list.
+            Sets the wind_times attribute of self to the reuslting global times list.
         """
         times_lists = []
         for k,v in self.__dict__.items():
             if k.startswith("sensor"):
                 times_lists.append(v.wind_times)
         combined_times = sorted(set(value for sublist in times_lists for value in sublist))
-        """
-        pseudocode:
-        find any "gaps" in the wind_times for each sensor and fill in the missing speed and direction values
-        compare the combined_times list to the sensor's wind_times list to figure out which indices in combined_list
-        need to be "filled in" for the speeds and directions.
-        Insert values in the speed and direction lists at those indices, between the values that are already there
-        Hs to be different for speeds vs directions to account for cyclical degrees.
-        """
-
-
+        for k,v in self.__dict__.items():
+            if k.startswith("sensor"):
+                v._global_times = combined_times
+        self.wind_times = combined_times
     
     def _add_sensor(self,
                     wind_speeds: list(float),
@@ -2401,15 +2410,18 @@ class WindSensorArray(BaseModel, extra = 'allow'):
                     wind_times: list(int) = [0],
                     sensor_height: float = 6.1,
                     ):
-        sensor = WindSensor(sensor_number=sensor_number,
-                            time_now = self.time_now,
-                            x_location=x_location,
-                            y_location=y_location,
-                            wind_times=wind_times,
-                            sensor_height=sensor_height,
-                            wind_speeds=wind_speeds,
-                            wind_directions=wind_directions)
+        sensor = WindSensor(
+            sensor_number=sensor_number,
+            time_now = self.time_now,
+            x_location=x_location,
+            y_location=y_location,
+            wind_times=wind_times,
+            sensor_height=sensor_height,
+            wind_speeds=wind_speeds,
+            wind_directions=wind_directions,
+            )
         sensor_name = "".join("sensor",sensor_number)
         if hasattr(self,sensor_name):
             print(f"WARNING: {sensor_name} already exists and will be overwritten")
         setattr(self,sensor_name,sensor)
+        self._update_wind_times()
