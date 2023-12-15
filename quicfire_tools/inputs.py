@@ -222,7 +222,7 @@ class SimulationInputs:
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
         windsensors = WindSensorArray(
-            time_now=start_time,wind_times=[0]
+            time_now=start_time,
             )
         windsensors._add_sensor(
             wind_speeds=[wind_speed],
@@ -245,7 +245,7 @@ class SimulationInputs:
             qu_metparams=qu_metparams,
             quic_fire=quic_fire,
             gridlist=gridlist,
-            windsensor=windsensor,
+            windsensor=windsensors,
             qu_topoinputs=qu_topoinputs,
             qu_simparams=qu_simparams,
         )
@@ -285,7 +285,7 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_file(directory),
             quic_fire=QUIC_fire.from_file(directory),
             gridlist=Gridlist.from_file(directory),
-            windsensor=WindSensor.from_file(directory),
+            windsensors=WindSensorArray.from_file(directory),
             qu_topoinputs=QU_TopoInputs.from_file(directory),
             qu_simparams=QU_Simparams.from_file(directory),
         )
@@ -323,7 +323,7 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_dict(data["qu_metparams"]),
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
             gridlist=Gridlist.from_dict(data["gridlist"]),
-            windsensor=WindSensor.from_dict(data["windsensor"]),
+            windsensors=WindSensorArray.from_dict(data["windsensors"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
             qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
         )
@@ -2352,7 +2352,7 @@ class WindSensor(InputFile):
             y_location=y_location,
         )
 
-class WindSensorArray(BaseModel, extra = 'allow'):
+class WindSensorArray(InputFile, extra = 'allow'):
     """
     Class containing all WindSensor input files and shared attributes.
 
