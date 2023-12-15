@@ -367,7 +367,6 @@ class SimulationInputs:
             raise NotADirectoryError(f"{directory} does not exist")
 
         self._update_shared_attributes()
-        self.windsensors._harmonize_wind_times()
 
         # Skip writing gridlist and rasterorigin if fuel_flag == 1
         skip_inputs = []
@@ -2352,18 +2351,9 @@ class WindSensor(InputFile):
             y_location=y_location,
         )
 
-class WindSensorArray(InputFile, extra = 'allow'):
+class WindSensorArray(BaseModel, extra = 'allow'):
     """
     Class containing all WindSensor input files and shared attributes.
-
-    Wind times updateing notes:
-    Have a global wind times list that gets updated every time a sensor is added.
-    EAch sensor has its own wind times list and own lists of speeds and directions.
-    When the global wind times list gets updated, it also updates an "global_times" attribute
-    in all the wind sensors.
-    When writing to a file, the wind lines are written by iterating through global_times, and
-    if a global time is not in the sensor times list, the previous values for speed and direction
-    are written.
 
     Is wind_times even necessary with the way _update_wind_times is currently written?
     """
@@ -2387,6 +2377,29 @@ class WindSensorArray(InputFile, extra = 'allow'):
             sensor_name = "".join("sensor", sensor_number)
             sensor = WindSensor.from_file(directory, sensor_number)
             setattr(cls,sensor_name,sensor)
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(**data)
+    
+    def to_dict(self, include_private: bool = False):
+        """
+        Convert the object to a dictionary, excluding attributes that start
+        with an underscore.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the object.
+        """
+        all_fields = self.model_dump(
+            exclude={"name", "_extension", "_filename", "param_info"}
+        )
+        if include_private:
+            return all_fields
+        return {
+            key: value for key, value in all_fields.items() if not key.startswith("_")
+        }
     
     def _update_wind_times(self):
         """
