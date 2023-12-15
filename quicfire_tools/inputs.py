@@ -14,6 +14,7 @@ from typing import Literal, Union
 # External Imports
 import numpy as np
 import pandas as pd
+import bisect
 from pandera import (
     DataFrameSchema,
     Column,
@@ -2284,6 +2285,12 @@ class WindSensor(InputFile):
         if v[0] != 0:
             raise ValueError("wind_times: first element of sensor.wind_times must be 0")
         return v
+    
+    def _find_last_wind_time(self,target_value):
+        index = bisect.bisect_left(self.wind_times, target_value)
+        if target_value not in self.wind_times:
+            index = index - 1
+        return(index)
 
     @computed_field
     @property
@@ -2293,21 +2300,21 @@ class WindSensor(InputFile):
             f"{self.y_location} !Y coordinate (meters)\n",
         )
         windshifts = []
-        for i in len(self.wind_times):
+        for i in self._gloabl_times:
+            time_idx = self._find_last_wind_time(i)
+            wind_speed = self.wind_speeds[time_idx]
+            wind_direction = self.wind_directions[time_idx]
             shift = (
-                f"\n{self.time_now + self.wind_times[i]} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+                f"\n{self.time_now + i} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
                 f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
                 f"0.1 !site zo\n"
                 f"0. ! 1/L (default = 0)\n"
                 f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
-                f"{self.sensor_height} {self.wind_speeds[i]} {self.wind_directions[i]}"
+                f"{self.sensor_height} {wind_speed} {wind_direction}"
             )
             windshifts.append(shift)
 
         return location_lines + "".join(windshifts)
-    
-    def _interpolate_windspeeds(self):
-
 
     @classmethod
     def from_file(cls, directory: str | Path, sensor_number: int):
