@@ -60,11 +60,9 @@ TEMPLATES_PATH = (
 
 class SimulationInputs:
     """
-    Class representing a QUIC-Fire input file deck.
-
-    This is the fundamental class in the quicfire_tools.data module. It is
-    used to create, modify, and write QUIC-Fire input file decks. It is also
-    used to read in existing QUIC-Fire input file decks.
+    Class representing a QUIC-Fire input file deck. This class is the primary
+    interface for building a QUIC-Fire input file deck and saving the input
+    files to a directory for running a simulation.
 
     Attributes
     ----------
@@ -163,32 +161,35 @@ class SimulationInputs:
         wind_speed: float,
         wind_direction: int,
         simulation_time: int,
-    ):
+    ) -> SimulationInputs:
         """
-        Creates a SimulationInputs object to build a QUIC-Fire input file deck
-        and run a simulation.
+        Creates a SimulationInputs object by taking in the mimum required
+        information to build a QUIC-Fire input file deck. Returns a
+        SimulationInputs object representing the complete state of the
+        QUIC-Fire simulation.
 
         Parameters
         ----------
         nx: int
-            Number of cells in the x-direction [-]
+            Number of cells in the x-direction [-]. Default cell size is 2m.
         ny: int
-            Number of cells in the y-direction [-]
+            Number of cells in the y-direction [-]. Default cell size is 2m.
         fire_nz: int
-            Number of cells in the z-direction for the fire grid [-]
+            Number of cells in the z-direction for the fire grid [-]. Default
+            cell size is 1m.
         wind_speed: float
-            Wind speed [m/s]
+            Wind speed [m/s].
         wind_direction: float
             Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
             be in range [0, 360).
         simulation_time: int
-            Number of seconds to run the simulation for [s]
+            Number of seconds to run the simulation for [s].
 
         Returns
         -------
         SimulationInputs
-            Class containing the data to build a QUIC-Fire
-            input file deck and run a simulation using default parameters.
+            Class containing the data to build a QUIC-Fire input file deck and
+            run a simulation using default parameters.
 
         Examples
         --------
@@ -294,8 +295,7 @@ class SimulationInputs:
     @classmethod
     def from_dict(cls, data: dict) -> SimulationInputs:
         """
-        Initializes a SimulationInputs object from a dictionary containing
-        input file data.
+        Initializes a SimulationInputs object from a dictionary.
 
         Parameters
         ----------
@@ -406,9 +406,9 @@ class SimulationInputs:
 
     def to_dict(self) -> dict:
         """
-        Convert the object to a dictionary representation. The SimulationInputs
-        object is represented as a nest dictionary, with the name of each
-        input file as a key to that input file's dictionary representation.
+        Convert the state of the SimulationInputs object to a dictionary.
+        The name of each input file in the SimulationInputs object is a key
+        to that input file's dictionary form.
 
         Returns
         -------
@@ -417,18 +417,26 @@ class SimulationInputs:
 
         Examples
         --------
-
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_dict = sim_inputs.to_dict()
         """
         return {key: value.to_dict() for key, value in self._input_files_dict.items()}
 
-    def to_json(self, path: str | Path):
+    def to_json(self, path: str | Path) -> None:
         """
-        Write the object to a JSON file.
+        Write the SimulationInputs object to a JSON file.
 
         Parameters
         ----------
         path : str | Path
             Path to write the JSON file to.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.to_json("path/to/json/object")
         """
         if isinstance(path, str):
             path = Path(path)
@@ -440,30 +448,33 @@ class SimulationInputs:
         fuel: bool = True,
         ignition: bool = True,
         topo: bool = True,
-    ):
+    ) -> None:
         """
-        Configures a custom simulation in QUIC-Fire by setting parameters for
-        fuel, ignition, and topography inputs.
+        Sets the simulation to use custom fuel, ignition, and topography
+        settings.
 
-        This method allows users to enable or disable custom configurations for
-        different, customizable components of the simulation domain. If enabled,
-        the respective parameters for each aspect (fuel, ignition, and
-        topography) are set to predefined values that point QUIC-Fire to custom
-        input files. This function can be useful for setting up simulations
-        that use .dat files to define custom fuel, topography, or ignition
-        inputs.
+        This function can be useful for setting up simulations that use .dat
+        files to define custom fuel, topography, or ignition inputs.
 
         Parameters
         ----------
         fuel : bool, optional
-            If True, sets the simulation to use custom fuel settings.
-            Default is True.
+            If True, sets the simulation to use custom fuel settings
+            (fuel flag 3). Default is True.
         ignition : bool, optional
-            If True, sets the simulation to use a custom ignition source.
-            Default is True.
+            If True, sets the simulation to use a custom ignition source
+            (ignition flag 6). Default is True.
         topo : bool, optional
-            If True, sets the simulation to use custom topography settings.
-            Default is True.
+            If True, sets the simulation to use custom topography settings
+            (topography flag 5). Default is True.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_custom_simulation(fuel=True, ignition=True, topo=True)
+        >>> sim_inputs.quic_fire.fuel_flag
+        3
         """
         if fuel:
             self.quic_fire.fuel_flag = 3
@@ -483,14 +494,61 @@ class SimulationInputs:
         fuel_moisture: float,
         fuel_height: float,
     ):
+        """
+        Sets the simulation to use uniform fuel settings. This function updates
+        the fuel flag to 1 and sets the fuel density, fuel moisture, and fuel
+        height to the specified values.
+
+        Parameters
+        ----------
+        fuel_density: float
+            Fuel bulk density [kg/m^3]. Note: This is the fuel bulk density, so
+            the fuel load should be normalized by the height of the fuel bed.
+        fuel_moisture: float
+            Fuel moisture content [%].
+        fuel_height: float
+            Fuel bed height [m].
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_uniform_fuels(fuel_density=0.5, fuel_moisture=25, fuel_height=1)
+        >>> sim_inputs.quic_fire.fuel_flag
+        1
+        >>> sim_inputs.quic_fire.fuel_density
+        0.5
+        """
         self.quic_fire.fuel_flag = 1
         self.quic_fire.fuel_density = fuel_density
         self.quic_fire.fuel_moisture = fuel_moisture
         self.quic_fire.fuel_height = fuel_height
 
     def set_rectangle_ignition(
-        self, x_min: int, y_min: int, x_length: int, y_length: int
-    ):
+        self, x_min: float, y_min: float, x_length: float, y_length: float
+    ) -> None:
+        """
+        Sets the simulation to use a rectangle ignition source. This function
+        updates the ignition flag to 1 and sets the ignition source to the
+        specified rectangle.
+
+        Parameters
+        ----------
+        x_min: float
+            South-west corner in the x-direction [m]
+        y_min: float
+            South-west corner in the y-direction [m]
+        x_length: float
+            Length in the x-direction [m]
+        y_length: float
+            Length in the y-direction [m]
+
+        Examples
+        -------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_rectangle_ignition(x_min=0, y_min=0, x_length=10, y_length=10)
+        """
         ignition = RectangleIgnition(
             x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
         )
@@ -509,7 +567,46 @@ class SimulationInputs:
         emissions: bool = False,
         radiation: bool = False,
         intensity: bool = False,
-    ):
+    ) -> None:
+        """
+        Sets the simulation to output the specified files. Files set to True
+        will be output by the simulation, and files set to False will not be
+        output.
+
+        Parameters
+        ----------
+        eng_to_atm: bool, optional
+            If True, output the fire-energy_to_atmos.bin file. Default is False.
+        react_rate: bool, optional
+            If True, output the fire-reaction_rate.bin file. Default is False.
+        fuel_dens: bool, optional
+            If True, output the fuels-dens.bin file. Default is False.
+        qf_wind: bool, optional
+            If True, output the windu, windv, and windw .bin files.
+            Default is False.
+        qu_wind_inst: bool, optional
+            If True, output the quic_wind_inst.bin file. Default is False.
+        qu_wind_avg: bool, optional
+            If True, output the quic_wind_avg.bin file. Default is False.
+        fuel_moist: bool, optional
+            If True, output the fuels-moist.bin file. Default is False.
+        mass_burnt: bool, optional
+            If True, output the mburnt_integ.bin file. Default is False.
+        emissions: bool, optional
+            If True, output the co-emissions and pm-emissions .bin files.
+            Default is False.
+        radiation: bool, optional
+            If True, output the thermaldose and thermalradiation .bin files.
+            Default is False.
+        intensity: bool, optional
+            If True, output the fire-intensity.bin file. Default is False.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_output_files(fuel_dens=True, mass_burnt=True)
+        """
         self.quic_fire.eng_to_atm_out = int(eng_to_atm)
         self.quic_fire.react_rate_out = int(react_rate)
         self.quic_fire.fuel_dens_out = int(fuel_dens)
