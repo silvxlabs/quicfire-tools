@@ -47,10 +47,10 @@ class RectangleIgnition(IgnitionType):
     """
 
     ignition_flag: IgnitionSources = IgnitionSources(1)
-    x_min: int
-    y_min: int
-    x_length: int
-    y_length: int
+    x_min: float
+    y_min: float
+    x_length: float
+    y_length: float
 
     def __str__(self):
         flag_line = super().__str__()
@@ -84,12 +84,12 @@ class SquareRingIgnition(IgnitionType):
     """
 
     ignition_flag: IgnitionSources = IgnitionSources(2)
-    x_min: int
-    y_min: int
-    x_length: int
-    y_length: int
-    x_width: int
-    y_width: int
+    x_min: float
+    y_min: float
+    x_length: float
+    y_length: float
+    x_width: float
+    y_width: float
 
     def __str__(self):
         flag_line = super().__str__()
@@ -123,11 +123,11 @@ class CircularRingIgnition(IgnitionType):
     """
 
     ignition_flag: IgnitionSources = IgnitionSources(3)
-    x_min: int
-    y_min: int
-    x_length: int
-    y_length: int
-    ring_width: int
+    x_min: float
+    y_min: float
+    x_length: float
+    y_length: float
+    ring_width: float
 
     def __str__(self):
         flag_line = super().__str__()
