@@ -11,6 +11,10 @@ from pydantic import BaseModel
 
 
 class IgnitionSources(int, Enum):
+    """
+    Enum class for all valid ignition source options in QUIC-Fire.
+    """
+
     rectangle = 1
     square_ring = 2
     circular_ring = 3
@@ -18,6 +22,11 @@ class IgnitionSources(int, Enum):
 
 
 class IgnitionType(BaseModel):
+    """
+    Base class for all ignition types in QUIC-Fire. This class is used to
+    provide a common string representation for all ignition types.
+    """
+
     ignition_flag: IgnitionSources
 
     def __str__(self):
@@ -34,7 +43,7 @@ class RectangleIgnition(IgnitionType):
     """
     Represents a rectangle ignition source in QUIC-Fire.
 
-    Parameters
+    Attributes
     ----------
     x_min : float
         South-west corner in the x-direction [m]
@@ -67,7 +76,7 @@ class SquareRingIgnition(IgnitionType):
     """
     Represents a square ring ignition source in QUIC-Fire.
 
-    Parameters
+    Attributes
     ----------
     x_min : float
         South-west corner in the x-direction [m]
@@ -108,7 +117,7 @@ class CircularRingIgnition(IgnitionType):
     """
     Represents a circular ring ignition source in QUIC-Fire.
 
-    Parameters
+    Attributes
     ----------
     x_min : float
         South-west corner in the x-direction [m]

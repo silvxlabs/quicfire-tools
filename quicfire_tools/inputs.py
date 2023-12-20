@@ -1399,7 +1399,7 @@ class QUIC_fire(InputFile):
     contains the parameters relating to the fire simulation and
     outputs.
 
-    Parameters
+    Attributes
     ----------
     fire_flag : Literal[0, 1]
         Fire flag, 1 = run fire; 0 = no fire
