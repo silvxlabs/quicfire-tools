@@ -148,12 +148,12 @@
         "can_be_modified": "Y"
     },
     "ignition_flag": {
-        "values_accepted": "[1 7]",
-        "tested_values_range": "1-7",
-        "description": "Ignition source shape flag: 1 = rectangle; 2 = square ring; 3 = circular ring; 4 = initial ignition locations provided through file QF_Ignitions.inp; 5 = time- and space-dependent ignition locations provided through file QF_IgnitionPattern.inp; 6 = ignite.dat (Firetec file); (NOTE: Flag of 7 works better for ignite.dat and is the default for custom ignitions)",
+        "values_accepted": "[1 6]",
+        "tested_values_range": "1-6",
+        "description": "Ignition source shape flag: 1 = rectangle; 2 = square ring; 3 = circular ring; 4 = initial ignition locations provided through file QF_Ignitions.inp; 5 = time- and space-dependent ignition locations provided through file QF_IgnitionPattern.inp; 6 = ignite.dat (Firetec file); (NOTE: Flag of 7 seems to work better for ignite.dat - NJT)",
         "units": "[-]",
         "can_be_modified": "Y",
-        "recommended_value": "1"
+        "recommended_value": "6 (NJT recommendation: 7)"
     },
     "ignitions_per_cell": {
         "values_accepted": "> 0",
@@ -161,7 +161,7 @@
         "description": "Number of ignition per cell of the fire model",
         "units": "[-]",
         "can_be_modified": "Y",
-        "recommended_value": "2"
+        "recommended_value": "100 (seems to have no effect). (CHANGED RECOMMENDATION PER QF MEETINGS: 2)"
     },
     "firebrand_flag": {
         "values_accepted": "[0 1]",

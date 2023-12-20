@@ -37,6 +37,6 @@ $mass_burnt_out		! Output vertically-integrated % mass burnt (fire grid)
 $firebrand_out		! Output trajectories firebrands
 $emissions_out		! Output compressed array emissions (fire grid)
 $radiation_out		! Output gridded thermal radiation (fire grid)
-$surf_eng_out      ! Output surface fire intensity at every fire time step
+$intensity_out      ! Output surface fire intensity at every fire time step
 ! AUTOKILL
 $auto_kill          ! Kill if the fire is out and there are no more ignitions or firebrands (0 = no, 1 = yes)

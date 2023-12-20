@@ -11,20 +11,15 @@ from pydantic import BaseModel
 
 
 class IgnitionSources(int, Enum):
-    """
-    Enum class for all valid ignition source options in QUIC-Fire.
-    """
-
     rectangle = 1
     square_ring = 2
     circular_ring = 3
-    ignite_dat_file = 7
+    ignite_dat_file = 6
 
 
 class IgnitionType(BaseModel):
     """
-    Base class for all ignition types in QUIC-Fire. This class is used to
-    provide a common string representation for all ignition types.
+    Test docs
     """
 
     ignition_flag: IgnitionSources
@@ -35,7 +30,7 @@ class IgnitionType(BaseModel):
             f"2 = square ring, 3 = circular ring, "
             f"4 = file (QF_Ignitions.inp), "
             f"5 = time-dependent ignitions (QF_IgnitionPattern.inp), "
-            f"7 = ignite.dat (firetech)"
+            f"6 = ignite.dat (firetech)"
         )
 
 
@@ -43,7 +38,7 @@ class RectangleIgnition(IgnitionType):
     """
     Represents a rectangle ignition source in QUIC-Fire.
 
-    Attributes
+    Parameters
     ----------
     x_min : float
         South-west corner in the x-direction [m]
@@ -56,10 +51,10 @@ class RectangleIgnition(IgnitionType):
     """
 
     ignition_flag: IgnitionSources = IgnitionSources(1)
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
+    x_min: int
+    y_min: int
+    x_length: int
+    y_length: int
 
     def __str__(self):
         flag_line = super().__str__()
@@ -76,7 +71,7 @@ class SquareRingIgnition(IgnitionType):
     """
     Represents a square ring ignition source in QUIC-Fire.
 
-    Attributes
+    Parameters
     ----------
     x_min : float
         South-west corner in the x-direction [m]
@@ -93,12 +88,12 @@ class SquareRingIgnition(IgnitionType):
     """
 
     ignition_flag: IgnitionSources = IgnitionSources(2)
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
-    x_width: float
-    y_width: float
+    x_min: int
+    y_min: int
+    x_length: int
+    y_length: int
+    x_width: int
+    y_width: int
 
     def __str__(self):
         flag_line = super().__str__()
@@ -117,7 +112,7 @@ class CircularRingIgnition(IgnitionType):
     """
     Represents a circular ring ignition source in QUIC-Fire.
 
-    Attributes
+    Parameters
     ----------
     x_min : float
         South-west corner in the x-direction [m]
@@ -132,11 +127,11 @@ class CircularRingIgnition(IgnitionType):
     """
 
     ignition_flag: IgnitionSources = IgnitionSources(3)
-    x_min: float
-    y_min: float
-    x_length: float
-    y_length: float
-    ring_width: float
+    x_min: int
+    y_min: int
+    x_length: int
+    y_length: int
+    ring_width: int
 
     def __str__(self):
         flag_line = super().__str__()
