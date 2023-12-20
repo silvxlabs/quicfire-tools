@@ -1048,7 +1048,7 @@ class TestQUIC_fire:
         assert result_dict["firebrand_out"] == quic_fire.firebrand_out
         assert result_dict["emissions_out"] == quic_fire.emissions_out
         assert result_dict["radiation_out"] == quic_fire.radiation_out
-        assert result_dict["intensity_out"] == quic_fire.intensity_out
+        assert result_dict["surf_eng_out"] == quic_fire.surf_eng_out
 
     def test_from_dict(self):
         quic_fire = self.get_test_object()
@@ -1166,7 +1166,7 @@ class TestQUIC_fire:
         assert quic_fire.radiation_out == int(
             lines[current_line + 12].strip().split("!")[0]
         )
-        assert quic_fire.intensity_out == int(
+        assert quic_fire.surf_eng_out == int(
             lines[current_line + 13].strip().split("!")[0]
         )
         assert quic_fire.auto_kill == int(
@@ -1909,7 +1909,7 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.fuel_moist_out == 0
         assert sim_inputs.quic_fire.mass_burnt_out == 1
         assert sim_inputs.quic_fire.radiation_out == 0
-        assert sim_inputs.quic_fire.intensity_out == 0
+        assert sim_inputs.quic_fire.surf_eng_out == 0
         assert sim_inputs.quic_fire.emissions_out == 2
 
     def test_set_custom_simulation(self):
@@ -1920,7 +1920,7 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.fuel_moisture is None
         assert sim_inputs.quic_fire.fuel_height is None
         assert sim_inputs.quic_fire.ignition_type == IgnitionType(
-            ignition_flag=IgnitionSources(6)
+            ignition_flag=IgnitionSources(7)
         )
         assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag=TopoSources(5))
 
