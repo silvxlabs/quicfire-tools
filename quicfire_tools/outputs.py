@@ -164,35 +164,6 @@ OUTPUTS_MAP = {
 
 
 class OutputFile:
-    """
-    A class representing a single output file. This class provides a common
-    interface for processing and retrieving data from output files.
-
-    Attributes
-    ----------
-    name: str
-        The name of the output file this object represents.
-    file_format: str
-        The format of the output file. Valid options are "gridded" and
-        "compressed".
-    dimensions: list[str]
-        The dimensions of the output file as ["z", "y", "x"] or ["y", "x"].
-    shape: tuple
-        The shape of the output file array data as (time, nz, ny, nx).
-    grid: str
-        The grid type of the output file. Valid options are "fire" and "quic".
-    delimiter: str
-        The delimiter used in the output file name.
-    extension: str
-        The file extension of the output file.
-    description: str
-        A description of the output file.
-    units: str
-        The units of the output file.
-    times: list[int]
-        A list of times corresponding to the timesteps.
-    """
-
     def __init__(
         self,
         name: str,
@@ -529,12 +500,10 @@ class SimulationOutputs:
         >>> import quicfire_tools as qft
         >>> outputs = qft.SimulationOutputs("path/to/outputs", 50, 100, 100)
         >>> output_name = "fire-energy_to_atmos"
-        >>>
         >>> # Get all timesteps for the fire-energy_to_atmos output
         >>> fire_energy_all = outputs.to_numpy(output_name)
-        >>>
         >>> # Get the first timestep for the fire-energy_to_atmos output
-        >>> fire_energy_first_time_step = outputs.to_numpy(output_name, timestep=0)
+        >>> fire_energy_slice = outputs.to_numpy(output_name, timestep=0)
         """
         output = self._validate_output(key)
         return output.to_numpy(timestep)
@@ -560,8 +529,8 @@ class SimulationOutputs:
         --------
         >>> import quicfire_tools as qft
         >>> outputs = qft.SimulationOutputs("path/to/outputs", 50, 100, 100)
-        >>> fire_energy_da = outputs.to_dask("fire-energy_to_atmos")
-        >>> fire_energy_np = fire_energy_da.compute()  # Retrieve the data
+        >>> fire_energy = outputs.to_dask("fire-energy_to_atmos")
+        >>> fire_energy.compute()
         """
         output = self._validate_output(key)
 

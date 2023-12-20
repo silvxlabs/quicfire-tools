@@ -13,6 +13,12 @@ from typing import Literal, Union
 
 # External Imports
 import numpy as np
+import pandas as pd
+from pandera import (
+    DataFrameSchema,
+    Column,
+    Check,
+)
 from pydantic import (
     BaseModel,
     Field,
@@ -60,9 +66,11 @@ TEMPLATES_PATH = (
 
 class SimulationInputs:
     """
-    Class representing a QUIC-Fire input file deck. This class is the primary
-    interface for building a QUIC-Fire input file deck and saving the input
-    files to a directory for running a simulation.
+    Class representing a QUIC-Fire input file deck.
+
+    This is the fundamental class in the quicfire_tools.data module. It is
+    used to create, modify, and write QUIC-Fire input file decks. It is also
+    used to read in existing QUIC-Fire input file decks.
 
     Attributes
     ----------
@@ -90,8 +98,8 @@ class SimulationInputs:
         Object representing the QUIC_fire.inp file.
     gridlist: Gridlist
         Object representing the gridlist.txt file.
-    sensor1: Sensor1
-        Object representing the sensor1.inp file.
+    windsensor: dict[str, WindSensor]
+        Object representing the all wind sensor input files, e.g. sensor1.inp.
     qu_topoinputs: QU_TopoInputs
         Object representing the QU_topoinputs.inp file.
     qu_simparams: QU_Simparams
@@ -112,7 +120,7 @@ class SimulationInputs:
         qu_metparams: QU_metparams,
         quic_fire: QUIC_fire,
         gridlist: Gridlist,
-        sensor1: Sensor1,
+        windsensor: dict[str, WindSensor],
         qu_topoinputs: QU_TopoInputs,
         qu_simparams: QU_Simparams,
     ):
@@ -129,7 +137,7 @@ class SimulationInputs:
         self.qu_metparams = qu_metparams
         self.quic_fire = quic_fire
         self.gridlist = gridlist
-        self.sensor1 = sensor1
+        self.windsensor = windsensor
         self.qu_topoinputs = qu_topoinputs
         self.qu_simparams = qu_simparams
 
@@ -147,10 +155,11 @@ class SimulationInputs:
             "qu_metparams": qu_metparams,
             "quic_fire": quic_fire,
             "gridlist": gridlist,
-            "sensor1": sensor1,
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
         }
+        for k, v in windsensor.items():
+            self._input_files_dict[k] = v
 
     @classmethod
     def create_simulation(
@@ -161,40 +170,32 @@ class SimulationInputs:
         wind_speed: float,
         wind_direction: int,
         simulation_time: int,
-    ) -> SimulationInputs:
+    ):
         """
-        Creates a SimulationInputs object by taking in the mimum required
-        information to build a QUIC-Fire input file deck. Returns a
-        SimulationInputs object representing the complete state of the
-        QUIC-Fire simulation.
+        Creates a SimulationInputs object to build a QUIC-Fire input file deck
+        and run a simulation.
 
         Parameters
         ----------
         nx: int
-            Number of cells in the x-direction [-]. Default cell size is 2m.
+            Number of cells in the x-direction [-]
         ny: int
-            Number of cells in the y-direction [-]. Default cell size is 2m.
+            Number of cells in the y-direction [-]
         fire_nz: int
-            Number of cells in the z-direction for the fire grid [-]. Default
-            cell size is 1m.
+            Number of cells in the z-direction for the fire grid [-]
         wind_speed: float
-            Wind speed [m/s].
+            Wind speed [m/s]
         wind_direction: float
             Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
             be in range [0, 360).
         simulation_time: int
-            Number of seconds to run the simulation for [s].
+            Number of seconds to run the simulation for [s]
 
         Returns
         -------
         SimulationInputs
-            Class containing the data to build a QUIC-Fire input file deck and
-            run a simulation using default parameters.
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+            Class containing the data to build a QUIC-Fire
+            input file deck and run a simulation using default parameters.
         """
         # Initialize default input files
         rasterorigin = RasterOrigin()
@@ -218,9 +219,13 @@ class SimulationInputs:
             ignition_type=ignition_type,
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
-        sensor1 = Sensor1(
-            time_now=start_time, wind_speed=wind_speed, wind_direction=wind_direction
-        )
+        windsensor = {
+            "sensor1": WindSensor(
+                time_now=start_time,
+                wind_speeds=wind_speed,
+                wind_directions=wind_direction,
+            )
+        }
         qu_topoinputs = QU_TopoInputs()
         qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
 
@@ -238,7 +243,7 @@ class SimulationInputs:
             qu_metparams=qu_metparams,
             quic_fire=quic_fire,
             gridlist=gridlist,
-            sensor1=sensor1,
+            windsensor=windsensor,
             qu_topoinputs=qu_topoinputs,
             qu_simparams=qu_simparams,
         )
@@ -247,10 +252,7 @@ class SimulationInputs:
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
         """
         Initializes a SimulationInputs object from a directory containing a
-        QUIC-Fire input file deck. The function looks for each input file in the
-        QUIC-Fire input file deck, reads in the file to an object, and compiles
-        the objects to a SimulationInputs object that represents the complete
-        state of the QUIC-Fire simulation.
+        QUIC-Fire input file deck.
 
         Parameters
         ----------
@@ -261,12 +263,6 @@ class SimulationInputs:
         -------
         SimulationInputs
             Class containing the input files in the QUIC-Fire input file deck.
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> simulation_path = "path/to/simulation/directory"
-        >>> sim_inputs = SimulationInputs.from_directory(simulation_path)
         """
         if isinstance(directory, str):
             directory = Path(directory)
@@ -287,28 +283,22 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_file(directory),
             quic_fire=QUIC_fire.from_file(directory),
             gridlist=Gridlist.from_file(directory),
-            sensor1=Sensor1.from_file(directory),
+            windsensor=WindSensor.from_file(directory),
             qu_topoinputs=QU_TopoInputs.from_file(directory),
             qu_simparams=QU_Simparams.from_file(directory),
         )
 
+    # TODO: figure out from_dict for windsensor
     @classmethod
     def from_dict(cls, data: dict) -> SimulationInputs:
         """
-        Initializes a SimulationInputs object from a dictionary.
+        Initializes a SimulationInputs object from a dictionary containing
+        input file data.
 
         Parameters
         ----------
         data: dict
             Dictionary containing input file data.
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> json_path = "path/to/json/object"
-        >>> sim_inputs = SimulationInputs.from_json(json_path)
-        >>> sim_dict = sim_inputs.to_dict()
-        >>> new_sim_inputs = SimulationInputs.from_dict(sim_dict)
         """
         return cls(
             rasterorigin=RasterOrigin.from_dict(data["rasterorigin"]),
@@ -331,7 +321,7 @@ class SimulationInputs:
             qu_metparams=QU_metparams.from_dict(data["qu_metparams"]),
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
             gridlist=Gridlist.from_dict(data["gridlist"]),
-            sensor1=Sensor1.from_dict(data["sensor1"]),
+            windsensor=WindSensor.from_dict(data["windsensor"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
             qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
         )
@@ -345,12 +335,6 @@ class SimulationInputs:
         ----------
         path: str | Path
             Path to the JSON file.
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> json_path = "path/to/json/object"
-        >>> sim_inputs = SimulationInputs.from_json(json_path)
         """
         if isinstance(path, str):
             path = Path(path)
@@ -363,7 +347,7 @@ class SimulationInputs:
         Write all input files in the SimulationInputs object to a specified
         directory.
 
-        This method is a core method of the SimulationInputs class. It
+        This method is the core method of the SimulationInputs class. It
         is the principle way to translate a SimulationInputs object into a
         QUIC-Fire input file deck.
 
@@ -373,12 +357,6 @@ class SimulationInputs:
             Directory to write the input files to.
         version: str
             Version of the input files to write. Default is "latest".
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_inputs.write_inputs("path/to/simulation/directory")
         """
         if isinstance(directory, str):
             directory = Path(directory)
@@ -406,37 +384,25 @@ class SimulationInputs:
 
     def to_dict(self) -> dict:
         """
-        Convert the state of the SimulationInputs object to a dictionary.
-        The name of each input file in the SimulationInputs object is a key
-        to that input file's dictionary form.
+        Convert the object to a dictionary representation. The SimulationInputs
+        object is represented as a nest dictionary, with the name of each
+        input file as a key to that input file's dictionary representation.
 
-        Returns
-        -------
+        Returns:
+        --------
         dict
             Dictionary representation of the object.
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_dict = sim_inputs.to_dict()
         """
         return {key: value.to_dict() for key, value in self._input_files_dict.items()}
 
-    def to_json(self, path: str | Path) -> None:
+    def to_json(self, path: str | Path):
         """
-        Write the SimulationInputs object to a JSON file.
+        Write the object to a JSON file.
 
         Parameters
         ----------
         path : str | Path
             Path to write the JSON file to.
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_inputs.to_json("path/to/json/object")
         """
         if isinstance(path, str):
             path = Path(path)
@@ -448,34 +414,7 @@ class SimulationInputs:
         fuel: bool = True,
         ignition: bool = True,
         topo: bool = True,
-    ) -> None:
-        """
-        Sets the simulation to use custom fuel, ignition, and topography
-        settings.
-
-        This function can be useful for setting up simulations that use .dat
-        files to define custom fuel, topography, or ignition inputs.
-
-        Parameters
-        ----------
-        fuel : bool, optional
-            If True, sets the simulation to use custom fuel settings
-            (fuel flag 3). Default is True.
-        ignition : bool, optional
-            If True, sets the simulation to use a custom ignition source
-            (ignition flag 6). Default is True.
-        topo : bool, optional
-            If True, sets the simulation to use custom topography settings
-            (topography flag 5). Default is True.
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_inputs.set_custom_simulation(fuel=True, ignition=True, topo=True)
-        >>> sim_inputs.quic_fire.fuel_flag
-        3
-        """
+    ):
         if fuel:
             self.quic_fire.fuel_flag = 3
             self.quic_fire.fuel_density = None
@@ -494,61 +433,14 @@ class SimulationInputs:
         fuel_moisture: float,
         fuel_height: float,
     ):
-        """
-        Sets the simulation to use uniform fuel settings. This function updates
-        the fuel flag to 1 and sets the fuel density, fuel moisture, and fuel
-        height to the specified values.
-
-        Parameters
-        ----------
-        fuel_density: float
-            Fuel bulk density [kg/m^3]. Note: This is the fuel bulk density, so
-            the fuel load should be normalized by the height of the fuel bed.
-        fuel_moisture: float
-            Fuel moisture content [%].
-        fuel_height: float
-            Fuel bed height [m].
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_inputs.set_uniform_fuels(fuel_density=0.5, fuel_moisture=25, fuel_height=1)
-        >>> sim_inputs.quic_fire.fuel_flag
-        1
-        >>> sim_inputs.quic_fire.fuel_density
-        0.5
-        """
         self.quic_fire.fuel_flag = 1
         self.quic_fire.fuel_density = fuel_density
         self.quic_fire.fuel_moisture = fuel_moisture
         self.quic_fire.fuel_height = fuel_height
 
     def set_rectangle_ignition(
-        self, x_min: float, y_min: float, x_length: float, y_length: float
-    ) -> None:
-        """
-        Sets the simulation to use a rectangle ignition source. This function
-        updates the ignition flag to 1 and sets the ignition source to the
-        specified rectangle.
-
-        Parameters
-        ----------
-        x_min: float
-            South-west corner in the x-direction [m]
-        y_min: float
-            South-west corner in the y-direction [m]
-        x_length: float
-            Length in the x-direction [m]
-        y_length: float
-            Length in the y-direction [m]
-
-        Examples
-        -------
-        >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_inputs.set_rectangle_ignition(x_min=0, y_min=0, x_length=10, y_length=10)
-        """
+        self, x_min: int, y_min: int, x_length: int, y_length: int
+    ):
         ignition = RectangleIgnition(
             x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
         )
@@ -567,48 +459,7 @@ class SimulationInputs:
         emissions: bool = False,
         radiation: bool = False,
         surf_eng: bool = False,
-        intensity: bool = False,
-    ) -> None:
-        """
-        Sets the simulation to output the specified files. Files set to True
-        will be output by the simulation, and files set to False will not be
-        output.
-
-        Parameters
-        ----------
-        eng_to_atm: bool, optional
-            If True, output the fire-energy_to_atmos.bin file. Default is False.
-        react_rate: bool, optional
-            If True, output the fire-reaction_rate.bin file. Default is False.
-        fuel_dens: bool, optional
-            If True, output the fuels-dens.bin file. Default is False.
-        qf_wind: bool, optional
-            If True, output the windu, windv, and windw .bin files.
-            Default is False.
-        qu_wind_inst: bool, optional
-            If True, output the quic_wind_inst.bin file. Default is False.
-        qu_wind_avg: bool, optional
-            If True, output the quic_wind_avg.bin file. Default is False.
-        fuel_moist: bool, optional
-            If True, output the fuels-moist.bin file. Default is False.
-        mass_burnt: bool, optional
-            If True, output the mburnt_integ.bin file. Default is False.
-        emissions: bool, optional
-            If True, output the co-emissions and pm-emissions .bin files.
-            Default is False.
-        radiation: bool, optional
-            If True, output the thermaldose and thermalradiation .bin files.
-            Default is False.
-        intensity: bool, optional
-            If True, output the fire-intensity.bin file. Default is False.
-
-        Examples
-        --------
-        >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_inputs.set_output_files(fuel_dens=True, mass_burnt=True)
-        """
-
+    ):
         self.quic_fire.eng_to_atm_out = int(eng_to_atm)
         self.quic_fire.react_rate_out = int(react_rate)
         self.quic_fire.fuel_dens_out = int(fuel_dens)
@@ -621,14 +472,148 @@ class SimulationInputs:
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
+    def set_windshifts_manual(
+        self,
+        wind_times: list(NonNegativeInt),
+        wind_speeds: list(PositiveFloat),
+        wind_directions: list(Field(PositiveInt, lt=360)),
+        sensor_number: PositiveInt = 1,
+    ):
+        """
+        Set wind shifts based on lists of wind times, speeds, and directions.
+        Lists must be of the same length.
+
+        Parameters
+        ----------
+        wind_times : list(NonNegativeInt)
+            List of times in seconds for each windshift from the start of the simulation.
+            First entry must be 0.
+        wind_speeds : list(PositiveFloat)
+            List of wind speeds for each windshift in m/s
+        wind_directions : list(PositiveInt < 360)
+            List of wind directions for each windshift in degrees.
+
+        """
+        sensor_name = "sensor" + str(sensor_number)
+        self.windsensor[sensor_name].wind_times = wind_times
+        self.windsensor[sensor_name].wind_speeds = wind_speeds
+        self.windsensor[sensor_name].wind_directions = wind_directions
+        self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in wind_times]
+
+    def set_windshifts_from_csv(
+        self, sensor_number: int, directory: str | Path, filename: str
+    ):
+        """
+        Set wind shifts from a csv file.
+
+        Parameters
+        ----------
+        sensor_number : int
+            Number representing which sensor to modify
+        directory : str | Path
+            Directory containing the csv to read
+        filename : str
+            Name of the csv file
+
+        Columns
+        -------
+        wind_times : int >= 0
+            Time in seconds that each windshift occurs from the start of the simulation.
+            First entry must be 0.
+        wind_speeds : float > 0
+            Wind speed of each windshift in m/s.
+        wind_directions : 0 <= int < 360
+            Wind direction of each windshift in degrees.
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+        filepath = directory / filename
+        sensor_name = "".join("sensor", sensor_number)
+        df = pd.read_csv(filepath)
+        validate = DataFrameSchema(
+            {
+                "wind_times": Column(int, checks=Check.ge(0)),
+                "wind_speeds": Column(float, checks=Check.gt(0)),  # can windspeed be 0?
+                "wind_directions": Column(int, checks=Check.lt(360)),
+            }
+        )
+        validated_df = validate(df)
+        self.windsensor[sensor_name].wind_times = list(validated_df["wind_times"])
+        self.windsensor[sensor_name].wind_speeds = list(validated_df["wind_speeds"])
+        self.windsensor[sensor_name].wind_directions = list(
+            validated_df["wind_directions"]
+        )
+        self.qu_simparams.wind_times = [
+            x + self.quic_fire.time_now for x in list(validated_df["wind_times"])
+        ]
+
+    def add_wind_sensor(
+        self,
+        sensor_number: PositiveInt,
+        x_location: PositiveInt,
+        y_location: PositiveInt,
+        wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
+        wind_directions: Union[PositiveInt, list(PositiveInt)],
+        wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0,
+        sensor_height: PositiveFloat = 6.1,
+    ):
+        """
+        Add an additional wind sensor
+
+        Parameters
+        ----------
+        sensor_number : PositiveInt
+            Number representing the wind sensor
+        x_location : PositiveInt
+            Location of the wind sensor in the x-direction (m)
+        y_location : PositiveInt
+            Location of the wind sensor in the y-direction (m)
+        wind_speeds : PositiveFloat | list(PositiveFloat)
+            Wind speed or list of wind speeds in m/s
+        wind_directions: PositiveInt | list(PositiveInt)
+            Wind direction or list of wind directions in degrees. Use 0 for north.
+        wind_times : NonNegativeInt | list(NonNegativeInt)
+            List of times for each windshift. Use 0 for single windshift. First value must be 0.
+        """
+        sensor_name = "".join("sensor", sensor_number)
+        if sensor_name in self.windsensor.keys():
+            raise ValueError(
+                f"{sensor_name} already exists. Set a different sensor number or modify the existing sensor directly"
+            )
+        self.windsensor[sensor_name] = WindSensor(
+            sensor_number=sensor_number,
+            time_now=self.quic_fire.time_now,
+            wind_times=wind_times,
+            wind_speeds=wind_speeds,
+            wind_directions=wind_directions,
+            sensor_height=sensor_height,
+            x_location=x_location,
+            y_location=y_location,
+        )
+        self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in wind_times]
+        self.qu_metparams.num_sensors = sensor_number
+
+    def _validate_wind_times(self):
+        if len(self.windsensor.keys()) > 1:
+            sensors = self.windsensor.values()
+            if not all(
+                getattr(sensor, "wind_times")
+                == getattr(next(iter(sensors)), "wind_times")
+                for sensor in sensors
+            ):
+                raise ValueError(
+                    "SimulationInputs: wind_times lists in all WindSensor input files must be identical"
+                )
+
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
         self.gridlist.m = self.qu_simparams.ny
         self.gridlist.l = self.quic_fire.nz
         self.gridlist.dx = self.qu_simparams.dx
         self.gridlist.dy = self.qu_simparams.dy
+        self._validate_wind_times()
         if (
-            not self.sensor1.time_now
+            not self.windsensor["sensor1"].time_now
             == self.quic_fire.time_now
             == self.qu_simparams.wind_times[0]
         ):
@@ -638,10 +623,11 @@ class SimulationInputs:
                 f"Times: \n"
                 f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
                 f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
-                f"\tsensor1.inp: {self.sensor1.time_now}\n"
+                f"\twindsensor.inp: {self.windsensor['sensor1'].time_now}\n"
                 f"Setting all values to {self.quic_fire.time_now}"
             )
-            self.sensor1.time_now = self.quic_fire.time_now
+            for key in self.windsensor.keys():
+                self.windsensor[key].time_now = self.quic_fire.time_now
             self.qu_simparams.wind_times[0] = self.quic_fire.time_now
 
 
@@ -651,42 +637,43 @@ class InputFile(BaseModel, validate_assignment=True):
 
     This base class provides a common interface for all input files in order to
     accomplish two main goals:
-
     1) Return documentation for each parameter in the input file.
-
-    2) Provide a method to write the input file to a directory.
+    2) Provide a method to write the input file to a specified directory.
     """
 
     name: str
     _extension: str
+    _param_info: dict = None
 
     @property
     def _filename(self):
         return f"{self.name}{self._extension}"
 
     @property
-    def documentation_dict(self) -> dict:
-        # Return the documentation dictionary
-        with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
-            return json.load(f)
-
-    def list_parameters(self) -> list[str]:
+    def param_info(self):
         """
-        Get a list of the names of all parameters in the input file.
+        Return a dictionary of parameter information for the input file.
         """
-        return list(self.documentation_dict.keys())
+        if self._param_info is None:  # open the file if it hasn't been read in
+            with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
+                self._param_info = json.load(f)
+        return self._param_info
 
-    def get_documentation(self, parameter: str = None) -> dict:
+    def list_parameters(self):
+        """List all parameters in the input file."""
+        return list(self.param_info.keys())
+
+    def get_documentation(self, parameter: str = None):
         """
         Retrieve documentation for a parameter. If no parameter is specified,
         return documentation for all parameters.
         """
         if parameter:
-            return self.documentation_dict.get(parameter, {})
+            return self.param_info.get(parameter, {})
         else:
-            return self.documentation_dict
+            return self.param_info
 
-    def print_documentation_table(self, parameter: str = None) -> None:
+    def print_documentation(self, parameter: str = None):
         """
         Print documentation for a parameter. If no parameter is specified,
         print documentation for all parameters.
@@ -699,7 +686,7 @@ class InputFile(BaseModel, validate_assignment=True):
             key = key.replace("_", " ").capitalize()
             print(f"- {key}: {value}")
 
-    def to_dict(self, include_private: bool = False) -> dict:
+    def to_dict(self, include_private: bool = False):
         """
         Convert the object to a dictionary, excluding attributes that start
         with an underscore.
@@ -710,7 +697,7 @@ class InputFile(BaseModel, validate_assignment=True):
             Dictionary representation of the object.
         """
         all_fields = self.model_dump(
-            exclude={"name", "_extension", "_filename", "documentation_dict"}
+            exclude={"name", "_extension", "_filename", "param_info"}
         )
         if include_private:
             return all_fields
@@ -932,8 +919,6 @@ class QU_Simparams(InputFile):
     Class representing the QU_simparams.inp file. This file contains the
     simulation parameters for the QUIC-Fire simulation.
 
-    Attributes
-    ----------
     nx : int
         Number of cells in the x-direction [-]. Recommended value: > 100
     ny : int
@@ -1155,14 +1140,14 @@ class QU_Simparams(InputFile):
 
     def _generate_wind_time_lines(self):
         """
-        Parses the utc_offset and wind_step_times to generate the wind times
+        Parses the utc_offset and wind_times to generate the wind times
         as a string for the QU_simparams.inp file.
         """
         # Verify that wind_step_times is not empty
         if not self.wind_times:
             raise ValueError(
-                "wind_step_times must not be empty. Please "
-                "provide a wind_step_times with num_wind_steps "
+                "wind_times must not be empty. Please "
+                "provide a wind_times with num_wind_steps "
                 "elements or use a different num_wind_steps."
             )
 
@@ -1401,7 +1386,7 @@ class QUIC_fire(InputFile):
     contains the parameters relating to the fire simulation and
     outputs.
 
-    Attributes
+    Parameters
     ----------
     fire_flag : Literal[0, 1]
         Fire flag, 1 = run fire; 0 = no fire
@@ -1530,8 +1515,8 @@ class QUIC_fire(InputFile):
     eng_to_atm_out: Literal[0, 1] = 0
     react_rate_out: Literal[0, 1] = 0
     fuel_dens_out: Literal[0, 1] = 1
-    qf_wind_out: Literal[0, 1] = 0
-    qu_wind_inst_out: Literal[0, 1] = 1
+    qf_wind_out: Literal[0, 1] = 1
+    qu_wind_inst_out: Literal[0, 1] = 0
     qu_wind_avg_out: Literal[0, 1] = 0
     fuel_moist_out: Literal[0, 1] = 0
     mass_burnt_out: Literal[0, 1] = 0
@@ -1694,8 +1679,7 @@ class QUIC_fire(InputFile):
         ignition_params = []
         current_line += 1
         for i in range(current_line, current_line + add):
-            ignition_line = float(lines[i].split("!")[0].strip())
-            ignition_params.append(ignition_line)
+            ignition_params.append(int(lines[i].strip().split("!")[0]))
         if ignition_flag == 1:
             x_min, y_min, x_length, y_length = ignition_params
             ignition_type = RectangleIgnition(
@@ -1967,8 +1951,6 @@ class QU_TopoInputs(InputFile):
     Class representing the QU_TopoInputs.inp input file. This file
     contains advanced data pertaining to topography.
 
-    Attributes
-    ----------
     filename : str
         Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp
     topo_type : TopoType
@@ -2205,14 +2187,16 @@ class QU_metparams(InputFile):
     name: str = "QU_metparams"
     _extension: str = ".inp"
     num_sensors: PositiveInt = 1
-    sensor_name: str = "sensor1"
 
     @computed_field
     @property
     def _sensor_lines(self) -> str:
-        return (
-            f"{self.sensor_name} !Site Name\n" f"!File name\n" f"{self.sensor_name}.inp"
-        )
+        sensor_lines = []
+        for i in range(1, self.num_sensors + 1):
+            sensor_lines.append(
+                f"sensor{str(i)} !Site Name\n" f"!File name\n" f"sensor{str(i)}.inp"
+            )
+        return "\n".join(sensor_lines)
 
     @classmethod
     def from_file(cls, directory):
@@ -2220,66 +2204,155 @@ class QU_metparams(InputFile):
             directory = Path(directory)
         with open(directory / "QU_metparams.inp", "r") as f:
             lines = f.readlines()
+        sensor_name = str(lines[4].strip().split()[0].strip())
+        if sensor_name != "sensor1":
+            print(
+                f"WARNING: wind sensor files must be named 'sensor*.inp'\n"
+                f"Current sensor name = {sensor_name}"
+            )
         return cls(
             num_sensors=int(lines[2].strip().split()[0]),
-            sensor_name=str(lines[4].strip().split()[0].strip()),
         )
 
 
-class Sensor1(InputFile):
+class WindSensor(InputFile):
     """
-    Class representing the sensor1.inp input file.
+    Class representing a sensor*.inp input file.
     This file contains information on winds, and serves as the
-    primary source for wind speed(s) and direction(s)
+    primary source for wind speed(s) and direction(s).
+    Multiple sensor*.inp files may be created.
 
     Attributes
     ----------
+    sensor_number : PositiveInt
+        Number representing the wind sensor
     time_now : PositiveInt
         Begining of time step in Unix Epoch time (integer seconds since
         1970/1/1 00:00:00). Must match time at beginning of fire
         (QU_Simparams.inp and QUIC_fire.inp)
+    wind_times : NonNegativeFloat | list(NonNegativeFloat)
+        Time in seconds since the start of the fire for each wind shift.
+        First time must be zero.
+    wind_speeds : PositiveFloat | list(PositiveFloat)
+        Wind speed or list of wind speeds (m/s)
+    wind_directions : NonNegativeInt < 360 | list(NonNegativeInt < 360)
+        Wind direction or list of directions (degrees). Use 0° for North
     sensor_height : PositiveFloat
         Wind measurement height (m). Default is 6.1m (20ft)
-    wind_speed : PositiveFloat
-        Wind speed (m/s)
-    wind_direction : NonNegativeInt < 360
-        Wind direction (degrees). Use 0° for North
+    x_location : PositiveInt
+        Location of the sensor in the x-direction
+    y_location : PositiveInt
+        Location of the sensor in the y-direction
     """
 
-    name: str = "sensor1"
+    sensor_number: PositiveInt = 1
     _extension: str = ".inp"
     time_now: PositiveInt
+    wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0
+    wind_speeds: Union[PositiveFloat, list(PositiveFloat)]
+    wind_directions: Union[PositiveFloat, list(PositiveFloat)]
     sensor_height: PositiveFloat = 6.1
-    wind_speed: PositiveFloat
-    wind_direction: NonNegativeInt = Field(lt=360)
+    x_location: PositiveInt = 1
+    y_location: PositiveInt = 1
+
+    @computed_field
+    @property
+    def name(self) -> str:
+        return "sensor" + str(self.sensor_number)
+
+    @field_validator("wind_times", "wind_speeds", "wind_directions")
+    @classmethod
+    def validate_wind_lists(cls, v: list) -> list:
+        for arg in v:
+            if isinstance(arg, float):
+                arg = [arg]
+        if not all(len(arg) == len(v[0]) for arg in v):
+            raise ValueError(
+                f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
+                f"len(wind_times) = {len(v[0])}\n"
+                f"len(wind_speeds) = {len(v[1])}\n"
+                f"len(win_directions) = {len(v[2])}"
+            )
+        return v
+
+    @field_validator("wind_times")
+    @classmethod
+    def validate_wind_start(cls, v: list) -> list:
+        if v[0] != 0:
+            raise ValueError("wind_times: first element of sensor.wind_times must be 0")
+        return v
 
     @computed_field
     @property
     def _wind_lines(self) -> str:
-        """
-        This is meant to support wind shifts in the future.
-        This computed field could be altered to reproduce the lines below
-        for a series of times, speeds, and directions.
-        """
-        return (
-            f"{self.time_now} !Begining of time step in Unix Epoch time\n"
-            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
-            f"0.1 !site zo\n"
-            f"0. ! 1/L (default = 0)\n"
-            f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
-            f"{self.sensor_height} {self.wind_speed} {self.wind_direction}"
+        location_lines = (
+            f"{self.x_location} !X coordinate (meters)\n",
+            f"{self.y_location} !Y coordinate (meters)\n",
         )
+        windshifts = []
+        for i in len(self.wind_times):
+            shift = (
+                f"\n{self.time_now + self.wind_times[i]} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+                f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+                f"0.1 !site zo\n"
+                f"0. ! 1/L (default = 0)\n"
+                f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+                f"{self.sensor_height} {self.wind_speeds[i]} {self.wind_directions[i]}"
+            )
+            windshifts.append(shift)
+
+        return location_lines + "".join(windshifts)
+
+    def from_file(directory: Path):
+        """
+        Wrapper for _from_file() classmethod returning dict of available WindSensor objects
+        """
+        # look for wind sensors
+        sensor_list = []
+        for file in directory.iterdir():
+            if file.is_file():
+                if file.stem.startswith("sensor") and file.name.endswith(".inp"):
+                    sensor_list.append(file.stem)
+        windsensor = {}
+        for sensor_number in range(1, len(sensor_list) + 1):
+            sensor_name = "".join("sensor", sensor_number)
+            windsensor[sensor_name] = WindSensor._from_file(directory, sensor_number)
+        return windsensor
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def _from_file(cls, directory: str | Path, sensor_number: int):
         if isinstance(directory, str):
             directory = Path(directory)
-        with open(directory / "sensor1.inp", "r") as f:
-            lines = f.readlines()
-        print("\n".join(lines))
-        return cls(
-            time_now=int(lines[6].strip().split("!")[0]),
-            sensor_height=float(lines[11].split(" ")[0]),
-            wind_speed=float(lines[11].split(" ")[1]),
-            wind_direction=int(lines[11].split(" ")[2]),
-        )
+        sensor_name = "".join("sensor", sensor_number, ".inp")
+        path = directory / sensor_name
+        if path.exists():
+            with open(directory / sensor_name, "r") as f:
+                lines = f.readlines()
+            # print("\n".join(lines))
+            wind_times = [0]
+            wind_speeds = []
+            wind_directions = []
+            x_location = int(lines[4].strip().split("!")[0])
+            y_location = int(lines[5].strip().split("!")[0])
+            time_now = int(lines[6].strip().split("!")[0])
+            sensor_height = float(lines[11].split(" ")[0])
+            wind_speeds.append(float(lines[11].split(" ")[1]))
+            wind_directions.append(int(lines[11].split(" ")[2]))
+            next_shift = 12
+            while (next_shift + 6) <= len(lines):
+                wind_times.append(
+                    int(lines[next_shift].strip().split("!")[0] - time_now)
+                )
+                wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
+                wind_directions.append(int(lines[next_shift + 5].split(" ")[2]))
+                next_shift += 6
+            return cls(
+                sensor_number=sensor_number,
+                time_now=time_now,
+                sensor_height=sensor_height,
+                wind_times=wind_times,
+                wind_speeds=wind_speeds,
+                wind_directions=wind_directions,
+                x_location=x_location,
+                y_location=y_location,
+            )
