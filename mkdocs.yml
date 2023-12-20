@@ -3,12 +3,18 @@ site_name: quicfire-tools Documentation
 
 theme:
   name: "material"
+  features:
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
 
 nav:
   - Home: index.md
-  # - Explanation: explanation.md
-  # - Tutorials: tutorials.md
-  # - How-To Guides: how-to-guides.md
+  - Explanation: explanation.md
+  - Tutorials: tutorials.md
+  - How-To Guides: how-to-guides.md
   - Reference: reference.md
 
 repo_url: https://github.com/silvxlabs/quicfire-tools
