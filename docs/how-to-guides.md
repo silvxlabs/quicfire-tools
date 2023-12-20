@@ -3,7 +3,7 @@
 QUIC-Fire is controlled by a deck of input files that specify fuel parameters, wind conditions, ignitions, topography, etc.
 The inputs module provides a simple interface to programatically create and modify new input file decks or read existing decks.
 The following guides provide step-by-step instructions for working with simple QUIC-Fire input decks.
-Please see [inputs](reference.md%quicfire_tools.inputs) for full documentation.
+Please see [inputs](reference.md#quicfire_tools.inputs) for full documentation.
 
 ### How to create a basic QUIC-Fire simulation
 
