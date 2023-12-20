@@ -649,7 +649,9 @@ class InputFile(BaseModel, validate_assignment=True):
 
     This base class provides a common interface for all input files in order to
     accomplish two main goals:
+
     1) Return documentation for each parameter in the input file.
+
     2) Provide a method to write the input file to a directory.
     """
 
@@ -662,9 +664,7 @@ class InputFile(BaseModel, validate_assignment=True):
 
     @property
     def documentation_dict(self) -> dict:
-        """
-        Return a dictionary of parameter documentation for the input file.
-        """
+        # Return the documentation dictionary
         with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
             return json.load(f)
 
