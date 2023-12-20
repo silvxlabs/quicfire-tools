@@ -1542,9 +1542,9 @@ class TestQUTopoInputs:
             "8 = cos hill, 9 = QP_elevation.inp, "
             "10 = terrainOutput.txt (ARA), "
             "11 = terrain.dat (firetec)\n"
-            "100.0\t! m, x-center\n"
-            "150.0\t! m, y-center\n"
-            "500.0\t! m, max height\n"
+            "100\t! m, x-center\n"
+            "150\t! m, y-center\n"
+            "500\t! m, max height\n"
             "20.0\t! m, std"
         )
         assert topoinputs.smoothing_method == 1
@@ -1646,11 +1646,9 @@ class TestQUTopoInputs:
             11: 0,
         }
         add = add_dict.get(topo_flag)
-        assert float(lines[3].strip().split("!")[0]) == topoinputs.topo_type.x_hilltop
-        assert float(lines[4].strip().split("!")[0]) == topoinputs.topo_type.y_hilltop
-        assert (
-            float(lines[5].strip().split("!")[0]) == topoinputs.topo_type.elevation_max
-        )
+        assert int(lines[3].strip().split("!")[0]) == topoinputs.topo_type.x_hilltop
+        assert int(lines[4].strip().split("!")[0]) == topoinputs.topo_type.y_hilltop
+        assert int(lines[5].strip().split("!")[0]) == topoinputs.topo_type.elevation_max
         assert (
             float(lines[6].strip().split("!")[0]) == topoinputs.topo_type.elevation_std
         )

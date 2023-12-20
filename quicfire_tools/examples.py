@@ -16,7 +16,7 @@ def create_line_fire() -> SimulationInputs:
 
     # Set uniform fuel values
     sim_inputs.set_uniform_fuels(
-        fuel_density=0.7,
+        fuel_density=0.5,
         fuel_moisture=0.10,
         fuel_height=1.0,
     )
@@ -32,8 +32,8 @@ def create_line_fire() -> SimulationInputs:
     # Select which binary files to output
     sim_inputs.set_output_files(
         fuel_dens=True,
-        emissions=True,
         fuel_moist=True,
+        emissions=True,
     )
 
     # Make modifications to the QUIC_Fire input file
