@@ -13,5 +13,5 @@ jobs:
         with:
           python-version: 3.x
           cache: pip
-      - run: pip install mkdocs mkdocstrings mkdocstrings-python mkdocs-material black
+      - run: pip install mkdocs mkdocstrings mkdocstrings-python mkdocs-material
       - run: mkdocs gh-deploy --force --clean --verbose
