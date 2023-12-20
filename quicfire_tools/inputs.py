@@ -483,7 +483,7 @@ class SimulationInputs:
             self.quic_fire.fuel_height = None
         if ignition:
             self.quic_fire.ignition_type = IgnitionType(
-                ignition_flag=IgnitionSources(6)
+                ignition_flag=IgnitionSources(7)
             )
         if topo:
             self.qu_topoinputs.topo_type = TopoType(topo_flag=TopoSources(5))
@@ -566,6 +566,7 @@ class SimulationInputs:
         mass_burnt: bool = False,
         emissions: bool = False,
         radiation: bool = False,
+        surf_eng: bool = False,
         intensity: bool = False,
     ) -> None:
         """
@@ -607,6 +608,7 @@ class SimulationInputs:
         >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
         >>> sim_inputs.set_output_files(fuel_dens=True, mass_burnt=True)
         """
+
         self.quic_fire.eng_to_atm_out = int(eng_to_atm)
         self.quic_fire.react_rate_out = int(react_rate)
         self.quic_fire.fuel_dens_out = int(fuel_dens)
@@ -616,7 +618,7 @@ class SimulationInputs:
         self.quic_fire.fuel_moist_out = int(fuel_moist)
         self.quic_fire.mass_burnt_out = int(mass_burnt)
         self.quic_fire.radiation_out = int(radiation)
-        self.quic_fire.intensity_out = int(intensity)
+        self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
     def _update_shared_attributes(self):
@@ -1536,7 +1538,7 @@ class QUIC_fire(InputFile):
     firebrand_out: Literal[0, 1] = 0
     emissions_out: Literal[0, 1, 2, 3, 4, 5] = 0
     radiation_out: Literal[0, 1] = 0
-    intensity_out: Literal[0, 1] = 0
+    surf_eng_out: Literal[0, 1] = 0
 
     @field_validator("random_seed")
     @classmethod
@@ -1717,8 +1719,6 @@ class QUIC_fire(InputFile):
                 y_length=y_length,
                 ring_width=ring_width,
             )
-        elif ignition_flag == 6:
-            ignition_type = IgnitionType(ignition_flag=6)
         else:
             ignition_type = IgnitionType(ignition_flag=ignition_flag)
 
