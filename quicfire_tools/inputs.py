@@ -1694,7 +1694,8 @@ class QUIC_fire(InputFile):
         ignition_params = []
         current_line += 1
         for i in range(current_line, current_line + add):
-            ignition_params.append(int(lines[i].strip().split("!")[0]))
+            ignition_line = float(lines[i].split("!")[0].strip())
+            ignition_params.append(ignition_line)
         if ignition_flag == 1:
             x_min, y_min, x_length, y_length = ignition_params
             ignition_type = RectangleIgnition(
