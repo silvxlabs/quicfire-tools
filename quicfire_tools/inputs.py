@@ -60,11 +60,9 @@ TEMPLATES_PATH = (
 
 class SimulationInputs:
     """
-    Class representing a QUIC-Fire input file deck.
-
-    This is the fundamental class in the quicfire_tools.data module. It is
-    used to create, modify, and write QUIC-Fire input file decks. It is also
-    used to read in existing QUIC-Fire input file decks.
+    Class representing a QUIC-Fire input file deck. This class is the primary
+    interface for building a QUIC-Fire input file deck and saving the input
+    files to a directory for running a simulation.
 
     Attributes
     ----------
@@ -163,32 +161,40 @@ class SimulationInputs:
         wind_speed: float,
         wind_direction: int,
         simulation_time: int,
-    ):
+    ) -> SimulationInputs:
         """
-        Creates a SimulationInputs object to build a QUIC-Fire input file deck
-        and run a simulation.
+        Creates a SimulationInputs object by taking in the mimum required
+        information to build a QUIC-Fire input file deck. Returns a
+        SimulationInputs object representing the complete state of the
+        QUIC-Fire simulation.
 
         Parameters
         ----------
         nx: int
-            Number of cells in the x-direction [-]
+            Number of cells in the x-direction [-]. Default cell size is 2m.
         ny: int
-            Number of cells in the y-direction [-]
+            Number of cells in the y-direction [-]. Default cell size is 2m.
         fire_nz: int
-            Number of cells in the z-direction for the fire grid [-]
+            Number of cells in the z-direction for the fire grid [-]. Default
+            cell size is 1m.
         wind_speed: float
-            Wind speed [m/s]
+            Wind speed [m/s].
         wind_direction: float
             Wind direction [deg]. 0 deg is north, 90 deg is east, etc. Must
             be in range [0, 360).
         simulation_time: int
-            Number of seconds to run the simulation for [s]
+            Number of seconds to run the simulation for [s].
 
         Returns
         -------
         SimulationInputs
-            Class containing the data to build a QUIC-Fire
-            input file deck and run a simulation using default parameters.
+            Class containing the data to build a QUIC-Fire input file deck and
+            run a simulation using default parameters.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
         """
         # Initialize default input files
         rasterorigin = RasterOrigin()
@@ -241,7 +247,10 @@ class SimulationInputs:
     def from_directory(cls, directory: str | Path) -> SimulationInputs:
         """
         Initializes a SimulationInputs object from a directory containing a
-        QUIC-Fire input file deck.
+        QUIC-Fire input file deck. The function looks for each input file in the
+        QUIC-Fire input file deck, reads in the file to an object, and compiles
+        the objects to a SimulationInputs object that represents the complete
+        state of the QUIC-Fire simulation.
 
         Parameters
         ----------
@@ -252,6 +261,12 @@ class SimulationInputs:
         -------
         SimulationInputs
             Class containing the input files in the QUIC-Fire input file deck.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> simulation_path = "path/to/simulation/directory"
+        >>> sim_inputs = SimulationInputs.from_directory(simulation_path)
         """
         if isinstance(directory, str):
             directory = Path(directory)
@@ -280,13 +295,20 @@ class SimulationInputs:
     @classmethod
     def from_dict(cls, data: dict) -> SimulationInputs:
         """
-        Initializes a SimulationInputs object from a dictionary containing
-        input file data.
+        Initializes a SimulationInputs object from a dictionary.
 
         Parameters
         ----------
         data: dict
             Dictionary containing input file data.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> json_path = "path/to/json/object"
+        >>> sim_inputs = SimulationInputs.from_json(json_path)
+        >>> sim_dict = sim_inputs.to_dict()
+        >>> new_sim_inputs = SimulationInputs.from_dict(sim_dict)
         """
         return cls(
             rasterorigin=RasterOrigin.from_dict(data["rasterorigin"]),
@@ -323,6 +345,12 @@ class SimulationInputs:
         ----------
         path: str | Path
             Path to the JSON file.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> json_path = "path/to/json/object"
+        >>> sim_inputs = SimulationInputs.from_json(json_path)
         """
         if isinstance(path, str):
             path = Path(path)
@@ -335,7 +363,7 @@ class SimulationInputs:
         Write all input files in the SimulationInputs object to a specified
         directory.
 
-        This method is the core method of the SimulationInputs class. It
+        This method is a core method of the SimulationInputs class. It
         is the principle way to translate a SimulationInputs object into a
         QUIC-Fire input file deck.
 
@@ -345,6 +373,12 @@ class SimulationInputs:
             Directory to write the input files to.
         version: str
             Version of the input files to write. Default is "latest".
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.write_inputs("path/to/simulation/directory")
         """
         if isinstance(directory, str):
             directory = Path(directory)
@@ -372,25 +406,37 @@ class SimulationInputs:
 
     def to_dict(self) -> dict:
         """
-        Convert the object to a dictionary representation. The SimulationInputs
-        object is represented as a nest dictionary, with the name of each
-        input file as a key to that input file's dictionary representation.
+        Convert the state of the SimulationInputs object to a dictionary.
+        The name of each input file in the SimulationInputs object is a key
+        to that input file's dictionary form.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary representation of the object.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_dict = sim_inputs.to_dict()
         """
         return {key: value.to_dict() for key, value in self._input_files_dict.items()}
 
-    def to_json(self, path: str | Path):
+    def to_json(self, path: str | Path) -> None:
         """
-        Write the object to a JSON file.
+        Write the SimulationInputs object to a JSON file.
 
         Parameters
         ----------
         path : str | Path
             Path to write the JSON file to.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.to_json("path/to/json/object")
         """
         if isinstance(path, str):
             path = Path(path)
@@ -402,7 +448,34 @@ class SimulationInputs:
         fuel: bool = True,
         ignition: bool = True,
         topo: bool = True,
-    ):
+    ) -> None:
+        """
+        Sets the simulation to use custom fuel, ignition, and topography
+        settings.
+
+        This function can be useful for setting up simulations that use .dat
+        files to define custom fuel, topography, or ignition inputs.
+
+        Parameters
+        ----------
+        fuel : bool, optional
+            If True, sets the simulation to use custom fuel settings
+            (fuel flag 3). Default is True.
+        ignition : bool, optional
+            If True, sets the simulation to use a custom ignition source
+            (ignition flag 6). Default is True.
+        topo : bool, optional
+            If True, sets the simulation to use custom topography settings
+            (topography flag 5). Default is True.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_custom_simulation(fuel=True, ignition=True, topo=True)
+        >>> sim_inputs.quic_fire.fuel_flag
+        3
+        """
         if fuel:
             self.quic_fire.fuel_flag = 3
             self.quic_fire.fuel_density = None
@@ -410,7 +483,7 @@ class SimulationInputs:
             self.quic_fire.fuel_height = None
         if ignition:
             self.quic_fire.ignition_type = IgnitionType(
-                ignition_flag=IgnitionSources(6)
+                ignition_flag=IgnitionSources(7)
             )
         if topo:
             self.qu_topoinputs.topo_type = TopoType(topo_flag=TopoSources(5))
@@ -421,14 +494,61 @@ class SimulationInputs:
         fuel_moisture: float,
         fuel_height: float,
     ):
+        """
+        Sets the simulation to use uniform fuel settings. This function updates
+        the fuel flag to 1 and sets the fuel density, fuel moisture, and fuel
+        height to the specified values.
+
+        Parameters
+        ----------
+        fuel_density: float
+            Fuel bulk density [kg/m^3]. Note: This is the fuel bulk density, so
+            the fuel load should be normalized by the height of the fuel bed.
+        fuel_moisture: float
+            Fuel moisture content [%].
+        fuel_height: float
+            Fuel bed height [m].
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_uniform_fuels(fuel_density=0.5, fuel_moisture=25, fuel_height=1)
+        >>> sim_inputs.quic_fire.fuel_flag
+        1
+        >>> sim_inputs.quic_fire.fuel_density
+        0.5
+        """
         self.quic_fire.fuel_flag = 1
         self.quic_fire.fuel_density = fuel_density
         self.quic_fire.fuel_moisture = fuel_moisture
         self.quic_fire.fuel_height = fuel_height
 
     def set_rectangle_ignition(
-        self, x_min: int, y_min: int, x_length: int, y_length: int
-    ):
+        self, x_min: float, y_min: float, x_length: float, y_length: float
+    ) -> None:
+        """
+        Sets the simulation to use a rectangle ignition source. This function
+        updates the ignition flag to 1 and sets the ignition source to the
+        specified rectangle.
+
+        Parameters
+        ----------
+        x_min: float
+            South-west corner in the x-direction [m]
+        y_min: float
+            South-west corner in the y-direction [m]
+        x_length: float
+            Length in the x-direction [m]
+        y_length: float
+            Length in the y-direction [m]
+
+        Examples
+        -------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_rectangle_ignition(x_min=0, y_min=0, x_length=10, y_length=10)
+        """
         ignition = RectangleIgnition(
             x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
         )
@@ -446,8 +566,49 @@ class SimulationInputs:
         mass_burnt: bool = False,
         emissions: bool = False,
         radiation: bool = False,
+        surf_eng: bool = False,
         intensity: bool = False,
-    ):
+    ) -> None:
+        """
+        Sets the simulation to output the specified files. Files set to True
+        will be output by the simulation, and files set to False will not be
+        output.
+
+        Parameters
+        ----------
+        eng_to_atm: bool, optional
+            If True, output the fire-energy_to_atmos.bin file. Default is False.
+        react_rate: bool, optional
+            If True, output the fire-reaction_rate.bin file. Default is False.
+        fuel_dens: bool, optional
+            If True, output the fuels-dens.bin file. Default is False.
+        qf_wind: bool, optional
+            If True, output the windu, windv, and windw .bin files.
+            Default is False.
+        qu_wind_inst: bool, optional
+            If True, output the quic_wind_inst.bin file. Default is False.
+        qu_wind_avg: bool, optional
+            If True, output the quic_wind_avg.bin file. Default is False.
+        fuel_moist: bool, optional
+            If True, output the fuels-moist.bin file. Default is False.
+        mass_burnt: bool, optional
+            If True, output the mburnt_integ.bin file. Default is False.
+        emissions: bool, optional
+            If True, output the co-emissions and pm-emissions .bin files.
+            Default is False.
+        radiation: bool, optional
+            If True, output the thermaldose and thermalradiation .bin files.
+            Default is False.
+        intensity: bool, optional
+            If True, output the fire-intensity.bin file. Default is False.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_output_files(fuel_dens=True, mass_burnt=True)
+        """
+
         self.quic_fire.eng_to_atm_out = int(eng_to_atm)
         self.quic_fire.react_rate_out = int(react_rate)
         self.quic_fire.fuel_dens_out = int(fuel_dens)
@@ -457,7 +618,7 @@ class SimulationInputs:
         self.quic_fire.fuel_moist_out = int(fuel_moist)
         self.quic_fire.mass_burnt_out = int(mass_burnt)
         self.quic_fire.radiation_out = int(radiation)
-        self.quic_fire.intensity_out = int(intensity)
+        self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
     def _update_shared_attributes(self):
@@ -490,43 +651,42 @@ class InputFile(BaseModel, validate_assignment=True):
 
     This base class provides a common interface for all input files in order to
     accomplish two main goals:
+
     1) Return documentation for each parameter in the input file.
-    2) Provide a method to write the input file to a specified directory.
+
+    2) Provide a method to write the input file to a directory.
     """
 
     name: str
     _extension: str
-    _param_info: dict = None
 
     @property
     def _filename(self):
         return f"{self.name}{self._extension}"
 
     @property
-    def param_info(self):
-        """
-        Return a dictionary of parameter information for the input file.
-        """
-        if self._param_info is None:  # open the file if it hasn't been read in
-            with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
-                self._param_info = json.load(f)
-        return self._param_info
+    def documentation_dict(self) -> dict:
+        # Return the documentation dictionary
+        with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
+            return json.load(f)
 
-    def list_parameters(self):
-        """List all parameters in the input file."""
-        return list(self.param_info.keys())
+    def list_parameters(self) -> list[str]:
+        """
+        Get a list of the names of all parameters in the input file.
+        """
+        return list(self.documentation_dict.keys())
 
-    def get_documentation(self, parameter: str = None):
+    def get_documentation(self, parameter: str = None) -> dict:
         """
         Retrieve documentation for a parameter. If no parameter is specified,
         return documentation for all parameters.
         """
         if parameter:
-            return self.param_info.get(parameter, {})
+            return self.documentation_dict.get(parameter, {})
         else:
-            return self.param_info
+            return self.documentation_dict
 
-    def print_documentation(self, parameter: str = None):
+    def print_documentation_table(self, parameter: str = None) -> None:
         """
         Print documentation for a parameter. If no parameter is specified,
         print documentation for all parameters.
@@ -539,7 +699,7 @@ class InputFile(BaseModel, validate_assignment=True):
             key = key.replace("_", " ").capitalize()
             print(f"- {key}: {value}")
 
-    def to_dict(self, include_private: bool = False):
+    def to_dict(self, include_private: bool = False) -> dict:
         """
         Convert the object to a dictionary, excluding attributes that start
         with an underscore.
@@ -550,7 +710,7 @@ class InputFile(BaseModel, validate_assignment=True):
             Dictionary representation of the object.
         """
         all_fields = self.model_dump(
-            exclude={"name", "_extension", "_filename", "param_info"}
+            exclude={"name", "_extension", "_filename", "documentation_dict"}
         )
         if include_private:
             return all_fields
@@ -772,6 +932,8 @@ class QU_Simparams(InputFile):
     Class representing the QU_simparams.inp file. This file contains the
     simulation parameters for the QUIC-Fire simulation.
 
+    Attributes
+    ----------
     nx : int
         Number of cells in the x-direction [-]. Recommended value: > 100
     ny : int
@@ -1239,7 +1401,7 @@ class QUIC_fire(InputFile):
     contains the parameters relating to the fire simulation and
     outputs.
 
-    Parameters
+    Attributes
     ----------
     fire_flag : Literal[0, 1]
         Fire flag, 1 = run fire; 0 = no fire
@@ -1368,15 +1530,15 @@ class QUIC_fire(InputFile):
     eng_to_atm_out: Literal[0, 1] = 0
     react_rate_out: Literal[0, 1] = 0
     fuel_dens_out: Literal[0, 1] = 1
-    qf_wind_out: Literal[0, 1] = 1
-    qu_wind_inst_out: Literal[0, 1] = 0
+    qf_wind_out: Literal[0, 1] = 0
+    qu_wind_inst_out: Literal[0, 1] = 1
     qu_wind_avg_out: Literal[0, 1] = 0
     fuel_moist_out: Literal[0, 1] = 0
     mass_burnt_out: Literal[0, 1] = 0
     firebrand_out: Literal[0, 1] = 0
     emissions_out: Literal[0, 1, 2, 3, 4, 5] = 0
     radiation_out: Literal[0, 1] = 0
-    intensity_out: Literal[0, 1] = 0
+    surf_eng_out: Literal[0, 1] = 0
 
     @field_validator("random_seed")
     @classmethod
@@ -1532,7 +1694,8 @@ class QUIC_fire(InputFile):
         ignition_params = []
         current_line += 1
         for i in range(current_line, current_line + add):
-            ignition_params.append(int(lines[i].strip().split("!")[0]))
+            ignition_line = float(lines[i].split("!")[0].strip())
+            ignition_params.append(ignition_line)
         if ignition_flag == 1:
             x_min, y_min, x_length, y_length = ignition_params
             ignition_type = RectangleIgnition(
@@ -1557,8 +1720,6 @@ class QUIC_fire(InputFile):
                 y_length=y_length,
                 ring_width=ring_width,
             )
-        elif ignition_flag == 6:
-            ignition_type = IgnitionType(ignition_flag=6)
         else:
             ignition_type = IgnitionType(ignition_flag=ignition_flag)
 
@@ -1806,6 +1967,8 @@ class QU_TopoInputs(InputFile):
     Class representing the QU_TopoInputs.inp input file. This file
     contains advanced data pertaining to topography.
 
+    Attributes
+    ----------
     filename : str
         Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp
     topo_type : TopoType
