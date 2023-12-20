@@ -9,22 +9,22 @@ def create_line_fire() -> SimulationInputs:
         nx=200,
         ny=200,
         fire_nz=1,
-        simulation_time=60,
+        simulation_time=600,
         wind_speed=1.7,
         wind_direction=270,
     )
 
     # Set uniform fuel values
     sim_inputs.set_uniform_fuels(
-        fuel_density=0.5,
+        fuel_density=0.7,
         fuel_moisture=0.10,
         fuel_height=1.0,
     )
 
     # Set a line ignitions
     sim_inputs.set_rectangle_ignition(
-        x_min=150,
-        y_min=100,
+        x_min=10,
+        y_min=50,
         x_length=10,
         y_length=100,
     )
@@ -32,21 +32,17 @@ def create_line_fire() -> SimulationInputs:
     # Select which binary files to output
     sim_inputs.set_output_files(
         fuel_dens=True,
-        fuel_moist=True,
-        emissions=True,
+        mass_burnt=True,
+        qf_wind=True,
     )
-
-    # Make modifications to the QUIC_Fire input file
-    sim_inputs.quic_fire.random_seed = 222
-    sim_inputs.quic_fire.time_now = 1653321600
-    sim_inputs.quic_fire.sim_time = 300
-    sim_inputs.quic_fire.out_time_fire = 50
-    sim_inputs.quic_fire.out_time_wind = 50
-    sim_inputs.quic_fire.out_time_emis_rad = 50
-    sim_inputs.quic_fire.out_time_wind_avg = 50
-    sim_inputs.quic_fire.ignitions_per_cell = 100
 
     return sim_inputs
 
 
+# TODO: Implement a FastFuels custom .dat file example
+def create_custom_fuels_simulation() -> SimulationInputs:
+    return None
+
+
 line_fire_simulation = create_line_fire()
+custom_fuels_simulation = create_custom_fuels_simulation()
