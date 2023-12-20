@@ -553,42 +553,41 @@ class InputFile(BaseModel, validate_assignment=True):
     This base class provides a common interface for all input files in order to
     accomplish two main goals:
     1) Return documentation for each parameter in the input file.
-    2) Provide a method to write the input file to a specified directory.
+    2) Provide a method to write the input file to a directory.
     """
 
     name: str
     _extension: str
-    _param_info: dict = None
 
     @property
     def _filename(self):
         return f"{self.name}{self._extension}"
 
     @property
-    def param_info(self):
+    def documentation_dict(self) -> dict:
         """
-        Return a dictionary of parameter information for the input file.
+        Return a dictionary of parameter documentation for the input file.
         """
-        if self._param_info is None:  # open the file if it hasn't been read in
-            with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
-                self._param_info = json.load(f)
-        return self._param_info
+        with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
+            return json.load(f)
 
-    def list_parameters(self):
-        """List all parameters in the input file."""
-        return list(self.param_info.keys())
+    def list_parameters(self) -> list[str]:
+        """
+        Get a list of the names of all parameters in the input file.
+        """
+        return list(self.documentation_dict.keys())
 
-    def get_documentation(self, parameter: str = None):
+    def get_documentation(self, parameter: str = None) -> dict:
         """
         Retrieve documentation for a parameter. If no parameter is specified,
         return documentation for all parameters.
         """
         if parameter:
-            return self.param_info.get(parameter, {})
+            return self.documentation_dict.get(parameter, {})
         else:
-            return self.param_info
+            return self.documentation_dict
 
-    def print_documentation(self, parameter: str = None):
+    def print_documentation_table(self, parameter: str = None) -> None:
         """
         Print documentation for a parameter. If no parameter is specified,
         print documentation for all parameters.
@@ -601,7 +600,7 @@ class InputFile(BaseModel, validate_assignment=True):
             key = key.replace("_", " ").capitalize()
             print(f"- {key}: {value}")
 
-    def to_dict(self, include_private: bool = False):
+    def to_dict(self, include_private: bool = False) -> dict:
         """
         Convert the object to a dictionary, excluding attributes that start
         with an underscore.
@@ -612,7 +611,7 @@ class InputFile(BaseModel, validate_assignment=True):
             Dictionary representation of the object.
         """
         all_fields = self.model_dump(
-            exclude={"name", "_extension", "_filename", "param_info"}
+            exclude={"name", "_extension", "_filename", "documentation_dict"}
         )
         if include_private:
             return all_fields
