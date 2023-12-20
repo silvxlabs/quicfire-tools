@@ -13,6 +13,10 @@ from pydantic import BaseModel, Field, PositiveFloat, SerializeAsAny
 
 
 class TopoSources(int, Enum):
+    """
+    Enum class for all valid topography source options in QUIC-Fire.
+    """
+
     flat = 0
     gaussian_hill = 1
     hill_pass = 2
@@ -28,6 +32,11 @@ class TopoSources(int, Enum):
 
 
 class TopoType(BaseModel):
+    """
+    Base class for all topography types in QUIC-Fire. This class is used to
+    provide a common string representation for all topography types.
+    """
+
     topo_flag: SerializeAsAny[TopoSources]
 
     def __str__(self):
