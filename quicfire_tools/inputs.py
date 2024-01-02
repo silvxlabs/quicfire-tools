@@ -635,34 +635,7 @@ class SimulationInputs:
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
-    def set_windshifts_manual(
-        self,
-        wind_times: list(NonNegativeInt),
-        wind_speeds: list(PositiveFloat),
-        wind_directions: list(Field(PositiveInt, lt=360)),
-        sensor_number: PositiveInt = 1,
-    ):
-        """
-        Set wind shifts based on lists of wind times, speeds, and directions.
-        Lists must be of the same length.
-
-        Parameters
-        ----------
-        wind_times : list(NonNegativeInt)
-            List of times in seconds for each windshift from the start of the simulation.
-            First entry must be 0.
-        wind_speeds : list(PositiveFloat)
-            List of wind speeds for each windshift in m/s
-        wind_directions : list(PositiveInt < 360)
-            List of wind directions for each windshift in degrees.
-
-        """
-        sensor_name = "sensor" + str(sensor_number)
-        self.windsensor[sensor_name].wind_times = wind_times
-        self.windsensor[sensor_name].wind_speeds = wind_speeds
-        self.windsensor[sensor_name].wind_directions = wind_directions
-        self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in wind_times]
-
+    #TODO: windshifts from csv
     def set_windshifts_from_csv(
         self, sensor_number: int, directory: str | Path, filename: str
     ):
@@ -721,7 +694,7 @@ class SimulationInputs:
         sensor_height: PositiveFloat = 6.1,
     ):
         """
-        Add an additional wind sensor
+        Add an additional wind sensor.
 
         Parameters
         ----------
@@ -737,13 +710,10 @@ class SimulationInputs:
             Wind direction or list of wind directions in degrees. Use 0 for north.
         wind_times : NonNegativeInt | list(NonNegativeInt)
             List of times for each windshift. Use 0 for single windshift. First value must be 0.
+        sensor_height : PositiveFloat
+            Height of the wind sensor in meters
         """
-        sensor_name = "".join("sensor", sensor_number)
-        if sensor_name in self.windsensor.keys():
-            raise ValueError(
-                f"{sensor_name} already exists. Set a different sensor number or modify the existing sensor directly"
-            )
-        self.windsensor[sensor_name] = WindSensor(
+        self.windsensors._add_sensor(
             sensor_number=sensor_number,
             time_now=self.quic_fire.time_now,
             wind_times=wind_times,
@@ -753,9 +723,10 @@ class SimulationInputs:
             x_location=x_location,
             y_location=y_location,
         )
-        self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in wind_times]
-        self.qu_metparams.num_sensors = sensor_number
+        self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in self.windsensors.wind_times]
+        self.qu_metparams.num_sensors = self.windsensors._num_sensors
 
+    #TODO: is _validate_wind_times necessary?
     def _validate_wind_times(self):
         if len(self.windsensor.keys()) > 1:
             sensors = self.windsensor.values()
@@ -2525,6 +2496,16 @@ class WindSensorArray(BaseModel, extra = 'allow'):
     time_now: PositiveInt
     wind_times: Union[NonNegativeInt,list(NonNegativeInt)]  = [0]
 
+    #TODO: make sure num sensors is counted every time a windsensor is added
+    @computed_field
+    @property
+    def _num_sensors(self) -> int:
+        n = 0
+        for k in self.__dict__.keys():
+            if k.startswith("sensor"):
+                n += 1
+        return n
+
     @classmethod
     def from_file(cls, directory: str | Path):
         """
@@ -2543,6 +2524,7 @@ class WindSensorArray(BaseModel, extra = 'allow'):
             sensor = WindSensor.from_file(directory, sensor_number)
             setattr(cls,sensor_name,sensor)
     
+    #TODO: dict methods for WindSensorArray
     @classmethod
     def from_dict(cls, data: dict):
         return cls(**data)
