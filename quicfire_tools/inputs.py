@@ -57,6 +57,8 @@ TEMPLATES_PATH = (
     importlib.resources.files("quicfire_tools").joinpath("data").joinpath("templates")
 )
 
+LATEST_VERSION = "v6"
+
 
 class SimulationInputs:
     """
@@ -244,7 +246,9 @@ class SimulationInputs:
         )
 
     @classmethod
-    def from_directory(cls, directory: str | Path) -> SimulationInputs:
+    def from_directory(
+        cls, directory: str | Path, version: str = "latest"
+    ) -> SimulationInputs:
         """
         Initializes a SimulationInputs object from a directory containing a
         QUIC-Fire input file deck. The function looks for each input file in the
@@ -256,6 +260,9 @@ class SimulationInputs:
         ----------
         directory: str | Path
             Directory containing a QUIC-Fire input file deck.
+        version: str
+            QUIC-Fire version of the input files to read. Currently supported
+            versions are "v5", "v6", and "latest". Default is "latest".
 
         Returns
         -------
@@ -270,6 +277,9 @@ class SimulationInputs:
         """
         if isinstance(directory, str):
             directory = Path(directory)
+
+        version = _validate_and_return_version(version)
+
         return cls(
             rasterorigin=RasterOrigin.from_file(directory),
             qu_buildings=QU_Buildings.from_file(directory),
@@ -285,7 +295,7 @@ class SimulationInputs:
             qu_movingcoords=QU_movingcoords.from_file(directory),
             qp_buildout=QP_buildout.from_file(directory),
             qu_metparams=QU_metparams.from_file(directory),
-            quic_fire=QUIC_fire.from_file(directory),
+            quic_fire=QUIC_fire.from_file(directory, version=version),
             gridlist=Gridlist.from_file(directory),
             sensor1=Sensor1.from_file(directory),
             qu_topoinputs=QU_TopoInputs.from_file(directory),
@@ -386,11 +396,13 @@ class SimulationInputs:
         if not directory.exists():
             raise NotADirectoryError(f"{directory} does not exist")
 
+        version = _validate_and_return_version(version)
+
         self._update_shared_attributes()
 
         # Skip writing gridlist and rasterorigin if fuel_flag == 1
         skip_inputs = []
-        if self.quic_fire.fuel_flag == 1:
+        if self.quic_fire.fuel_density_flag == 3:
             skip_inputs.extend(["gridlist", "rasterorigin"])
 
         # Write each input file to the output directory
@@ -445,7 +457,11 @@ class SimulationInputs:
 
     def set_custom_simulation(
         self,
-        fuel: bool = True,
+        fuel_density: bool = True,
+        fuel_moisture: bool = True,
+        fuel_height: bool = True,
+        size_scale: bool = False,
+        patch_and_gap: bool = False,
         ignition: bool = True,
         topo: bool = True,
     ) -> None:
@@ -458,9 +474,23 @@ class SimulationInputs:
 
         Parameters
         ----------
-        fuel : bool, optional
-            If True, sets the simulation to use custom fuel settings
-            (fuel flag 3). Default is True.
+        fuel_density: bool, optional
+            If True, sets the simulation to use fuel density information from
+            a treesrhof.dat file (fuel density flag 3). Default is True.
+        fuel_moisture: bool, optional
+            If True, sets the simulation to use fuel moisture information from
+            a treesmoist.dat file (fuel moisture flag 3). Default is True.
+        fuel_height: bool, optional
+            If True, sets the simulation to use fuel height information from
+            a treesdepth.dat file (fuel height flag 3). Default is True.
+        size_scale: bool, optional
+            If True, sets the simulation to use size scale information from
+            a treesss.dat file (size scale flag 3). Defaults to False as this
+            is a new feature.
+        patch_and_gap: bool, optional
+            If True, sets the simulation to use patch and gap information from
+            patch.dat and gap.dat files (patch and gap flag 2). Defaults to
+            False as this is a new feature.
         ignition : bool, optional
             If True, sets the simulation to use a custom ignition source
             (ignition flag 6). Default is True.
@@ -476,11 +506,16 @@ class SimulationInputs:
         >>> sim_inputs.quic_fire.fuel_flag
         3
         """
-        if fuel:
-            self.quic_fire.fuel_flag = 3
-            self.quic_fire.fuel_density = None
-            self.quic_fire.fuel_moisture = None
-            self.quic_fire.fuel_height = None
+        if fuel_density:
+            self.quic_fire.fuel_density_flag = 3
+        if fuel_moisture:
+            self.quic_fire.fuel_moisture_flag = 3
+        if fuel_height:
+            self.quic_fire.fuel_height_flag = 3
+        if size_scale:
+            self.quic_fire.size_scale_flag = 3
+        if patch_and_gap:
+            self.quic_fire.patch_and_gap_flag = 2
         if ignition:
             self.quic_fire.ignition_type = IgnitionType(
                 ignition_flag=IgnitionSources(7)
@@ -493,7 +528,10 @@ class SimulationInputs:
         fuel_density: float,
         fuel_moisture: float,
         fuel_height: float,
-    ):
+        size_scale: float = 0.0005,
+        patch_size: float = 0.0,
+        gap_size: float = 0.0,
+    ) -> None:
         """
         Sets the simulation to use uniform fuel settings. This function updates
         the fuel flag to 1 and sets the fuel density, fuel moisture, and fuel
@@ -508,21 +546,40 @@ class SimulationInputs:
             Fuel moisture content [%].
         fuel_height: float
             Fuel bed height [m].
+        size_scale: float, optional
+            Size scale [m]. Default is 0.0005.
+        patch_size: float, optional
+            Patch size [m]. Default is 0.0.
+        gap_size: float, optional
+            Gap size [m]. Default is 0.0.
 
         Examples
         --------
         >>> from quicfire_tools import SimulationInputs
         >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
         >>> sim_inputs.set_uniform_fuels(fuel_density=0.5, fuel_moisture=25, fuel_height=1)
-        >>> sim_inputs.quic_fire.fuel_flag
+        >>> sim_inputs.quic_fire.fuel_density_flag
         1
         >>> sim_inputs.quic_fire.fuel_density
         0.5
         """
-        self.quic_fire.fuel_flag = 1
+        self.quic_fire.fuel_density_flag = 1
         self.quic_fire.fuel_density = fuel_density
+        self.quic_fire.fuel_moisture_flag = 1
         self.quic_fire.fuel_moisture = fuel_moisture
+        self.quic_fire.fuel_height_flag = 1
         self.quic_fire.fuel_height = fuel_height
+        if size_scale != 0.0005:
+            self.quic_fire.size_scale_flag = 1
+            self.quic_fire.size_scale = size_scale
+        else:
+            self.quic_fire.size_scale_flag = 0
+        if patch_size != 0.0 or gap_size != 0.0:
+            self.quic_fire.patch_and_gap_flag = 1
+            self.quic_fire.patch_size = patch_size
+            self.quic_fire.gap_size = gap_size
+        else:
+            self.quic_fire.patch_and_gap_flag = 0
 
     def set_rectangle_ignition(
         self, x_min: float, y_min: float, x_length: float, y_length: float
@@ -732,6 +789,8 @@ class InputFile(BaseModel, validate_assignment=True):
         if isinstance(directory, str):
             directory = Path(directory)
 
+        version = _validate_and_return_version(version)
+
         template_file_path = TEMPLATES_PATH / version / f"{self._filename}"
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
@@ -784,7 +843,7 @@ class Gridlist(InputFile):
     aa1: PositiveFloat = 1.0
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         """
         Initializes a Gridlist object from a directory containing a
         gridlist.txt file.
@@ -824,7 +883,7 @@ class RasterOrigin(InputFile):
     utm_y: NonNegativeFloat = 0.0
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         """
         Initializes a RasterOrigin object from a directory containing a
         rasterorigin.txt file.
@@ -860,7 +919,7 @@ class QU_Buildings(InputFile):
     number_of_polygon_nodes: NonNegativeInt = 0
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         """
         Initializes a QU_Buildings object from a directory containing a
         QU_buildings.inp file.
@@ -909,7 +968,7 @@ class QU_Fileoptions(InputFile):
     generate_wind_startup_files_flag: Literal[0, 1] = 0
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         """
         Initializes a QU_Fileoptions object from a directory containing a
         QU_fileoptions.inp file.
@@ -1193,7 +1252,7 @@ class QU_Simparams(InputFile):
         )
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         """
         Initializes a QU_Simparams object from a directory containing a
         QU_simparams.inp file.
@@ -1368,7 +1427,7 @@ class QFire_Advanced_User_Inputs(InputFile):
     maximum_firebrand_thickness: PositiveFloat = 0.03
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         """
         Initializes a QFire_Advanced_User_Inputs object from a directory
         containing a QFire_Advanced_User_Inputs.inp file.
@@ -1435,20 +1494,49 @@ class QUIC_fire(InputFile):
     dz_array : List[PositiveFloat]
         Custom dz, one dz per line must be specified, from the ground to the
         top of the domain
-    fuel_flag : Literal[1, 2, 3, 4]
-        Flag for fuel data:
-            - density
-            - moisture
-            - height
-        1 = uniform; 2 = provided thru QF_FuelDensity.inp, 3 = Firetech files
-        for quic grid, 4 = Firetech files for different grid
-        (need interpolation)
+    fuel_density_flag: Literal[1, 2, 3, 4]
+        Fuel density flag (defaults to 1):
+        1 = density is uniform over the domain,
+        2 = density is provided through QF_FuelDensity.inp,
+        3 = density is provided through Firetec file (treesrhof.dat) matching QUIC-Fire grid,
+        4 = density is provided through Firetec files for an arbitrary grid,
+        5 = FastFuels input (assuming uniform dz of 1m)
     fuel_density : PositiveFloat
         Fuel density (kg/m3)
+    fuel_moisture_flag : Literal[1, 2, 3, 4]
+        Fuel moisture flag (defaults to 1):
+        1 = moisture is uniform over the domain,
+        2 = moisture is provided through QF_FuelMoisture.inp,
+        3 = moisture is provided through Firetec file (treesmoist.dat) matching QUIC-Fire grid,
+        4 = moisture is provided through Firetec files for an arbitrary grid,
+        5 = FastFuels input (assuming uniform dz of 1m)
     fuel_moisture : PositiveFloat
-        Fuel moisture = mass of water/mass of dry fuel
+        Fuel moisture = mass of water/mass of dry fuel (kg/kg). Must be between
+        0 and 1.
+    fuel_height_flag : Literal[1, 2, 3, 4]
+        Fuel height flag (defaults to 1):
+        1 = height is uniform over the domain,
+        2 = height is provided through QF_FuelHeight.inp,
+        3 = height is provided through Firetec file (treesheight.dat) matching QUIC-Fire grid,
+        4 = height is provided through Firetec files for an arbitrary grid,
+        5 = FastFuels input (assuming uniform dz of 1m)
     fuel_height : PositiveFloat
         Fuel height of surface layer (m)
+    size_scale_flag : Literal[0, 1, 2, 3, 4, 5]
+        Size scale flag (defaults to 0):
+        0 = Default value (0.0005) over entire domain,
+        1 = custom uniform value over the domain,
+        2 = custom value provided through QF_SizeScale.inp,
+        3 = custom value provided through Firetec file (treesss.dat) matching QUIC-Fire grid,
+        4 = custom value provided through Firetec files for an arbitrary grid,
+        5 = FastFuels input (assuming uniform dz of 1m)
+    size_scale : PositiveFloat
+        Size scale (m). Defaults to 0.0005.
+    patch_and_gap_flag : Literal[0, 1, 2]
+        Patch and gap flag (defaults to 0):
+        0 = Default values (0, 0) over entire domain,
+        1 = custom uniform values over the domain,
+        2 = custom values provided by patch.dat and gap.dat
     ignition_type: IgnitionType
         Ignition type specified as an IgnitionsType class from ignitions.py
         1 = rectangle
@@ -1517,10 +1605,17 @@ class QUIC_fire(InputFile):
     stretch_grid_flag: Literal[0, 1] = 0
     dz: PositiveInt = 1
     dz_array: list[PositiveFloat] = []
-    fuel_flag: Literal[1, 2, 3, 4] = 1
+    fuel_density_flag: Literal[1, 2, 3, 4] = 1
     fuel_density: Union[PositiveFloat, None] = 0.5
+    fuel_moisture_flag: Literal[1, 2, 3, 4] = 1
     fuel_moisture: Union[PositiveFloat, None] = 0.1
+    fuel_height_flag: Literal[1, 2, 3, 4] = 1
     fuel_height: Union[PositiveFloat, None] = 1.0
+    size_scale_flag: Literal[0, 1, 2, 3, 4, 5] = 0
+    size_scale: PositiveFloat = 0.0005
+    patch_and_gap_flag: Literal[0, 1, 2] = 0
+    patch_size: NonNegativeFloat = 0
+    gap_size: NonNegativeFloat = 0
     ignition_type: Union[
         RectangleIgnition, SquareRingIgnition, CircularRingIgnition, IgnitionType
     ]
@@ -1586,46 +1681,54 @@ class QUIC_fire(InputFile):
 
     @computed_field
     @property
-    def _fuel_lines(self) -> str:
-        flag_line = (
-            " 1 = uniform; "
-            "2 = provided thru QF_FuelMoisture.inp, 3 = Firetech"
-            " files for quic grid, 4 = Firetech files for "
-            "different grid (need interpolation)"
-        )
-        fuel_density_flag_line = f"{self.fuel_flag}\t! fuel density flag: " + flag_line
-        fuel_moist_flag_line = f"\n{self.fuel_flag}\t! fuel moisture flag: " + flag_line
-        fuel_height_flag_line = f"\n{self.fuel_flag}\t! fuel height flag: " + flag_line
-        if self.fuel_flag == 1:
-            try:
-                assert self.fuel_density is not None
-                assert self.fuel_moisture is not None
-                assert self.fuel_height is not None
-            except AssertionError:
-                raise ValueError(
-                    "fuel_params: FuelInputs class must have values for fuel_density, fuel_moisture, and fuel_height"
-                )
-            fuel_dens_line = f"\n{self.fuel_density}"
-            fuel_moist_line = f"\n{self.fuel_moisture}"
-            fuel_height_line = f"\n{self.fuel_height}"
-            return (
-                fuel_density_flag_line
-                + fuel_dens_line
-                + fuel_moist_flag_line
-                + fuel_moist_line
-                + fuel_height_flag_line
-                + fuel_height_line
-            )
-        return fuel_density_flag_line + fuel_moist_flag_line
+    def _fuel_density_lines(self) -> str:
+        fuel_density_flag_line = f"{self.fuel_density_flag}\t! fuel density flag\n"
+        if self.fuel_density_flag == 1:
+            return fuel_density_flag_line + f"{self.fuel_density}\n"
+        return fuel_density_flag_line
+
+    @computed_field
+    @property
+    def _fuel_moisture_lines(self) -> str:
+        fuel_moist_flag_line = f"{self.fuel_moisture_flag}\t! fuel moisture flag\n"
+        if self.fuel_moisture_flag == 1:
+            return fuel_moist_flag_line + f"{self.fuel_moisture}\n"
+        return fuel_moist_flag_line
+
+    @computed_field
+    @property
+    def _fuel_height_lines(self) -> str:
+        fuel_height_flag_line = f"{self.fuel_height_flag}\t! fuel height flag"
+        if self.fuel_height_flag == 1:
+            return fuel_height_flag_line + f"\n{self.fuel_height}"
+        return fuel_height_flag_line
+
+    @computed_field
+    @property
+    def _size_scale_lines(self) -> str:
+        size_scale_flag_line = f"\n{self.size_scale_flag}\t! size scale flag\n"
+        if self.size_scale_flag == 1:
+            return size_scale_flag_line + f"{self.size_scale}\n"
+        return size_scale_flag_line
+
+    @computed_field
+    @property
+    def _patch_and_gap_lines(self) -> str:
+        patch_and_gap_flag_line = f"{self.patch_and_gap_flag}\t! patch and gap flag"
+        if self.patch_and_gap_flag == 1:
+            return patch_and_gap_flag_line + f"\n{self.patch_size}\n{self.gap_size}"
+        return patch_and_gap_flag_line
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         """
         Initializes a QUIC_fire object from a directory containing a
         QUIC_Fire.inp file.
         """
         if isinstance(directory, str):
             directory = Path(directory)
+
+        version = _validate_and_return_version(kwargs.get("version", ""))
 
         with open(directory / "QUIC_fire.inp", "r") as f:
             lines = f.readlines()
@@ -1665,29 +1768,82 @@ class QUIC_fire(InputFile):
         current_line += 4  # skip unused lines
 
         # Read fuel data
-        # current_line = ! FUEL
-        current_line += 1  # header
-        fuel_flag = int(lines[current_line].strip().split("!")[0])
-        if fuel_flag == 1:
-            fuel_density = float(lines[current_line + 1].strip())
-            moisture_flag = int(lines[current_line + 2].strip().split("!")[0])
-            fuel_moisture = float(lines[current_line + 3].strip())
-            height_flag = int(lines[current_line + 4].strip().split("!")[0])
-            fuel_height = float(lines[current_line + 5].strip())
-            if moisture_flag != fuel_flag or height_flag != fuel_flag:
-                raise ValueError(
-                    "QUIC_fire.inp: Fuel moisture and fue height flags must match fuel density flag"
-                )
-            current_line += 6
-        else:
-            fuel_density = None
-            fuel_moisture = None
-            fuel_height = None
-            current_line += 2
+        current_line += 1  # skip !FUEL line
 
-            # Read ignition data
-        # current_line = ! IGNITION LOCATIONS
-        current_line += 1  # header
+        # Read fuel density
+        fuel_density_flag = int(lines[current_line].strip().split("!")[0])
+        fuel_density = None
+        if fuel_density_flag == 1:
+            current_line += 1
+            fuel_density = float(lines[current_line].strip())
+
+        # Read fuel moisture
+        current_line += 1
+        fuel_moisture_flag = int(lines[current_line].strip().split("!")[0])
+        fuel_moisture = None
+        if fuel_moisture_flag == 1:
+            current_line += 1
+            fuel_moisture = float(lines[current_line].strip())
+
+        # Read fuel height
+        current_line += 1
+        fuel_height_flag = 0
+        if fuel_density_flag == 1:
+            fuel_height_flag = int(lines[current_line].strip().split("!")[0])
+        fuel_height = None
+        if fuel_density_flag == 1 and fuel_moisture_flag == 1:
+            current_line += 1
+            fuel_height = float(lines[current_line].strip())
+
+        # Read size scale and patch/gap (Supported for v6 and above)
+        if version in ("v6"):
+            # Check if the next line is the ignition header
+            next_line = lines[current_line + 1].strip()
+            if next_line.startswith("! IGNITION LOCATIONS"):
+                # Trying to read a v5 file with v6 reader so throw error
+                raise ValueError(
+                    "Invalid file version. Selected reader for QUIC-Fire v6, but file is v5."
+                )
+
+            # Read size scale
+            current_line += 1
+            size_scale_flag = int(lines[current_line].strip().split("!")[0])
+            size_scale = 0.0005
+            if size_scale_flag == 1:
+                current_line += 1
+                size_scale = float(lines[current_line].strip())
+
+            # Read patch and gap
+            current_line += 1
+            patch_and_gap_flag = int(lines[current_line].strip().split("!")[0])
+            patch_size = 0.0
+            gap_size = 0.0
+            if patch_and_gap_flag == 1:
+                current_line += 1
+                patch_size = float(lines[current_line].strip())
+                current_line += 1
+                gap_size = float(lines[current_line].strip())
+        elif version == "v5":
+            # The next line should be the ignition header. If it is not, then
+            # the file is not a v5 file, and we should throw an error.
+            next_line = lines[current_line + 1].strip()
+            if not next_line.startswith("! IGNITION LOCATIONS"):
+                # Trying to read a v6 file with v5 reader so throw error
+                raise ValueError(
+                    "Invalid file version. Selected reader for QUIC-Fire v5, but file is v6."
+                )
+
+            # Set size scale and patch and gap to defaults
+            size_scale_flag = 0
+            size_scale = 0.0005
+            patch_and_gap_flag = 0
+            patch_size = 0.0
+            gap_size = 0.0
+        else:
+            raise ValueError(f"Unsupported version: {version}")
+
+        # Read ignition data
+        current_line += 2  # skip ! IGNITION LOCATIONS header
         ignition_flag = int(lines[current_line].strip().split("!")[0])
         add_lines = {1: 4, 2: 6, 3: 5, 4: 0, 5: 0, 6: 0, 7: 0}
         add = add_lines.get(ignition_flag)
@@ -1766,10 +1922,17 @@ class QUIC_fire(InputFile):
             stretch_grid_flag=stretch_grid_flag,
             dz=dz,
             dz_array=dz_array,
-            fuel_flag=fuel_flag,
+            fuel_density_flag=fuel_density_flag,
             fuel_density=fuel_density,
+            fuel_moisture_flag=fuel_moisture_flag,
             fuel_moisture=fuel_moisture,
+            fuel_height_flag=fuel_height_flag,
             fuel_height=fuel_height,
+            size_scale_flag=size_scale_flag,
+            size_scale=size_scale,
+            patch_and_gap_flag=patch_and_gap_flag,
+            patch_size=patch_size,
+            gap_size=gap_size,
             ignition_type=ignition_type,
             ignitions_per_cell=ignitions_per_cell,
             firebrand_flag=firebrand_flag,
@@ -1835,7 +1998,7 @@ class QFire_Bldg_Advanced_User_Inputs(InputFile):
     fuel_surface_roughness: PositiveFloat = Field(0.1, ge=0)
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         """
         Initializes a QFire_Bldg_Advanced_User_Inputs object from a directory
         containing a QFire_Bldg_Advanced_User_Inputs.inp file.
@@ -1935,7 +2098,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
     plume_to_grid_intersection_flag: Literal[0, 1] = 1
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         if isinstance(directory, str):
             directory = Path(directory)
 
@@ -2016,7 +2179,7 @@ class QU_TopoInputs(InputFile):
         return str(self.topo_type)
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         if isinstance(directory, str):
             directory = Path(directory)
         with open(directory / "QU_TopoInputs.inp", "r") as f:
@@ -2114,18 +2277,18 @@ class RuntimeAdvancedUserInputs(InputFile):
     ----------
     num_cpus : PositiveInt
         Maximum number of CPU to use. Do not exceed 8. Use 1 for ensemble
-        simulations.
+        simulations. Defaults to 1.
     use_acw : Literal[0,1]
-        Use Adaptive Computation Window (0=Disabled 1=Enabled)
+        Use Adaptive Computation Window (0=Disabled 1=Enabled). Defaults to 0.
     """
 
     name: str = "Runtime_Advanced_User_Inputs"
     _extension: str = ".inp"
-    num_cpus: PositiveInt = Field(le=8, default=8)
+    num_cpus: PositiveInt = Field(le=8, default=1)
     use_acw: Literal[0, 1] = 0
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         if isinstance(directory, str):
             directory = Path(directory)
         with open(directory / "Runtime_Advanced_User_Inputs.inp", "r") as f:
@@ -2147,7 +2310,7 @@ class QU_movingcoords(InputFile):
     _extension: str = ".inp"
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         if isinstance(directory, str):
             directory = Path(directory)
 
@@ -2172,7 +2335,7 @@ class QP_buildout(InputFile):
     _extension: str = ".inp"
 
     @classmethod
-    def from_file(cls, directory: str | Path):
+    def from_file(cls, directory: str | Path, **kwargs):
         if isinstance(directory, str):
             directory = Path(directory)
 
@@ -2215,7 +2378,7 @@ class QU_metparams(InputFile):
         )
 
     @classmethod
-    def from_file(cls, directory):
+    def from_file(cls, directory: str | Path, **kwargs):
         if isinstance(directory, str):
             directory = Path(directory)
         with open(directory / "QU_metparams.inp", "r") as f:
@@ -2283,3 +2446,11 @@ class Sensor1(InputFile):
             wind_speed=float(lines[11].split(" ")[1]),
             wind_direction=int(lines[11].split(" ")[2]),
         )
+
+
+def _validate_and_return_version(version: str) -> str:
+    if version not in ("latest", "v5", "v6"):
+        raise ValueError(
+            f"Version {version} is not supported. Supported versions: 'latest', 'v5', 'v6'"
+        )
+    return LATEST_VERSION if version == "latest" else version

@@ -18,7 +18,7 @@ $_stretch_grid_input ! m, dz
 1                   ! Fuel types are in separate files
 2                   ! File is stream (1) or headers (2)
 ! FUEL
-$_fuel_lines
+$_fuel_density_lines $_fuel_moisture_lines $_fuel_height_lines $_size_scale_lines $_patch_and_gap_lines
 ! IGNITION LOCATIONS
 $_ignition_lines
 $ignitions_per_cell ! number of ignitions
@@ -28,15 +28,15 @@ $firebrand_flag		! 0 = off, 1 = on
 $eng_to_atm_out		! Output gridded energy-to-atmosphere (3D fire grid + extra layers)
 $react_rate_out		! Output compressed array reaction rate (fire grid)
 $fuel_dens_out		! Output compressed array fuel density (fire grid)
-$QF_wind_out	    ! Output gridded wind (u,v,w,sigma) (3D fire grid)
-$QU_wind_inst_out	! Output gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
-$QU_wind_avg_out		! Output gridded QU winds with fire effects, averaged (QUIC-URB grid)
+$qf_wind_out	    ! Output gridded wind (u,v,w,sigma) (3D fire grid)
+$qu_wind_inst_out	! Output gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
+$qu_wind_avg_out	! Output gridded QU winds with fire effects, averaged (QUIC-URB grid)
 0					! Output plume trajectories (ONLY FOR DEBUG)
 $fuel_moist_out		! Output compressed array fuel moisture (fire grid)
 $mass_burnt_out		! Output vertically-integrated % mass burnt (fire grid)
 $firebrand_out		! Output trajectories firebrands
 $emissions_out		! Output compressed array emissions (fire grid)
 $radiation_out		! Output gridded thermal radiation (fire grid)
-$intensity_out      ! Output surface fire intensity at every fire time step
+$surf_eng_out       ! Output surface fire intensity at every fire time step
 ! AUTOKILL
 $auto_kill          ! Kill if the fire is out and there are no more ignitions or firebrands (0 = no, 1 = yes)
