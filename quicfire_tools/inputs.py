@@ -1682,39 +1682,41 @@ class QUIC_fire(InputFile):
     @computed_field
     @property
     def _fuel_density_lines(self) -> str:
-        fuel_density_flag_line = f"{self.fuel_density_flag}\t! fuel density flag\n"
+        fuel_density_flag_line = f"{self.fuel_density_flag}\t! fuel density flag"
         if self.fuel_density_flag == 1:
-            return fuel_density_flag_line + f"{self.fuel_density}\n"
+            return fuel_density_flag_line + f"\n{self.fuel_density}"
         return fuel_density_flag_line
 
     @computed_field
     @property
     def _fuel_moisture_lines(self) -> str:
-        fuel_moist_flag_line = f"{self.fuel_moisture_flag}\t! fuel moisture flag\n"
+        fuel_moist_flag_line = f"\n{self.fuel_moisture_flag}\t! fuel moisture flag"
         if self.fuel_moisture_flag == 1:
-            return fuel_moist_flag_line + f"{self.fuel_moisture}\n"
+            return fuel_moist_flag_line + f"\n{self.fuel_moisture}"
         return fuel_moist_flag_line
 
     @computed_field
     @property
     def _fuel_height_lines(self) -> str:
-        fuel_height_flag_line = f"{self.fuel_height_flag}\t! fuel height flag"
-        if self.fuel_height_flag == 1:
-            return fuel_height_flag_line + f"\n{self.fuel_height}"
-        return fuel_height_flag_line
+        if self.fuel_density_flag == 1:
+            fuel_height_flag_line = f"\n{self.fuel_height_flag}\t! fuel height flag"
+            if self.fuel_height_flag == 1:
+                return fuel_height_flag_line + f"\n{self.fuel_height}"
+            return fuel_height_flag_line
+        return ""
 
     @computed_field
     @property
     def _size_scale_lines(self) -> str:
-        size_scale_flag_line = f"\n{self.size_scale_flag}\t! size scale flag\n"
+        size_scale_flag_line = f"\n{self.size_scale_flag}\t! size scale flag"
         if self.size_scale_flag == 1:
-            return size_scale_flag_line + f"{self.size_scale}\n"
+            return size_scale_flag_line + f"\n{self.size_scale}"
         return size_scale_flag_line
 
     @computed_field
     @property
     def _patch_and_gap_lines(self) -> str:
-        patch_and_gap_flag_line = f"{self.patch_and_gap_flag}\t! patch and gap flag"
+        patch_and_gap_flag_line = f"\n{self.patch_and_gap_flag}\t! patch and gap flag"
         if self.patch_and_gap_flag == 1:
             return patch_and_gap_flag_line + f"\n{self.patch_size}\n{self.gap_size}"
         return patch_and_gap_flag_line

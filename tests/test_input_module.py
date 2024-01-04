@@ -986,7 +986,9 @@ class TestQUIC_fire:
         with pytest.raises(ValidationError):
             quic_fire.random_seed = 0
 
-        # Test set fuel values
+    def test_fuel_lines_uniform(self):
+        quic_fire = self.get_basic_test_object()
+
         quic_fire.fuel_density_flag = 1
         quic_fire.fuel_density = 0.5
         quic_fire.fuel_moisture_flag = 1
@@ -998,7 +1000,7 @@ class TestQUIC_fire:
         quic_fire.patch_and_gap_flag = 1
         quic_fire.patch_size = 0.5
         quic_fire.gap_size = 0.5
-        with open(TEST_DIR / "data/test-inputs/fuel_lines.txt") as f:
+        with open(TEST_DIR / "data/test-inputs/fuel_lines_uniform.txt") as f:
             expected_lines = f.readlines()
         fuel_lines = (
             quic_fire._fuel_density_lines
@@ -1008,6 +1010,28 @@ class TestQUIC_fire:
             + quic_fire._patch_and_gap_lines
         )
         assert "".join(expected_lines) == fuel_lines
+
+        quic_fire.to_file(TMP_DIR, version="v5")
+
+    def test_fuel_lines_custom(self):
+        quic_fire = self.get_basic_test_object()
+
+        quic_fire.fuel_density_flag = 3
+        quic_fire.fuel_moisture_flag = 3
+        quic_fire.size_scale_flag = 0
+        quic_fire.patch_and_gap_flag = 0
+        with open(TEST_DIR / "data/test-inputs/fuel_lines_custom.txt") as f:
+            expected_lines = f.readlines()
+        fuel_lines = (
+            quic_fire._fuel_density_lines
+            + quic_fire._fuel_moisture_lines
+            + quic_fire._fuel_height_lines
+            + quic_fire._size_scale_lines
+            + quic_fire._patch_and_gap_lines
+        )
+        assert "".join(expected_lines) == fuel_lines
+
+        quic_fire.to_file(TMP_DIR, version="v5")
 
     def test_to_dict(self):
         """Test the to_dict method of a QUIC_fire object."""

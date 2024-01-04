@@ -18,7 +18,7 @@ $_stretch_grid_input ! m, dz
 1                   ! Fuel types are in separate files
 2                   ! File is stream (1) or headers (2)
 ! FUEL
-$_fuel_density_lines $_fuel_moisture_lines $_fuel_height_lines
+$_fuel_density_lines$_fuel_moisture_lines$_fuel_height_lines
 ! IGNITION LOCATIONS
 $_ignition_lines
 $ignitions_per_cell ! number of ignitions
