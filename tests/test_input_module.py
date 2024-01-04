@@ -30,7 +30,6 @@ from quicfire_tools.ignitions import (
     IgnitionType,
     IgnitionSources,
     RectangleIgnition,
-    default_line_ignition,
 )
 from quicfire_tools.topography import TopoType, TopoSources, GaussianHillTopo
 
@@ -1212,7 +1211,7 @@ class TestQUIC_fire:
         """
         quic_fire = self.get_basic_test_object()
         quic_fire.to_file(TMP_DIR, version="v6")
-        with pytest.raises(ValueError) as err:
+        with pytest.raises(ValueError):
             QUIC_fire.from_file(TMP_DIR, version="v5")
 
     def test_from_file_v5_with_v6_reader(self):

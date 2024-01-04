@@ -9,7 +9,7 @@ import time
 import importlib.resources
 from pathlib import Path
 from string import Template
-from typing import Literal, Union, Optional
+from typing import Literal, Union
 
 # External Imports
 import numpy as np
