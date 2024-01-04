@@ -1,0 +1,30 @@
+!QUIC 6.26
+$nx ! nx - Domain Length (X) Grid Cells
+$ny ! ny - Domain Width (Y) Grid Cells
+$nz ! nz - domain height (Z) grid cells
+$dx ! DX [m]
+$dy ! DY [m]
+$stretch_grid_flag ! Vertical stretching flag (0 = uniform, 1 = custom, 2 = parabolic Z, 3 = parabolic DZ, 4 = exponential)
+$_vertical_grid_lines
+$_wind_time_lines
+2 ! (NOT USED) Rooftop flag (0 = none, 1 = log profile, 2 = vortex)
+3 ! (NOT USED) Upwind cavity flag (0 = none, 1 = Rockle, 2 = MVP, 3 = HMVP)
+4 ! (NOT USED) Street canyon flag (0 = none, 1 = Roeckle, 2 = CPB, 3 = exp. param. PKK, 4 = Roeckle w/ Fackrel)
+1 ! (NOT USED) Street intersection flag (0 = off, 1 = on)
+4 ! (NOT USED) Wake flag (0 = none, 1 = Rockle, 2 = modified Rockle, 3 = area scaled)
+1 ! (NOT USED) Sidewall flag (0 = off, 1 = on)
+1 ! (NOT USED) Individual tree wake flag
+2 ! (NOT USED) Canopy flag (0 = off, 1 = Cionco w/o wakes, 2 = Cionco w/ wakes)
+1 ! (NOT USED) Season flag (1 = Summer, 2 = Winter, 3 = Transition)
+$sor_iter_max ! Maximum number of iterations
+$sor_residual_reduction ! Residual reduction (Orders of Magnitude)
+$use_diffusion_flag ! Use diffusion algorithm (0 = off, 1 = on)
+$number_diffusion_iterations ! Number of diffusion iterations
+$domain_rotation ! Domain rotation relative to true north [degrees] (cw = +)
+$utm_x ! UTMX of domain origin [m]
+$utm_y ! UTMY of domain origin [m]
+$utm_zone_number ! UTM zone
+$utm_zone_letter ! UTM zone letter (1 = A, 2 = B, etc.)
+$quic_cfd_flag ! QUIC-CFD Flag
+$explosive_bldg_flag ! Explosive building damage flag (1 = on)
+$bldg_array_flag ! Building Array Flag (1 = on)

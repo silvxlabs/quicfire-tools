@@ -24,7 +24,7 @@ $domain_rotation ! Domain rotation relative to true north [degrees] (cw = +)
 $utm_x ! UTMX of domain origin [m]
 $utm_y ! UTMY of domain origin [m]
 $utm_zone_number ! UTM zone
-$utm_zone_letter ! UTM zone leter (1 = A, 2 = B, etc.)
+$utm_zone_letter ! UTM zone letter (1 = A, 2 = B, etc.)
 $quic_cfd_flag ! QUIC-CFD Flag
 $explosive_bldg_flag ! Explosive building damage flag (1 = on)
 $bldg_array_flag ! Building Array Flag (1 = on)
