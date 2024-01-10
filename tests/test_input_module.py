@@ -22,8 +22,9 @@ from quicfire_tools.inputs import (
     QU_movingcoords,
     QP_buildout,
     QU_metparams,
-    Sensor1,
     SimulationInputs,
+    WindSensorArray,
+    WindSensor
 )
 from quicfire_tools.ignitions import (
     IgnitionType,
@@ -1774,43 +1775,53 @@ class Test_QU_metparams:
         assert qu_metparams == test_object
 
 
-class TestSensor1:
-    def get_test_object(self):
-        return Sensor1(time_now=1697555154, wind_speed=5, wind_direction=270)
+class TestWindSensorArray:
+    def test_add_sensor(self):
+        windarray = WindSensorArray(time_now=1)
+        sensor1 = windarray.add_sensor(5,270)
+        assert len(windarray.sensor_array) == 1
+        assert windarray.sensor_array[0] == sensor1
+        sensor2 = windarray.add_sensor(6,230)
+        assert len(windarray.sensor_array) == 2
+        assert windarray.sensor_array[0] == sensor1
+        assert windarray.sensor_array[1] == sensor2
+        sensor3 = windarray.add_sensor(4,10)
+        assert len(windarray.sensor_array) == 3
+        assert windarray.sensor_array[0] == sensor1
+        assert windarray.sensor_array[1] == sensor2
+        assert windarray.sensor_array[2] == sensor3
 
-    def test_init(self):
-        sensor1 = self.get_test_object()
-        assert isinstance(sensor1, Sensor1)
-        assert sensor1.wind_speed == 5.0
-        assert sensor1.wind_direction == 270
-        assert sensor1.sensor_height == 6.1
+    def test_update_sensor(self):
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5,270)
+        windarray.update_sensor(name = 'sensor1',
+                                wind_speeds = 3)
 
-    def test_error(self):
-        sensor1 = self.get_test_object()
-        with pytest.raises(ValidationError):
-            sensor1.wind_direction = 360
+    def test_getattr(self):
+        windarray = WindSensorArray(time_now=1)
+        # sensor list is empty, so trying to get a sensor throws an error
+        with pytest.raises(AttributeError):
+            windarray.sensor1
+        # We set time_now to 1, so we should be able to get it back
+        assert windarray.time_now == 1
+        # We should get an error for any attribute not in WindSensorArray or not called sensor*
+        with pytest.raises(AttributeError):
+            windarray.nonsense
+        # Now add three wind sensors and see if we can get them back
+        windarray.add_sensor(5,270)
+        windarray.add_sensor(6,230)
+        windarray.add_sensor(4,10)
+        sensor1 = windarray.sensor1
+        sensor2 = windarray.sensor2
+        sensor3 = windarray.sensor3
+        assert isinstance(sensor1, WindSensor)
+        assert isinstance(sensor2, WindSensor)
+        assert isinstance(sensor3, WindSensor)
+        assert sensor1 == windarray.sensor_array[0]
+        assert sensor2 == windarray.sensor_array[1]
+        assert sensor3 == windarray.sensor_array[2]
 
-    def test_to_file(self):
-        sensor1 = self.get_test_object()
-        sensor1.to_file(TMP_DIR)
-
-        # Read the content of the file and check for correctness
-        with open(TMP_DIR / "sensor1.inp", "r") as file:
-            lines = file.readlines()
-        time_now = int(lines[6].strip().split("!")[0])
-        sensor_height = float(lines[11].split(" ")[0])
-        wind_speed = float(lines[11].split(" ")[1])
-        wind_direction = int(lines[11].split(" ")[2])
-        assert time_now == sensor1.time_now
-        assert sensor_height == sensor1.sensor_height
-        assert wind_speed == sensor1.wind_speed
-        assert wind_direction == sensor1.wind_direction
-
-    def test_from_file(self):
-        sensor1 = self.get_test_object()
-        sensor1.to_file(TMP_DIR)
-        test_object = Sensor1.from_file(TMP_DIR)
-        assert sensor1 == test_object
+    
 
 
 class TestSimulationInputs:

@@ -712,7 +712,7 @@ class SimulationInputs:
         sensor_height : PositiveFloat
             Height of the wind sensor in meters
         """
-        self.windsensors._add_sensor(
+        self.windsensors.add_sensor(
             sensor_number=sensor_number,
             time_now=self.quic_fire.time_now,
             wind_times=wind_times,
@@ -723,7 +723,7 @@ class SimulationInputs:
             y_location=y_location,
         )
         self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in self.windsensors.wind_times]
-        self.qu_metparams.num_sensors = self.windsensors._num_sensors
+        self.qu_metparams.num_sensors = len(self.windsensors.sensor_array)
 
     #TODO: is _validate_wind_times necessary?
     def _validate_wind_times(self):
@@ -2385,51 +2385,52 @@ class WindSensor(InputFile):
     name: str
     _extension: str = ".inp"
     time_now: PositiveInt
-    wind_times: List[NonNegativeFloat] = 0
-    wind_speeds: List[PositiveFloat]
-    wind_directions: List[PositiveFloat]
+    wind_times: Union[NonNegativeFloat,List[NonNegativeFloat]] = 0
+    wind_speeds: Union[PositiveFloat,List[PositiveFloat]]
+    wind_directions: Union[PositiveFloat,List[PositiveFloat]]
     sensor_height: PositiveFloat = 6.1
     x_location: PositiveInt = 1
     y_location: PositiveInt = 1
     _gloabl_times: List[NonNegativeInt] = [0]
 
-    @field_validator("wind_times", "wind_speeds", "wind_directions", mode='before')
+    @field_validator("wind_times", mode='before')
     @classmethod
-    def validate_wind_lists(cls, v) -> list:
-        if isinstance(v, (float, int)):
+    def validate_wind_times(cls, v: list, values) -> list:
+        if isinstance(v, (float,int)):
             v = [v]
-        # TODO: Do we need to validate list lengths?
-        # if not all(len(lst) == len(wind_times) for lst in [wind_speeds, wind_directions]):
-        #     raise ValidationError(
-        #         f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
-        #         f"len(wind_times) = {len(wind_times)}\n"
-        #         f"len(wind_speeds) = {len(wind_speeds)}\n"
-        #         f"len(wind_directions) = {len(wind_directions)}"
-        #     )
-        return v
-
-    @field_validator("wind_times")
-    @classmethod
-    def validate_wind_start(cls, v: list) -> list:
         if v[0] != 0:
             raise ValueError("wind_times: first element of sensor.wind_times must be 0")
         return v
-    
+
+    @field_validator("wind_speeds","wind_directions")
+    @classmethod
+    def validate_wind_lists(cls, v, values) -> list:
+        if isinstance(v, (float,int)):
+            v = [v]
+        if v and len(values.data["wind_times"]) != len(v):
+            raise ValidationError(
+                f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
+            )
+        return v
+
+    @computed_field
+    @property
+    def _filename(self):
+        return self.name + self._extension
+
     def _find_last_wind_time(self,target_value):
         index = bisect.bisect_left(self.wind_times, target_value)
         if target_value not in self.wind_times:
             index = index - 1
         return(index)
-
-    @computed_field
-    @property
-    def _wind_lines(self) -> str:
+    
+    def get_wind_lines(self,global_times) -> str:
         location_lines = (
             f"{self.x_location} !X coordinate (meters)\n"
             f"{self.y_location} !Y coordinate (meters)\n"
         )
         windshifts = []
-        for i in self._gloabl_times:
+        for i in global_times:
             time_idx = self._find_last_wind_time(i)
             wind_speed = self.wind_speeds[time_idx]
             wind_direction = self.wind_directions[time_idx]
@@ -2443,9 +2444,25 @@ class WindSensor(InputFile):
             )
             windshifts.append(shift)
         wind_lines = "".join(windshifts)
-        print(location_lines)
 
         return location_lines + wind_lines
+
+    def to_file(self, global_times, directory, version):
+        self._wind_lines = self.get_wind_lines(global_times)
+        
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        template_file_path = TEMPLATES_PATH / version / f"sensor.inp"
+        with open(template_file_path, "r") as ftemp:
+            src = Template(ftemp.read())
+
+        result = src.substitute(self.to_dict(include_private=True))
+
+        output_file_path = directory / self._filename
+        with open(output_file_path, "w") as fout:
+            fout.write(result)
+
 
     @classmethod
     def from_file(cls, directory: str | Path, sensor_number: int):
@@ -2490,65 +2507,70 @@ class WindSensorArray(BaseModel, extra = 'allow'):
     """
     time_now: PositiveInt
     wind_times: List[NonNegativeInt]  = [0]
+    sensor_array: List[WindSensor] = []
 
-    #TODO: make sure num sensors is counted every time a windsensor is added
-    @computed_field
-    @property
-    def _num_sensors(self) -> int:
-        n = 0
-        for k in self.__dict__.keys():
-            if k.startswith("sensor"):
-                n += 1
-        return n
+    def __getattr__(self,name):
+        for sensor in self.sensor_array:
+            if name==sensor.name:
+                return sensor
+        raise AttributeError(f"Attribute {name} not found")
 
-    @classmethod
-    def from_file(cls, directory: str | Path):
-        """
-        Wrapper for WindSensor.from_file() classmethod returning dict of available WindSensor objects
-        """
-        if isinstance(directory, str):
-            directory = Path(directory)
-        # look for wind sensors
-        sensor_list = []
-        for file in directory.iterdir():
-            if file.is_file():
-                if file.stem.startswith("sensor") and file.name.endswith(".inp"):
-                    sensor_list.append(file.stem)
-        for sensor_number in range(1, len(sensor_list) + 1):
-            sensor_name = "".join("sensor", sensor_number)
-            sensor = WindSensor.from_file(directory, sensor_number)
-            setattr(cls,sensor_name,sensor)
+    # @classmethod
+    # def from_file(cls, directory: str | Path):
+    #     """
+    #     Wrapper for WindSensor.from_file() classmethod returning dict of available WindSensor objects
+    #     """
+    #     if isinstance(directory, str):
+    #         directory = Path(directory)
+    #     # look for wind sensors
+    #     sensor_list = []
+    #     for file in directory.iterdir():
+    #         if file.is_file():
+    #             if file.stem.startswith("sensor") and file.name.endswith(".inp"):
+    #                 sensor_list.append(file.stem)
+    #     for sensor_number in range(1, len(sensor_list) + 1):
+    #         sensor_name = "".join("sensor", sensor_number)
+    #         sensor = WindSensor.from_file(directory, sensor_number)
+    #         setattr(cls,sensor_name,sensor)
     
-    #TODO: dict methods for WindSensorArray
-    @classmethod
-    def from_dict(cls, data: dict):
-        return cls(**data)
+    # #TODO: dict methods for WindSensorArray
+    # @classmethod
+    # def from_dict(cls, data: dict):
+    #     windarray = cls(**data)
+    #     print(windarray)
+    #     print(dir(windarray))
+    #     #TODO: the following doesn't work because even though sensor* attributes are in the
+    #     #dictionary they don't get added as attributes because they are not defined in the class
+    #     #Weirdly, if you print windarray, you see the sensor* class(es), but they are not accessed
+    #     #by dir() or vars() or .__dict__
+    #     for k,v in data.items():
+    #         if k.startswith("sensor"):
+    #             sensor = WindSensor.from_dict(v)
+    #             setattr(windarray,k,sensor)
+    #     print(windarray.__dict__[k])
+    #     return windarray
     
-    def to_dict(self, include_private: bool = False):
-        """
-        Convert the object to a dictionary, excluding attributes that start
-        with an underscore.
+    # def to_dict(self, include_private: bool = False):
+    #     """
+    #     Convert the object to a dictionary, excluding attributes that start
+    #     with an underscore.
 
-        Returns
-        -------
-        dict
-            Dictionary representation of the object.
-        """
-        all_fields = self.model_dump(
-            exclude={"name", "_extension", "_filename", "param_info"}
-        )
-        #TODO: see if everything gets serialized correctly as-is, if not, do what's below
-        # #in a for loop:
-        # for k in self.__dict__.keys():
-        #     sensor1 = self.sensor1.to_dict()
-        #     all_fields['sensor1'] = sensor1
+    #     Returns
+    #     -------
+    #     dict
+    #         Dictionary representation of the object.
+    #     """
+    #     all_fields = self.model_dump(
+    #         exclude={"name", "_extension", "_filename", "param_info"}
+    #     )
          
-        if include_private:
-            return all_fields
-        return {
-            key: value for key, value in all_fields.items() if not key.startswith("_")
-        }
+    #     if include_private:
+    #         return all_fields
+    #     return {
+    #         key: value for key, value in all_fields.items() if not key.startswith("_")
+    #     }
     
+    @property
     def _update_wind_times(self):
         """
         Creates a global wind times list by combining the wind times lists of each sensor.
@@ -2569,15 +2591,15 @@ class WindSensorArray(BaseModel, extra = 'allow'):
                 v._global_times = combined_times
         self.wind_times = combined_times
     
-    def _add_sensor(self,
+    def add_sensor(self,
                     wind_speeds: list(float),
                     wind_directions: list(int),
-                    sensor_number: int = 1,
                     x_location: int = 1,
                     y_location: int = 1,
                     wind_times: list(int) = [0],
                     sensor_height: float = 6.1,
                     ):
+        sensor_number = len(self.sensor_array) + 1
         sensor_name = "".join(["sensor",str(sensor_number)])
         sensor = WindSensor(
             name = sensor_name,
@@ -2589,7 +2611,5 @@ class WindSensorArray(BaseModel, extra = 'allow'):
             wind_speeds=wind_speeds,
             wind_directions=wind_directions,
             )
-        if hasattr(self,sensor_name):
-            print(f"WARNING: {sensor_name} already exists and will be overwritten")
-        setattr(self,sensor_name,sensor)
-        self._update_wind_times()
+        self.sensor_array.append(sensor)
+        return sensor
