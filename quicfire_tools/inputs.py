@@ -9,7 +9,7 @@ import time
 import importlib.resources
 from pathlib import Path
 from string import Template
-from typing import Literal, Union
+from typing import Literal, Union, List
 
 # External Imports
 import numpy as np
@@ -30,6 +30,7 @@ from pydantic import (
     computed_field,
     field_validator,
     SerializeAsAny,
+    ValidationError,
 )
 
 # Internal imports
@@ -156,10 +157,8 @@ class SimulationInputs:
             "gridlist": gridlist,
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
+            "windsensors": windsensors,
         }
-        for k, v in windsensors.__dict__.items():
-            if k.startswith("sensor"):
-                self._input_files_dict[k] = v
 
     @classmethod
     def create_simulation(
@@ -251,7 +250,7 @@ class SimulationInputs:
             qu_metparams=qu_metparams,
             quic_fire=quic_fire,
             gridlist=gridlist,
-            windsensor=windsensors,
+            windsensors=windsensors,
             qu_topoinputs=qu_topoinputs,
             qu_simparams=qu_simparams,
         )
@@ -2383,35 +2382,30 @@ class WindSensor(InputFile):
         Location of the sensor in the y-direction
     """
 
+    name: str
     _extension: str = ".inp"
-    sensor_number: PositiveInt = 1
     time_now: PositiveInt
-    wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0
-    wind_speeds: Union[PositiveFloat, list(PositiveFloat)]
-    wind_directions: Union[PositiveFloat, list(PositiveFloat)]
+    wind_times: List[NonNegativeFloat] = 0
+    wind_speeds: List[PositiveFloat]
+    wind_directions: List[PositiveFloat]
     sensor_height: PositiveFloat = 6.1
     x_location: PositiveInt = 1
     y_location: PositiveInt = 1
-    _gloabl_times: list(NonNegativeInt) = [0]
+    _gloabl_times: List[NonNegativeInt] = [0]
 
-    @computed_field
-    @property
-    def name(self) -> str:
-        return "sensor" + str(self.sensor_number)
-
-    @field_validator("wind_times", "wind_speeds", "wind_directions")
+    @field_validator("wind_times", "wind_speeds", "wind_directions", mode='before')
     @classmethod
-    def validate_wind_lists(cls, v: list) -> list:
-        for arg in v:
-            if isinstance(arg, float):
-                arg = [arg]
-        if not all(len(arg) == len(v[0]) for arg in v):
-            raise ValueError(
-                f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
-                f"len(wind_times) = {len(v[0])}\n"
-                f"len(wind_speeds) = {len(v[1])}\n"
-                f"len(win_directions) = {len(v[2])}"
-            )
+    def validate_wind_lists(cls, v) -> list:
+        if isinstance(v, (float, int)):
+            v = [v]
+        # TODO: Do we need to validate list lengths?
+        # if not all(len(lst) == len(wind_times) for lst in [wind_speeds, wind_directions]):
+        #     raise ValidationError(
+        #         f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
+        #         f"len(wind_times) = {len(wind_times)}\n"
+        #         f"len(wind_speeds) = {len(wind_speeds)}\n"
+        #         f"len(wind_directions) = {len(wind_directions)}"
+        #     )
         return v
 
     @field_validator("wind_times")
@@ -2431,8 +2425,8 @@ class WindSensor(InputFile):
     @property
     def _wind_lines(self) -> str:
         location_lines = (
-            f"{self.x_location} !X coordinate (meters)\n",
-            f"{self.y_location} !Y coordinate (meters)\n",
+            f"{self.x_location} !X coordinate (meters)\n"
+            f"{self.y_location} !Y coordinate (meters)\n"
         )
         windshifts = []
         for i in self._gloabl_times:
@@ -2448,8 +2442,10 @@ class WindSensor(InputFile):
                 f"{self.sensor_height} {wind_speed} {wind_direction}"
             )
             windshifts.append(shift)
+        wind_lines = "".join(windshifts)
+        print(location_lines)
 
-        return location_lines + "".join(windshifts)
+        return location_lines + wind_lines
 
     @classmethod
     def from_file(cls, directory: str | Path, sensor_number: int):
@@ -2458,7 +2454,6 @@ class WindSensor(InputFile):
         sensor_name = "".join("sensor", sensor_number, ".inp")
         with open(directory / sensor_name, "r") as f:
             lines = f.readlines()
-        # print("\n".join(lines))
         wind_times = [0]
         wind_speeds = []
         wind_directions = []
@@ -2494,7 +2489,7 @@ class WindSensorArray(BaseModel, extra = 'allow'):
     Is wind_times even necessary with the way _update_wind_times is currently written?
     """
     time_now: PositiveInt
-    wind_times: Union[NonNegativeInt,list(NonNegativeInt)]  = [0]
+    wind_times: List[NonNegativeInt]  = [0]
 
     #TODO: make sure num sensors is counted every time a windsensor is added
     @computed_field
@@ -2542,6 +2537,12 @@ class WindSensorArray(BaseModel, extra = 'allow'):
         all_fields = self.model_dump(
             exclude={"name", "_extension", "_filename", "param_info"}
         )
+        #TODO: see if everything gets serialized correctly as-is, if not, do what's below
+        # #in a for loop:
+        # for k in self.__dict__.keys():
+        #     sensor1 = self.sensor1.to_dict()
+        #     all_fields['sensor1'] = sensor1
+         
         if include_private:
             return all_fields
         return {
@@ -2577,8 +2578,9 @@ class WindSensorArray(BaseModel, extra = 'allow'):
                     wind_times: list(int) = [0],
                     sensor_height: float = 6.1,
                     ):
+        sensor_name = "".join(["sensor",str(sensor_number)])
         sensor = WindSensor(
-            sensor_number=sensor_number,
+            name = sensor_name,
             time_now = self.time_now,
             x_location=x_location,
             y_location=y_location,
@@ -2587,7 +2589,6 @@ class WindSensorArray(BaseModel, extra = 'allow'):
             wind_speeds=wind_speeds,
             wind_directions=wind_directions,
             )
-        sensor_name = "".join("sensor",sensor_number)
         if hasattr(self,sensor_name):
             print(f"WARNING: {sensor_name} already exists and will be overwritten")
         setattr(self,sensor_name,sensor)
