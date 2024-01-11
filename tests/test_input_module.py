@@ -1774,8 +1774,10 @@ class Test_QU_metparams:
         assert isinstance(test_object, QU_metparams)
         assert qu_metparams == test_object
 
+#TODO: test WindSensor class
 
 class TestWindSensorArray:
+    #TODO: test update_wind_sensor
     def test_add_sensor(self):
         windarray = WindSensorArray(time_now=1)
         sensor1 = windarray.add_sensor(5,270)
@@ -1790,12 +1792,6 @@ class TestWindSensorArray:
         assert windarray.sensor_array[0] == sensor1
         assert windarray.sensor_array[1] == sensor2
         assert windarray.sensor_array[2] == sensor3
-
-    def test_update_sensor(self):
-        windarray = WindSensorArray(time_now=1)
-        windarray.add_sensor(5,270)
-        windarray.update_sensor(name = 'sensor1',
-                                wind_speeds = 3)
 
     def test_getattr(self):
         windarray = WindSensorArray(time_now=1)
@@ -1821,7 +1817,43 @@ class TestWindSensorArray:
         assert sensor2 == windarray.sensor_array[1]
         assert sensor3 == windarray.sensor_array[2]
 
-    
+    def test_update_sensor(self):
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5,270)
+        # Make sure a nonexistent sensor can't be updated
+        with pytest.raises(AttributeError):
+            windarray.update_sensor(sensor_name = 'sensor2',
+                                    wind_speeds = 3)
+        with pytest.raises(AttributeError):
+            windarray.update_sensor(sensor_name = 'nonsense',
+                                    wind_speeds = 3)
+        # Make sure the right parameters are updated
+        windarray.update_sensor(sensor_name = 'sensor1',
+                                wind_speeds = 3)
+        assert windarray.sensor1.wind_speeds == [3]
+        assert windarray.sensor1.wind_directions == [270]
+        # Add another sensor and update everything
+        windarray.add_sensor(6,230)
+        windarray.update_sensor(sensor_name = 'sensor2',
+                                wind_times=[0,2,3],
+                                wind_speeds=[4,5,6],
+                                wind_directions=[90,180,270],
+                                sensor_height=5.1,
+                                x_location=2,
+                                y_location=2
+                                )
+        assert windarray.sensor2.wind_times == [0,2,3]
+        assert windarray.sensor2.wind_speeds==[4,5,6]
+        assert windarray.sensor2.wind_directions==[90,180,270]
+        assert windarray.sensor2.sensor_height==5.1
+        assert windarray.sensor2.x_location==2
+        assert windarray.sensor2.y_location==2
+        # Add a third sensor and try updating
+        windarray.add_sensor(4,10)
+        windarray.update_sensor(sensor_name='sensor3',
+                                sensor_height=11)
+        assert windarray.sensor3.sensor_height==11
+        assert windarray.sensor3.wind_speeds==[4]
 
 
 class TestSimulationInputs:

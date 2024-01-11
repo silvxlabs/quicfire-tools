@@ -725,18 +725,6 @@ class SimulationInputs:
         self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in self.windsensors.wind_times]
         self.qu_metparams.num_sensors = len(self.windsensors.sensor_array)
 
-    #TODO: is _validate_wind_times necessary?
-    def _validate_wind_times(self):
-        if len(self.windsensor.keys()) > 1:
-            sensors = self.windsensor.values()
-            if not all(
-                getattr(sensor, "wind_times")
-                == getattr(next(iter(sensors)), "wind_times")
-                for sensor in sensors
-            ):
-                raise ValueError(
-                    "SimulationInputs: wind_times lists in all WindSensor input files must be identical"
-                )
 
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
@@ -744,7 +732,6 @@ class SimulationInputs:
         self.gridlist.l = self.quic_fire.nz
         self.gridlist.dx = self.qu_simparams.dx
         self.gridlist.dy = self.qu_simparams.dy
-        self._validate_wind_times()
         if (
             not self.windsensor["sensor1"].time_now
             == self.quic_fire.time_now
@@ -2415,7 +2402,7 @@ class WindSensor(InputFile):
 
     @computed_field
     @property
-    def _filename(self):
+    def _filename(self) -> str:
         return self.name + self._extension
 
     def _find_last_wind_time(self,target_value):
@@ -2515,6 +2502,7 @@ class WindSensorArray(BaseModel, extra = 'allow'):
                 return sensor
         raise AttributeError(f"Attribute {name} not found")
 
+    # TODO: from_file, dict methods
     # @classmethod
     # def from_file(cls, directory: str | Path):
     #     """
@@ -2532,14 +2520,12 @@ class WindSensorArray(BaseModel, extra = 'allow'):
     #         sensor_name = "".join("sensor", sensor_number)
     #         sensor = WindSensor.from_file(directory, sensor_number)
     #         setattr(cls,sensor_name,sensor)
-    
-    # #TODO: dict methods for WindSensorArray
+
     # @classmethod
     # def from_dict(cls, data: dict):
     #     windarray = cls(**data)
     #     print(windarray)
     #     print(dir(windarray))
-    #     #TODO: the following doesn't work because even though sensor* attributes are in the
     #     #dictionary they don't get added as attributes because they are not defined in the class
     #     #Weirdly, if you print windarray, you see the sensor* class(es), but they are not accessed
     #     #by dir() or vars() or .__dict__
@@ -2570,27 +2556,6 @@ class WindSensorArray(BaseModel, extra = 'allow'):
     #         key: value for key, value in all_fields.items() if not key.startswith("_")
     #     }
     
-    @property
-    def _update_wind_times(self):
-        """
-        Creates a global wind times list by combining the wind times lists of each sensor.
-        
-        Returns
-        -------
-        None
-            Sets the _global_times attribute of each WindSensor to the resulting global times list.
-            Sets the wind_times attribute of self to the reuslting global times list.
-        """
-        times_lists = []
-        for k,v in self.__dict__.items():
-            if k.startswith("sensor"):
-                times_lists.append(v.wind_times)
-        combined_times = sorted(set(value for sublist in times_lists for value in sublist))
-        for k,v in self.__dict__.items():
-            if k.startswith("sensor"):
-                v._global_times = combined_times
-        self.wind_times = combined_times
-    
     def add_sensor(self,
                     wind_speeds: list(float),
                     wind_directions: list(int),
@@ -2612,4 +2577,38 @@ class WindSensorArray(BaseModel, extra = 'allow'):
             wind_directions=wind_directions,
             )
         self.sensor_array.append(sensor)
+        
         return sensor
+    
+    def update_sensor(self,
+                      sensor_name: str,
+                      wind_times: float | list(float) = None,
+                      wind_speeds: float | list(float) = None,
+                      wind_directions: float | list(float) = None,
+                      sensor_height: float = None,
+                      x_location: int = None,
+                      y_location: int = None):
+        """
+        Update parameters for a single wind sensor. Any parameters not provided will
+        remain unchanged.
+        """
+        for arg in [wind_times,wind_speeds,wind_directions]:
+            if isinstance(arg, float):
+                arg = [arg]
+        sensor_found = False
+        for sensor in self.sensor_array:
+            if sensor_name==sensor.name:
+                updater = sensor
+                sensor_found = True
+        if sensor_found==False:
+            raise AttributeError(f"{sensor_name} not found")
+            
+        updater.wind_times = wind_times if wind_times is not None else updater.wind_times
+        updater.wind_speeds = wind_speeds if wind_speeds is not None else updater.wind_speeds
+        updater.wind_directions = wind_directions if wind_directions is not None else updater.wind_directions
+        updater.sensor_height = sensor_height if sensor_height is not None else updater.sensor_height
+        updater.x_location = x_location if x_location is not None else updater.x_location
+        updater.y_location = y_location if y_location is not None else updater.y_location
+
+
+
