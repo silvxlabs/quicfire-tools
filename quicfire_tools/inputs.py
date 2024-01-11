@@ -30,7 +30,6 @@ from pydantic import (
     computed_field,
     field_validator,
     SerializeAsAny,
-    ValidationError,
 )
 
 # Internal imports
@@ -725,7 +724,7 @@ class SimulationInputs:
         self.qu_simparams.wind_times = [x + self.quic_fire.time_now for x in self.windsensors.wind_times]
         self.qu_metparams.num_sensors = len(self.windsensors.sensor_array)
 
-
+    # TODO: update shared attributes for new windsensorarray class
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx
         self.gridlist.m = self.qu_simparams.ny
@@ -2378,7 +2377,8 @@ class WindSensor(InputFile):
     sensor_height: PositiveFloat = 6.1
     x_location: PositiveInt = 1
     y_location: PositiveInt = 1
-    _gloabl_times: List[NonNegativeInt] = [0]
+    #TODO: figure out why it can't be _wind_lines
+    wind_lines: str = None
 
     @field_validator("wind_times", mode='before')
     @classmethod
@@ -2395,7 +2395,7 @@ class WindSensor(InputFile):
         if isinstance(v, (float,int)):
             v = [v]
         if v and len(values.data["wind_times"]) != len(v):
-            raise ValidationError(
+            raise ValueError(
                 f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
             )
         return v
@@ -2404,6 +2404,11 @@ class WindSensor(InputFile):
     @property
     def _filename(self) -> str:
         return self.name + self._extension
+    
+    @computed_field
+    @property
+    def sensor_name(self) -> str:
+        return self.name
 
     def _find_last_wind_time(self,target_value):
         index = bisect.bisect_left(self.wind_times, target_value)
@@ -2414,7 +2419,7 @@ class WindSensor(InputFile):
     def get_wind_lines(self,global_times) -> str:
         location_lines = (
             f"{self.x_location} !X coordinate (meters)\n"
-            f"{self.y_location} !Y coordinate (meters)\n"
+            f"{self.y_location} !Y coordinate (meters)"
         )
         windshifts = []
         for i in global_times:
@@ -2434,8 +2439,11 @@ class WindSensor(InputFile):
 
         return location_lines + wind_lines
 
-    def to_file(self, global_times, directory, version):
-        self._wind_lines = self.get_wind_lines(global_times)
+    def to_file(self, 
+                global_times: list,
+                directory: Path | str,
+                version: str):
+        self.wind_lines = self.get_wind_lines(global_times)
         
         if isinstance(directory, str):
             directory = Path(directory)
@@ -2476,7 +2484,7 @@ class WindSensor(InputFile):
             wind_directions.append(int(lines[next_shift + 5].split(" ")[2]))
             next_shift += 6
         return cls(
-            sensor_number=sensor_number,
+            name=sensor_name,
             time_now=time_now,
             sensor_height=sensor_height,
             wind_times=wind_times,
@@ -2501,6 +2509,16 @@ class WindSensorArray(BaseModel, extra = 'allow'):
             if name==sensor.name:
                 return sensor
         raise AttributeError(f"Attribute {name} not found")
+    
+    def _update_wind_times(self):
+        """
+        Creates a global wind times list by combining the wind times lists of each sensor.
+        """
+        times_lists = []
+        for sensor in self.sensor_array:
+                times_lists.append(sensor.wind_times)
+        combined_times = sorted(set(value for sublist in times_lists for value in sublist))
+        self.wind_times = combined_times
 
     # TODO: from_file, dict methods
     # @classmethod
@@ -2555,7 +2573,17 @@ class WindSensorArray(BaseModel, extra = 'allow'):
     #     return {
     #         key: value for key, value in all_fields.items() if not key.startswith("_")
     #     }
-    
+    def to_file(self, 
+                directory: Path | str, 
+                version: str = 'latest'):
+        self._update_wind_times()
+
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        for sensor in self.sensor_array:
+            sensor.to_file(self.wind_times, directory, version)
+
     def add_sensor(self,
                     wind_speeds: list(float),
                     wind_directions: list(int),

@@ -1774,10 +1774,8 @@ class Test_QU_metparams:
         assert isinstance(test_object, QU_metparams)
         assert qu_metparams == test_object
 
-#TODO: test WindSensor class
 
 class TestWindSensorArray:
-    #TODO: test update_wind_sensor
     def test_add_sensor(self):
         windarray = WindSensorArray(time_now=1)
         sensor1 = windarray.add_sensor(5,270)
@@ -1854,6 +1852,142 @@ class TestWindSensorArray:
                                 sensor_height=11)
         assert windarray.sensor3.sensor_height==11
         assert windarray.sensor3.wind_speeds==[4]
+    
+    def test_to_file(self):
+        # Test case with one sensor and one windshift
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5,270)
+        windarray.to_file(TMP_DIR)
+        assert windarray.wind_times == [0]
+        sensor1_path = TMP_DIR / "sensor1.inp"
+        assert sensor1_path.exists()
+        # Test case with multiple sensors and one windshift
+        windarray.add_sensor(6,230)
+        windarray.add_sensor(4,10)
+        windarray.to_file(TMP_DIR)
+        sensor2_path = TMP_DIR / "sensor2.inp"
+        sensor3_path = TMP_DIR / "sensor3.inp"
+        assert sensor2_path.exists()
+        assert sensor3_path.exists()
+        assert windarray.wind_times == [0]
+        # Test case with multiple sensors with different wind shifts
+        windarray.update_sensor(sensor_name='sensor2',
+                                wind_times=[0,100,300],
+                                wind_speeds=[6,4,5],
+                                wind_directions=[270,270,270])
+        windarray.update_sensor(sensor_name='sensor3',
+                                wind_times=[0,200,400],
+                                wind_speeds=[4,4,4],
+                                wind_directions=[10,30,45])
+        windarray.to_file(TMP_DIR)
+        assert windarray.wind_times == [0,100,200,300,400]
+
+class TestWindSensor:
+    def test_validation(self):
+        # make sure float/int inputs are converted to lists
+        sensor = WindSensor(name='sensor1',
+                            time_now=1,
+                            wind_times=0,
+                            wind_speeds=4.5,
+                            wind_directions=270)
+        assert sensor.wind_times==[0]
+        assert sensor.wind_speeds==[4.5]
+        assert sensor.wind_directions==[270]
+        # first element of wind_times is not allowed to be zero
+        with pytest.raises(ValueError):
+            sensor.wind_times = [1,2,3]
+        # wind lists have to be the same length
+        with pytest.raises(ValueError):
+            sensor = WindSensor(name='sensor1',
+                                time_now=1,
+                                wind_times=0,
+                                wind_speeds=[1,2,3],
+                                wind_directions=270)
+        with pytest.raises(ValueError):
+            sensor = WindSensor(name='sensor1',
+                                time_now=1,
+                                wind_times=[0,100,200],
+                                wind_speeds=[1,2,3],
+                                wind_directions=270)
+    
+    def test_get_wind_lines(self):
+        # test scenario where there are 3 global wind times, but wind sensor has only 1 shift
+        global_times = [0,100,200]
+        sensor = WindSensor(name='sensor1',
+                            time_now=1,
+                            wind_times=0,
+                            wind_speeds=4.5,
+                            wind_directions=270)
+        wind_lines = sensor.get_wind_lines(global_times)
+        assert isinstance(wind_lines,str)
+        assert wind_lines == (
+            f"1 !X coordinate (meters)\n"
+            f"1 !Y coordinate (meters)"
+            f"\n1 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270.0"
+            f"\n101 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270.0"
+            f"\n201 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270.0"
+        )
+        # test scenario where there are 3 global wind times, and two wind shifts
+        global_times = [0,100,200]
+        sensor = WindSensor(name='sensor1',
+                            time_now=1,
+                            wind_times=[0,200],
+                            wind_speeds=[4.5,5.5],
+                            wind_directions=[270,330])
+        wind_lines = sensor.get_wind_lines(global_times)
+        assert isinstance(wind_lines,str)
+        assert wind_lines == (
+            f"1 !X coordinate (meters)\n"
+            f"1 !Y coordinate (meters)"
+            f"\n1 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270.0"
+            f"\n101 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270.0"
+            f"\n201 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 5.5 330.0"
+        )
+    
+    def test_to_file(self):
+        global_times = [0,200]
+        sensor = WindSensor(name='sensor1',
+                            time_now=1,
+                            wind_times=[0,200],
+                            wind_speeds=[4.5,5.5],
+                            wind_directions=[270,330])
+        sensor.to_file(global_times, TMP_DIR, "latest")
+        with open(TMP_DIR / "sensor1.inp", "r") as file:
+            lines = file.readlines()
+        assert str(lines[0].strip().split("!")[0].strip()) == sensor.name
+        assert float(lines[11].split(" ")[0]) == sensor.sensor_height
+        assert float(lines[11].split(" ")[1]) == sensor.wind_speeds[0]
+        assert float(lines[11].split(" ")[2]) == sensor.wind_directions[0]
 
 
 class TestSimulationInputs:
@@ -1904,7 +2038,7 @@ class TestSimulationInputs:
         assert isinstance(sim_inputs.qu_movingcoords, QU_movingcoords)
         assert isinstance(sim_inputs.qp_buildout, QP_buildout)
         assert isinstance(sim_inputs.qu_metparams, QU_metparams)
-        assert isinstance(sim_inputs.sensor1, Sensor1)
+        assert isinstance(sim_inputs.windsensors, WindSensorArray)
 
         assert sim_inputs.quic_fire.nz == 1
         assert sim_inputs.quic_fire.sim_time == 65
