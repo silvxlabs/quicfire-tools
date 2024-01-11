@@ -1881,6 +1881,28 @@ class TestWindSensorArray:
                                 wind_directions=[10,30,45])
         windarray.to_file(TMP_DIR)
         assert windarray.wind_times == [0,100,200,300,400]
+    
+    def test_from_file(self):
+        # Test three wind sensors with a single windshift
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5,270)
+        windarray.add_sensor(6,230)
+        windarray.add_sensor(4,10)
+        windarray.to_file(TMP_DIR)
+        new_array = WindSensorArray.from_file(TMP_DIR)
+        assert isinstance(new_array,WindSensorArray)
+        assert len(new_array.sensor_array) == 3
+        assert new_array.sensor1.wind_speeds == [5]
+        assert new_array.sensor2.wind_directions == [230]
+        assert new_array.sensor3.time_now == 1
+        # Add a windshift to one sensor
+        windarray.update_sensor('sensor1', 
+                                wind_times=[0,60],
+                                wind_speeds=[5,6],
+                                wind_directions=[270,270])
+        windarray.to_file(TMP_DIR)
+        new_array = WindSensorArray.from_file(TMP_DIR)
+        assert windarray.wind_times == [0,60]
 
 class TestWindSensor:
     def test_validation(self):
@@ -1988,6 +2010,26 @@ class TestWindSensor:
         assert float(lines[11].split(" ")[0]) == sensor.sensor_height
         assert float(lines[11].split(" ")[1]) == sensor.wind_speeds[0]
         assert float(lines[11].split(" ")[2]) == sensor.wind_directions[0]
+    
+    def test_from_file(self):
+        global_times = [0,200]
+        sensor = WindSensor(name='sensor1',
+                            time_now=1,
+                            wind_times=[0,200],
+                            wind_speeds=[4.5,5.5],
+                            wind_directions=[270,330])
+        sensor.to_file(global_times, TMP_DIR, "latest")
+        sensor1 = WindSensor.from_file(TMP_DIR, "sensor1")
+        assert isinstance(sensor1, WindSensor)
+        assert sensor1.name == sensor.name
+        assert sensor1.time_now == sensor.time_now
+        assert sensor1.wind_times == sensor.wind_times
+        assert sensor1.wind_directions == sensor.wind_directions
+        assert sensor1.wind_speeds == sensor.wind_speeds
+        assert sensor1.sensor_height == sensor.sensor_height
+        assert sensor1.x_location == sensor.x_location
+        assert sensor1.y_location == sensor.y_location
+
 
 
 class TestSimulationInputs:

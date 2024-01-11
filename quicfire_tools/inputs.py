@@ -2460,28 +2460,28 @@ class WindSensor(InputFile):
 
 
     @classmethod
-    def from_file(cls, directory: str | Path, sensor_number: int):
+    def from_file(cls, directory: str | Path, sensor_name: str):
         if isinstance(directory, str):
             directory = Path(directory)
-        sensor_name = "".join("sensor", sensor_number, ".inp")
-        with open(directory / sensor_name, "r") as f:
+        sensor_file = sensor_name + ".inp"
+        with open(directory / sensor_file, "r") as f:
             lines = f.readlines()
         wind_times = [0]
         wind_speeds = []
         wind_directions = []
         x_location = int(lines[4].strip().split("!")[0])
         y_location = int(lines[5].strip().split("!")[0])
-        time_now = int(lines[6].strip().split("!")[0])
+        time_now = float(lines[6].strip().split("!")[0])
         sensor_height = float(lines[11].split(" ")[0])
         wind_speeds.append(float(lines[11].split(" ")[1]))
-        wind_directions.append(int(lines[11].split(" ")[2]))
+        wind_directions.append(float(lines[11].split(" ")[2].strip()))
         next_shift = 12
         while (next_shift + 6) <= len(lines):
             wind_times.append(
-                int(lines[next_shift].strip().split("!")[0] - time_now)
+                float(lines[next_shift].strip().split("!")[0]) - time_now
             )
             wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
-            wind_directions.append(int(lines[next_shift + 5].split(" ")[2]))
+            wind_directions.append(float(lines[next_shift + 5].split(" ")[2].strip()))
             next_shift += 6
         return cls(
             name=sensor_name,
@@ -2521,23 +2521,26 @@ class WindSensorArray(BaseModel, extra = 'allow'):
         self.wind_times = combined_times
 
     # TODO: from_file, dict methods
-    # @classmethod
-    # def from_file(cls, directory: str | Path):
-    #     """
-    #     Wrapper for WindSensor.from_file() classmethod returning dict of available WindSensor objects
-    #     """
-    #     if isinstance(directory, str):
-    #         directory = Path(directory)
-    #     # look for wind sensors
-    #     sensor_list = []
-    #     for file in directory.iterdir():
-    #         if file.is_file():
-    #             if file.stem.startswith("sensor") and file.name.endswith(".inp"):
-    #                 sensor_list.append(file.stem)
-    #     for sensor_number in range(1, len(sensor_list) + 1):
-    #         sensor_name = "".join("sensor", sensor_number)
-    #         sensor = WindSensor.from_file(directory, sensor_number)
-    #         setattr(cls,sensor_name,sensor)
+    @classmethod
+    def from_file(cls, directory: str | Path):
+        if isinstance(directory, str):
+            directory = Path(directory)
+        sensor_array = []
+        # look for wind sensors
+        sensor_list = []
+        for file in directory.iterdir():
+            if file.is_file():
+                if file.stem.startswith("sensor") and file.name.endswith(".inp"):
+                    sensor_list.append(file.stem)
+        for sensor_name in sensor_list:
+            sensor = WindSensor.from_file(directory, sensor_name)
+            sensor_array.append(sensor)
+        time_now = sensor_array[0].time_now
+        windarray = cls(time_now = time_now,
+                        sensor_array = sensor_array)
+        windarray._update_wind_times()
+        return windarray
+        
 
     # @classmethod
     # def from_dict(cls, data: dict):
