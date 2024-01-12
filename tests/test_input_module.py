@@ -1903,6 +1903,26 @@ class TestWindSensorArray:
         windarray.to_file(TMP_DIR)
         new_array = WindSensorArray.from_file(TMP_DIR)
         assert windarray.wind_times == [0,60]
+    
+    def test_to_dict(self):
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5,270)
+        windarray.add_sensor(6,230)
+        windarray.add_sensor(4,10)
+        result_dict = windarray.to_dict()
+        assert result_dict['wind_times'] == windarray.wind_times
+        assert result_dict['sensor_array'][0]['wind_speeds'] == windarray.sensor1.wind_speeds
+        assert result_dict['sensor_array'][1]['wind_directions'] == windarray.sensor2.wind_directions
+        assert result_dict['sensor_array'][2]['wind_times'] == windarray.sensor2.wind_times
+
+    def test_from_dict(self):
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5,270)
+        windarray.add_sensor(6,230)
+        windarray.add_sensor(4,10)
+        result_dict = windarray.to_dict()
+        new_windarray = WindSensorArray.from_dict(result_dict)
+        assert new_windarray == windarray
 
 class TestWindSensor:
     def test_validation(self):
@@ -1915,7 +1935,7 @@ class TestWindSensor:
         assert sensor.wind_times==[0]
         assert sensor.wind_speeds==[4.5]
         assert sensor.wind_directions==[270]
-        # first element of wind_times is not allowed to be zero
+        # first element of wind_times must be zero
         with pytest.raises(ValueError):
             sensor.wind_times = [1,2,3]
         # wind lists have to be the same length
@@ -2030,7 +2050,26 @@ class TestWindSensor:
         assert sensor1.x_location == sensor.x_location
         assert sensor1.y_location == sensor.y_location
 
-
+    def test_to_dict(self):
+        sensor = WindSensor(name='sensor1',
+                            time_now=1,
+                            wind_times=[0,200],
+                            wind_speeds=[4.5,5.5],
+                            wind_directions=[270,330])
+        result_dict = sensor.to_dict()
+        assert result_dict['name'] == 'sensor1'
+        assert result_dict['wind_directions'] == [270,330]
+    
+    def test_from_dict(self):
+        sensor = WindSensor(name='sensor1',
+                            time_now=1,
+                            wind_times=[0,200],
+                            wind_speeds=[4.5,5.5],
+                            wind_directions=[270,330])
+        result_dict = sensor.to_dict()
+        new_sensor = WindSensor.from_dict(result_dict)
+        assert isinstance(new_sensor, WindSensor)
+        assert sensor == new_sensor
 
 class TestSimulationInputs:
     @staticmethod

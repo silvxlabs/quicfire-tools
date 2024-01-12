@@ -2338,7 +2338,7 @@ class QU_metparams(InputFile):
         )
 
 
-class WindSensor(InputFile):
+class WindSensor(BaseModel, validate_assignment=True):
     """
     Class representing a sensor*.inp input file.
     This file contains information on winds, and serves as the
@@ -2377,8 +2377,6 @@ class WindSensor(InputFile):
     sensor_height: PositiveFloat = 6.1
     x_location: PositiveInt = 1
     y_location: PositiveInt = 1
-    #TODO: figure out why it can't be _wind_lines
-    wind_lines: str = None
 
     @field_validator("wind_times", mode='before')
     @classmethod
@@ -2399,16 +2397,16 @@ class WindSensor(InputFile):
                 f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
             )
         return v
-
-    @computed_field
-    @property
-    def _filename(self) -> str:
-        return self.name + self._extension
     
-    @computed_field
     @property
-    def sensor_name(self) -> str:
-        return self.name
+    def _filename(self):
+        return f"{self.name}{self._extension}"
+
+    @property
+    def documentation_dict(self) -> dict:
+        # Return the documentation dictionary
+        with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
+            return json.load(f)
 
     def _find_last_wind_time(self,target_value):
         index = bisect.bisect_left(self.wind_times, target_value)
@@ -2443,7 +2441,6 @@ class WindSensor(InputFile):
                 global_times: list,
                 directory: Path | str,
                 version: str):
-        self.wind_lines = self.get_wind_lines(global_times)
         
         if isinstance(directory, str):
             directory = Path(directory)
@@ -2452,12 +2449,13 @@ class WindSensor(InputFile):
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
 
-        result = src.substitute(self.to_dict(include_private=True))
+        dict_representation = self.to_dict(include_private=True)
+        dict_representation['_wind_lines'] = self.get_wind_lines(global_times)
+        result = src.substitute(dict_representation)
 
         output_file_path = directory / self._filename
         with open(output_file_path, "w") as fout:
             fout.write(result)
-
 
     @classmethod
     def from_file(cls, directory: str | Path, sensor_name: str):
@@ -2493,6 +2491,59 @@ class WindSensor(InputFile):
             x_location=x_location,
             y_location=y_location,
         )
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(**data)
+
+    def list_parameters(self) -> list[str]:
+        """
+        Get a list of the names of all parameters in the input file.
+        """
+        return list(self.documentation_dict.keys())
+
+    def get_documentation(self, parameter: str = None) -> dict:
+        """
+        Retrieve documentation for a parameter. If no parameter is specified,
+        return documentation for all parameters.
+        """
+        if parameter:
+            return self.documentation_dict.get(parameter, {})
+        else:
+            return self.documentation_dict
+
+    def print_documentation_table(self, parameter: str = None) -> None:
+        """
+        Print documentation for a parameter. If no parameter is specified,
+        print documentation for all parameters.
+        """
+        if parameter:
+            info = self.get_documentation(parameter)
+        else:
+            info = self.get_documentation()
+        for key, value in info.items():
+            key = key.replace("_", " ").capitalize()
+            print(f"- {key}: {value}")
+
+    def to_dict(self, include_private: bool = False) -> dict:
+        """
+        Convert the object to a dictionary, excluding attributes that start
+        with an underscore.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the object.
+        """
+        all_fields = self.model_dump(
+            exclude={"_extension", "_filename", "documentation_dict"}
+        )
+        if include_private:
+            return all_fields
+        return {
+            key: value for key, value in all_fields.items() if not key.startswith("_")
+        }
+
 
 class WindSensorArray(BaseModel, extra = 'allow'):
     """
@@ -2520,7 +2571,6 @@ class WindSensorArray(BaseModel, extra = 'allow'):
         combined_times = sorted(set(value for sublist in times_lists for value in sublist))
         self.wind_times = combined_times
 
-    # TODO: from_file, dict methods
     @classmethod
     def from_file(cls, directory: str | Path):
         if isinstance(directory, str):
@@ -2541,41 +2591,32 @@ class WindSensorArray(BaseModel, extra = 'allow'):
         windarray._update_wind_times()
         return windarray
         
-
-    # @classmethod
-    # def from_dict(cls, data: dict):
-    #     windarray = cls(**data)
-    #     print(windarray)
-    #     print(dir(windarray))
-    #     #dictionary they don't get added as attributes because they are not defined in the class
-    #     #Weirdly, if you print windarray, you see the sensor* class(es), but they are not accessed
-    #     #by dir() or vars() or .__dict__
-    #     for k,v in data.items():
-    #         if k.startswith("sensor"):
-    #             sensor = WindSensor.from_dict(v)
-    #             setattr(windarray,k,sensor)
-    #     print(windarray.__dict__[k])
-    #     return windarray
+    @classmethod
+    def from_dict(cls, data: dict):
+        windarray = cls(**data)
+        windarray._update_wind_times()
+        return windarray
     
-    # def to_dict(self, include_private: bool = False):
-    #     """
-    #     Convert the object to a dictionary, excluding attributes that start
-    #     with an underscore.
+    def to_dict(self, include_private: bool = False):
+        """
+        Convert the object to a dictionary, excluding attributes that start
+        with an underscore.
 
-    #     Returns
-    #     -------
-    #     dict
-    #         Dictionary representation of the object.
-    #     """
-    #     all_fields = self.model_dump(
-    #         exclude={"name", "_extension", "_filename", "param_info"}
-    #     )
+        Returns
+        -------
+        dict
+            Dictionary representation of the object.
+        """
+        all_fields = self.model_dump(
+            exclude={"name", "_extension", "_filename", "param_info"}
+        )
          
-    #     if include_private:
-    #         return all_fields
-    #     return {
-    #         key: value for key, value in all_fields.items() if not key.startswith("_")
-    #     }
+        if include_private:
+            return all_fields
+        return {
+            key: value for key, value in all_fields.items() if not key.startswith("_")
+        }
+
     def to_file(self, 
                 directory: Path | str, 
                 version: str = 'latest'):
