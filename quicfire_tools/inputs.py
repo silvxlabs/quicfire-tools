@@ -227,11 +227,11 @@ class SimulationInputs:
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
         windsensors = WindSensorArray(
             time_now=start_time,
-            )
+        )
         windsensors.add_sensor(
             wind_speeds=[wind_speed],
             wind_directions=[wind_direction],
-            )
+        )
         qu_topoinputs = QU_TopoInputs()
         qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
 
@@ -632,10 +632,8 @@ class SimulationInputs:
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
-    #TODO: windshifts from csv
-    def add_wind_sensor_from_csv(
-        self, directory: str | Path, filename: str
-    ):
+    # TODO: windshifts from csv
+    def add_wind_sensor_from_csv(self, directory: str | Path, filename: str):
         """
         Add a wind sensor from a csv file.
 
@@ -673,21 +671,28 @@ class SimulationInputs:
                 "wind_times": Column(int, checks=Check.ge(0)),
                 "wind_speeds": Column(float, checks=Check.gt(0)),  # can windspeed be 0?
                 "wind_directions": Column(int, checks=Check.lt(360)),
-                "sensor_height": Column(float, checks=Check(lambda s: len(s.unique()) == 1, element_wise=False)),
-                "x_location": Column(int, checks=Check(lambda s: len(s.unique()) == 1, element_wise=False)),
-                "y_location": Column(int, checks=Check(lambda s: len(s.unique()) == 1, element_wise=False)),
+                "sensor_height": Column(
+                    float,
+                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
+                ),
+                "x_location": Column(
+                    int,
+                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
+                ),
+                "y_location": Column(
+                    int,
+                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
+                ),
             }
         )
         validated_df = validate(df)
         self.add_wind_sensor(
-            wind_times = list(validated_df["wind_times"]),
-            wind_speeds = list(validated_df["wind_speeds"]),
-            wind_directions = list(
-                validated_df["wind_directions"]
-            ),
-            sensor_height = list(validated_df["sensor_height"])[0],
-            x_location = list(validated_df["x_location"])[0],
-            y_location = list(validated_df["y_location"])[0],
+            wind_times=list(validated_df["wind_times"]),
+            wind_speeds=list(validated_df["wind_speeds"]),
+            wind_directions=list(validated_df["wind_directions"]),
+            sensor_height=list(validated_df["sensor_height"])[0],
+            x_location=list(validated_df["x_location"])[0],
+            y_location=list(validated_df["y_location"])[0],
         )
 
     def update_wind_sensor_from_csv(
@@ -730,24 +735,30 @@ class SimulationInputs:
                 "wind_times": Column(int, checks=Check.ge(0)),
                 "wind_speeds": Column(float, checks=Check.gt(0)),  # can windspeed be 0?
                 "wind_directions": Column(int, checks=Check.lt(360)),
-                "sensor_height": Column(float, checks=Check(lambda s: len(s.unique()) == 1, element_wise=False)),
-                "x_location": Column(int, checks=Check(lambda s: len(s.unique()) == 1, element_wise=False)),
-                "y_location": Column(int, checks=Check(lambda s: len(s.unique()) == 1, element_wise=False)),
+                "sensor_height": Column(
+                    float,
+                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
+                ),
+                "x_location": Column(
+                    int,
+                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
+                ),
+                "y_location": Column(
+                    int,
+                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
+                ),
             }
         )
         validated_df = validate(df)
         self.update_wind_sensor(
-            sensor_name = sensor_name,
-            wind_times = list(validated_df["wind_times"]),
-            wind_speeds = list(validated_df["wind_speeds"]),
-            wind_directions = list(
-                validated_df["wind_directions"]
-            ),
-            sensor_height = list(validated_df["sensor_height"])[0],
-            x_location = list(validated_df["x_location"])[0],
-            y_location = list(validated_df["y_location"])[0],
+            sensor_name=sensor_name,
+            wind_times=list(validated_df["wind_times"]),
+            wind_speeds=list(validated_df["wind_speeds"]),
+            wind_directions=list(validated_df["wind_directions"]),
+            sensor_height=list(validated_df["sensor_height"])[0],
+            x_location=list(validated_df["x_location"])[0],
+            y_location=list(validated_df["y_location"])[0],
         )
-    
 
     def add_wind_sensor(
         self,
@@ -784,16 +795,17 @@ class SimulationInputs:
             x_location=x_location,
             y_location=y_location,
         )
-    
-    def update_wind_sensor(self,
-                           sensor_name: str,
-                           x_location: Optional[PositiveInt] = None,
-                           y_location: Optional[PositiveInt] = None,
-                           wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
-                           wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-                           wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-                           sensor_height: Optional[PositiveFloat] = None,
-                           ):
+
+    def update_wind_sensor(
+        self,
+        sensor_name: str,
+        x_location: Optional[PositiveInt] = None,
+        y_location: Optional[PositiveInt] = None,
+        wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
+        wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
+        wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
+        sensor_height: Optional[PositiveFloat] = None,
+    ):
         """
         Update an existing wind sensor.
 
@@ -830,10 +842,7 @@ class SimulationInputs:
         self.gridlist.l = self.quic_fire.nz
         self.gridlist.dx = self.qu_simparams.dx
         self.gridlist.dy = self.qu_simparams.dy
-        if (
-            not self.windsensors.time_now
-            == self.quic_fire.time_now
-        ):
+        if not self.windsensors.time_now == self.quic_fire.time_now:
             print(
                 f"WARNING: fire start time must be the same for all input files.\n"
                 f"Times: \n"
@@ -843,7 +852,9 @@ class SimulationInputs:
                 f"Setting all values to {self.quic_fire.time_now}"
             )
             self.windsensors.time_now = self.quic_fire.time_now
-        self.qu_simparams.wind_times = [s + self.windsensors.time_now for s in self.windsensors.wind_times]
+        self.qu_simparams.wind_times = [
+            s + self.windsensors.time_now for s in self.windsensors.wind_times
+        ]
         self.qu_metparams.num_sensors = len(self.windsensors.sensor_array)
 
 
@@ -2468,33 +2479,33 @@ class WindSensor(BaseModel, validate_assignment=True):
     name: str
     _extension: str = ".inp"
     time_now: PositiveInt
-    wind_times: Union[NonNegativeFloat,List[NonNegativeFloat]] = 0
-    wind_speeds: Union[PositiveFloat,List[PositiveFloat]]
-    wind_directions: Union[NonNegativeInt,List[NonNegativeInt]]
+    wind_times: Union[NonNegativeFloat, List[NonNegativeFloat]] = 0
+    wind_speeds: Union[PositiveFloat, List[PositiveFloat]]
+    wind_directions: Union[NonNegativeInt, List[NonNegativeInt]]
     sensor_height: PositiveFloat = 6.1
     x_location: PositiveInt = 1
     y_location: PositiveInt = 1
 
-    @field_validator("wind_times", mode='before')
+    @field_validator("wind_times", mode="before")
     @classmethod
     def validate_wind_times(cls, v: list, values) -> list:
-        if isinstance(v, (float,int)):
+        if isinstance(v, (float, int)):
             v = [v]
         if v[0] != 0:
             raise ValueError("wind_times: first element of sensor.wind_times must be 0")
         return v
 
-    @field_validator("wind_speeds","wind_directions")
+    @field_validator("wind_speeds", "wind_directions")
     @classmethod
     def validate_wind_lists(cls, v, values) -> list:
-        if isinstance(v, (float,int)):
+        if isinstance(v, (float, int)):
             v = [v]
         if v and len(values.data["wind_times"]) != len(v):
             raise ValueError(
                 f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
             )
         return v
-    
+
     @property
     def _filename(self):
         return f"{self.name}{self._extension}"
@@ -2505,13 +2516,13 @@ class WindSensor(BaseModel, validate_assignment=True):
         with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
             return json.load(f)
 
-    def _find_last_wind_time(self,target_value):
+    def _find_last_wind_time(self, target_value):
         index = bisect.bisect_left(self.wind_times, target_value)
         if target_value not in self.wind_times:
             index = index - 1
-        return(index)
-    
-    def get_wind_lines(self,global_times) -> str:
+        return index
+
+    def get_wind_lines(self, global_times) -> str:
         location_lines = (
             f"{self.x_location} !X coordinate (meters)\n"
             f"{self.y_location} !Y coordinate (meters)"
@@ -2534,11 +2545,7 @@ class WindSensor(BaseModel, validate_assignment=True):
 
         return location_lines + wind_lines
 
-    def to_file(self, 
-                global_times: list,
-                directory: Path | str,
-                version: str):
-        
+    def to_file(self, global_times: list, directory: Path | str, version: str):
         if isinstance(directory, str):
             directory = Path(directory)
 
@@ -2547,7 +2554,7 @@ class WindSensor(BaseModel, validate_assignment=True):
             src = Template(ftemp.read())
 
         dict_representation = self.to_dict(include_private=True)
-        dict_representation['_wind_lines'] = self.get_wind_lines(global_times)
+        dict_representation["_wind_lines"] = self.get_wind_lines(global_times)
         result = src.substitute(dict_representation)
 
         output_file_path = directory / self._filename
@@ -2572,11 +2579,11 @@ class WindSensor(BaseModel, validate_assignment=True):
         wind_directions.append(int(float(lines[11].split(" ")[2].strip())))
         next_shift = 12
         while (next_shift + 6) <= len(lines):
-            wind_times.append(
-                float(lines[next_shift].strip().split("!")[0]) - time_now
-            )
+            wind_times.append(float(lines[next_shift].strip().split("!")[0]) - time_now)
             wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
-            wind_directions.append(int(float(lines[next_shift + 5].split(" ")[2].strip())))
+            wind_directions.append(
+                int(float(lines[next_shift + 5].split(" ")[2].strip()))
+            )
             next_shift += 6
         return cls(
             name=sensor_name,
@@ -2588,7 +2595,7 @@ class WindSensor(BaseModel, validate_assignment=True):
             x_location=x_location,
             y_location=y_location,
         )
-    
+
     @classmethod
     def from_dict(cls, data: dict):
         return cls(**data)
@@ -2648,28 +2655,31 @@ class WindSensorArray(BaseModel):
 
     Is wind_times even necessary with the way _update_wind_times is currently written?
     """
+
     time_now: PositiveInt
-    wind_times: List[NonNegativeInt]  = [0]
+    wind_times: List[NonNegativeInt] = [0]
     sensor_array: List[WindSensor] = []
 
-    def __getattr__(self,name):
+    def __getattr__(self, name):
         for sensor in self.sensor_array:
-            if name==sensor.name:
+            if name == sensor.name:
                 return sensor
         raise AttributeError(f"Attribute {name} not found")
-    
+
     def _update_time_now(self):
         for sensor in self.sensor_array:
             sensor.time_now = self.time_now
-    
+
     def _update_wind_times(self):
         """
         Creates a global wind times list by combining the wind times lists of each sensor.
         """
         times_lists = []
         for sensor in self.sensor_array:
-                times_lists.append(sensor.wind_times)
-        combined_times = sorted(set(value for sublist in times_lists for value in sublist))
+            times_lists.append(sensor.wind_times)
+        combined_times = sorted(
+            set(value for sublist in times_lists for value in sublist)
+        )
         self.wind_times = combined_times
 
     @classmethod
@@ -2687,17 +2697,16 @@ class WindSensorArray(BaseModel):
             sensor = WindSensor.from_file(directory, sensor_name)
             sensor_array.append(sensor)
         time_now = sensor_array[0].time_now
-        windarray = cls(time_now = time_now,
-                        sensor_array = sensor_array)
+        windarray = cls(time_now=time_now, sensor_array=sensor_array)
         windarray._update_wind_times()
         return windarray
-        
+
     @classmethod
     def from_dict(cls, data: dict):
         windarray = cls(**data)
         windarray._update_wind_times()
         return windarray
-    
+
     def to_dict(self, include_private: bool = False):
         """
         Convert the object to a dictionary, excluding attributes that start
@@ -2711,17 +2720,14 @@ class WindSensorArray(BaseModel):
         all_fields = self.model_dump(
             exclude={"name", "_extension", "_filename", "param_info"}
         )
-         
+
         if include_private:
             return all_fields
         return {
             key: value for key, value in all_fields.items() if not key.startswith("_")
         }
 
-    def to_file(self, 
-                directory: Path | str, 
-                version: str = 'latest'):
-        
+    def to_file(self, directory: Path | str, version: str = "latest"):
         self._update_time_now()
 
         if isinstance(directory, str):
@@ -2730,64 +2736,75 @@ class WindSensorArray(BaseModel):
         for sensor in self.sensor_array:
             sensor.to_file(self.wind_times, directory, version)
 
-    def add_sensor(self,
-                    wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
-                    wind_directions: Union[NonNegativeInt, list(NonNegativeInt)],
-                    wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0,
-                    sensor_height: PositiveFloat = 6.1,
-                    x_location: PositiveInt = 1,
-                    y_location: PositiveInt = 1,
-                    ):
+    def add_sensor(
+        self,
+        wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
+        wind_directions: Union[NonNegativeInt, list(NonNegativeInt)],
+        wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0,
+        sensor_height: PositiveFloat = 6.1,
+        x_location: PositiveInt = 1,
+        y_location: PositiveInt = 1,
+    ):
         sensor_number = len(self.sensor_array) + 1
-        sensor_name = "".join(["sensor",str(sensor_number)])
+        sensor_name = "".join(["sensor", str(sensor_number)])
         sensor = WindSensor(
-            name = sensor_name,
-            time_now = self.time_now,
+            name=sensor_name,
+            time_now=self.time_now,
             x_location=x_location,
             y_location=y_location,
             wind_times=wind_times,
             sensor_height=sensor_height,
             wind_speeds=wind_speeds,
             wind_directions=wind_directions,
-            )
+        )
         self.sensor_array.append(sensor)
         self._update_wind_times()
-        
+
         return sensor
-    
-    def update_sensor(self,
-                      sensor_name: str,
-                        x_location: Optional[PositiveInt] = None,
-                        y_location: Optional[PositiveInt] = None,
-                        wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
-                        wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-                        wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-                        sensor_height: Optional[PositiveFloat] = None,
-                        ):
+
+    def update_sensor(
+        self,
+        sensor_name: str,
+        x_location: Optional[PositiveInt] = None,
+        y_location: Optional[PositiveInt] = None,
+        wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
+        wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
+        wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
+        sensor_height: Optional[PositiveFloat] = None,
+    ):
         """
         Update parameters for a single wind sensor. Any parameters not provided will
         remain unchanged.
         """
-        for arg in [wind_times,wind_speeds,wind_directions]:
-            if isinstance(arg, (float,int)):
+        for arg in [wind_times, wind_speeds, wind_directions]:
+            if isinstance(arg, (float, int)):
                 arg = [arg]
         sensor_found = False
         for sensor in self.sensor_array:
-            if sensor_name==sensor.name:
+            if sensor_name == sensor.name:
                 updater = sensor
                 sensor_found = True
-        if sensor_found==False:
+        if sensor_found == False:
             raise AttributeError(f"{sensor_name} not found")
-            
-        updater.wind_times = wind_times if wind_times is not None else updater.wind_times
-        updater.wind_speeds = wind_speeds if wind_speeds is not None else updater.wind_speeds
-        updater.wind_directions = wind_directions if wind_directions is not None else updater.wind_directions
-        updater.sensor_height = sensor_height if sensor_height is not None else updater.sensor_height
-        updater.x_location = x_location if x_location is not None else updater.x_location
-        updater.y_location = y_location if y_location is not None else updater.y_location
+
+        updater.wind_times = (
+            wind_times if wind_times is not None else updater.wind_times
+        )
+        updater.wind_speeds = (
+            wind_speeds if wind_speeds is not None else updater.wind_speeds
+        )
+        updater.wind_directions = (
+            wind_directions if wind_directions is not None else updater.wind_directions
+        )
+        updater.sensor_height = (
+            sensor_height if sensor_height is not None else updater.sensor_height
+        )
+        updater.x_location = (
+            x_location if x_location is not None else updater.x_location
+        )
+        updater.y_location = (
+            y_location if y_location is not None else updater.y_location
+        )
 
         self._update_wind_times()
         self._update_time_now()
-
-
-
