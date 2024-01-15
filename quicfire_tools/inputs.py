@@ -632,7 +632,6 @@ class SimulationInputs:
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
-    # TODO: windshifts from csv
     def add_wind_sensor_from_csv(self, directory: str | Path, filename: str):
         """
         Add a wind sensor from a csv file.
