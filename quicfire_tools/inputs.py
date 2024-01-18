@@ -647,16 +647,13 @@ class SimulationInputs:
         y_location: Optional[PositiveInt] = None,
     ):
         """
-        Add a wind sensor or update an existing one.
+        Adds a wind sensor or updates an existing one.
 
         Parameters
         ----------
         update: str
             Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
-        x_location : PositiveInt
-            Optional. Updated location of the wind sensor in the x-direction (m)
-        y_location : PositiveInt
-            Optional. Updated location of the wind sensor in the y-direction (m)
+            Omit or use update = None to add a new sensor.
         wind_speeds : PositiveFloat | list(PositiveFloat)
             Optional. Updated wind speed or list of wind speeds in m/s
         wind_directions: PositiveInt | list(PositiveInt)
@@ -664,7 +661,20 @@ class SimulationInputs:
         wind_times : NonNegativeInt | list(NonNegativeInt)
             Optional. Updated list of times for each windshift. Use 0 for single windshift. First value must be 0.
         sensor_height : PositiveFloat
-            Optional. Updated height of the wind sensor in meters
+            Optional. Updated height of the wind sensor in meters.
+        x_location : PositiveInt
+            Optional. Updated location of the wind sensor in the x-direction (m).
+        y_location : PositiveInt
+            Optional. Updated location of the wind sensor in the y-direction (m).
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> # Add a new sensor
+        >>> sim_inputs.new_wind_sensor(wind_speeds = 4.47, wind_directions = 270, wind_times = 0, sensor_height = 6.1, x_location = 50, y_location = 50)
+        >>> # Update an existing wind sensor
+        >>> sim_inputs.new_wind_sensor(update = 'sensor2', wind_speeds = [4.47, 6.7], wind_directions = [270, 270], wind_times = [0,300])
         """
         if update is None:
             arg_dict = {
@@ -706,16 +716,17 @@ class SimulationInputs:
         self, directory: str | Path, filename: str, update: str = None
     ):
         """
-        Update an existing wind sensor from a csv file.
+        Adds a wind sensor or updates an existing one from a csv file.
 
         Parameters
         ----------
-        sensor_number : int
-            Number representing which sensor to modify
         directory : str | Path
             Directory containing the csv to read
         filename : str
             Name of the csv file
+        update: str
+            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
+            Omit or use update = None to add a new sensor.
 
         Columns
         -------
@@ -732,6 +743,12 @@ class SimulationInputs:
             Location of the wind sensor in the x-direction. All values in column must be the same
         y_location : int >= 0
             Location of the wind sensor in the y-direction. All values in column must be the same
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.new_wind_sensor_from_csv("path/to/directory","filename",update='sensor1')
         """
         if isinstance(directory, str):
             directory = Path(directory)
@@ -2707,6 +2724,24 @@ class WindSensorArray(BaseModel):
         x_location: PositiveInt,
         y_location: PositiveInt,
     ):
+        """
+        Add a wind sensor to the wind sensor array. Existing sensors will be unchanged.
+
+        Parameters
+        ----------
+        wind_speeds : PositiveFloat | list(PositiveFloat)
+            Optional. Updated wind speed or list of wind speeds in m/s
+        wind_directions: PositiveInt | list(PositiveInt)
+            Optional. Updated wind direction or list of wind directions in degrees. Use 0 for north.
+        wind_times : NonNegativeInt | list(NonNegativeInt)
+            Optional. Updated list of times for each windshift. Use 0 for single windshift. First value must be 0.
+        sensor_height : PositiveFloat
+            Optional. Updated height of the wind sensor in meters
+        x_location : PositiveInt
+            Optional. Updated location of the wind sensor in the x-direction (m)
+        y_location : PositiveInt
+            Optional. Updated location of the wind sensor in the y-direction (m)
+        """
         sensor_number = len(self.sensor_array) + 1
         sensor_name = "".join(["sensor", str(sensor_number)])
         sensor = WindSensor(
@@ -2737,6 +2772,23 @@ class WindSensorArray(BaseModel):
         """
         Update parameters for a single wind sensor. Any parameters not provided will
         remain unchanged.
+
+        Parameters
+        ----------
+        update: str
+            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
+        x_location : PositiveInt
+            Optional. Updated location of the wind sensor in the x-direction (m)
+        y_location : PositiveInt
+            Optional. Updated location of the wind sensor in the y-direction (m)
+        wind_speeds : PositiveFloat | list(PositiveFloat)
+            Optional. Updated wind speed or list of wind speeds in m/s
+        wind_directions: PositiveInt | list(PositiveInt)
+            Optional. Updated wind direction or list of wind directions in degrees. Use 0 for north.
+        wind_times : NonNegativeInt | list(NonNegativeInt)
+            Optional. Updated list of times for each windshift. Use 0 for single windshift. First value must be 0.
+        sensor_height : PositiveFloat
+            Optional. Updated height of the wind sensor in meters
         """
         for arg in [wind_times, wind_speeds, wind_directions]:
             if isinstance(arg, (float, int)):
