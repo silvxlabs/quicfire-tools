@@ -632,70 +632,8 @@ class SimulationInputs:
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
-    def add_wind_sensor_from_csv(self, directory: str | Path, filename: str):
-        """
-        Add a wind sensor from a csv file.
-
-        Parameters
-        ----------
-        sensor_number : int
-            Number representing which sensor to modify
-        directory : str | Path
-            Directory containing the csv to read
-        filename : str
-            Name of the csv file
-
-        Columns
-        -------
-        wind_times : int >= 0
-            Time in seconds that each windshift occurs from the start of the simulation.
-            First entry must be 0.
-        wind_speeds : float > 0
-            Wind speed of each windshift in m/s.
-        wind_directions : 0 <= int < 360
-            Wind direction of each windshift in degrees.
-        sensor_height : float > 0
-            Height of wind sensor. All values in column must be the same
-        x_location : int >= 0
-            Location of the wind sensor in the x-direction. All values in column must be the same
-        y_location : int >= 0
-            Location of the wind sensor in the y-direction. All values in column must be the same
-        """
-        if isinstance(directory, str):
-            directory = Path(directory)
-        filepath = directory / filename
-        df = pd.read_csv(filepath)
-        validate = DataFrameSchema(
-            {
-                "wind_times": Column(int, checks=Check.ge(0)),
-                "wind_speeds": Column(float, checks=Check.gt(0)),  # can windspeed be 0?
-                "wind_directions": Column(int, checks=Check.lt(360)),
-                "sensor_height": Column(
-                    float,
-                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
-                ),
-                "x_location": Column(
-                    int,
-                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
-                ),
-                "y_location": Column(
-                    int,
-                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
-                ),
-            }
-        )
-        validated_df = validate(df)
-        self.add_wind_sensor(
-            wind_times=list(validated_df["wind_times"]),
-            wind_speeds=list(validated_df["wind_speeds"]),
-            wind_directions=list(validated_df["wind_directions"]),
-            sensor_height=list(validated_df["sensor_height"])[0],
-            x_location=list(validated_df["x_location"])[0],
-            y_location=list(validated_df["y_location"])[0],
-        )
-
-    def update_wind_sensor_from_csv(
-        self, sensor_name: str, directory: str | Path, filename: str
+    def new_wind_sensor_from_csv(
+        self, directory: str | Path, filename: str, update: str = None
     ):
         """
         Update an existing wind sensor from a csv file.
@@ -749,55 +687,29 @@ class SimulationInputs:
             }
         )
         validated_df = validate(df)
-        self.update_wind_sensor(
-            sensor_name=sensor_name,
-            wind_times=list(validated_df["wind_times"]),
-            wind_speeds=list(validated_df["wind_speeds"]),
-            wind_directions=list(validated_df["wind_directions"]),
-            sensor_height=list(validated_df["sensor_height"])[0],
-            x_location=list(validated_df["x_location"])[0],
-            y_location=list(validated_df["y_location"])[0],
-        )
+        if update is None:
+            self.windsensors.add_sensor(
+                wind_times=list(validated_df["wind_times"]),
+                wind_speeds=list(validated_df["wind_speeds"]),
+                wind_directions=list(validated_df["wind_directions"]),
+                sensor_height=list(validated_df["sensor_height"])[0],
+                x_location=list(validated_df["x_location"])[0],
+                y_location=list(validated_df["y_location"])[0],
+            )
+        else:
+            self.windsensors.update_sensor(
+                sensor_name=update,
+                wind_times=list(validated_df["wind_times"]),
+                wind_speeds=list(validated_df["wind_speeds"]),
+                wind_directions=list(validated_df["wind_directions"]),
+                sensor_height=list(validated_df["sensor_height"])[0],
+                x_location=list(validated_df["x_location"])[0],
+                y_location=list(validated_df["y_location"])[0],
+            )
 
-    def add_wind_sensor(
+    def new_wind_sensor(
         self,
-        x_location: PositiveInt,
-        y_location: PositiveInt,
-        wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
-        wind_directions: Union[NonNegativeInt, list(NonNegativeInt)],
-        wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0,
-        sensor_height: PositiveFloat = 6.1,
-    ):
-        """
-        Add an additional wind sensor.
-
-        Parameters
-        ----------
-        x_location : PositiveInt
-            Location of the wind sensor in the x-direction (m)
-        y_location : PositiveInt
-            Location of the wind sensor in the y-direction (m)
-        wind_speeds : PositiveFloat | list(PositiveFloat)
-            Wind speed or list of wind speeds in m/s
-        wind_directions: PositiveInt | list(PositiveInt)
-            Wind direction or list of wind directions in degrees. Use 0 for north.
-        wind_times : NonNegativeInt | list(NonNegativeInt)
-            List of times for each windshift. Use 0 for single windshift. First value must be 0.
-        sensor_height : PositiveFloat
-            Height of the wind sensor in meters
-        """
-        self.windsensors.add_sensor(
-            wind_times=wind_times,
-            wind_speeds=wind_speeds,
-            wind_directions=wind_directions,
-            sensor_height=sensor_height,
-            x_location=x_location,
-            y_location=y_location,
-        )
-
-    def update_wind_sensor(
-        self,
-        sensor_name: str,
+        update: str = None,
         x_location: Optional[PositiveInt] = None,
         y_location: Optional[PositiveInt] = None,
         wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
@@ -806,7 +718,7 @@ class SimulationInputs:
         sensor_height: Optional[PositiveFloat] = None,
     ):
         """
-        Update an existing wind sensor.
+        Add a wind sensor or update an existing one.
 
         Parameters
         ----------
@@ -825,15 +737,25 @@ class SimulationInputs:
         sensor_height : PositiveFloat
             Optional. Updated height of the wind sensor in meters
         """
-        self.windsensors.update_sensor(
-            sensor_name=sensor_name,
-            wind_times=wind_times,
-            wind_speeds=wind_speeds,
-            wind_directions=wind_directions,
-            sensor_height=sensor_height,
-            x_location=x_location,
-            y_location=y_location,
-        )
+        if update is None:
+            self.windsensors.add_sensor(
+                wind_times=wind_times,
+                wind_speeds=wind_speeds,
+                wind_directions=wind_directions,
+                sensor_height=sensor_height,
+                x_location=x_location,
+                y_location=y_location,
+            )
+        else:
+            self.windsensors.update_sensor(
+                sensor_name=update,
+                wind_times=wind_times,
+                wind_speeds=wind_speeds,
+                wind_directions=wind_directions,
+                sensor_height=sensor_height,
+                x_location=x_location,
+                y_location=y_location,
+            )
 
     def _update_shared_attributes(self):
         self.gridlist.n = self.qu_simparams.nx

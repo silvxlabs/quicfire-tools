@@ -2249,9 +2249,10 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.fuel_moisture == 0.1
         assert sim_inputs.quic_fire.fuel_height == 1.0
 
-    def test_add_wind_sensor(self):
+    def test_new_wind_sensor(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.add_wind_sensor(
+        # Add a new wind sensor
+        sim_inputs.new_wind_sensor(
             x_location=1,
             y_location=1,
             wind_speeds=[6, 6],
@@ -2270,40 +2271,38 @@ class TestSimulationInputs:
         assert sim_inputs.qu_simparams.wind_times == [
             s + sim_inputs.quic_fire.time_now for s in sim_inputs.windsensors.wind_times
         ]
-
-    def test_update_wind_sensor(self):
-        sim_inputs = self.get_test_object()
-        sim_inputs.update_wind_sensor(
-            sensor_name="sensor1",
-            wind_speeds=[6, 6],
-            wind_directions=[270, 350],
-            wind_times=[0, 100],
+        # Try replacing sensor1
+        sim_inputs.new_wind_sensor(
+            update="sensor1",
+            wind_speeds=[6, 6, 6],
+            wind_directions=[270, 350, 270],
+            wind_times=[0, 100, 200],
         )
         # test that a windsensor was not added to the sensor array
-        assert len(sim_inputs.windsensors.sensor_array) == 1
+        assert len(sim_inputs.windsensors.sensor_array) == 2
         # and that windarray wind times were updated
-        assert sim_inputs.windsensors.wind_times == [0, 100]
+        assert sim_inputs.windsensors.wind_times == [0, 100, 200]
         # but the wind times in qu_simparams should not be reflected until the write stage
-        assert len(sim_inputs.qu_simparams.wind_times) == 1
+        assert len(sim_inputs.qu_simparams.wind_times) == 2
         sim_inputs.write_inputs(TMP_DIR)
-        assert sim_inputs.windsensors.wind_times == [0, 100]
+        assert sim_inputs.windsensors.wind_times == [0, 100, 200]
         assert sim_inputs.qu_simparams.wind_times == [
             s + sim_inputs.quic_fire.time_now for s in sim_inputs.windsensors.wind_times
         ]
-        # Test nonexistent sensors
+        # Test updating nonexistent sensors
         with pytest.raises(AttributeError):
-            sim_inputs.update_wind_sensor(sensor_name="sensor2", wind_speeds=6)
+            sim_inputs.new_wind_sensor(update="sensor3", wind_speeds=6)
         with pytest.raises(AttributeError):
-            sim_inputs.update_wind_sensor(sensor_name="sensor 1", wind_speeds=6)
+            sim_inputs.new_wind_sensor(update="sensor 1", wind_speeds=6)
 
-    def test_wind_sensor_from_csv(self):
+    def test_new_wind_sensor_from_csv(self):
         sim_inputs = self.get_test_object()
         # first test updating sensor1
-        sim_inputs.update_wind_sensor_from_csv(
-            sensor_name="sensor1", directory=DAT_DIR, filename="sample_raws_data.csv"
+        sim_inputs.new_wind_sensor_from_csv(
+            update="sensor1", directory=DAT_DIR, filename="sample_raws_data.csv"
         )
         # now add a wind sensor with the same data
-        sim_inputs.add_wind_sensor_from_csv(DAT_DIR, "sample_raws_data.csv")
+        sim_inputs.new_wind_sensor_from_csv(DAT_DIR, "sample_raws_data.csv")
         assert (
             sim_inputs.windsensors.sensor1.wind_times
             == sim_inputs.windsensors.sensor2.wind_times
@@ -2336,13 +2335,13 @@ class TestSimulationInputs:
             north_is_360__path
         )
         with pytest.raises(SchemaError):
-            sim_inputs.add_wind_sensor_from_csv(TMP_DIR, "raws_missing_column.csv")
+            sim_inputs.new_wind_sensor_from_csv(TMP_DIR, "raws_missing_column.csv")
         with pytest.raises(SchemaError):
-            sim_inputs.add_wind_sensor_from_csv(TMP_DIR, "raws_wrong_datatype.csv")
+            sim_inputs.new_wind_sensor_from_csv(TMP_DIR, "raws_wrong_datatype.csv")
         with pytest.raises(SchemaError):
-            sim_inputs.add_wind_sensor_from_csv(TMP_DIR, "raws_vary_constants.csv")
+            sim_inputs.new_wind_sensor_from_csv(TMP_DIR, "raws_vary_constants.csv")
         with pytest.raises(SchemaError):
-            sim_inputs.add_wind_sensor_from_csv(TMP_DIR, "raws_north_is_360.csv")
+            sim_inputs.new_wind_sensor_from_csv(TMP_DIR, "raws_north_is_360.csv")
 
     def test_write_inputs(self):
         sim_inputs = self.get_test_object()
