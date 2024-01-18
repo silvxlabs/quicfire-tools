@@ -2253,8 +2253,8 @@ class TestSimulationInputs:
         sim_inputs = self.get_test_object()
         # Add a new wind sensor
         sim_inputs.new_wind_sensor(
-            x_location=1,
-            y_location=1,
+            x_location=2,
+            y_location=2,
             wind_speeds=[6, 6],
             wind_directions=[270, 350],
             wind_times=[0, 100],
@@ -2291,9 +2291,21 @@ class TestSimulationInputs:
         ]
         # Test updating nonexistent sensors
         with pytest.raises(AttributeError):
-            sim_inputs.new_wind_sensor(update="sensor3", wind_speeds=6)
+            sim_inputs.new_wind_sensor(
+                update="sensor3", wind_speeds=6, wind_directions=270
+            )
         with pytest.raises(AttributeError):
-            sim_inputs.new_wind_sensor(update="sensor 1", wind_speeds=6)
+            sim_inputs.new_wind_sensor(
+                update="sensor 1", wind_speeds=6, wind_directions=270
+            )
+        # Test adding a new windsensor without putting in values for all the arguments
+        with pytest.raises(TypeError):
+            sim_inputs.new_wind_sensor(
+                wind_speeds=[6, 6],
+                wind_directions=[270, 350],
+                wind_times=[0, 100],
+                sensor_height=6.1,
+            )
 
     def test_new_wind_sensor_from_csv(self):
         sim_inputs = self.get_test_object()

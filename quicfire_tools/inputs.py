@@ -231,6 +231,10 @@ class SimulationInputs:
         windsensors.add_sensor(
             wind_speeds=[wind_speed],
             wind_directions=[wind_direction],
+            wind_times=[0],
+            sensor_height=6.1,
+            x_location=1,
+            y_location=1,
         )
         qu_topoinputs = QU_TopoInputs()
         qu_simparams = QU_Simparams(nx=nx, ny=ny, wind_times=[start_time])
@@ -632,6 +636,72 @@ class SimulationInputs:
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
 
+    def new_wind_sensor(
+        self,
+        update: Optional[str] = None,
+        wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
+        wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
+        wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
+        sensor_height: Optional[PositiveFloat] = None,
+        x_location: Optional[PositiveInt] = None,
+        y_location: Optional[PositiveInt] = None,
+    ):
+        """
+        Add a wind sensor or update an existing one.
+
+        Parameters
+        ----------
+        update: str
+            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
+        x_location : PositiveInt
+            Optional. Updated location of the wind sensor in the x-direction (m)
+        y_location : PositiveInt
+            Optional. Updated location of the wind sensor in the y-direction (m)
+        wind_speeds : PositiveFloat | list(PositiveFloat)
+            Optional. Updated wind speed or list of wind speeds in m/s
+        wind_directions: PositiveInt | list(PositiveInt)
+            Optional. Updated wind direction or list of wind directions in degrees. Use 0 for north.
+        wind_times : NonNegativeInt | list(NonNegativeInt)
+            Optional. Updated list of times for each windshift. Use 0 for single windshift. First value must be 0.
+        sensor_height : PositiveFloat
+            Optional. Updated height of the wind sensor in meters
+        """
+        if update is None:
+            arg_dict = {
+                "x_location": x_location,
+                "y_location": y_location,
+                "wind_speeds": wind_speeds,
+                "wind_directions": wind_directions,
+                "wind_times": wind_times,
+                "sensor_height": sensor_height,
+            }
+            error_list = []
+            for k, v in arg_dict.items():
+                if v is None:
+                    error_list.append(k)
+            if len(error_list) > 0:
+                raise TypeError(
+                    f"Arguments {error_list} must be supplied when update = None"
+                )
+            self.windsensors.add_sensor(
+                wind_times=wind_times,
+                wind_speeds=wind_speeds,
+                wind_directions=wind_directions,
+                sensor_height=sensor_height,
+                x_location=x_location,
+                y_location=y_location,
+            )
+        else:
+            self.windsensors.update_sensor(
+                sensor_name=update,
+                wind_times=wind_times,
+                wind_speeds=wind_speeds,
+                wind_directions=wind_directions,
+                sensor_height=sensor_height,
+                x_location=x_location,
+                y_location=y_location,
+            )
+
     def new_wind_sensor_from_csv(
         self, directory: str | Path, filename: str, update: str = None
     ):
@@ -705,56 +775,6 @@ class SimulationInputs:
                 sensor_height=list(validated_df["sensor_height"])[0],
                 x_location=list(validated_df["x_location"])[0],
                 y_location=list(validated_df["y_location"])[0],
-            )
-
-    def new_wind_sensor(
-        self,
-        update: str = None,
-        x_location: Optional[PositiveInt] = None,
-        y_location: Optional[PositiveInt] = None,
-        wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
-        wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-        wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-        sensor_height: Optional[PositiveFloat] = None,
-    ):
-        """
-        Add a wind sensor or update an existing one.
-
-        Parameters
-        ----------
-        sensor_name: str
-            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
-        x_location : PositiveInt
-            Optional. Updated location of the wind sensor in the x-direction (m)
-        y_location : PositiveInt
-            Optional. Updated location of the wind sensor in the y-direction (m)
-        wind_speeds : PositiveFloat | list(PositiveFloat)
-            Optional. Updated wind speed or list of wind speeds in m/s
-        wind_directions: PositiveInt | list(PositiveInt)
-            Optional. Updated wind direction or list of wind directions in degrees. Use 0 for north.
-        wind_times : NonNegativeInt | list(NonNegativeInt)
-            Optional. Updated list of times for each windshift. Use 0 for single windshift. First value must be 0.
-        sensor_height : PositiveFloat
-            Optional. Updated height of the wind sensor in meters
-        """
-        if update is None:
-            self.windsensors.add_sensor(
-                wind_times=wind_times,
-                wind_speeds=wind_speeds,
-                wind_directions=wind_directions,
-                sensor_height=sensor_height,
-                x_location=x_location,
-                y_location=y_location,
-            )
-        else:
-            self.windsensors.update_sensor(
-                sensor_name=update,
-                wind_times=wind_times,
-                wind_speeds=wind_speeds,
-                wind_directions=wind_directions,
-                sensor_height=sensor_height,
-                x_location=x_location,
-                y_location=y_location,
             )
 
     def _update_shared_attributes(self):
@@ -2661,10 +2681,10 @@ class WindSensorArray(BaseModel):
         self,
         wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
         wind_directions: Union[NonNegativeInt, list(NonNegativeInt)],
-        wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)] = 0,
-        sensor_height: PositiveFloat = 6.1,
-        x_location: PositiveInt = 1,
-        y_location: PositiveInt = 1,
+        wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)],
+        sensor_height: PositiveFloat,
+        x_location: PositiveInt,
+        y_location: PositiveInt,
     ):
         sensor_number = len(self.sensor_array) + 1
         sensor_name = "".join(["sensor", str(sensor_number)])
