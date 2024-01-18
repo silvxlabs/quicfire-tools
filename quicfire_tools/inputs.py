@@ -2607,6 +2607,27 @@ class WindSensorArray(BaseModel):
                 return sensor
         raise AttributeError(f"Attribute {name} not found")
 
+    # TODO: make sure wind sensors don't get put in the same location?
+    # @field_validator("sensor_array")
+    # @classmethod
+    # def validate_sensor_location(cls, v, values) -> list:
+    #     sensor_dict = {}
+    #     for sensor in v:
+    #         sensor_dict[sensor.name] = [
+    #             sensor.sensor_height,
+    #             sensor.x_location,
+    #             sensor.y_location,
+    #         ]
+    #     same_set = set()
+    #     for key, val in sensor_dict.items():
+    #         tuple_val = tuple(val)
+    #         if tuple_val in same_set:
+    #             raise ValueError(
+    #                 "Wind sensors must not be placed at the same location and height"
+    #             )
+    #         same_set.add(tuple_val)
+    #     return v
+
     def _update_time_now(self):
         for sensor in self.sensor_array:
             sensor.time_now = self.time_now

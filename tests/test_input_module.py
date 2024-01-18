@@ -1782,14 +1782,14 @@ class Test_QU_metparams:
 class TestWindSensorArray:
     def test_add_sensor(self):
         windarray = WindSensorArray(time_now=1)
-        sensor1 = windarray.add_sensor(5, 270)
+        sensor1 = windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
         assert len(windarray.sensor_array) == 1
         assert windarray.sensor_array[0] == sensor1
-        sensor2 = windarray.add_sensor(6, 230)
+        sensor2 = windarray.add_sensor(6, 230, 0, 10, 1, 1)
         assert len(windarray.sensor_array) == 2
         assert windarray.sensor_array[0] == sensor1
         assert windarray.sensor_array[1] == sensor2
-        sensor3 = windarray.add_sensor(4, 10)
+        sensor3 = windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
         assert len(windarray.sensor_array) == 3
         assert windarray.sensor_array[0] == sensor1
         assert windarray.sensor_array[1] == sensor2
@@ -1806,9 +1806,9 @@ class TestWindSensorArray:
         with pytest.raises(AttributeError):
             windarray.nonsense
         # Now add three wind sensors and see if we can get them back
-        windarray.add_sensor(5, 270)
-        windarray.add_sensor(6, 230)
-        windarray.add_sensor(4, 10)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
         sensor1 = windarray.sensor1
         sensor2 = windarray.sensor2
         sensor3 = windarray.sensor3
@@ -1821,7 +1821,7 @@ class TestWindSensorArray:
 
     def test_update_sensor(self):
         windarray = WindSensorArray(time_now=1)
-        windarray.add_sensor(5, 270)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
         # Make sure a nonexistent sensor can't be updated
         with pytest.raises(AttributeError):
             windarray.update_sensor(sensor_name="sensor2", wind_speeds=3)
@@ -1832,7 +1832,7 @@ class TestWindSensorArray:
         assert windarray.sensor1.wind_speeds == [3]
         assert windarray.sensor1.wind_directions == [270]
         # Add another sensor and update everything
-        windarray.add_sensor(6, 230)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
         windarray.update_sensor(
             sensor_name="sensor2",
             wind_times=[0, 2, 3],
@@ -1849,22 +1849,30 @@ class TestWindSensorArray:
         assert windarray.sensor2.x_location == 2
         assert windarray.sensor2.y_location == 2
         # Add a third sensor and try updating
-        windarray.add_sensor(4, 10)
+        windarray.add_sensor(4, 10, 0, 10, 1, 1)
         windarray.update_sensor(sensor_name="sensor3", sensor_height=11)
         assert windarray.sensor3.sensor_height == 11
         assert windarray.sensor3.wind_speeds == [4]
 
+    # TODO: make sure wind sensors don't get put in the same location?
+    # def test_validate_sensor_location(self):
+    #     # Validation should not allow two sensors to be in the same place at the same height
+    #     windarray = WindSensorArray(time_now=1)
+    #     windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+    #     with pytest.raises(ValueError):
+    #         windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+
     def test_to_file(self):
         # Test case with one sensor and one windshift
         windarray = WindSensorArray(time_now=1)
-        windarray.add_sensor(5, 270)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
         windarray.to_file(TMP_DIR)
         assert windarray.wind_times == [0]
         sensor1_path = TMP_DIR / "sensor1.inp"
         assert sensor1_path.exists()
         # Test case with multiple sensors and one windshift
-        windarray.add_sensor(6, 230)
-        windarray.add_sensor(4, 10)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
         windarray.to_file(TMP_DIR)
         sensor2_path = TMP_DIR / "sensor2.inp"
         sensor3_path = TMP_DIR / "sensor3.inp"
@@ -1890,9 +1898,9 @@ class TestWindSensorArray:
     def test_from_file(self):
         # Test three wind sensors with a single windshift
         windarray = WindSensorArray(time_now=1)
-        windarray.add_sensor(5, 270)
-        windarray.add_sensor(6, 230)
-        windarray.add_sensor(4, 10)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
         windarray.to_file(TMP_DIR)
         new_array = WindSensorArray.from_file(TMP_DIR)
         assert isinstance(new_array, WindSensorArray)
@@ -1913,9 +1921,9 @@ class TestWindSensorArray:
 
     def test_to_dict(self):
         windarray = WindSensorArray(time_now=1)
-        windarray.add_sensor(5, 270)
-        windarray.add_sensor(6, 230)
-        windarray.add_sensor(4, 10)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
         result_dict = windarray.to_dict()
         assert result_dict["wind_times"] == windarray.wind_times
         assert (
@@ -1932,18 +1940,18 @@ class TestWindSensorArray:
 
     def test_from_dict(self):
         windarray = WindSensorArray(time_now=1)
-        windarray.add_sensor(5, 270)
-        windarray.add_sensor(6, 230)
-        windarray.add_sensor(4, 10)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
         result_dict = windarray.to_dict()
         new_windarray = WindSensorArray.from_dict(result_dict)
         assert new_windarray == windarray
 
     def test_update_time_now(self):
         windarray = WindSensorArray(time_now=1)
-        windarray.add_sensor(5, 270)
-        windarray.add_sensor(6, 230)
-        windarray.add_sensor(4, 10)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
         windarray.time_now = 2
         assert windarray.sensor1.time_now == 1
         assert windarray.sensor2.time_now == 1
@@ -2382,7 +2390,7 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.time_now == sim_inputs.windsensors.sensor1.time_now
         assert sim_inputs.quic_fire.time_now == sim_inputs.qu_simparams.wind_times[0]
         # now add a sensor with windshifts and see if those changes get reflected
-        sim_inputs.add_wind_sensor(
+        sim_inputs.new_wind_sensor(
             x_location=1,
             y_location=1,
             wind_speeds=[6, 6],
