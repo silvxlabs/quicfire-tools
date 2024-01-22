@@ -145,3 +145,7 @@ tests/data/test-output-zarr/
 # Test files
 test-simulation-line-fire/
 test-simulation-custom-fuels/
+
+# Notebook files
+notebooks/simulation/
+notebooks/example-linefire-output/
