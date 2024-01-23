@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
+from pandera.errors import SchemaError
 from pathlib import Path
+import pandas as pd
 
 from quicfire_tools.inputs import (
     InputFile,
@@ -23,8 +25,9 @@ from quicfire_tools.inputs import (
     QU_movingcoords,
     QP_buildout,
     QU_metparams,
-    Sensor1,
     SimulationInputs,
+    WindSensorArray,
+    WindSensor,
 )
 from quicfire_tools.ignitions import (
     IgnitionType,
@@ -36,6 +39,8 @@ from quicfire_tools.topography import TopoType, TopoSources, GaussianHillTopo
 TEST_DIR = Path(__file__).parent
 TMP_DIR = TEST_DIR / "tmp"
 TMP_DIR.mkdir(exist_ok=True)
+TEST_DATA_DIR = TEST_DIR / "data" / "test-inputs"
+TEST_DATA_DIR.mkdir(exist_ok=True)
 
 
 class TestInputFile:
@@ -1836,43 +1841,331 @@ class Test_QU_metparams:
         assert qu_metparams == test_object
 
 
-class TestSensor1:
-    def get_test_object(self):
-        return Sensor1(time_now=1697555154, wind_speed=5, wind_direction=270)
+class TestWindSensorArray:
+    def test_add_sensor(self):
+        windarray = WindSensorArray(time_now=1)
+        sensor1 = windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        assert len(windarray.sensor_array) == 1
+        assert windarray.sensor_array[0] == sensor1
+        sensor2 = windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        assert len(windarray.sensor_array) == 2
+        assert windarray.sensor_array[0] == sensor1
+        assert windarray.sensor_array[1] == sensor2
+        sensor3 = windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
+        assert len(windarray.sensor_array) == 3
+        assert windarray.sensor_array[0] == sensor1
+        assert windarray.sensor_array[1] == sensor2
+        assert windarray.sensor_array[2] == sensor3
 
-    def test_init(self):
-        sensor1 = self.get_test_object()
-        assert isinstance(sensor1, Sensor1)
-        assert sensor1.wind_speed == 5.0
-        assert sensor1.wind_direction == 270
-        assert sensor1.sensor_height == 6.1
+    def test_getattr(self):
+        windarray = WindSensorArray()
+        # sensor list is empty, so trying to get a sensor throws an error
+        with pytest.raises(AttributeError):
+            windarray.sensor1
+        # We should get an error for any attribute not in WindSensorArray or not called sensor*
+        with pytest.raises(AttributeError):
+            windarray.nonsense
+        # Now add three wind sensors and see if we can get them back
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
+        sensor1 = windarray.sensor1
+        sensor2 = windarray.sensor2
+        sensor3 = windarray.sensor3
+        assert isinstance(sensor1, WindSensor)
+        assert isinstance(sensor2, WindSensor)
+        assert isinstance(sensor3, WindSensor)
+        assert sensor1 == windarray.sensor_array[0]
+        assert sensor2 == windarray.sensor_array[1]
+        assert sensor3 == windarray.sensor_array[2]
 
-    def test_error(self):
-        sensor1 = self.get_test_object()
-        with pytest.raises(ValidationError):
-            sensor1.wind_direction = 360
+    def test_update_sensor(self):
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        # Make sure a nonexistent sensor can't be updated
+        with pytest.raises(AttributeError):
+            windarray.update_sensor(sensor_name="sensor2", wind_speeds=3)
+        with pytest.raises(AttributeError):
+            windarray.update_sensor(sensor_name="nonsense", wind_speeds=3)
+        # Make sure the right parameters are updated
+        windarray.update_sensor(sensor_name="sensor1", wind_speeds=3)
+        assert windarray.sensor1.wind_speeds == [3]
+        assert windarray.sensor1.wind_directions == [270]
+        # Add another sensor and update everything
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.update_sensor(
+            sensor_name="sensor2",
+            wind_times=[0, 2, 3],
+            wind_speeds=[4, 5, 6],
+            wind_directions=[90, 180, 270],
+            sensor_height=5.1,
+            x_location=2,
+            y_location=2,
+        )
+        assert windarray.sensor2.wind_times == [0, 2, 3]
+        assert windarray.sensor2.wind_speeds == [4, 5, 6]
+        assert windarray.sensor2.wind_directions == [90, 180, 270]
+        assert windarray.sensor2.sensor_height == 5.1
+        assert windarray.sensor2.x_location == 2
+        assert windarray.sensor2.y_location == 2
+        # Add a third sensor and try updating
+        windarray.add_sensor(4, 10, 0, 10, 1, 1)
+        windarray.update_sensor(sensor_name="sensor3", sensor_height=11)
+        assert windarray.sensor3.sensor_height == 11
+        assert windarray.sensor3.wind_speeds == [4]
+
+    # TODO: make sure wind sensors don't get put in the same location?
+    # def test_validate_sensor_location(self):
+    #     # Validation should not allow two sensors to be in the same place at the same height
+    #     windarray = WindSensorArray(time_now=1)
+    #     windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+    #     with pytest.raises(ValueError):
+    #         windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
 
     def test_to_file(self):
-        sensor1 = self.get_test_object()
-        sensor1.to_file(TMP_DIR)
-
-        # Read the content of the file and check for correctness
-        with open(TMP_DIR / "sensor1.inp", "r") as file:
-            lines = file.readlines()
-        time_now = int(lines[6].strip().split("!")[0])
-        sensor_height = float(lines[11].split(" ")[0])
-        wind_speed = float(lines[11].split(" ")[1])
-        wind_direction = int(lines[11].split(" ")[2])
-        assert time_now == sensor1.time_now
-        assert sensor_height == sensor1.sensor_height
-        assert wind_speed == sensor1.wind_speed
-        assert wind_direction == sensor1.wind_direction
+        # Test case with one sensor and one windshift
+        windarray = WindSensorArray()
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.to_file(time_now=1, directory=TMP_DIR)
+        assert windarray.wind_times == [0]
+        sensor1_path = TMP_DIR / "sensor1.inp"
+        assert sensor1_path.exists()
+        # Test case with multiple sensors and one windshift
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
+        windarray.to_file(time_now=1, directory=TMP_DIR)
+        sensor2_path = TMP_DIR / "sensor2.inp"
+        sensor3_path = TMP_DIR / "sensor3.inp"
+        assert sensor2_path.exists()
+        assert sensor3_path.exists()
+        assert windarray.wind_times == [0]
+        # Test case with multiple sensors with different wind shifts
+        windarray.update_sensor(
+            sensor_name="sensor2",
+            wind_times=[0, 100, 300],
+            wind_speeds=[6, 4, 5],
+            wind_directions=[270, 270, 270],
+        )
+        windarray.update_sensor(
+            sensor_name="sensor3",
+            wind_times=[0, 200, 400],
+            wind_speeds=[4, 4, 4],
+            wind_directions=[10, 30, 45],
+        )
+        windarray.to_file(time_now=1, directory=TMP_DIR)
+        assert windarray.wind_times == [0, 100, 200, 300, 400]
 
     def test_from_file(self):
-        sensor1 = self.get_test_object()
-        sensor1.to_file(TMP_DIR)
-        test_object = Sensor1.from_file(TMP_DIR)
-        assert sensor1 == test_object
+        # Test three wind sensors with a single windshift
+        windarray = WindSensorArray()
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
+        windarray.to_file(time_now=1, directory=TMP_DIR)
+        new_array = WindSensorArray.from_file(TMP_DIR)
+        assert isinstance(new_array, WindSensorArray)
+        assert len(new_array.sensor_array) == 3
+        assert new_array.sensor1.wind_speeds == [5]
+        assert new_array.sensor2.wind_directions == [230]
+        # Add a windshift to one sensor
+        windarray.update_sensor(
+            "sensor1",
+            wind_times=[0, 60],
+            wind_speeds=[5, 6],
+            wind_directions=[270, 270],
+        )
+        windarray.to_file(time_now=1, directory=TMP_DIR)
+        new_array = WindSensorArray.from_file(TMP_DIR)
+        assert windarray.wind_times == [0, 60]
+
+    def test_to_dict(self):
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
+        result_dict = windarray.to_dict()
+        assert result_dict["wind_times"] == windarray.wind_times
+        assert (
+            result_dict["sensor_array"][0]["wind_speeds"]
+            == windarray.sensor1.wind_speeds
+        )
+        assert (
+            result_dict["sensor_array"][1]["wind_directions"]
+            == windarray.sensor2.wind_directions
+        )
+        assert (
+            result_dict["sensor_array"][2]["wind_times"] == windarray.sensor2.wind_times
+        )
+
+    def test_from_dict(self):
+        windarray = WindSensorArray(time_now=1)
+        windarray.add_sensor(5, 270, 0, 6.1, 1, 1)
+        windarray.add_sensor(6, 230, 0, 10, 1, 1)
+        windarray.add_sensor(4, 10, 0, 6.1, 2, 2)
+        result_dict = windarray.to_dict()
+        new_windarray = WindSensorArray.from_dict(result_dict)
+        assert new_windarray == windarray
+
+
+class TestWindSensor:
+    def test_validation(self):
+        # make sure float/int inputs are converted to lists
+        sensor = WindSensor(
+            name="sensor1",
+            time_now=1,
+            wind_times=0,
+            wind_speeds=4.5,
+            wind_directions=270,
+        )
+        assert sensor.wind_times == [0]
+        assert sensor.wind_speeds == [4.5]
+        assert sensor.wind_directions == [270]
+        # first element of wind_times must be zero
+        with pytest.raises(ValueError):
+            sensor.wind_times = [1, 2, 3]
+        # wind lists have to be the same length
+        with pytest.raises(ValueError):
+            sensor = WindSensor(
+                name="sensor1",
+                time_now=1,
+                wind_times=0,
+                wind_speeds=[1, 2, 3],
+                wind_directions=270,
+            )
+        with pytest.raises(ValueError):
+            sensor = WindSensor(
+                name="sensor1",
+                time_now=1,
+                wind_times=[0, 100, 200],
+                wind_speeds=[1, 2, 3],
+                wind_directions=270,
+            )
+
+    def test_get_wind_lines(self):
+        # test scenario where there are 3 global wind times, but wind sensor has only 1 shift
+        global_times = [0, 100, 200]
+        sensor = WindSensor(
+            name="sensor1",
+            wind_times=0,
+            wind_speeds=4.5,
+            wind_directions=270,
+        )
+        wind_lines = sensor.get_wind_lines(global_times, time_now=1)
+        assert isinstance(wind_lines, str)
+        assert wind_lines == (
+            f"1 !X coordinate (meters)\n"
+            f"1 !Y coordinate (meters)"
+            f"\n1 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270"
+            f"\n101 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270"
+            f"\n201 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270"
+        )
+        # test scenario where there are 3 global wind times, and two wind shifts
+        global_times = [0, 100, 200]
+        sensor = WindSensor(
+            name="sensor1",
+            wind_times=[0, 200],
+            wind_speeds=[4.5, 5.5],
+            wind_directions=[270, 330],
+        )
+        wind_lines = sensor.get_wind_lines(global_times, time_now=1)
+        assert isinstance(wind_lines, str)
+        assert wind_lines == (
+            f"1 !X coordinate (meters)\n"
+            f"1 !Y coordinate (meters)"
+            f"\n1 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270"
+            f"\n101 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 4.5 270"
+            f"\n201 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+            f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
+            f"0.1 !site zo\n"
+            f"0. ! 1/L (default = 0)\n"
+            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"6.1 5.5 330"
+        )
+
+    def test_to_file(self):
+        global_times = [0, 200]
+        sensor = WindSensor(
+            name="sensor1",
+            wind_times=[0, 200],
+            wind_speeds=[4.5, 5.5],
+            wind_directions=[270, 330],
+        )
+        sensor.to_file(global_times, 1, TMP_DIR, "latest")
+        with open(TMP_DIR / "sensor1.inp", "r") as file:
+            lines = file.readlines()
+        assert str(lines[0].strip().split("!")[0].strip()) == sensor.name
+        assert float(lines[11].split(" ")[0]) == sensor.sensor_height
+        assert float(lines[11].split(" ")[1]) == sensor.wind_speeds[0]
+        assert float(lines[11].split(" ")[2]) == sensor.wind_directions[0]
+
+    def test_from_file(self):
+        global_times = [0, 200]
+        sensor = WindSensor(
+            name="sensor1",
+            wind_times=[0, 200],
+            wind_speeds=[4.5, 5.5],
+            wind_directions=[270, 330],
+        )
+        sensor.to_file(global_times, 1, TMP_DIR, "latest")
+        sensor1 = WindSensor.from_file(TMP_DIR, "sensor1")
+        assert isinstance(sensor1, WindSensor)
+        assert sensor1.name == sensor.name
+        assert sensor1.wind_times == sensor.wind_times
+        assert sensor1.wind_directions == sensor.wind_directions
+        assert sensor1.wind_speeds == sensor.wind_speeds
+        assert sensor1.sensor_height == sensor.sensor_height
+        assert sensor1.x_location == sensor.x_location
+        assert sensor1.y_location == sensor.y_location
+
+    def test_to_dict(self):
+        sensor = WindSensor(
+            name="sensor1",
+            time_now=1,
+            wind_times=[0, 200],
+            wind_speeds=[4.5, 5.5],
+            wind_directions=[270, 330],
+        )
+        result_dict = sensor.to_dict()
+        assert result_dict["name"] == "sensor1"
+        assert result_dict["wind_directions"] == [270, 330]
+
+    def test_from_dict(self):
+        sensor = WindSensor(
+            name="sensor1",
+            time_now=1,
+            wind_times=[0, 200],
+            wind_speeds=[4.5, 5.5],
+            wind_directions=[270, 330],
+        )
+        result_dict = sensor.to_dict()
+        new_sensor = WindSensor.from_dict(result_dict)
+        assert isinstance(new_sensor, WindSensor)
+        assert sensor == new_sensor
 
 
 class TestSimulationInputs:
@@ -1923,16 +2216,15 @@ class TestSimulationInputs:
         assert isinstance(sim_inputs.qu_movingcoords, QU_movingcoords)
         assert isinstance(sim_inputs.qp_buildout, QP_buildout)
         assert isinstance(sim_inputs.qu_metparams, QU_metparams)
-        assert isinstance(sim_inputs.sensor1, Sensor1)
+        assert isinstance(sim_inputs.windsensors, WindSensorArray)
 
         assert sim_inputs.quic_fire.nz == 1
         assert sim_inputs.quic_fire.sim_time == 65
         assert sim_inputs.qu_simparams.nx == 150
         assert sim_inputs.qu_simparams.ny == 150
-        assert sim_inputs.quic_fire.time_now == sim_inputs.sensor1.time_now
-        assert sim_inputs.qu_simparams.wind_times[0] == sim_inputs.sensor1.time_now
-        assert sim_inputs.sensor1.wind_speed == 5.0
-        assert sim_inputs.sensor1.wind_direction == 90
+        assert sim_inputs.qu_simparams.wind_times[0] == sim_inputs.quic_fire.time_now
+        assert sim_inputs.windsensors.sensor1.wind_speeds == [5.0]
+        assert sim_inputs.windsensors.sensor1.wind_directions == [90]
 
     def test_set_uniform_fuels(self):
         sim_inputs = self.get_test_object()
@@ -2028,6 +2320,129 @@ class TestSimulationInputs:
         sim_inputs = self.get_test_object()
         sim_inputs.write_inputs(TMP_DIR, version="v6")
 
+    def test_new_wind_sensor(self):
+        sim_inputs = self.get_test_object()
+        # Add a new wind sensor
+        sim_inputs.new_wind_sensor(
+            x_location=2,
+            y_location=2,
+            wind_speeds=[6, 6],
+            wind_directions=[270, 350],
+            wind_times=[0, 100],
+            sensor_height=6.1,
+        )
+        # test that a windsensor was added to the sensor array
+        assert len(sim_inputs.windsensors.sensor_array) == 2
+        # and that windarray wind times were updated
+        assert sim_inputs.windsensors.wind_times == [0, 100]
+        # but the wind times in qu_simparams should not be reflected until the write stage
+        assert len(sim_inputs.qu_simparams.wind_times) == 1
+        sim_inputs.write_inputs(TMP_DIR)
+        assert sim_inputs.windsensors.wind_times == [0, 100]
+        assert sim_inputs.qu_simparams.wind_times == [
+            s + sim_inputs.quic_fire.time_now for s in sim_inputs.windsensors.wind_times
+        ]
+        # Try replacing sensor1
+        sim_inputs.new_wind_sensor(
+            update="sensor1",
+            wind_speeds=[6, 6, 6],
+            wind_directions=[270, 350, 270],
+            wind_times=[0, 100, 200],
+        )
+        # test that a windsensor was not added to the sensor array
+        assert len(sim_inputs.windsensors.sensor_array) == 2
+        # and that windarray wind times were updated
+        assert sim_inputs.windsensors.wind_times == [0, 100, 200]
+        # but the wind times in qu_simparams should not be reflected until the write stage
+        assert len(sim_inputs.qu_simparams.wind_times) == 2
+        sim_inputs.write_inputs(TMP_DIR)
+        assert sim_inputs.windsensors.wind_times == [0, 100, 200]
+        assert sim_inputs.qu_simparams.wind_times == [
+            s + sim_inputs.quic_fire.time_now for s in sim_inputs.windsensors.wind_times
+        ]
+        # Test updating nonexistent sensors
+        with pytest.raises(AttributeError):
+            sim_inputs.new_wind_sensor(
+                update="sensor3", wind_speeds=6, wind_directions=270
+            )
+        with pytest.raises(AttributeError):
+            sim_inputs.new_wind_sensor(
+                update="sensor 1", wind_speeds=6, wind_directions=270
+            )
+        # Test adding a new windsensor without putting in values for all the arguments
+        with pytest.raises(TypeError):
+            sim_inputs.new_wind_sensor(
+                wind_speeds=[6, 6],
+                wind_directions=[270, 350],
+                wind_times=[0, 100],
+                sensor_height=6.1,
+            )
+
+    def test_new_wind_sensor_from_csv(self):
+        sim_inputs = self.get_test_object()
+        # first test updating sensor1
+        sim_inputs.new_wind_sensor_from_csv(
+            update="sensor1", directory=TEST_DATA_DIR, filename="sample_raws_data.csv"
+        )
+        # now add a wind sensor with the same data
+        sim_inputs.new_wind_sensor_from_csv(
+            TEST_DATA_DIR,
+            "sample_raws_data.csv",
+            sensor_height=6.1,
+            x_location=1,
+            y_location=1,
+        )
+        assert (
+            sim_inputs.windsensors.sensor1.wind_times
+            == sim_inputs.windsensors.sensor2.wind_times
+        )
+        assert (
+            sim_inputs.windsensors.sensor1.wind_speeds
+            == sim_inputs.windsensors.sensor2.wind_speeds
+        )
+        assert (
+            sim_inputs.windsensors.sensor1.wind_directions
+            == sim_inputs.windsensors.sensor2.wind_directions
+        )
+        # Test incorrect data frame
+        csv_path = TEST_DATA_DIR / "sample_raws_data.csv"
+        raws = pd.read_csv(csv_path)
+        missing_column_path = TMP_DIR / "raws_missing_column.csv"
+        wrong_datatype_path = TMP_DIR / "raws_wrong_datatype.csv"
+        north_is_360__path = TMP_DIR / "raws_north_is_360.csv"
+        # when a column is missing
+        raws.drop(["wind_times"], axis=1).to_csv(missing_column_path)
+        # when a column has the wrong data type
+        raws.astype({"wind_directions": "float64"}).to_csv(wrong_datatype_path)
+        # when 360 deg is used for north
+        raws["wind_directions"].apply(lambda x: 360 if x == 0 else x).to_csv(
+            north_is_360__path
+        )
+        with pytest.raises(SchemaError):
+            sim_inputs.new_wind_sensor_from_csv(
+                TMP_DIR,
+                "raws_missing_column.csv",
+                sensor_height=6.1,
+                x_location=1,
+                y_location=1,
+            )
+        with pytest.raises(SchemaError):
+            sim_inputs.new_wind_sensor_from_csv(
+                TMP_DIR,
+                "raws_wrong_datatype.csv",
+                sensor_height=6.1,
+                x_location=1,
+                y_location=1,
+            )
+        with pytest.raises(SchemaError):
+            sim_inputs.new_wind_sensor_from_csv(
+                TMP_DIR,
+                "raws_north_is_360.csv",
+                sensor_height=6.1,
+                x_location=1,
+                y_location=1,
+            )
+
     def test_write_inputs_latest(self):
         sim_inputs = self.get_test_object()
         sim_inputs.write_inputs(TMP_DIR, version="latest")
@@ -2037,28 +2452,52 @@ class TestSimulationInputs:
         with pytest.raises(ValueError):
             sim_inputs.write_inputs(TMP_DIR, version="invalid_version")
 
-    def test_update_shared_inputs(self):
+    def test_update_shared_attributes(self):
         sim_inputs = self.get_test_object()
+        # assign some new parameters directly to the input files
         sim_inputs.qu_simparams.nx = 100
         sim_inputs.qu_simparams.ny = 100
         sim_inputs.quic_fire.nz = 2
         sim_inputs.quic_fire.time_now = 12345667
+        # first test that these changes are not reflected in the same attributes of other input files
         assert sim_inputs.qu_simparams.nx != sim_inputs.gridlist.n
         assert sim_inputs.qu_simparams.ny != sim_inputs.gridlist.m
         assert sim_inputs.quic_fire.nz != sim_inputs.gridlist.l
-        assert sim_inputs.quic_fire.time_now != sim_inputs.sensor1.time_now
         assert sim_inputs.quic_fire.time_now != sim_inputs.qu_simparams.wind_times[0]
-
+        # then write to a file and confirm that they are changed across input files at the write stage
         sim_inputs.write_inputs(TMP_DIR)
         assert sim_inputs.qu_simparams.nx == sim_inputs.gridlist.n
         assert sim_inputs.qu_simparams.ny == sim_inputs.gridlist.m
         assert sim_inputs.quic_fire.nz == sim_inputs.gridlist.l
-        assert sim_inputs.quic_fire.time_now == sim_inputs.sensor1.time_now
         assert sim_inputs.quic_fire.time_now == sim_inputs.qu_simparams.wind_times[0]
+        # now add a sensor with windshifts and see if those changes get reflected
+        sim_inputs.new_wind_sensor(
+            x_location=1,
+            y_location=1,
+            wind_speeds=[6, 6],
+            wind_directions=[270, 350],
+            wind_times=[0, 100],
+            sensor_height=6.1,
+        )
+        # wind times should be updated in windsensors but not qu_simparams
+        assert sim_inputs.windsensors.wind_times == [0, 100]
+        assert len(sim_inputs.windsensors.wind_times) != len(
+            sim_inputs.qu_simparams.wind_times
+        )
+        # until the write stage
+        sim_inputs.write_inputs(TMP_DIR)
+        assert sim_inputs.qu_simparams.wind_times == [
+            s + sim_inputs.quic_fire.time_now for s in sim_inputs.windsensors.wind_times
+        ]
 
     def test_from_directory(self):
         sim_inputs = self.get_test_object()
         sim_inputs.write_inputs(TMP_DIR)
+        sensor2 = TMP_DIR / "sensor2.inp"
+        sensor3 = TMP_DIR / "sensor3.inp"
+        for file in [sensor2, sensor3]:
+            if file.exists():
+                file.unlink()
         test_object = SimulationInputs.from_directory(TMP_DIR)
         assert isinstance(test_object, SimulationInputs)
 
