@@ -39,8 +39,8 @@ from quicfire_tools.topography import TopoType, TopoSources, GaussianHillTopo
 TEST_DIR = Path(__file__).parent
 TMP_DIR = TEST_DIR / "tmp"
 TMP_DIR.mkdir(exist_ok=True)
-DAT_DIR = TEST_DIR / "data" / "test-inputs"
-DAT_DIR.mkdir(exist_ok=True)
+TEST_DATA_DIR = TEST_DIR / "data" / "test-inputs"
+TEST_DATA_DIR.mkdir(exist_ok=True)
 
 
 class TestGridList:

@@ -10,11 +10,11 @@ import importlib.resources
 from pathlib import Path
 from string import Template
 from typing import Literal, Union, List, Optional
+import bisect
 
 # External Imports
 import numpy as np
 import pandas as pd
-import bisect
 from pandera import (
     DataFrameSchema,
     Column,
@@ -638,13 +638,13 @@ class SimulationInputs:
 
     def new_wind_sensor(
         self,
-        update: Optional[str] = None,
-        wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
-        wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-        wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-        sensor_height: Optional[PositiveFloat] = None,
-        x_location: Optional[PositiveInt] = None,
-        y_location: Optional[PositiveInt] = None,
+        update: str = None,
+        wind_speeds: float | list(float) = None,
+        wind_directions: int | list(int) = None,
+        wind_times: int | list(int) = None,
+        sensor_height: float = None,
+        x_location: int = None,
+        y_location: int = None,
     ):
         """
         Adds a wind sensor or updates an existing one.
@@ -713,7 +713,13 @@ class SimulationInputs:
             )
 
     def new_wind_sensor_from_csv(
-        self, directory: str | Path, filename: str, update: str = None
+        self,
+        directory: str | Path,
+        filename: str,
+        update: str = None,
+        sensor_height: float = None,
+        x_location: int = None,
+        y_location: int = None,
     ):
         """
         Adds a wind sensor or updates an existing one from a csv file.
@@ -727,6 +733,12 @@ class SimulationInputs:
         update: str
             Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
             Omit or use update = None to add a new sensor.
+        sensor_height : float > 0
+            Height of wind sensor.
+        x_location : int >= 0
+            Location of the wind sensor in the x-direction.
+        y_location : int >= 0
+            Location of the wind sensor in the y-direction.
 
         Columns
         -------
@@ -737,12 +749,6 @@ class SimulationInputs:
             Wind speed of each windshift in m/s.
         wind_directions : 0 <= int < 360
             Wind direction of each windshift in degrees.
-        sensor_height : float > 0
-            Height of wind sensor. All values in column must be the same
-        x_location : int >= 0
-            Location of the wind sensor in the x-direction. All values in column must be the same
-        y_location : int >= 0
-            Location of the wind sensor in the y-direction. All values in column must be the same
 
         Examples
         --------
@@ -759,18 +765,6 @@ class SimulationInputs:
                 "wind_times": Column(int, checks=Check.ge(0)),
                 "wind_speeds": Column(float, checks=Check.gt(0)),  # can windspeed be 0?
                 "wind_directions": Column(int, checks=Check.lt(360)),
-                "sensor_height": Column(
-                    float,
-                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
-                ),
-                "x_location": Column(
-                    int,
-                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
-                ),
-                "y_location": Column(
-                    int,
-                    checks=Check(lambda s: len(s.unique()) == 1, element_wise=False),
-                ),
             }
         )
         validated_df = validate(df)
@@ -779,9 +773,9 @@ class SimulationInputs:
                 wind_times=list(validated_df["wind_times"]),
                 wind_speeds=list(validated_df["wind_speeds"]),
                 wind_directions=list(validated_df["wind_directions"]),
-                sensor_height=list(validated_df["sensor_height"])[0],
-                x_location=list(validated_df["x_location"])[0],
-                y_location=list(validated_df["y_location"])[0],
+                sensor_height=sensor_height,
+                x_location=x_location,
+                y_location=y_location,
             )
         else:
             self.windsensors.update_sensor(
@@ -789,9 +783,9 @@ class SimulationInputs:
                 wind_times=list(validated_df["wind_times"]),
                 wind_speeds=list(validated_df["wind_speeds"]),
                 wind_directions=list(validated_df["wind_directions"]),
-                sensor_height=list(validated_df["sensor_height"])[0],
-                x_location=list(validated_df["x_location"])[0],
-                y_location=list(validated_df["y_location"])[0],
+                sensor_height=sensor_height,
+                x_location=x_location,
+                y_location=y_location,
             )
 
     def _update_shared_attributes(self):
@@ -2474,7 +2468,7 @@ class WindSensor(BaseModel, validate_assignment=True):
         with open(DOCS_PATH / f"{self._filename}.json", "r") as f:
             return json.load(f)
 
-    def _find_last_wind_time(self, target_value):
+    def _find_target_time_index(self, target_value):
         index = bisect.bisect_left(self.wind_times, target_value)
         if target_value not in self.wind_times:
             index = index - 1
@@ -2667,11 +2661,9 @@ class WindSensorArray(BaseModel):
             directory = Path(directory)
         sensor_array = []
         # look for wind sensors
-        sensor_list = []
-        for file in directory.iterdir():
-            if file.is_file():
-                if file.stem.startswith("sensor") and file.name.endswith(".inp"):
-                    sensor_list.append(file.stem)
+        sensor_list = [
+            file.stem for file in directory.glob("sensor*.inp") if file.is_file()
+        ]
         for sensor_name in sensor_list:
             sensor = WindSensor.from_file(directory, sensor_name)
             sensor_array.append(sensor)
