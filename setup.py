@@ -16,6 +16,17 @@ def get_version():
     return version[1:]  # Remove the leading "v" from the version number
 
 
+def get_requirements():
+    """Get the requirements from the requirements.txt file."""
+    requirements = []
+    with open("requirements/requirements.txt", encoding="utf-8") as fd:
+        for line in fd:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                requirements.append(line)
+    return requirements
+
+
 NAME = "quicfire-tools"
 DESCRIPTION = "Input and output management tools for the QUIC-Fire fire model"
 LONG_DESCRIPTION = read_file("README.md")
@@ -23,6 +34,7 @@ VERSION = get_version()
 LICENSE = "MIT"
 URL = "https://github.com/silvxlabs/quicfire-tools"
 PROJECT_URLS = {"Bug Tracker": f"{URL}/issues"}
+REQUIREMENTS = get_requirements()
 
 setup(
     name=NAME,
@@ -49,11 +61,6 @@ setup(
     packages=find_packages(exclude=["docs", "tests"]),
     package_data={"quicfire_tools": ["data/templates/*/*", "data/documentation/*"]},
     include_package_data=True,
-    install_requires=[
-        "numpy<2",
-        "dask",
-        "pydantic>=2",
-        "zarr>=2",
-    ],
+    install_requires=REQUIREMENTS,
     python_requires=">=3.8",
 )
