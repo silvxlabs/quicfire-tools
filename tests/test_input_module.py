@@ -1907,7 +1907,6 @@ class TestWindSensorArray:
         assert len(new_array.sensor_array) == 3
         assert new_array.sensor1.wind_speeds == [5]
         assert new_array.sensor2.wind_directions == [230]
-        assert new_array.sensor3.time_now == 1
         # Add a windshift to one sensor
         windarray.update_sensor(
             "sensor1",
@@ -2001,12 +2000,11 @@ class TestWindSensor:
         global_times = [0, 100, 200]
         sensor = WindSensor(
             name="sensor1",
-            time_now=1,
             wind_times=0,
             wind_speeds=4.5,
             wind_directions=270,
         )
-        wind_lines = sensor.get_wind_lines(global_times)
+        wind_lines = sensor.get_wind_lines(global_times, time_now=1)
         assert isinstance(wind_lines, str)
         assert wind_lines == (
             f"1 !X coordinate (meters)\n"
@@ -2034,12 +2032,11 @@ class TestWindSensor:
         global_times = [0, 100, 200]
         sensor = WindSensor(
             name="sensor1",
-            time_now=1,
             wind_times=[0, 200],
             wind_speeds=[4.5, 5.5],
             wind_directions=[270, 330],
         )
-        wind_lines = sensor.get_wind_lines(global_times)
+        wind_lines = sensor.get_wind_lines(global_times, time_now=1)
         assert isinstance(wind_lines, str)
         assert wind_lines == (
             f"1 !X coordinate (meters)\n"
@@ -2068,12 +2065,11 @@ class TestWindSensor:
         global_times = [0, 200]
         sensor = WindSensor(
             name="sensor1",
-            time_now=1,
             wind_times=[0, 200],
             wind_speeds=[4.5, 5.5],
             wind_directions=[270, 330],
         )
-        sensor.to_file(global_times, TMP_DIR, "latest")
+        sensor.to_file(global_times, 1, TMP_DIR, "latest")
         with open(TMP_DIR / "sensor1.inp", "r") as file:
             lines = file.readlines()
         assert str(lines[0].strip().split("!")[0].strip()) == sensor.name
@@ -2085,16 +2081,14 @@ class TestWindSensor:
         global_times = [0, 200]
         sensor = WindSensor(
             name="sensor1",
-            time_now=1,
             wind_times=[0, 200],
             wind_speeds=[4.5, 5.5],
             wind_directions=[270, 330],
         )
-        sensor.to_file(global_times, TMP_DIR, "latest")
+        sensor.to_file(global_times, 1, TMP_DIR, "latest")
         sensor1 = WindSensor.from_file(TMP_DIR, "sensor1")
         assert isinstance(sensor1, WindSensor)
         assert sensor1.name == sensor.name
-        assert sensor1.time_now == sensor.time_now
         assert sensor1.wind_times == sensor.wind_times
         assert sensor1.wind_directions == sensor.wind_directions
         assert sensor1.wind_speeds == sensor.wind_speeds

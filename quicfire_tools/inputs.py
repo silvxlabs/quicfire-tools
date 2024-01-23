@@ -410,7 +410,10 @@ class SimulationInputs:
 
         # Write each input file to the output directory
         for input_file in self._input_files_dict.values():
-            input_file.to_file(directory, version=version)
+            if input_file != "windsensors":
+                input_file.to_file(directory, version=version)
+            else:
+                input_file.to_file(self.quic_fire.time_now, directory, version=version)
 
         # Copy QU_landuse from the template directory to the output directory
         template_file_path = TEMPLATES_PATH / version / "QU_landuse.inp"
@@ -2535,7 +2538,6 @@ class WindSensor(BaseModel, validate_assignment=True):
             next_shift += 6
         return cls(
             name=sensor_name,
-            time_now=time_now,
             sensor_height=sensor_height,
             wind_times=wind_times,
             wind_speeds=wind_speeds,
@@ -2615,9 +2617,21 @@ class WindSensorArray(BaseModel):
 
     """
 
-    time_now: PositiveInt
-    wind_times: List[NonNegativeInt] = [0]
     sensor_array: List[WindSensor] = []
+
+    @computed_field
+    @property
+    def wind_times(self) -> list:
+        """
+        Creates a global wind times list by combining the wind times lists of each sensor.
+        """
+        times_lists = []
+        for sensor in self.sensor_array:
+            times_lists.append(sensor.wind_times)
+        combined_times = sorted(
+            set(value for sublist in times_lists for value in sublist)
+        )
+        return combined_times
 
     def __getattr__(self, name):
         for sensor in self.sensor_array:
@@ -2646,18 +2660,6 @@ class WindSensorArray(BaseModel):
     #         same_set.add(tuple_val)
     #     return v
 
-    def _update_wind_times(self):
-        """
-        Creates a global wind times list by combining the wind times lists of each sensor.
-        """
-        times_lists = []
-        for sensor in self.sensor_array:
-            times_lists.append(sensor.wind_times)
-        combined_times = sorted(
-            set(value for sublist in times_lists for value in sublist)
-        )
-        self.wind_times = combined_times
-
     def _find_sensor_by_name(self, sensor_name: str) -> WindSensor | None:
         """
         Find and return sensor by name. Returns None if there is no matching sensor name.
@@ -2679,15 +2681,12 @@ class WindSensorArray(BaseModel):
         for sensor_name in sensor_list:
             sensor = WindSensor.from_file(directory, sensor_name)
             sensor_array.append(sensor)
-        time_now = sensor_array[0].time_now
-        windarray = cls(time_now=time_now, sensor_array=sensor_array)
-        windarray._update_wind_times()
+        windarray = cls(sensor_array=sensor_array)
         return windarray
 
     @classmethod
     def from_dict(cls, data: dict):
         windarray = cls(**data)
-        windarray._update_wind_times()
         return windarray
 
     def to_dict(self, include_private: bool = False):
@@ -2710,12 +2709,12 @@ class WindSensorArray(BaseModel):
             key: value for key, value in all_fields.items() if not key.startswith("_")
         }
 
-    def to_file(self, directory: Path | str, version: str = "latest"):
+    def to_file(self, time_now: int, directory: Path | str, version: str = "latest"):
         if isinstance(directory, str):
             directory = Path(directory)
 
         for sensor in self.sensor_array:
-            sensor.to_file(self.wind_times, self.time_now, directory, version)
+            sensor.to_file(self.wind_times, time_now, directory, version)
 
     def add_sensor(
         self,
@@ -2757,7 +2756,6 @@ class WindSensorArray(BaseModel):
             wind_directions=wind_directions,
         )
         self.sensor_array.append(sensor)
-        self._update_wind_times()
 
         return sensor
 
@@ -2817,5 +2815,3 @@ class WindSensorArray(BaseModel):
         updater.y_location = (
             y_location if y_location is not None else updater.y_location
         )
-
-        self._update_wind_times()
