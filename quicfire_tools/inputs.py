@@ -2666,6 +2666,7 @@ class WindSensor(BaseModel, validate_assignment=True):
         if isinstance(directory, str):
             directory = Path(directory)
 
+        version = _validate_and_return_version(version)
         template_file_path = TEMPLATES_PATH / version / "sensor.inp"
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())

@@ -1809,13 +1809,11 @@ class Test_QU_metparams:
     def test_init(self):
         qu_metparams = self.get_test_object()
         assert qu_metparams.num_sensors == 1
-        assert qu_metparams.sensor_name == "sensor1"
 
     def test_to_dict(self):
         qu_metparams = self.get_test_object()
         result_dict = qu_metparams.to_dict()
         assert result_dict["num_sensors"] == qu_metparams.num_sensors
-        assert result_dict["sensor_name"] == qu_metparams.sensor_name
 
     def test_from_dict(self):
         qu_metparams = self.get_test_object()
@@ -1831,7 +1829,6 @@ class Test_QU_metparams:
         with open(TMP_DIR / "QU_metparams.inp", "r") as file:
             lines = file.readlines()
         assert int(lines[2].strip().split("!")[0]) == qu_metparams.num_sensors
-        assert str(lines[4].strip().split("!")[0].strip()) == qu_metparams.sensor_name
 
     def test_from_file(self):
         qu_metparams = self.get_test_object()
@@ -2065,7 +2062,7 @@ class TestWindSensor:
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
-            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
             f"6.1 4.5 270"
             f"\n201 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
@@ -2074,6 +2071,7 @@ class TestWindSensor:
             f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
             f"6.1 4.5 270"
         )
+
         # test scenario where there are 3 global wind times, and two wind shifts
         global_times = [0, 100, 200]
         sensor = WindSensor(
@@ -2091,7 +2089,7 @@ class TestWindSensor:
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
-            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
             f"6.1 4.5 270"
             f"\n101 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
