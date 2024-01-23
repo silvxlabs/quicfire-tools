@@ -2617,7 +2617,7 @@ class WindSensor(BaseModel, validate_assignment=True):
             v = [v]
         if v and len(values.data["wind_times"]) != len(v):
             raise ValueError(
-                f"WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
+                "WindSensor: lists of wind times, speeds, and directions must be the same length.\n"
             )
         return v
 
@@ -2643,16 +2643,16 @@ class WindSensor(BaseModel, validate_assignment=True):
             f"{self.y_location} !Y coordinate (meters)"
         )
         windshifts = []
-        for time in global_times:
-            time_idx = self._find_target_time_index(time)
+        for wind_time in global_times:
+            time_idx = self._find_target_time_index(wind_time)
             wind_speed = self.wind_speeds[time_idx]
             wind_direction = self.wind_directions[time_idx]
             shift = (
-                f"\n{time_now + time} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+                f"\n{time_now + wind_time} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
                 f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
                 f"0.1 !site zo\n"
                 f"0. ! 1/L (default = 0)\n"
-                f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+                f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
                 f"{self.sensor_height} {wind_speed} {wind_direction}"
             )
             windshifts.append(shift)
@@ -2666,7 +2666,7 @@ class WindSensor(BaseModel, validate_assignment=True):
         if isinstance(directory, str):
             directory = Path(directory)
 
-        template_file_path = TEMPLATES_PATH / version / f"sensor.inp"
+        template_file_path = TEMPLATES_PATH / version / "sensor.inp"
         with open(template_file_path, "r") as ftemp:
             src = Template(ftemp.read())
 

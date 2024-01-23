@@ -2059,7 +2059,7 @@ class TestWindSensor:
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
-            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
             f"6.1 4.5 270"
             f"\n101 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
@@ -2071,7 +2071,7 @@ class TestWindSensor:
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
-            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
             f"6.1 4.5 270"
         )
         # test scenario where there are 3 global wind times, and two wind shifts
@@ -2097,13 +2097,13 @@ class TestWindSensor:
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
-            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
             f"6.1 4.5 270"
             f"\n201 !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
             f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
             f"0.1 !site zo\n"
             f"0. ! 1/L (default = 0)\n"
-            f"!Height (m),Speed	(m/s), Direction (deg relative to true N)\n"
+            f"!Height (m), Speed (m/s), Direction (deg relative to true N)\n"
             f"6.1 5.5 330"
         )
 
