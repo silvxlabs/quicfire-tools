@@ -2474,12 +2474,12 @@ class WindSensor(BaseModel, validate_assignment=True):
             f"{self.y_location} !Y coordinate (meters)"
         )
         windshifts = []
-        for i in global_times:
-            time_idx = self._find_target_time_index(i)
+        for time in global_times:
+            time_idx = self._find_target_time_index(time)
             wind_speed = self.wind_speeds[time_idx]
             wind_direction = self.wind_directions[time_idx]
             shift = (
-                f"\n{time_now + i} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+                f"\n{time_now + time} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
                 f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
                 f"0.1 !site zo\n"
                 f"0. ! 1/L (default = 0)\n"
@@ -2601,7 +2601,18 @@ class WindSensorArray(BaseModel):
     """
     Class containing all WindSensor input files and shared attributes.
 
-    Is wind_times even necessary with the way _update_wind_times is currently written?
+    Parameters
+    ----------
+    time_now : PositiveInt
+        When the fire is ignited in Unix Epoch time (integer seconds since
+        1970/1/1 00:00:00). Must be greater or equal to the time of the first
+        wind
+    wind_times : NonNegativeFloat | list(NonNegativeFloat)
+        Time in seconds since the start of the fire for each wind shift.
+        First time must be zero.
+    sensor_array : list(WindSensor)
+        List of all WindSensor input files managed by the WindSensorArray.
+
     """
 
     time_now: PositiveInt
@@ -2635,10 +2646,6 @@ class WindSensorArray(BaseModel):
     #         same_set.add(tuple_val)
     #     return v
 
-    def _update_time_now(self):
-        for sensor in self.sensor_array:
-            sensor.time_now = self.time_now
-
     def _update_wind_times(self):
         """
         Creates a global wind times list by combining the wind times lists of each sensor.
@@ -2650,6 +2657,15 @@ class WindSensorArray(BaseModel):
             set(value for sublist in times_lists for value in sublist)
         )
         self.wind_times = combined_times
+
+    def _find_sensor_by_name(self, sensor_name: str) -> WindSensor | None:
+        """
+        Find and return sensor by name. Returns None if there is no matching sensor name.
+        """
+        for sensor in self.sensor_array:
+            if sensor.name == sensor_name:
+                return sensor
+        return None
 
     @classmethod
     def from_file(cls, directory: str | Path):
@@ -2695,8 +2711,6 @@ class WindSensorArray(BaseModel):
         }
 
     def to_file(self, directory: Path | str, version: str = "latest"):
-        self._update_time_now()
-
         if isinstance(directory, str):
             directory = Path(directory)
 
@@ -2781,12 +2795,8 @@ class WindSensorArray(BaseModel):
         for arg in [wind_times, wind_speeds, wind_directions]:
             if isinstance(arg, (float, int)):
                 arg = [arg]
-        sensor_found = False
-        for sensor in self.sensor_array:
-            if sensor_name == sensor.name:
-                updater = sensor
-                sensor_found = True
-        if sensor_found == False:
+        updater = self._find_sensor_by_name(sensor_name)
+        if not updater:
             raise AttributeError(f"{sensor_name} not found")
 
         updater.wind_times = (
@@ -2809,4 +2819,3 @@ class WindSensorArray(BaseModel):
         )
 
         self._update_wind_times()
-        self._update_time_now()
