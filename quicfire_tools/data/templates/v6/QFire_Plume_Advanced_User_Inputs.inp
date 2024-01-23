@@ -1,0 +1,16 @@
+$max_plumes_per_timestep                ! N/A, max number of plume at each time step
+$min_plume_updraft_velocity				! m/s, minimum vertical velocity of a plume. If wc is below minimum, the plume is eliminated (default 0.1 m/s)
+$max_plume_updraft_velocity				! m/s, maximum vertical velocity of a plume (default 100 m/s)
+$min_velocity_ratio				        ! N/A, minimum speed ratio (plume vertical velocity/wind speed). If below, the plume is eliminated (default 0.1)
+$brunt_vaisala_freq_squared				! 1/s2, brunt vaisala frequency squared
+$creeping_flag					        ! N/A creeping flag: 0 = off, 1 = on
+$adaptive_timestep_flag					! Flag time step (0 = constant, 1 = adaptive)
+$plume_timestep                         ! s, time step used to compute the buoyant plume trajectory
+$sor_option_flag                        ! sor option (0 = reset lambda at each call, 1 = keep)
+$sor_alpha_plume_center                 ! alpha 2 - plume centerline
+$sor_alpha_plume_edge                   ! alpha 2 - plume edges
+$max_plume_merging_angle                ! deg, max angle between plumes to merging
+$max_plume_overlap_fraction             ! N/A, fraction of overlap of plumes for merging
+$plume_to_grid_updrafts_flag            ! N/A, which wplume-to-grid scheme: 0 = new, 1 = old
+$max_points_along_plume_edge            ! N/A, number of points per edge for new scheme (only new scheme)
+$plume_to_grid_intersection_flag        ! N/A, w computation: 1 = max(w), 0 = sum(w^3)

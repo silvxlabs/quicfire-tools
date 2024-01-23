@@ -12,6 +12,7 @@ import zarr
 import numpy as np
 import dask.array as da
 from numpy import ndarray
+from shutil import rmtree
 
 FUELS_OUTPUTS = {
     "fire-energy_to_atmos": {
@@ -69,6 +70,16 @@ FUELS_OUTPUTS = {
         "description": "2D file containing the percentage of mass burnt for each (i,j) "
         "location on the fire grid (vertically integrated)",
         "units": "%",
+    },
+    "surfEnergy": {
+        "file_format": "gridded",
+        "dimensions": ["y", "x"],
+        "grid": "fire",
+        "delimiter": None,
+        "extension": ".bin",
+        "description": "Array contains total energy output by each surface cell "
+        "on a per second interval.",
+        "units": "kW/m^2",
     },
 }
 THERMAL_RADIATION_OUTPUTS = {
@@ -566,30 +577,42 @@ class SimulationOutputs:
 
         return dask_array
 
+    # ZCC Changes
     def to_zarr(
-        self, fpath: str | Path, outputs: str | list[str] = None
-    ) -> zarr.hierarchy.Group:
+        self,
+        fpath: str | Path,
+        outputs: str | list[str] = None,
+        over_write: bool = False,
+    ):
         """
         Write the outputs to a zarr file.
 
         Parameters
         ----------
         fpath: str | Path
-            The path to the zarr file to be written.
+            The path to the folder where zarr files are written to be written.
         outputs: str | list[str]
             The name of the output(s) to write to the zarr file. If None, then
             all outputs are written to the zarr file.
+        over_write: bool
+            Whether or not to over_write zarr if it already exists
 
-        Returns
+        Builds
         -------
-        zarr.hierarchy.Group
-            The zarr file object.
+        zarr files to disk
         """
+        # Hard coding dimentions. Will want to add dimensions to one of the classes.
+        dz = 1
+        dy = 2
+        dx = 2
+
         if isinstance(fpath, str):
             fpath = Path(fpath)
 
-        # Create the zarr file
-        zarr_file = zarr.open(str(fpath), mode="w")
+        if not fpath.exists():
+            fpath.mkdir(parents=True)
+
+        self.zarr_folder_path = fpath  # store folder location of zarrs to object
 
         # Get a list of outputs to write to the zarr file
         if outputs is None:
@@ -602,20 +625,151 @@ class SimulationOutputs:
             # Get the output object and verify it exists
             output = self.get_output(output_name)
 
-            # Create a zarr dataset for the output
-            shape = (len(output.times), *output.shape)
-            chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
-            zarr_dataset = zarr_file.create_dataset(
-                output_name, shape=shape, chunks=chunks, dtype=float
-            )
-            zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["time", "z", "y", "x"]
+            # Build zarr path and store to output object
+            zarr_path = fpath / (output_name + ".zarr")
+            output.zarr_path = zarr_path  # store zarr_path to output object
 
-            # Write each timestep to the output's zarr dataset
-            for time_step in range(len(output.times)):
-                data = self.to_numpy(output_name, time_step)
-                zarr_dataset[time_step, ...] = data[0, ...]
+            write_zarr_to_disk = True
+            if zarr_path.exists():
+                if not over_write:
+                    write_zarr_to_disk = False
+                    print(
+                        "A dataset for {} already exists in the zarr file.\n".format(
+                            output_name
+                        ),
+                        "Set over_write flag to True if you would like to rebuild the zarr.",
+                    )
+                else:
+                    rmtree(zarr_path)
 
-        return zarr_file
+            if write_zarr_to_disk:
+                # Create the zarr file
+                zarr_file = zarr.open(str(zarr_path), mode="w")
+
+                # Create a zarr dataset for the output
+                shape = (len(output.times), *output.shape)
+                chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
+
+                # Output to zarr dataset
+                DATA_NAME = "data"
+                zarr_dataset = zarr_file.create_dataset(
+                    DATA_NAME, shape=shape, chunks=chunks, dtype=float
+                )
+
+                # Metadata
+                zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["time", "z", "y", "x"]
+                zarr_dataset.attrs["long_name"] = output_name
+                zarr_dataset.attrs["units"] = output.units
+                # Write each timestep to the output's zarr dataset
+                for time_step in range(len(output.times)):
+                    data = self.to_numpy(output_name, time_step)
+                    zarr_dataset[time_step, ...] = data[0, ...]
+
+                # Build datasets for coordinates
+                # Build time coordinate
+                zarr_dataset = zarr_file.create_dataset(
+                    "time", shape=len(output.times), dtype=int
+                )
+                # Metadata
+                zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["time"]
+                zarr_dataset.attrs["long_name"] = "Time since start of simulation"
+                zarr_dataset.attrs["units"] = "s"
+                # Store Values
+                zarr_dataset[...] = np.array(output.times)
+
+                # Build z coordinate
+                zarr_dataset = zarr_file.create_dataset(
+                    "z", shape=output.shape[0], dtype=int
+                )
+                # Metadata
+                zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["z"]
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "cell height: bottom of cell from ground"
+                zarr_dataset.attrs["units"] = "m"
+                # Store Values
+                zarr_dataset[...] = np.array(range(output.shape[0])) * dz
+
+                # Build y coordinate
+                zarr_dataset = zarr_file.create_dataset(
+                    "y", shape=output.shape[1], dtype=int
+                )
+                # Metadata
+                zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["y"]
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "Latitude: cell dist north from southern edge of domain"
+                zarr_dataset.attrs["units"] = "m"
+                # Store Values
+                zarr_dataset[...] = np.array(range(output.shape[1])) * dy
+
+                # Build x coordinate
+                zarr_dataset = zarr_file.create_dataset(
+                    "x", shape=output.shape[2], dtype=int
+                )
+                # Metadata
+                zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["x"]
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "Longitude: cell dist east from western edge of domain"
+                zarr_dataset.attrs["units"] = "m"
+                # Store Values
+                zarr_dataset[...] = np.array(range(0, output.shape[2])) * dx
+
+                zarr.convenience.consolidate_metadata(zarr_path)
+        return
+
+    # #Anthony's method
+    # def to_zarr(
+    #     self, fpath: str | Path, outputs: str | list[str] = None
+    # ) -> zarr.hierarchy.Group:
+    #     """
+    #     Write the outputs to a zarr file.
+
+    #     Parameters
+    #     ----------
+    #     fpath: str | Path
+    #         The path to the zarr file to be written.
+    #     outputs: str | list[str]
+    #         The name of the output(s) to write to the zarr file. If None, then
+    #         all outputs are written to the zarr file.
+
+    #     Returns
+    #     -------
+    #     zarr.hierarchy.Group
+    #         The zarr file object.
+    #     """
+    #     if isinstance(fpath, str):
+    #         fpath = Path(fpath)
+
+    #     # Create the zarr file
+    #     zarr_file = zarr.open(str(fpath), mode="w")
+
+    #     # Get a list of outputs to write to the zarr file
+    #     if outputs is None:
+    #         outputs = self.list_available_outputs()
+    #     elif isinstance(outputs, str):
+    #         outputs = [outputs]
+
+    #     # Write each output to the zarr file
+    #     for output_name in outputs:
+    #         # Get the output object and verify it exists
+    #         output = self.get_output(output_name)
+
+    #         # Create a zarr dataset for the output
+    #         shape = (len(output.times), *output.shape)
+    #         chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
+    #         zarr_dataset = zarr_file.create_dataset(
+    #             output_name, shape=shape, chunks=chunks, dtype=float
+    #         )
+    #         zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["time", "z", "y", "x"]
+
+    #         # Write each timestep to the output's zarr dataset
+    #         for time_step in range(len(output.times)):
+    #             data = self.to_numpy(output_name, time_step)
+    #             zarr_dataset[time_step, ...] = data[0, ...]
+
+    #     return zarr_file
 
 
 def _process_compressed_bin(filename, dim_zyx, *args) -> ndarray:

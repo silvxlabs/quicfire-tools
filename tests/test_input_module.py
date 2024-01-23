@@ -10,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 from quicfire_tools.inputs import (
+    InputFile,
     Gridlist,
     RasterOrigin,
     QU_Buildings,
@@ -32,7 +33,6 @@ from quicfire_tools.ignitions import (
     IgnitionType,
     IgnitionSources,
     RectangleIgnition,
-    default_line_ignition,
 )
 from quicfire_tools.topography import TopoType, TopoSources, GaussianHillTopo
 
@@ -41,6 +41,23 @@ TMP_DIR = TEST_DIR / "tmp"
 TMP_DIR.mkdir(exist_ok=True)
 TEST_DATA_DIR = TEST_DIR / "data" / "test-inputs"
 TEST_DATA_DIR.mkdir(exist_ok=True)
+
+
+class TestInputFile:
+    def test_to_file_v5(self):
+        input_file = InputFile(name="QP_buildout")
+        input_file._extension = ".inp"
+        input_file.to_file(TMP_DIR, version="v5")
+
+    def test_to_file_v6(self):
+        input_file = InputFile(name="QP_buildout")
+        input_file._extension = ".inp"
+        input_file.to_file(TMP_DIR, version="v6")
+
+    def test_to_file_invalid_version(self):
+        input_file = InputFile(name="")
+        with pytest.raises(ValueError):
+            input_file.to_file(TMP_DIR, version="v1")
 
 
 class TestGridList:
@@ -942,7 +959,7 @@ class TestQFire_Advanced_User_Inputs:
 
 class TestQUIC_fire:
     @staticmethod
-    def get_test_object():
+    def get_basic_test_object():
         return QUIC_fire(
             nz=26,
             sim_time=60,
@@ -952,26 +969,9 @@ class TestQUIC_fire:
             ),
         )
 
-    @staticmethod
-    def get_complex_test_object():
-        return QUIC_fire(
-            nz=5,
-            sim_time=60,
-            time_now=1695311421,
-            ignition_type=RectangleIgnition(
-                x_min=20, y_min=20, x_length=10, y_length=160
-            ),
-            stretch_grid_flag=1,
-            dz_array=[1, 2, 3, 4, 5],
-            fuel_flag=1,
-            fuel_density=0.5,
-            fuel_moisture=1,
-            fuel_height=0.75,
-        )
-
     def test_init(self):
         # Test default initialization
-        quic_fire = self.get_test_object()
+        quic_fire = self.get_basic_test_object()
         assert quic_fire.nz == 26
         assert quic_fire.sim_time == 60
 
@@ -986,27 +986,61 @@ class TestQUIC_fire:
         # Test stretch grid input
         assert quic_fire.stretch_grid_flag == 0
         assert quic_fire._stretch_grid_input == "1"
-        assert quic_fire.dz == 1
-        quic_fire.nz = 5
-        quic_fire.dz_array = [1, 2, 3, 4, 5]
-        quic_fire.stretch_grid_flag = 1
-        assert quic_fire._stretch_grid_input == "1.0\n2.0\n3.0\n4.0\n5.0\n"
 
         # Test invalid random_seed
         with pytest.raises(ValidationError):
             quic_fire.random_seed = 0
 
-        # Set fuel_density, fuel_moisture, and fuel_height
+    def test_fuel_lines_uniform(self):
+        quic_fire = self.get_basic_test_object()
+
+        quic_fire.fuel_density_flag = 1
         quic_fire.fuel_density = 0.5
+        quic_fire.fuel_moisture_flag = 1
         quic_fire.fuel_moisture = 1
+        quic_fire.fuel_height_flag = 1
         quic_fire.fuel_height = 0.75
-        with open(TEST_DIR / "data/test-inputs/fuel_lines.txt") as f:
+        quic_fire.size_scale_flag = 1
+        quic_fire.size_scale = 0.001
+        quic_fire.patch_and_gap_flag = 1
+        quic_fire.patch_size = 0.5
+        quic_fire.gap_size = 0.5
+        with open(TEST_DIR / "data/test-inputs/fuel_lines_uniform.txt") as f:
             expected_lines = f.readlines()
-        assert quic_fire._fuel_lines == "".join(expected_lines)
+        fuel_lines = (
+            quic_fire._fuel_density_lines
+            + quic_fire._fuel_moisture_lines
+            + quic_fire._fuel_height_lines
+            + quic_fire._size_scale_lines
+            + quic_fire._patch_and_gap_lines
+        )
+        assert "".join(expected_lines) == fuel_lines
+
+        quic_fire.to_file(TMP_DIR, version="v5")
+
+    def test_fuel_lines_custom(self):
+        quic_fire = self.get_basic_test_object()
+
+        quic_fire.fuel_density_flag = 3
+        quic_fire.fuel_moisture_flag = 3
+        quic_fire.size_scale_flag = 0
+        quic_fire.patch_and_gap_flag = 0
+        with open(TEST_DIR / "data/test-inputs/fuel_lines_custom.txt") as f:
+            expected_lines = f.readlines()
+        fuel_lines = (
+            quic_fire._fuel_density_lines
+            + quic_fire._fuel_moisture_lines
+            + quic_fire._fuel_height_lines
+            + quic_fire._size_scale_lines
+            + quic_fire._patch_and_gap_lines
+        )
+        assert "".join(expected_lines) == fuel_lines
+
+        quic_fire.to_file(TMP_DIR, version="v5")
 
     def test_to_dict(self):
         """Test the to_dict method of a QUIC_fire object."""
-        quic_fire = self.get_complex_test_object()
+        quic_fire = self.get_basic_test_object()
         result_dict = quic_fire.to_dict()
 
         assert result_dict["nz"] == quic_fire.nz
@@ -1023,10 +1057,17 @@ class TestQUIC_fire:
         assert result_dict["stretch_grid_flag"] == quic_fire.stretch_grid_flag
         assert result_dict["dz"] == quic_fire.dz
         assert result_dict["dz_array"] == quic_fire.dz_array
-        assert result_dict["fuel_flag"] == quic_fire.fuel_flag
+        assert result_dict["fuel_density_flag"] == quic_fire.fuel_density_flag
         assert result_dict["fuel_density"] == quic_fire.fuel_density
+        assert result_dict["fuel_moisture_flag"] == quic_fire.fuel_moisture_flag
         assert result_dict["fuel_moisture"] == quic_fire.fuel_moisture
+        assert result_dict["fuel_height_flag"] == quic_fire.fuel_height_flag
         assert result_dict["fuel_height"] == quic_fire.fuel_height
+        assert result_dict["size_scale_flag"] == quic_fire.size_scale_flag
+        assert result_dict["size_scale"] == quic_fire.size_scale
+        assert result_dict["patch_and_gap_flag"] == quic_fire.patch_and_gap_flag
+        assert result_dict["patch_size"] == quic_fire.patch_size
+        assert result_dict["gap_size"] == quic_fire.gap_size
         assert (
             result_dict["ignition_type"]["ignition_flag"]
             == quic_fire.ignition_type.ignition_flag
@@ -1056,136 +1097,157 @@ class TestQUIC_fire:
         assert result_dict["surf_eng_out"] == quic_fire.surf_eng_out
 
     def test_from_dict(self):
-        quic_fire = self.get_test_object()
+        quic_fire = self.get_basic_test_object()
         test_dict = quic_fire.to_dict()
         test_object = QUIC_fire.from_dict(test_dict)
         assert test_object == quic_fire
-
-        quic_fire = self.get_complex_test_object()
-        test_dict = quic_fire.to_dict()
-        test_object = QUIC_fire.from_dict(test_dict)
-        assert test_object == quic_fire
-
-    # TODO: Clarify to_docs test
-    # def test_to_docs(self):
-    #     quic_fire = self.get_test_object()
-    #     result_dict = quic_fire.to_dict()
-    #     result_docs = quic_fire.get_documentation()
-    #     for key in result_dict:
-    #         assert key in result_docs
-    #     for key in result_docs:
-    #         assert key in result_dict
-
-    #     quic_fire = self.get_complex_test_object()
-    #     result_dict = quic_fire.to_dict()
-    #     result_docs = quic_fire.get_documentation()
-    #     for key in result_dict:
-    #         assert key in result_docs
-    #     for key in result_docs:
-    #         assert key in result_dict
 
     def test_to_file(self):
-        quic_fire = self.get_complex_test_object()
-        quic_fire.to_file(TMP_DIR)
-        with open(TMP_DIR / "QUIC_fire.inp", "r") as file:
-            lines = file.readlines()
+        quic_fire = self.get_basic_test_object()
+        for version in ["v5", "v6"]:
+            quic_fire.to_file(TMP_DIR, version=version)
+            with open(TMP_DIR / "QUIC_fire.inp", "r") as file:
+                lines = file.readlines()
 
-        assert quic_fire.fire_flag == int(lines[0].strip().split("!")[0])
-        assert quic_fire.random_seed == int(lines[1].strip().split("!")[0])
-        assert quic_fire.time_now == int(lines[3].strip().split("!")[0])
-        assert quic_fire.sim_time == int(lines[4].strip().split("!")[0])
-        assert quic_fire.fire_time_step == int(lines[5].strip().split("!")[0])
-        assert quic_fire.quic_time_step == int(lines[6].strip().split("!")[0])
-        assert quic_fire.out_time_fire == int(lines[7].strip().split("!")[0])
-        assert quic_fire.out_time_wind == int(lines[8].strip().split("!")[0])
-        assert quic_fire.out_time_emis_rad == int(lines[9].strip().split("!")[0])
-        assert quic_fire.out_time_wind_avg == int(lines[10].strip().split("!")[0])
-        assert quic_fire.nz == int(lines[12].strip().split("!")[0])
-        assert quic_fire.stretch_grid_flag == int(lines[13].strip().split("!")[0])
-        dz_array = []
-        for i in range(14, 14 + len(quic_fire.dz_array)):
-            dz_array.append(float(lines[i].strip()))
-        assert quic_fire.dz_array == dz_array
-        current_line = 15 + len(quic_fire.dz_array)
-        current_line += 4  # skip unused lines
-        current_line += 1  # header
-        assert quic_fire.fuel_flag == int(lines[current_line].strip().split("!")[0])
-        assert quic_fire.fuel_density == float(lines[current_line + 1].strip())
-        assert quic_fire.fuel_moisture == float(lines[current_line + 3].strip())
-        assert quic_fire.fuel_height == float(lines[current_line + 5].strip())
-        current_line += 6
-        current_line += 1  # header
-        ignition_flag = int(lines[current_line].strip().split("!")[0])
-        ignition_params = []
-        current_line += 1
-        for i in range(current_line, current_line + 4):
-            ignition_params.append(float(lines[i].strip().split("!")[0]))
-        x_min, y_min, x_length, y_length = ignition_params
-        assert quic_fire.ignition_type == RectangleIgnition(
-            ignition_flag=ignition_flag,
-            x_min=x_min,
-            y_min=y_min,
-            x_length=x_length,
-            y_length=y_length,
-        )
-        current_line += 4
-        assert quic_fire.ignitions_per_cell == int(
-            lines[current_line].strip().split("!")[0]
-        )
-        current_line += 1
-        current_line += 1  # header
-        assert quic_fire.firebrand_flag == int(
-            lines[current_line].strip().split("!")[0]
-        )
-        current_line += 1
-        assert quic_fire.eng_to_atm_out == int(
-            lines[current_line + 1].strip().split("!")[0]
-        )
-        assert quic_fire.react_rate_out == int(
-            lines[current_line + 2].strip().split("!")[0]
-        )
-        assert quic_fire.fuel_dens_out == int(
-            lines[current_line + 3].strip().split("!")[0]
-        )
-        assert quic_fire.qf_wind_out == int(
-            lines[current_line + 4].strip().split("!")[0]
-        )
-        assert quic_fire.qu_wind_inst_out == int(
-            lines[current_line + 5].strip().split("!")[0]
-        )
-        assert quic_fire.qu_wind_avg_out == int(
-            lines[current_line + 6].strip().split("!")[0]
-        )
-        assert quic_fire.fuel_moist_out == int(
-            lines[current_line + 8].strip().split("!")[0]
-        )
-        assert quic_fire.mass_burnt_out == int(
-            lines[current_line + 9].strip().split("!")[0]
-        )
-        assert quic_fire.firebrand_out == int(
-            lines[current_line + 10].strip().split("!")[0]
-        )
-        assert quic_fire.emissions_out == int(
-            lines[current_line + 11].strip().split("!")[0]
-        )
-        assert quic_fire.radiation_out == int(
-            lines[current_line + 12].strip().split("!")[0]
-        )
-        assert quic_fire.surf_eng_out == int(
-            lines[current_line + 13].strip().split("!")[0]
-        )
-        assert quic_fire.auto_kill == int(
-            lines[current_line + 15].strip().split("!")[0]
-        )
+            assert quic_fire.fire_flag == int(lines[0].strip().split("!")[0])
+            assert quic_fire.random_seed == int(lines[1].strip().split("!")[0])
+            assert quic_fire.time_now == int(lines[3].strip().split("!")[0])
+            assert quic_fire.sim_time == int(lines[4].strip().split("!")[0])
+            assert quic_fire.fire_time_step == int(lines[5].strip().split("!")[0])
+            assert quic_fire.quic_time_step == int(lines[6].strip().split("!")[0])
+            assert quic_fire.out_time_fire == int(lines[7].strip().split("!")[0])
+            assert quic_fire.out_time_wind == int(lines[8].strip().split("!")[0])
+            assert quic_fire.out_time_emis_rad == int(lines[9].strip().split("!")[0])
+            assert quic_fire.out_time_wind_avg == int(lines[10].strip().split("!")[0])
+            assert quic_fire.nz == int(lines[12].strip().split("!")[0])
+            assert quic_fire.stretch_grid_flag == int(lines[13].strip().split("!")[0])
+            dz_array = []
+            for i in range(14, 14 + len(quic_fire.dz_array)):
+                dz_array.append(float(lines[i].strip()))
+            assert quic_fire.dz_array == dz_array
+            current_line = 15 + len(quic_fire.dz_array)
+            current_line += 4  # skip unused lines
+            current_line += 1  # header
+            assert quic_fire.fuel_density_flag == int(
+                lines[current_line].strip().split("!")[0]
+            )
+            assert quic_fire.fuel_density == float(lines[current_line + 1].strip())
+            assert quic_fire.fuel_moisture_flag == int(
+                lines[current_line + 2].strip().split("!")[0]
+            )
+            assert quic_fire.fuel_moisture == float(lines[current_line + 3].strip())
+            assert quic_fire.fuel_height_flag == int(
+                lines[current_line + 4].strip().split("!")[0]
+            )
+            assert quic_fire.fuel_height == float(lines[current_line + 5].strip())
+            if version == "v6":
+                assert quic_fire.size_scale_flag == int(
+                    lines[current_line + 6].strip().split("!")[0]
+                )
+                assert quic_fire.patch_and_gap_flag == int(
+                    lines[current_line + 7].strip().split("!")[0]
+                )
+                current_line += 8
+            else:
+                current_line += 6
 
-    def test_from_file(self):
+            current_line += 1  # header
+            ignition_flag = int(lines[current_line].strip().split("!")[0])
+            ignition_params = []
+            current_line += 1
+            for i in range(current_line, current_line + 4):
+                ignition_params.append(float(lines[i].strip().split("!")[0]))
+            x_min, y_min, x_length, y_length = ignition_params
+            assert quic_fire.ignition_type == RectangleIgnition(
+                ignition_flag=ignition_flag,
+                x_min=x_min,
+                y_min=y_min,
+                x_length=x_length,
+                y_length=y_length,
+            )
+            current_line += 4
+            assert quic_fire.ignitions_per_cell == int(
+                lines[current_line].strip().split("!")[0]
+            )
+            current_line += 1
+            current_line += 1  # header
+            assert quic_fire.firebrand_flag == int(
+                lines[current_line].strip().split("!")[0]
+            )
+            current_line += 1
+            assert quic_fire.eng_to_atm_out == int(
+                lines[current_line + 1].strip().split("!")[0]
+            )
+            assert quic_fire.react_rate_out == int(
+                lines[current_line + 2].strip().split("!")[0]
+            )
+            assert quic_fire.fuel_dens_out == int(
+                lines[current_line + 3].strip().split("!")[0]
+            )
+            assert quic_fire.qf_wind_out == int(
+                lines[current_line + 4].strip().split("!")[0]
+            )
+            assert quic_fire.qu_wind_inst_out == int(
+                lines[current_line + 5].strip().split("!")[0]
+            )
+            assert quic_fire.qu_wind_avg_out == int(
+                lines[current_line + 6].strip().split("!")[0]
+            )
+            assert quic_fire.fuel_moist_out == int(
+                lines[current_line + 8].strip().split("!")[0]
+            )
+            assert quic_fire.mass_burnt_out == int(
+                lines[current_line + 9].strip().split("!")[0]
+            )
+            assert quic_fire.firebrand_out == int(
+                lines[current_line + 10].strip().split("!")[0]
+            )
+            assert quic_fire.emissions_out == int(
+                lines[current_line + 11].strip().split("!")[0]
+            )
+            assert quic_fire.radiation_out == int(
+                lines[current_line + 12].strip().split("!")[0]
+            )
+            assert quic_fire.surf_eng_out == int(
+                lines[current_line + 13].strip().split("!")[0]
+            )
+            assert quic_fire.auto_kill == int(
+                lines[current_line + 15].strip().split("!")[0]
+            )
+
+    def test_from_file_v5(self):
         """Test initializing a class from a QUIC_fire.inp
         file."""
-        quic_fire = self.get_test_object()
-        quic_fire.to_file(TMP_DIR)
-        test_object = QUIC_fire.from_file(TMP_DIR)
+        quic_fire = self.get_basic_test_object()
+        quic_fire.to_file(TMP_DIR, version="v5")
+        test_object = QUIC_fire.from_file(TMP_DIR, version="v5")
         assert isinstance(test_object, QUIC_fire)
         assert quic_fire == test_object
+
+    def test_from_file_v6(self):
+        """Test initializing a class from a QUIC_fire.inp
+        file."""
+        quic_fire = self.get_basic_test_object()
+        quic_fire.to_file(TMP_DIR, version="v6")
+        test_object = QUIC_fire.from_file(TMP_DIR, version="v6")
+        assert isinstance(test_object, QUIC_fire)
+        assert quic_fire == test_object
+
+    def test_from_file_v6_with_v5_reader(self):
+        """
+        This test tries to read in a version 6 file using the version="v5"
+        argument which should result in an error.
+        """
+        quic_fire = self.get_basic_test_object()
+        quic_fire.to_file(TMP_DIR, version="v6")
+        with pytest.raises(ValueError):
+            QUIC_fire.from_file(TMP_DIR, version="v5")
+
+    def test_from_file_v5_with_v6_reader(self):
+        quic_fire = self.get_basic_test_object()
+        quic_fire.to_file(TMP_DIR, version="v5")
+        with pytest.raises(ValueError):
+            QUIC_fire.from_file(TMP_DIR, version="v6")
 
 
 class Test_QFire_Bldg_Advanced_User_Inputs:
@@ -1700,7 +1762,7 @@ class TestRuntimeAdvancedUserInputs:
     def test_init(self):
         raui = self.get_test_object()
         assert isinstance(raui, RuntimeAdvancedUserInputs)
-        assert raui.num_cpus == 8
+        assert raui.num_cpus == 1
         assert raui.use_acw == 0
 
     def test_from_file(self):
@@ -2166,13 +2228,34 @@ class TestSimulationInputs:
 
     def test_set_uniform_fuels(self):
         sim_inputs = self.get_test_object()
+
+        # Test with default size scale and patch/gap
         sim_inputs.set_uniform_fuels(
             fuel_density=0.6, fuel_moisture=0.05, fuel_height=0.9
         )
-        assert sim_inputs.quic_fire.fuel_flag == 1
+        assert sim_inputs.quic_fire.fuel_density_flag == 1
         assert sim_inputs.quic_fire.fuel_density == 0.6
+        assert sim_inputs.quic_fire.fuel_moisture_flag == 1
         assert sim_inputs.quic_fire.fuel_moisture == 0.05
+        assert sim_inputs.quic_fire.fuel_height_flag == 1
         assert sim_inputs.quic_fire.fuel_height == 0.9
+        assert sim_inputs.quic_fire.size_scale_flag == 0
+        assert sim_inputs.quic_fire.patch_and_gap_flag == 0
+
+        # Test with custom uniform size scale and patch/gap values
+        sim_inputs.set_uniform_fuels(
+            fuel_density=0.6,
+            fuel_moisture=0.05,
+            fuel_height=0.9,
+            size_scale=0.00025,
+            patch_size=0.5,
+            gap_size=0.5,
+        )
+        assert sim_inputs.quic_fire.size_scale_flag == 1
+        assert sim_inputs.quic_fire.size_scale == 0.00025
+        assert sim_inputs.quic_fire.patch_and_gap_flag == 1
+        assert sim_inputs.quic_fire.patch_size == 0.5
+        assert sim_inputs.quic_fire.gap_size == 0.5
 
     def test_set_rectangle_ignition(self):
         sim_inputs = self.get_test_object()
@@ -2205,31 +2288,37 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.emissions_out == 2
 
     def test_set_custom_simulation(self):
+        # Test default set custom simulation (no arguments)
         sim_inputs = self.get_test_object()
         sim_inputs.set_custom_simulation()
-        assert sim_inputs.quic_fire.fuel_flag == 3
-        assert sim_inputs.quic_fire.fuel_density is None
-        assert sim_inputs.quic_fire.fuel_moisture is None
-        assert sim_inputs.quic_fire.fuel_height is None
+        assert sim_inputs.quic_fire.fuel_density_flag == 3
+        assert sim_inputs.quic_fire.fuel_moisture_flag == 3
+        assert sim_inputs.quic_fire.fuel_height_flag == 3
+        assert sim_inputs.quic_fire.size_scale_flag == 0  # Default
+        assert sim_inputs.quic_fire.patch_and_gap_flag == 0  # Default
         assert sim_inputs.quic_fire.ignition_type == IgnitionType(
             ignition_flag=IgnitionSources(7)
         )
         assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag=TopoSources(5))
 
+        # Test including size scale and patch/gap from set custom simulation
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_custom_simulation(size_scale=True, patch_and_gap=True)
+        assert sim_inputs.quic_fire.size_scale_flag == 3
+        assert sim_inputs.quic_fire.patch_and_gap_flag == 2
+
+        # Test excluding topo flag from set custom simulation
         sim_inputs = self.get_test_object()
         sim_inputs.set_custom_simulation(topo=False)
         assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag=TopoSources(0))
 
+    def test_write_inputs_v5(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.set_custom_simulation(ignition=False)
-        assert sim_inputs.quic_fire.ignition_type == default_line_ignition(150, 150, 90)
+        sim_inputs.write_inputs(TMP_DIR, version="v5")
 
+    def test_write_inputs_v6(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.set_custom_simulation(fuel=False)
-        assert sim_inputs.quic_fire.fuel_flag == 1
-        assert sim_inputs.quic_fire.fuel_density == 0.5
-        assert sim_inputs.quic_fire.fuel_moisture == 0.1
-        assert sim_inputs.quic_fire.fuel_height == 1.0
+        sim_inputs.write_inputs(TMP_DIR, version="v6")
 
     def test_new_wind_sensor(self):
         sim_inputs = self.get_test_object()
@@ -2354,9 +2443,14 @@ class TestSimulationInputs:
                 y_location=1,
             )
 
-    def test_write_inputs(self):
+    def test_write_inputs_latest(self):
         sim_inputs = self.get_test_object()
-        sim_inputs.write_inputs(TMP_DIR)
+        sim_inputs.write_inputs(TMP_DIR, version="latest")
+
+    def test_write_inputs_invalid_version(self):
+        sim_inputs = self.get_test_object()
+        with pytest.raises(ValueError):
+            sim_inputs.write_inputs(TMP_DIR, version="invalid_version")
 
     def test_update_shared_attributes(self):
         sim_inputs = self.get_test_object()

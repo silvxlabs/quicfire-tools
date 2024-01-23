@@ -1,0 +1,4 @@
+3	! fuel density flag
+3	! fuel moisture flag
+0	! size scale flag
+0	! patch and gap flag
