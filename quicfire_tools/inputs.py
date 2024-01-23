@@ -410,7 +410,7 @@ class SimulationInputs:
 
         # Write each input file to the output directory
         for input_file in self._input_files_dict.values():
-            if input_file != "windsensors":
+            if input_file != self._input_files_dict["windsensors"]:
                 input_file.to_file(directory, version=version)
             else:
                 input_file.to_file(self.quic_fire.time_now, directory, version=version)
@@ -797,7 +797,7 @@ class SimulationInputs:
         self.gridlist.l = self.quic_fire.nz
         self.gridlist.dx = self.qu_simparams.dx
         self.gridlist.dy = self.qu_simparams.dy
-        if not self.windsensors.time_now == self.quic_fire.time_now:
+        if not self.qu_simparams.wind_times[0] == self.quic_fire.time_now:
             print(
                 f"WARNING: fire start time must be the same for all input files.\n"
                 f"Times: \n"
@@ -805,9 +805,9 @@ class SimulationInputs:
                 f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
                 f"Setting all values to {self.quic_fire.time_now}"
             )
-            self.windsensors.time_now = self.quic_fire.time_now
+        # TODO: check qu_metparams and qu_simparams
         self.qu_simparams.wind_times = [
-            s + self.windsensors.time_now for s in self.windsensors.wind_times
+            s + self.quic_fire.time_now for s in self.windsensors.wind_times
         ]
         self.qu_metparams.num_sensors = len(self.windsensors.sensor_array)
 
@@ -2747,7 +2747,6 @@ class WindSensorArray(BaseModel):
         sensor_name = "".join(["sensor", str(sensor_number)])
         sensor = WindSensor(
             name=sensor_name,
-            time_now=self.time_now,
             x_location=x_location,
             y_location=y_location,
             wind_times=wind_times,
