@@ -8,3 +8,7 @@ ignore =
     E741,
     # Line break before binary operator. flake8 is wrong and goes against PEP8.
     W503,
+    # missing whitespace after ':'
+    E231,
+    # f-string is missing placeholders
+    F541
