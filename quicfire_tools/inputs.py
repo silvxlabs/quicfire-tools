@@ -11,6 +11,7 @@ from pathlib import Path
 from string import Template
 from typing import Literal, Union, List, Optional
 import bisect
+import re
 
 # External Imports
 import numpy as np
@@ -2674,9 +2675,10 @@ class WindSensorArray(BaseModel):
         if isinstance(directory, str):
             directory = Path(directory)
         sensor_array = []
-        # look for wind sensors
+        # get a list of all the sensor*.inp files that match the regular expression
+        pattern = re.compile(r"sensor\d+\.inp$")
         sensor_list = [
-            file.stem for file in directory.glob("sensor*.inp") if file.is_file()
+            file.stem for file in directory.iterdir() if pattern.match(file.name)
         ]
         for sensor_name in sensor_list:
             sensor = WindSensor.from_file(directory, sensor_name)
