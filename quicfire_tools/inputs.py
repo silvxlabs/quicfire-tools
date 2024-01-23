@@ -800,7 +800,6 @@ class SimulationInputs:
                 f"Times: \n"
                 f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
                 f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
-                f"\twindsensor.inp: {self.windsensors.time_now}\n"
                 f"Setting all values to {self.quic_fire.time_now}"
             )
             self.windsensors.time_now = self.quic_fire.time_now
@@ -2409,10 +2408,6 @@ class WindSensor(BaseModel, validate_assignment=True):
     ----------
     sensor_number : PositiveInt
         Number representing the wind sensor
-    time_now : PositiveInt
-        Begining of time step in Unix Epoch time (integer seconds since
-        1970/1/1 00:00:00). Must match time at beginning of fire
-        (QU_Simparams.inp and QUIC_fire.inp)
     wind_times : NonNegativeFloat | list(NonNegativeFloat)
         Time in seconds since the start of the fire for each wind shift.
         First time must be zero.
@@ -2430,7 +2425,6 @@ class WindSensor(BaseModel, validate_assignment=True):
 
     name: str
     _extension: str = ".inp"
-    time_now: PositiveInt
     wind_times: Union[NonNegativeFloat, List[NonNegativeFloat]] = 0
     wind_speeds: Union[PositiveFloat, List[PositiveFloat]]
     wind_directions: Union[NonNegativeInt, List[NonNegativeInt]]
@@ -2474,18 +2468,18 @@ class WindSensor(BaseModel, validate_assignment=True):
             index = index - 1
         return index
 
-    def get_wind_lines(self, global_times) -> str:
+    def get_wind_lines(self, global_times, time_now) -> str:
         location_lines = (
             f"{self.x_location} !X coordinate (meters)\n"
             f"{self.y_location} !Y coordinate (meters)"
         )
         windshifts = []
         for i in global_times:
-            time_idx = self._find_last_wind_time(i)
+            time_idx = self._find_target_time_index(i)
             wind_speed = self.wind_speeds[time_idx]
             wind_direction = self.wind_directions[time_idx]
             shift = (
-                f"\n{self.time_now + i} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
+                f"\n{time_now + i} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n"
                 f"1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n"
                 f"0.1 !site zo\n"
                 f"0. ! 1/L (default = 0)\n"
@@ -2497,7 +2491,9 @@ class WindSensor(BaseModel, validate_assignment=True):
 
         return location_lines + wind_lines
 
-    def to_file(self, global_times: list, directory: Path | str, version: str):
+    def to_file(
+        self, global_times: list, time_now: int, directory: Path | str, version: str
+    ):
         if isinstance(directory, str):
             directory = Path(directory)
 
@@ -2506,7 +2502,7 @@ class WindSensor(BaseModel, validate_assignment=True):
             src = Template(ftemp.read())
 
         dict_representation = self.to_dict(include_private=True)
-        dict_representation["_wind_lines"] = self.get_wind_lines(global_times)
+        dict_representation["_wind_lines"] = self.get_wind_lines(global_times, time_now)
         result = src.substitute(dict_representation)
 
         output_file_path = directory / self._filename
@@ -2705,7 +2701,7 @@ class WindSensorArray(BaseModel):
             directory = Path(directory)
 
         for sensor in self.sensor_array:
-            sensor.to_file(self.wind_times, directory, version)
+            sensor.to_file(self.wind_times, self.time_now, directory, version)
 
     def add_sensor(
         self,
