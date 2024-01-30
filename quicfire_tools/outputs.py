@@ -380,7 +380,7 @@ class SimulationOutputs:
         Get a sorted list of output files in the Output/ directory for the
         given output name.
         """
-        paths = list(self.output_directory.glob(f"{name}*"))
+        paths = list(self.output_directory.glob(f"{name}*\.bin"))
         paths.sort()
         return paths
 
