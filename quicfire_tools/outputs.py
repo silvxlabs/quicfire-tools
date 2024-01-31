@@ -351,7 +351,9 @@ class SimulationOutputs:
         the output file and the value is an instantiated OutputFile object.
         """
         for key, attributes in OUTPUTS_MAP.items():
-            output_files_list = self._get_list_output_paths(key)
+            output_files_list = self._get_list_output_paths(
+                key, attributes["extension"]
+            )
 
             # Check if any output files of the given type exist in the directory
             if output_files_list:
@@ -375,16 +377,16 @@ class SimulationOutputs:
                     self.outputs[key].times.append(time)
                     self.outputs[key].filepaths.append(filepath)
 
-    def _get_list_output_paths(self, name) -> list[Path]:
+    def _get_list_output_paths(self, name, ext) -> list[Path]:
         """
         Get a sorted list of output files in the Output/ directory for the
         given output name.
         """
-        paths = list(self.output_directory.glob(f"{name}*"))
+        paths = list(self.output_directory.glob(f"{name}*\{ext}"))
         paths.sort()
         return paths
 
-    def _get_output_shape(self, name, attrs) -> tuple:
+    def _get_output_shape(self, attrs) -> tuple:
         number_dimensions = len(attrs["dimensions"])
         if number_dimensions == 2:
             return 1, self.ny, self.nx
