@@ -1,6 +1,7 @@
 """
 Module for converting QUIC-Fire output files to duck array data formats.
 """
+
 from __future__ import annotations
 
 # Core imports
@@ -357,7 +358,7 @@ class SimulationOutputs:
 
             # Check if any output files of the given type exist in the directory
             if output_files_list:
-                shape = self._get_output_shape(key, attributes)
+                shape = self._get_output_shape(attributes)
                 self.outputs[key] = OutputFile(
                     name=key,
                     file_format=attributes["file_format"],
@@ -382,7 +383,7 @@ class SimulationOutputs:
         Get a sorted list of output files in the Output/ directory for the
         given output name.
         """
-        paths = list(self.output_directory.glob(f"{name}*\{ext}"))
+        paths = list(self.output_directory.glob(f"{name}*{ext}"))
         paths.sort()
         return paths
 
@@ -685,9 +686,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["z"]
-                zarr_dataset.attrs[
-                    "long_name"
-                ] = "cell height: bottom of cell from ground"
+                zarr_dataset.attrs["long_name"] = (
+                    "cell height: bottom of cell from ground"
+                )
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(output.shape[0])) * dz
@@ -698,9 +699,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["y"]
-                zarr_dataset.attrs[
-                    "long_name"
-                ] = "Latitude: cell dist north from southern edge of domain"
+                zarr_dataset.attrs["long_name"] = (
+                    "Latitude: cell dist north from southern edge of domain"
+                )
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(output.shape[1])) * dy
@@ -711,9 +712,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["x"]
-                zarr_dataset.attrs[
-                    "long_name"
-                ] = "Longitude: cell dist east from western edge of domain"
+                zarr_dataset.attrs["long_name"] = (
+                    "Longitude: cell dist east from western edge of domain"
+                )
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(0, output.shape[2])) * dx
