@@ -686,9 +686,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["z"]
-                zarr_dataset.attrs["long_name"] = (
-                    "cell height: bottom of cell from ground"
-                )
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "cell height: bottom of cell from ground"
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(output.shape[0])) * dz
@@ -699,9 +699,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["y"]
-                zarr_dataset.attrs["long_name"] = (
-                    "Latitude: cell dist north from southern edge of domain"
-                )
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "Latitude: cell dist north from southern edge of domain"
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(output.shape[1])) * dy
@@ -712,9 +712,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["x"]
-                zarr_dataset.attrs["long_name"] = (
-                    "Longitude: cell dist east from western edge of domain"
-                )
+                zarr_dataset.attrs[
+                    "long_name"
+                ] = "Longitude: cell dist east from western edge of domain"
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(0, output.shape[2])) * dx
