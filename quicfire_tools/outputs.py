@@ -256,32 +256,21 @@ class OutputFile:
         >>> # Get the first timestep for the fire-energy_to_atmos output
         >>> fire_energy_slice = fire_energy.to_numpy(timestep=0)
         """
-        self._validate_timestep(timestep)
         selected_files = self._select_files_based_on_timestep(timestep)
         return self._get_multiple_timesteps(selected_files)
 
-    def _validate_timestep(self, timestep: int | list[int] | None) -> None:
-        """Validate the timestep input."""
-        if timestep is None:
-            return
-        if isinstance(timestep, int):
-            if timestep not in range(len(self.times)):
-                raise ValueError(f"Invalid timestep: {timestep}")
-        elif all(isinstance(ts, int) for ts in timestep):
-            if any(ts not in range(len(self.times)) for ts in timestep):
-                raise ValueError(f"Invalid timestep: {timestep}")
-        else:
-            raise TypeError(f"Invalid timestep type: {type(timestep)}")
-
     def _select_files_based_on_timestep(
-        self, timestep: int | list[int] | None
+        self, timestep: int | list[int] | range | None
     ) -> list[Path]:
         """Return files selected based on timestep."""
         if timestep is None:
             return self.filepaths
         if isinstance(timestep, int):
-            return [self.filepaths[timestep]]
-        return [self.filepaths[ts] for ts in timestep]
+            timestep = [timestep]
+        try:
+            return [self.filepaths[ts] for ts in timestep]
+        except IndexError:
+            raise ValueError(f"Invalid timestep: {timestep}")
 
     def _get_single_timestep(self, output_file: Path) -> np.ndarray:
         """Return a numpy array for the given output file."""
@@ -686,9 +675,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["z"]
-                zarr_dataset.attrs[
-                    "long_name"
-                ] = "cell height: bottom of cell from ground"
+                zarr_dataset.attrs["long_name"] = (
+                    "cell height: bottom of cell from ground"
+                )
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(output.shape[0])) * dz
@@ -699,9 +688,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["y"]
-                zarr_dataset.attrs[
-                    "long_name"
-                ] = "Latitude: cell dist north from southern edge of domain"
+                zarr_dataset.attrs["long_name"] = (
+                    "Latitude: cell dist north from southern edge of domain"
+                )
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(output.shape[1])) * dy
@@ -712,9 +701,9 @@ class SimulationOutputs:
                 )
                 # Metadata
                 zarr_dataset.attrs["_ARRAY_DIMENSIONS"] = ["x"]
-                zarr_dataset.attrs[
-                    "long_name"
-                ] = "Longitude: cell dist east from western edge of domain"
+                zarr_dataset.attrs["long_name"] = (
+                    "Longitude: cell dist east from western edge of domain"
+                )
                 zarr_dataset.attrs["units"] = "m"
                 # Store Values
                 zarr_dataset[...] = np.array(range(0, output.shape[2])) * dx
