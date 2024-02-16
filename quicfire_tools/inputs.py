@@ -1,6 +1,7 @@
 """
 QUIC-Fire Tools Simulation Input Module
 """
+
 from __future__ import annotations
 
 # Core Imports
@@ -696,6 +697,28 @@ class SimulationInputs:
         self.quic_fire.radiation_out = int(radiation)
         self.quic_fire.surf_eng_out = int(surf_eng)
         self.quic_fire.emissions_out = 2 if emissions else 0
+
+    def set_output_interval(self, interval: int):
+        """
+        Sets the interval, in seconds, at which the simulation will write .bin
+        files to disk. This function sets the same interval for all output
+        files.
+
+        Parameters
+        ----------
+        interval: int
+            Interval in seconds at which to write .bin files to disk.
+
+        Examples
+        --------
+        >>> from quicfire_tools import SimulationInputs
+        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
+        >>> sim_inputs.set_output_interval(60)
+        """
+        self.quic_fire.out_time_fire = interval
+        self.quic_fire.out_time_wind = interval
+        self.quic_fire.out_time_wind_avg = interval
+        self.quic_fire.out_time_emis_rad = interval
 
     def new_wind_sensor(
         self,

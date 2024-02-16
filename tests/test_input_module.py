@@ -1,6 +1,7 @@
 """
 Test module for the data module of the quicfire_tools package.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -2284,6 +2285,22 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.radiation_out == 0
         assert sim_inputs.quic_fire.surf_eng_out == 0
         assert sim_inputs.quic_fire.emissions_out == 2
+
+    def test_set_output_times(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_output_interval(60)
+        assert sim_inputs.quic_fire.out_time_fire == 60
+        assert sim_inputs.quic_fire.out_time_wind == 60
+        assert sim_inputs.quic_fire.out_time_wind_avg == 60
+        assert sim_inputs.quic_fire.out_time_emis_rad == 60
+
+        # Test with invalid intervals
+        with pytest.raises(ValueError):
+            sim_inputs.set_output_interval(-1)
+        with pytest.raises(ValueError):
+            sim_inputs.set_output_interval(0)
+        with pytest.raises(ValueError):
+            sim_inputs.set_output_interval("a")
 
     def test_set_custom_simulation(self):
         # Test default set custom simulation (no arguments)
