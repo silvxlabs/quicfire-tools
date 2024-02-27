@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+
 # External imports
 import zarr
 import numpy as np
@@ -105,7 +106,7 @@ THERMAL_RADIATION_OUTPUTS = {
         "units": "kW/m^2",
     },
 }
-WIND_OUTPUTS = {
+QF_WIND_OUTPUTS = {
     "windu": {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
@@ -131,6 +132,72 @@ WIND_OUTPUTS = {
         "delimiter": "",
         "extension": ".bin",
         "description": "Fire w-components, cell centered ",
+        "units": "m/s",
+    },
+}
+QU_WIND_OUTPUTS = {
+    "qf_windu": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Instantaneous wind component in the x-direction, cell centered ",
+        "units": "m/s",
+    },
+    "qu_windv": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Instantaneous wind component in the y-direction, cell centered ",
+        "units": "m/s",
+    },
+    "qu_windw": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Instantaneous wind component in the x-direction, cell centered ",
+        "units": "m/s",
+    },
+    "qf_windu_ave": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Averaged wind component in the x-direction, cell centered ",
+        "units": "m/s",
+    },
+    "qu_windv_ave": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Averaged wind component in the y-direction, cell centered ",
+        "units": "m/s",
+    },
+    "qu_windw_ave": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Averaged wind component in the z-direction, cell centered ",
+        "units": "m/s",
+    },
+    "qu_wplume": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Instantaneous wind component in the z-direction generated "
+        "by the fire, cell centered ",
         "units": "m/s",
     },
 }
@@ -165,11 +232,22 @@ EMISSIONS_OUTPUTS = {
         "times (fuel moisture + water from combustion) in grams",
         "units": "g",
     },
+    "emissions_distribution": {
+        "file_format": "compressed",
+        "dimensions": ["z", "y", "x"],
+        "grid": "fire",
+        "delimiter": "-",
+        "extension": ".bin",
+        "description": "Size of PM2.5 emitted between two emission file output"
+        "times in microns",
+        "units": "g",
+    },
 }
 OUTPUTS_MAP = {
     **FUELS_OUTPUTS,
     **THERMAL_RADIATION_OUTPUTS,
-    **WIND_OUTPUTS,
+    **QF_WIND_OUTPUTS,
+    **QU_WIND_OUTPUTS,
     **EMISSIONS_OUTPUTS,
 }
 
