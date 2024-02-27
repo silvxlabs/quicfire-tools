@@ -1,6 +1,7 @@
 """
 QUIC-Fire Tools Simulation Input Module
 """
+
 from __future__ import annotations
 
 # Core Imports
@@ -1957,9 +1958,10 @@ class QUIC_fire(InputFile):
 
         # Read fuel height
         current_line += 1
-        fuel_height_flag = 0
         if fuel_density_flag == 1:
             fuel_height_flag = int(lines[current_line].strip().split("!")[0])
+        else:
+            fuel_height_flag = fuel_density_flag
         fuel_height = None
         if fuel_density_flag == 1 and fuel_moisture_flag == 1:
             current_line += 1
