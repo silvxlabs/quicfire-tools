@@ -1956,10 +1956,10 @@ class QUIC_fire(InputFile):
             fuel_moisture = float(lines[current_line].strip())
 
         # Read fuel height
-        current_line += 1
-        fuel_height_flag = 0
         if fuel_density_flag == 1:
             fuel_height_flag = int(lines[current_line].strip().split("!")[0])
+        else:
+            fuel_height_flag = fuel_density_flag
         fuel_height = None
         if fuel_density_flag == 1 and fuel_moisture_flag == 1:
             current_line += 1
