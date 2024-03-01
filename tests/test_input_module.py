@@ -44,6 +44,8 @@ from quicfire_tools.topography import (
     CanyonTopo,
     CosHillTopo,
     HillPassTopo,
+    SinusoidTopo,
+    SlopeMesaTopo,
 )
 
 TEST_DIR = Path(__file__).parent
@@ -2550,6 +2552,175 @@ class TestSimulationInputs:
 
         # Check that the inputs are the same
         compare_simulation_inputs(sim_inputs, test_obj)
+
+
+class TestSamples:
+    def test_canyon(self):
+        canyon_sim = SimulationInputs.from_directory(SAMPLES_DIR / "Canyon")
+
+        # Check topography
+        assert isinstance(canyon_sim.qu_topoinputs.topography, CanyonTopo)
+        assert canyon_sim.qu_topoinputs.topography.topo_flag == 4
+        assert canyon_sim.qu_topoinputs.topography.x_location == 300
+        assert canyon_sim.qu_topoinputs.topography.y_location == 150
+        assert canyon_sim.qu_topoinputs.topography.canyon_std == 100
+        assert canyon_sim.qu_topoinputs.topography.vertical_offset == 20
+
+        # Check ignition
+        assert isinstance(canyon_sim.quic_fire.ignition, RectangleIgnition)
+        assert canyon_sim.quic_fire.ignition.ignition_flag == 1
+        assert canyon_sim.quic_fire.ignition.x_min == 250
+        assert canyon_sim.quic_fire.ignition.y_min == 225
+        assert canyon_sim.quic_fire.ignition.x_length == 10
+        assert canyon_sim.quic_fire.ignition.y_length == 100
+
+        # Check I/O
+        canyon_sim.write_inputs(TMP_DIR)
+        canyon_sim.to_json(TMP_DIR / "sim.json")
+        canyon_sim_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(canyon_sim, canyon_sim_from_json)
+
+    def test_cos_hill(self):
+        cos_hill = SimulationInputs.from_directory(SAMPLES_DIR / "CosHill")
+
+        # Check topography
+        assert isinstance(cos_hill.qu_topoinputs.topography, CosHillTopo)
+        assert cos_hill.qu_topoinputs.topography.topo_flag == 8
+        assert cos_hill.qu_topoinputs.topography.aspect == 100
+        assert cos_hill.qu_topoinputs.topography.height == 10
+
+        # Check I/O
+        cos_hill.write_inputs(TMP_DIR)
+        cos_hill.to_json(TMP_DIR / "sim.json")
+        cos_hill_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(cos_hill, cos_hill_from_json)
+
+    def test_eglin_canopy(self):
+        eglin_canopy = SimulationInputs.from_directory(SAMPLES_DIR / "EglinCanopyTest")
+
+        # Check topography
+        assert isinstance(eglin_canopy.qu_topoinputs.topography, Topography)
+        assert eglin_canopy.qu_topoinputs.topography.topo_flag == 0
+
+        # Check fuel flags
+        assert eglin_canopy.quic_fire.fuel_density_flag == 5
+        assert eglin_canopy.quic_fire.fuel_moisture_flag == 5
+
+        # Check ignition
+        assert isinstance(eglin_canopy.quic_fire.ignition, Ignition)
+        assert eglin_canopy.quic_fire.ignition.ignition_flag == 7
+
+        # Check I/O
+        eglin_canopy.write_inputs(TMP_DIR)
+        eglin_canopy.to_json(TMP_DIR / "sim.json")
+        eglin_canopy_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(eglin_canopy, eglin_canopy_from_json)
+
+    def test_gauss_hill(self):
+        gauss_hill = SimulationInputs.from_directory(SAMPLES_DIR / "GaussHill")
+
+        # Check topography
+        assert isinstance(gauss_hill.qu_topoinputs.topography, GaussianHillTopo)
+        assert gauss_hill.qu_topoinputs.topography.topo_flag == 1
+        assert gauss_hill.qu_topoinputs.topography.x_hilltop == 400
+        assert gauss_hill.qu_topoinputs.topography.y_hilltop == 300
+        assert gauss_hill.qu_topoinputs.topography.elevation_max == 100
+        assert gauss_hill.qu_topoinputs.topography.elevation_std == 150
+
+        # Check I/O
+        gauss_hill.write_inputs(TMP_DIR)
+        gauss_hill.to_json(TMP_DIR / "sim.json")
+        gauss_hill_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(gauss_hill, gauss_hill_from_json)
+
+    def test_hill_pass(self):
+        hill_pass = SimulationInputs.from_directory(SAMPLES_DIR / "HillPass")
+
+        # Check topography
+        assert isinstance(hill_pass.qu_topoinputs.topography, HillPassTopo)
+        assert hill_pass.qu_topoinputs.topography.topo_flag == 2
+        assert hill_pass.qu_topoinputs.topography.max_height == 70
+        assert hill_pass.qu_topoinputs.topography.location_param == 5
+
+        # Check I/O
+        hill_pass.write_inputs(TMP_DIR)
+        hill_pass.to_json(TMP_DIR / "sim.json")
+        hill_pass_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(hill_pass, hill_pass_from_json)
+
+    def test_line_fire(self):
+        line_fire = SimulationInputs.from_directory(SAMPLES_DIR / "LineFire")
+
+        # Check topography
+        assert isinstance(line_fire.qu_topoinputs.topography, Topography)
+        assert line_fire.qu_topoinputs.topography.topo_flag == 0
+
+        # Check ignition
+        assert isinstance(line_fire.quic_fire.ignition, CircularRingIgnition)
+        assert line_fire.quic_fire.ignition.ignition_flag == 3
+        assert line_fire.quic_fire.ignition.x_min == 50
+        assert line_fire.quic_fire.ignition.y_min == 50
+        assert line_fire.quic_fire.ignition.x_length == 100
+        assert line_fire.quic_fire.ignition.y_length == 100
+        assert line_fire.quic_fire.ignition.ring_width == 2
+
+        # Check I/O
+        line_fire.write_inputs(TMP_DIR)
+        line_fire.to_json(TMP_DIR / "sim.json")
+        line_fire_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(line_fire, line_fire_from_json)
+
+    def test_sinusoid(self):
+        sinusoid = SimulationInputs.from_directory(SAMPLES_DIR / "Sinusoid")
+
+        # Check topography
+        assert isinstance(sinusoid.qu_topoinputs.topography, SinusoidTopo)
+        assert sinusoid.qu_topoinputs.topography.topo_flag == 7
+        assert sinusoid.qu_topoinputs.topography.period == 20
+        assert sinusoid.qu_topoinputs.topography.amplitude == 80
+
+        # Check I/O
+        sinusoid.write_inputs(TMP_DIR)
+        sinusoid.to_json(TMP_DIR / "sim.json")
+        sinusoid_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(sinusoid, sinusoid_from_json)
+
+    def test_slope_mesa(self):
+        slope_mesa = SimulationInputs.from_directory(SAMPLES_DIR / "SlopeMesa")
+
+        # Check topography
+        assert isinstance(slope_mesa.qu_topoinputs.topography, SlopeMesaTopo)
+        assert slope_mesa.qu_topoinputs.topography.topo_flag == 3
+        assert slope_mesa.qu_topoinputs.topography.slope_axis == 0
+        assert slope_mesa.qu_topoinputs.topography.slope_value == 0.2
+        assert slope_mesa.qu_topoinputs.topography.flat_fraction == 0.5
+
+        # Check I/O
+        slope_mesa.write_inputs(TMP_DIR)
+        slope_mesa.to_json(TMP_DIR / "sim.json")
+        slope_mesa_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(slope_mesa, slope_mesa_from_json)
+
+    def test_transient_winds(self):
+        transient_winds = SimulationInputs.from_directory(
+            SAMPLES_DIR / "TransientWinds"
+        )
+
+        # Check wind sensors
+        assert transient_winds.qu_simparams.wind_times == [1653321600, 1653321700]
+        assert transient_winds.qu_metparams.num_sensors == 1
+        assert len(transient_winds.windsensors) == 1
+        assert isinstance(transient_winds.windsensors.sensor1, WindSensor)
+        assert transient_winds.windsensors.sensor1.wind_times == [0, 100]
+        assert transient_winds.windsensors.sensor1.wind_speeds == [6, 6]
+        assert transient_winds.windsensors.sensor1.wind_directions == [270, 180]
+        assert transient_winds.windsensors.sensor1.sensor_height == 10.0
+
+        # Check I/O
+        transient_winds.write_inputs(TMP_DIR)
+        transient_winds.to_json(TMP_DIR / "sim.json")
+        transient_winds_from_json = SimulationInputs.from_json(TMP_DIR / "sim.json")
+        compare_simulation_inputs(transient_winds, transient_winds_from_json)
 
 
 def compare_simulation_inputs(a: SimulationInputs, b: SimulationInputs):

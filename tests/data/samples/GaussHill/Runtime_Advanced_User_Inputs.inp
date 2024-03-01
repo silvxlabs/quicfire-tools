@@ -1,0 +1,2 @@
+8  ! max number of cpu threads used
+0  ! Use Adaptive Computation Window (0=Disabled 1=Enabled)

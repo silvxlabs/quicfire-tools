@@ -2926,6 +2926,9 @@ class WindSensorArray(BaseModel):
         )
         return combined_times
 
+    def __len__(self):
+        return len(self.sensor_array)
+
     def __getattr__(self, name):
         for sensor in self.sensor_array:
             if name == sensor.name:

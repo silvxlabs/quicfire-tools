@@ -1,0 +1,15 @@
+Specify file name for custom topo (full path)
+""
+1     ! N/A, topo flag: 0 = flat, 1 = Gaussian hill, 2 = hill pass, 3 = slope mesa, 4 = canyon, 5 = custom, 6 = half circle, 7 = sinusoid, 8 = cos hill, 9 = QP_elevation.inp, 10 = terrainOutput.txt (ARA), 11 = terrain.dat (firetec)
+400   ! m, x-center
+300   ! m, y-center
+100    ! m, max height
+150   ! m, std
+0     ! N/A, smoothing method (0 = none (default for idealized terrain), 1 = blur, 2 = David's)
+0     ! N/A, number of smoothing passes
+150   ! N/A, number of initial SOR iterations (only if fire is run)
+4     ! N/A, sor cycles
+1.3   ! N/A, sor relaxation parameter (default for flat is 1.78, ignored if there is no terrain)
+0     ! N/A, add slope flow correction (0 = no, 1 = yes)
+Command to run slope flow code (system specific)
+""
