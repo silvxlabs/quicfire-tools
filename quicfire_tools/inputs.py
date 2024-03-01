@@ -2516,9 +2516,9 @@ class QU_TopoInputs(InputFile):
                     topo_params
                 )
                 topo_type = CanyonTopo(
-                    x_start=int(x_start),
-                    y_center=int(y_center),
-                    sloe_value=slope_value,
+                    x_location=int(x_start),
+                    y_location=int(y_center),
+                    slope_value=slope_value,
                     canyon_std=canyon_std,
                     vertical_offset=vertical_offset,
                 )
