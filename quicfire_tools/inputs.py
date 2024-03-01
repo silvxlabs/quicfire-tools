@@ -1756,7 +1756,7 @@ class QUIC_fire(InputFile):
     dz_array : List[PositiveFloat]
         Custom dz, one dz per line must be specified, from the ground to the
         top of the domain
-    fuel_density_flag: Literal[1, 2, 3, 4]
+    fuel_density_flag: Literal[1, 2, 3, 4, 5]
         Fuel density flag (defaults to 1):
         1 = density is uniform over the domain,
         2 = density is provided through QF_FuelDensity.inp,
@@ -1765,7 +1765,7 @@ class QUIC_fire(InputFile):
         5 = FastFuels input (assuming uniform dz of 1m)
     fuel_density : PositiveFloat
         Fuel density (kg/m3)
-    fuel_moisture_flag : Literal[1, 2, 3, 4]
+    fuel_moisture_flag : Literal[1, 2, 3, 4, 5]
         Fuel moisture flag (defaults to 1):
         1 = moisture is uniform over the domain,
         2 = moisture is provided through QF_FuelMoisture.inp,
@@ -1867,9 +1867,9 @@ class QUIC_fire(InputFile):
     stretch_grid_flag: Literal[0, 1] = 0
     dz: PositiveFloat = 1
     dz_array: list[PositiveFloat] = []
-    fuel_density_flag: Literal[1, 2, 3, 4] = 1
+    fuel_density_flag: Literal[1, 2, 3, 4, 5] = 1
     fuel_density: Union[PositiveFloat, None] = 0.5
-    fuel_moisture_flag: Literal[1, 2, 3, 4] = 1
+    fuel_moisture_flag: Literal[1, 2, 3, 4, 5] = 1
     fuel_moisture: Union[PositiveFloat, None] = 0.1
     fuel_height_flag: Literal[1, 2, 3, 4] = 1
     fuel_height: Union[PositiveFloat, None] = 1.0
@@ -2052,9 +2052,9 @@ class QUIC_fire(InputFile):
                 fuel_moisture = float(lines[current_line].strip().split()[0])
 
             # Read fuel height
-            current_line += 1
-            fuel_height_flag = 0
+            fuel_height_flag = 1
             if fuel_density_flag == 1:
+                current_line += 1
                 fuel_height_flag = int(lines[current_line].strip().split()[0])
             fuel_height = None
             if fuel_density_flag == 1 and fuel_moisture_flag == 1:
