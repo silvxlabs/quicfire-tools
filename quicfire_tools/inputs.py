@@ -53,6 +53,7 @@ from quicfire_tools.topography import (
     SinusoidTopo,
     SlopeMesaTopo,
     TopoType,
+    serialize_topo_type,
 )
 from quicfire_tools.utils import compute_parabolic_stretched_grid
 
@@ -2460,6 +2461,12 @@ class QU_TopoInputs(InputFile):
     @property
     def _topo_lines(self) -> str:
         return str(self.topo_type)
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        if "topo_type" in data:
+            data["topo_type"] = serialize_topo_type(data["topo_type"])
+        return cls(**data)
 
     @classmethod
     def from_file(cls, directory: str | Path, **kwargs):

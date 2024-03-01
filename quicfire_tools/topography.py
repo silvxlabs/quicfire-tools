@@ -1,6 +1,7 @@
 """
 QUIC-Fire Tools Topography Model
 """
+
 from __future__ import annotations
 
 # Core Imports
@@ -8,7 +9,6 @@ from enum import Enum
 
 # External Imports
 from typing import Literal
-
 from pydantic import BaseModel, Field, PositiveFloat, SerializeAsAny
 
 
@@ -244,3 +244,23 @@ class CosHillTopo(TopoType):
         flag_line = super().__str__()
         params = f"\n{self.aspect}\t! [0], aspect\n" f"{self.height}\t! m, height"
         return flag_line + params
+
+
+def serialize_topo_type(topo_data: dict):
+    topo_flag = topo_data.get("topo_flag")
+    if topo_flag == TopoSources(1):
+        return GaussianHillTopo(**topo_data)
+    elif topo_flag == TopoSources(2):
+        return HillPassTopo(**topo_data)
+    elif topo_flag == TopoSources(3):
+        return SlopeMesaTopo(**topo_data)
+    elif topo_flag == TopoSources(4):
+        return CanyonTopo(**topo_data)
+    elif topo_flag == TopoSources(6):
+        return HalfCircleTopo(**topo_data)
+    elif topo_flag == TopoSources(7):
+        return SinusoidTopo(**topo_data)
+    elif topo_flag == TopoSources(8):
+        return CosHillTopo(**topo_data)
+    else:
+        return TopoType(**topo_data)
