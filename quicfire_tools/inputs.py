@@ -2796,18 +2796,19 @@ class WindSensor(BaseModel, validate_assignment=True):
             x_location = int(lines[4].strip().split("!")[0])
             y_location = int(lines[5].strip().split("!")[0])
             time_now = float(lines[6].strip().split("!")[0])
-            sensor_height = float(lines[11].split(" ")[0])
-            wind_speeds.append(float(lines[11].split(" ")[1]))
-            wind_directions.append(int(float(lines[11].split(" ")[2].strip())))
+            wind_line = lines[11].strip()
+            sensor_height = float(wind_line.split()[0])
+            wind_speed = float(wind_line.split()[1])
+            wind_speeds.append(wind_speed)
+            wind_direction = int(wind_line.split()[2])
+            wind_directions.append(wind_direction)
             next_shift = 12
             while (next_shift + 6) <= len(lines):
-                wind_times.append(
-                    float(lines[next_shift].strip().split("!")[0]) - time_now
-                )
-                wind_speeds.append(float(lines[next_shift + 5].split(" ")[1]))
-                wind_directions.append(
-                    int(float(lines[next_shift + 5].split(" ")[2].strip()))
-                )
+                wind_time_line = lines[next_shift].strip()
+                wind_times.append(float(wind_time_line.split()[0]) - time_now)
+                wind_line = lines[next_shift + 5].strip()
+                wind_speeds.append(float(wind_line.split()[1]))
+                wind_directions.append(int(wind_line.split()[2].strip()))
                 next_shift += 6
 
         except IndexError:
