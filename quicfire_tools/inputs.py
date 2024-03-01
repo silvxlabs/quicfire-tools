@@ -2041,7 +2041,7 @@ class QUIC_fire(InputFile):
             fuel_density = None
             if fuel_density_flag == 1:
                 current_line += 1
-                fuel_density = float(lines[current_line].strip())
+                fuel_density = float(lines[current_line].strip().split()[0])
 
             # Read fuel moisture
             current_line += 1
@@ -2049,7 +2049,7 @@ class QUIC_fire(InputFile):
             fuel_moisture = None
             if fuel_moisture_flag == 1:
                 current_line += 1
-                fuel_moisture = float(lines[current_line].strip())
+                fuel_moisture = float(lines[current_line].strip().split()[0])
 
             # Read fuel height
             current_line += 1
@@ -2059,7 +2059,7 @@ class QUIC_fire(InputFile):
             fuel_height = None
             if fuel_density_flag == 1 and fuel_moisture_flag == 1:
                 current_line += 1
-                fuel_height = float(lines[current_line].strip())
+                fuel_height = float(lines[current_line].strip().split()[0])
 
             # Read size scale and patch/gap (Supported for v6 and above)
             if version in ("v6"):
@@ -2077,7 +2077,7 @@ class QUIC_fire(InputFile):
                 size_scale = 0.0005
                 if size_scale_flag == 1:
                     current_line += 1
-                    size_scale = float(lines[current_line].strip())
+                    size_scale = float(lines[current_line].strip().split()[0])
 
                 # Read patch and gap
                 current_line += 1
@@ -2086,9 +2086,9 @@ class QUIC_fire(InputFile):
                 gap_size = 0.0
                 if patch_and_gap_flag == 1:
                     current_line += 1
-                    patch_size = float(lines[current_line].strip())
+                    patch_size = float(lines[current_line].strip().split()[0])
                     current_line += 1
-                    gap_size = float(lines[current_line].strip())
+                    gap_size = float(lines[current_line].strip().split()[0])
             elif version == "v5":
                 # The next line should be the ignition header. If it is not, then
                 # the file is not a v5 file, and we should throw an error.
