@@ -35,7 +35,7 @@ from quicfire_tools.ignitions import (
     Ignition,
     IgnitionFlags,
     RectangleIgnition,
-    CircularRingIgnition,
+    SquareRingIgnition,
 )
 from quicfire_tools.topography import (
     Topography,
@@ -2656,13 +2656,14 @@ class TestSamples:
         assert line_fire.qu_topoinputs.topography.topo_flag == 0
 
         # Check ignition
-        assert isinstance(line_fire.quic_fire.ignition, CircularRingIgnition)
-        assert line_fire.quic_fire.ignition.ignition_flag == 3
+        assert isinstance(line_fire.quic_fire.ignition, SquareRingIgnition)
+        assert line_fire.quic_fire.ignition.ignition_flag == 2
         assert line_fire.quic_fire.ignition.x_min == 50
         assert line_fire.quic_fire.ignition.y_min == 50
-        assert line_fire.quic_fire.ignition.x_length == 100
-        assert line_fire.quic_fire.ignition.y_length == 100
-        assert line_fire.quic_fire.ignition.ring_width == 2
+        assert line_fire.quic_fire.ignition.x_length == 200
+        assert line_fire.quic_fire.ignition.y_length == 200
+        assert line_fire.quic_fire.ignition.x_width == 10
+        assert line_fire.quic_fire.ignition.y_width == 10
 
         # Check I/O
         line_fire.write_inputs(TMP_DIR)

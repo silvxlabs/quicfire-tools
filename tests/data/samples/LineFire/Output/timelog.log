@@ -1,0 +1,39 @@
+ Percentage of cells with fuel (fire domain):    98.0099945     %
+ Percentage of cells with fuel (QU domain):    3.92040014     %
+ Max number of fires in a timestep:            0
+ Max number of fires in a timestep (% of fuel cells):    0.00000000     %
+ Simulation time =           38 s
+ Sub time fire:            1
+ Sub time plumes:           32
+ Sub time mass-consistency:            5
+ !==========================================
+ InitNewPlumes   :            0
+ MovePlumes      :           30
+ [CompPlumePull] :            0
+ [PullPlumeTog]  :           30
+ [TerrainPull]   :            0
+ MergePlumes     :            2
+ WPlume2QUGrid   :            0
+ UpdateAlphaDenom:            0
+ Divergence      :            0
+ SOR_Startup     :            0
+ SOR_InSimu      :            5
+ EulerUpdate     :            0
+ ConvElemToCanopy:            0
+ InjPlumes2Wind  :            0
+ InterpQU2FG     :            0
+ UpCanopy        :            0
+ UpFire          :            0
+ InitWorkArray   :            0
+ CompNewFire     :            1
+ UpBurnCenter    :            0
+ UpMoisture      :            0
+ DetActFireCells :            0
+ ChkProx2Bord    :            0
+ ChkFrontDist    :            0
+ !==========================================
+ Maximum plume height [m]:    29.7098045    
+ Maximum plume w [m/s]:    8.05976009    
+ Maximum domain height [m]:    249.999985    
+ !===== Max Numbers Per Output Period =====
+Time:    0->   60s, Max # Fires:  9658  Max # Plumes Pre-merge:  12231  Max # Plumes Post-merge:   1549

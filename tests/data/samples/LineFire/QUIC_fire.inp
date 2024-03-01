@@ -2,13 +2,13 @@
 222				! Random number generator: -1: use time and date, any other integer > 0 is used as the seed
 ! FIRE TIMES
 1653321600		! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00). Must be greater or equal to the time of the first wind
-300				! Total simulation time for the fire [s]
+60				! Total simulation time for the fire [s]
 1					! time step for the fire simulation [s]
 1					! Number of fire time steps done before updating the quic wind field (integer, >= 1)
-50					! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
-50					! After how many quic updates to print out wind-related files
-50					! After how many fire time steps to average emissions and radiation
-50					! After how many quic updates to print out averaged wind-related files
+60					! After how many fire time steps to print out fire-related files (excluding emissions and radiation)
+60					! After how many quic updates to print out wind-related files
+60					! After how many fire time steps to average emissions and radiation
+60					! After how many quic updates to print out averaged wind-related files
 ! FIRE GRID
 1					! Number of vertical layers of fire grid cells (integer)
 0					! Vertical stretching flag: 0 = uniform dz, 1 = custom
@@ -27,20 +27,21 @@
 0              ! size scale flag: 0 = default, 1 = uniform, 2 = provided thru QF_FuelMoisture.inp, 3 = Firetech files for quic grid, 4 = Firetech files for different grid (need interpolation), 5 = Fastfuels
 0              ! patch & gap flag: 0 = default (0,0), 1 = uniform(supply patch and gap value in meters [following two lines]), 2 = provided thru patch.dat & gap.dat (no interpolation)
 ! IGNITION LOCATIONS
-3					! 1 = rectangle, 2 = square ring, 3 = circular ring, 4 = file (QF_Ignitions.inp), 5 = time-dependent ignitions (QF_IgnitionPattern.inp), 6 = ignite.dat (firetech)
+2					! 1 = rectangle, 2 = square ring, 3 = circular ring, 4 = file (QF_Ignitions.inp), 5 = time-dependent ignitions (QF_IgnitionPattern.inp), 6 = ignite.dat (firetech)
 50
 50
-100
-100
-2
-5            ! number of ignitions
+200
+200
+10
+10
+2            ! number of ignitions
 ! FIREBRANDS
 0				   ! 0 = off, 1 = on
 ! OUTPUT FILES (formats depend on the grid type flag)
 1					! Output gridded energy-to-atmosphere (3D fire grid + extra layers)
 0					! Output compressed array reaction rate (fire grid)
 1					! Output compressed array fuel density (fire grid)
-1					! Output gridded wind (u,v,w,sigma) (3D fire grid)
+0					! Output gridded wind (u,v,w,sigma) (3D fire grid)
 0					! Output gridded QU winds with fire effects, instantaneous (QUIC-URB grid)
 0					! Output gridded QU winds with fire effects, averaged (QUIC-URB grid)
 0					! Output plume trajectories (ONLY FOR DEBUG)
@@ -49,6 +50,6 @@
 0					! Output trajectories firebrands
 0					! Output compressed array emissions (fire grid)
 0					! Output gridded thermal radiation (fire grid)
-0              ! Output surface fire intensity at every fire time step
+1                   ! Output surface fire intensity at every fire time step
 ! AUTOKILL
 0              ! Kill if the fire is out and there are no more ignitions or firebrands (0 = no, 1 = yes)

@@ -1,0 +1,48 @@
+ Percentage of cells with fuel (fire domain):    98.8366699     %
+ Percentage of cells with fuel (QU domain):    4.05853319     %
+ Max number of fires in a timestep:            0
+ Max number of fires in a timestep (% of fuel cells):    0.00000000     %
+ Simulation time =         1213 s
+ Sub time fire:           19
+ Sub time plumes:           51
+ Sub time mass-consistency:         1131
+ !==========================================
+ InitNewPlumes   :            2
+ MovePlumes      :           42
+ [CompPlumePull] :            0
+ [PullPlumeTog]  :           42
+ [TerrainPull]   :            0
+ MergePlumes     :            3
+ WPlume2QUGrid   :            1
+ UpdateAlphaDenom:            3
+ Divergence      :            2
+ SOR_Startup     :           10
+ SOR_InSimu      :         1106
+ EulerUpdate     :           23
+ ConvElemToCanopy:            0
+ InjPlumes2Wind  :            0
+ InterpQU2FG     :            0
+ UpCanopy        :            0
+ UpFire          :            0
+ InitWorkArray   :            0
+ CompNewFire     :           19
+ UpBurnCenter    :            0
+ UpMoisture      :            0
+ DetActFireCells :            0
+ ChkProx2Bord    :            0
+ ChkFrontDist    :            0
+ !==========================================
+ Maximum plume height [m]:    46.9231339    
+ Maximum plume w [m/s]:    6.10555410    
+ Maximum domain height [m]:    249.999985    
+ !===== Max Numbers Per Output Period =====
+Time:    0->   60s, Max # Fires:  4224  Max # Plumes Pre-merge:    956  Max # Plumes Post-merge:    240
+Time:   60->  120s, Max # Fires:  9750  Max # Plumes Pre-merge:   1343  Max # Plumes Post-merge:    340
+Time:  120->  180s, Max # Fires: 16714  Max # Plumes Pre-merge:   1593  Max # Plumes Post-merge:    401
+Time:  180->  240s, Max # Fires: 24437  Max # Plumes Pre-merge:   1949  Max # Plumes Post-merge:    483
+Time:  240->  300s, Max # Fires: 28886  Max # Plumes Pre-merge:   2062  Max # Plumes Post-merge:    521
+Time:  300->  360s, Max # Fires: 31153  Max # Plumes Pre-merge:   1341  Max # Plumes Post-merge:    441
+Time:  360->  420s, Max # Fires: 32939  Max # Plumes Pre-merge:   1134  Max # Plumes Post-merge:    382
+Time:  420->  480s, Max # Fires: 34527  Max # Plumes Pre-merge:   1099  Max # Plumes Post-merge:    383
+Time:  480->  540s, Max # Fires: 36320  Max # Plumes Pre-merge:   1122  Max # Plumes Post-merge:    379
+Time:  540->  600s, Max # Fires: 38677  Max # Plumes Pre-merge:   1269  Max # Plumes Post-merge:    407
