@@ -12,7 +12,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, PositiveFloat, SerializeAsAny
 
 
-class TopoSources(int, Enum):
+class TopoFlags(int, Enum):
     """
     Enum class for all valid topography source options in QUIC-Fire.
     """
@@ -31,13 +31,13 @@ class TopoSources(int, Enum):
     terrain_dat = 11
 
 
-class TopoType(BaseModel):
+class Topography(BaseModel):
     """
     Base class for all topography types in QUIC-Fire. This class is used to
     provide a common string representation for all topography types.
     """
 
-    topo_flag: SerializeAsAny[TopoSources]
+    topo_flag: SerializeAsAny[TopoFlags]
 
     def __str__(self):
         return (
@@ -51,7 +51,7 @@ class TopoType(BaseModel):
         )
 
 
-class GaussianHillTopo(TopoType):
+class GaussianHillTopo(Topography):
     """
     Creates a Gaussian hill topography in QUIC-Fire.
 
@@ -67,7 +67,7 @@ class GaussianHillTopo(TopoType):
         Standard deviation of the Gaussian hill [m]
     """
 
-    topo_flag: SerializeAsAny[TopoSources] = TopoSources(1)
+    topo_flag: SerializeAsAny[TopoFlags] = TopoFlags(1)
     x_hilltop: PositiveFloat
     y_hilltop: PositiveFloat
     elevation_max: PositiveFloat
@@ -84,7 +84,7 @@ class GaussianHillTopo(TopoType):
         return flag_line + params
 
 
-class HillPassTopo(TopoType):
+class HillPassTopo(Topography):
     """
     Creates a hill pass topography in QUIC-Fire.
 
@@ -96,7 +96,7 @@ class HillPassTopo(TopoType):
         Location parameter of the hill pass [m]
     """
 
-    topo_flag: SerializeAsAny[TopoSources] = TopoSources(2)
+    topo_flag: SerializeAsAny[TopoFlags] = TopoFlags(2)
     max_height: PositiveFloat
     location_param: PositiveFloat
 
@@ -109,7 +109,7 @@ class HillPassTopo(TopoType):
         return flag_line + params
 
 
-class SlopeMesaTopo(TopoType):
+class SlopeMesaTopo(Topography):
     """
     Creates a slope mesa topography in QUIC-Fire.
 
@@ -121,7 +121,7 @@ class SlopeMesaTopo(TopoType):
         Slope in dh/dx or dh/dy
     """
 
-    topo_flag: SerializeAsAny[TopoSources] = TopoSources(3)
+    topo_flag: SerializeAsAny[TopoFlags] = TopoFlags(3)
     slope_axis: Literal[0, 1]
     slope_value: PositiveFloat
     flat_fraction: float = Field(ge=0, le=1)
@@ -136,7 +136,7 @@ class SlopeMesaTopo(TopoType):
         return flag_line + params
 
 
-class CanyonTopo(TopoType):
+class CanyonTopo(Topography):
     """
     Creates a canyon topography in QUIC-Fire.
 
@@ -154,7 +154,7 @@ class CanyonTopo(TopoType):
         Canyon vertical offset [m].
     """
 
-    topo_flag: SerializeAsAny[TopoSources] = TopoSources(4)
+    topo_flag: SerializeAsAny[TopoFlags] = TopoFlags(4)
     x_location: PositiveFloat
     y_location: PositiveFloat
     slope_value: PositiveFloat
@@ -173,7 +173,7 @@ class CanyonTopo(TopoType):
         return flag_line + params
 
 
-class HalfCircleTopo(TopoType):
+class HalfCircleTopo(Topography):
     """
     Creates a half-circle topography in QUIC-Fire.
 
@@ -187,7 +187,7 @@ class HalfCircleTopo(TopoType):
         The radius of the half-circle topography [m].
     """
 
-    topo_flag: SerializeAsAny[TopoSources] = TopoSources(6)
+    topo_flag: SerializeAsAny[TopoFlags] = TopoFlags(6)
     x_location: PositiveFloat
     y_location: PositiveFloat
     radius: PositiveFloat
@@ -202,7 +202,7 @@ class HalfCircleTopo(TopoType):
         return flag_line + params
 
 
-class SinusoidTopo(TopoType):
+class SinusoidTopo(Topography):
     """
     Creates a sinusoidal topography in QUIC-Fire.
 
@@ -214,7 +214,7 @@ class SinusoidTopo(TopoType):
         The amplitude of the sinusoidal wave [m].
     """
 
-    topo_flag: SerializeAsAny[TopoSources] = TopoSources(7)
+    topo_flag: SerializeAsAny[TopoFlags] = TopoFlags(7)
     period: PositiveFloat
     amplitude: PositiveFloat
 
@@ -224,7 +224,7 @@ class SinusoidTopo(TopoType):
         return flag_line + params
 
 
-class CosHillTopo(TopoType):
+class CosHillTopo(Topography):
     """
     Creates a cosine-shaped hill topography in QUIC-Fire.
 
@@ -236,7 +236,7 @@ class CosHillTopo(TopoType):
         The height of the hill [m].
     """
 
-    topo_flag: SerializeAsAny[TopoSources] = TopoSources(8)
+    topo_flag: SerializeAsAny[TopoFlags] = TopoFlags(8)
     aspect: PositiveFloat
     height: PositiveFloat
 
@@ -246,21 +246,21 @@ class CosHillTopo(TopoType):
         return flag_line + params
 
 
-def serialize_topo_type(topo_data: dict):
+def serialize_topography(topo_data: dict):
     topo_flag = topo_data.get("topo_flag")
-    if topo_flag == TopoSources(1):
+    if topo_flag == TopoFlags(1):
         return GaussianHillTopo(**topo_data)
-    elif topo_flag == TopoSources(2):
+    elif topo_flag == TopoFlags(2):
         return HillPassTopo(**topo_data)
-    elif topo_flag == TopoSources(3):
+    elif topo_flag == TopoFlags(3):
         return SlopeMesaTopo(**topo_data)
-    elif topo_flag == TopoSources(4):
+    elif topo_flag == TopoFlags(4):
         return CanyonTopo(**topo_data)
-    elif topo_flag == TopoSources(6):
+    elif topo_flag == TopoFlags(6):
         return HalfCircleTopo(**topo_data)
-    elif topo_flag == TopoSources(7):
+    elif topo_flag == TopoFlags(7):
         return SinusoidTopo(**topo_data)
-    elif topo_flag == TopoSources(8):
+    elif topo_flag == TopoFlags(8):
         return CosHillTopo(**topo_data)
     else:
-        return TopoType(**topo_data)
+        return Topography(**topo_data)

@@ -44,7 +44,7 @@ from quicfire_tools.ignitions import (
     default_line_ignition,
 )
 from quicfire_tools.topography import (
-    TopoSources,
+    TopoFlags,
     CanyonTopo,
     CosHillTopo,
     GaussianHillTopo,
@@ -52,8 +52,8 @@ from quicfire_tools.topography import (
     HillPassTopo,
     SinusoidTopo,
     SlopeMesaTopo,
-    TopoType,
-    serialize_topo_type,
+    Topography,
+    serialize_topography,
 )
 from quicfire_tools.utils import compute_parabolic_stretched_grid
 
@@ -575,7 +575,7 @@ class SimulationInputs:
                 ignition_flag=IgnitionSources(7)
             )
         if topo:
-            self.qu_topoinputs.topo_type = TopoType(topo_flag=TopoSources(5))
+            self.qu_topoinputs.topography = Topography(topo_flag=TopoFlags(5))
 
     def set_uniform_fuels(
         self,
@@ -2418,7 +2418,7 @@ class QU_TopoInputs(InputFile):
     ----------
     filename : str
         Path to the custom topo file (only used with option 5). Cannot be .bin. Use .dat or .inp
-    topo_type : TopoType
+    topography : Topography
         Topography type specified as a TopoType class from topography.py
         0 = no terrain file provided, QUIC-Fire is run with flat terrain
         1 = Gaussian hill
@@ -2450,7 +2450,7 @@ class QU_TopoInputs(InputFile):
     name: str = "QU_TopoInputs"
     _extension: str = ".inp"
     filename: str = "topo.dat"
-    topo_type: SerializeAsAny[TopoType] = TopoType(topo_flag=TopoSources(0))
+    topography: SerializeAsAny[Topography] = Topography(topo_flag=TopoFlags(0))
     smoothing_method: Literal[0, 1, 2] = 2
     smoothing_passes: NonNegativeInt = Field(le=500, default=500)
     sor_iterations: PositiveInt = Field(le=500, default=200)
@@ -2460,12 +2460,12 @@ class QU_TopoInputs(InputFile):
     @computed_field
     @property
     def _topo_lines(self) -> str:
-        return str(self.topo_type)
+        return str(self.topography)
 
     @classmethod
     def from_dict(cls, data: dict):
-        if "topo_type" in data:
-            data["topo_type"] = serialize_topo_type(data["topo_type"])
+        if "topography" in data:
+            data["topography"] = serialize_topography(data["topography"])
         return cls(**data)
 
     @classmethod
@@ -2500,7 +2500,7 @@ class QU_TopoInputs(InputFile):
                 topo_params.append(float(lines[i].strip().split()[0]))
             if topo_flag == 1:
                 x_hilltop, y_hilltop, elevation_max, elevation_std = topo_params
-                topo_type = GaussianHillTopo(
+                topography = GaussianHillTopo(
                     x_hilltop=int(x_hilltop),
                     y_hilltop=int(y_hilltop),
                     elevation_max=int(elevation_max),
@@ -2508,12 +2508,12 @@ class QU_TopoInputs(InputFile):
                 )
             elif topo_flag == 2:
                 max_height, location_param = topo_params
-                topo_type = HillPassTopo(
+                topography = HillPassTopo(
                     max_height=int(max_height), location_param=location_param
                 )
             elif topo_flag == 3:
                 slope_axis, slope_value, flat_fraction = topo_params
-                topo_type = SlopeMesaTopo(
+                topography = SlopeMesaTopo(
                     slope_axis=int(slope_axis),
                     slope_value=slope_value,
                     flat_fraction=flat_fraction,
@@ -2522,7 +2522,7 @@ class QU_TopoInputs(InputFile):
                 x_start, y_center, slope_value, canyon_std, vertical_offset = (
                     topo_params
                 )
-                topo_type = CanyonTopo(
+                topography = CanyonTopo(
                     x_location=int(x_start),
                     y_location=int(y_center),
                     slope_value=slope_value,
@@ -2531,19 +2531,19 @@ class QU_TopoInputs(InputFile):
                 )
             elif topo_flag == 6:
                 x_location, y_location, radius = topo_params
-                topo_type = HalfCircleTopo(
+                topography = HalfCircleTopo(
                     x_location=int(x_location),
                     y_location=int(y_location),
                     radius=radius,
                 )
             elif topo_flag == 7:
                 period, amplitude = topo_params
-                topo_type = SinusoidTopo(period=period, amplitude=amplitude)
+                topography = SinusoidTopo(period=period, amplitude=amplitude)
             elif topo_flag == 8:
                 aspect, height = topo_params
-                topo_type = CosHillTopo(aspect=aspect, height=height)
+                topography = CosHillTopo(aspect=aspect, height=height)
             else:
-                topo_type = TopoType(topo_flag=topo_flag)
+                topography = Topography(topo_flag=topo_flag)
             current_line = 3 + add
             # Smoothing and SOR
             smoothing_method = int(lines[current_line].strip().split()[0])
@@ -2559,7 +2559,7 @@ class QU_TopoInputs(InputFile):
 
         return cls(
             filename=filename,
-            topo_type=topo_type,
+            topography=topography,
             smoothing_method=smoothing_method,
             smoothing_passes=smoothing_passes,
             sor_iterations=sor_iterations,

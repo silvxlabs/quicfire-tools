@@ -179,14 +179,14 @@ from quicfire_tools.topography import GaussianHillTopo
 
 # First, create an TopoType class
 topo = GaussianHillTopo(
-    x_hilltop = 100,
-    y_hilltop = 150,
-    elevation_max = 50,
-    elevation_std = 15
+    x_hilltop=100,
+    y_hilltop=150,
+    elevation_max=50,
+    elevation_std=15
 )
 
-# Next, assign it to the topo_type attribute of the qu_topoinputs InputFile
-simulation.qu_topoinputs.topo_type = topo
+# Next, assign it to the topography attribute of the qu_topoinputs InputFile
+simulation.qu_topoinputs.topography = topo
 ```
 
 Please see [topopgraphy](reference.md#quicfire_tools.topography) for a full list of topography types.
