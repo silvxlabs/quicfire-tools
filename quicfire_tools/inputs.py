@@ -297,26 +297,59 @@ class SimulationInputs:
 
         version = _validate_and_return_version(version)
 
+        # Read the required input files
+        qu_fileoptions = QU_Fileoptions.from_file(directory)
+        qfire_advanced_user_inputs = QFire_Advanced_User_Inputs.from_file(directory)
+        qfire_bldg_advanced_user_inputs = QFire_Bldg_Advanced_User_Inputs.from_file(
+            directory
+        )
+        qfire_plume_advanced_user_inputs = QFire_Plume_Advanced_User_Inputs.from_file(
+            directory
+        )
+        runtime_advanced_user_inputs = RuntimeAdvancedUserInputs.from_file(directory)
+        qu_metparams = QU_metparams.from_file(directory)
+        quic_fire = QUIC_fire.from_file(directory, version=version)
+        windsensors = WindSensorArray.from_file(directory)
+        qu_topoinputs = QU_TopoInputs.from_file(directory)
+        qu_simparams = QU_Simparams.from_file(directory)
+
+        # Try and read optional input files. Return defaults if not found.
+        try:
+            raster_origin = RasterOrigin.from_file(directory)
+        except FileNotFoundError:
+            raster_origin = RasterOrigin()
+
+        # Instantiate file objects that are all default values
+        qu_buildings = QU_Buildings()
+        qp_buildout = QP_buildout()
+        qu_movingcoords = QU_movingcoords()
+
+        # Instantiate derivative files. Eventually get rid of these...
+        gridlist = Gridlist(
+            n=qu_simparams.nx,
+            m=qu_simparams.ny,
+            l=quic_fire.nz,
+            dx=qu_simparams.dx,
+            dy=qu_simparams.dy,
+            dz=qu_simparams.dz,
+        )
+
         return cls(
-            rasterorigin=RasterOrigin.from_file(directory),
-            qu_buildings=QU_Buildings.from_file(directory),
-            qu_fileoptions=QU_Fileoptions.from_file(directory),
-            qfire_advanced_user_inputs=QFire_Advanced_User_Inputs.from_file(directory),
-            qfire_bldg_advanced_user_inputs=QFire_Bldg_Advanced_User_Inputs.from_file(
-                directory
-            ),
-            qfire_plume_advanced_user_inputs=QFire_Plume_Advanced_User_Inputs.from_file(
-                directory
-            ),
-            runtime_advanced_user_inputs=RuntimeAdvancedUserInputs.from_file(directory),
-            qu_movingcoords=QU_movingcoords.from_file(directory),
-            qp_buildout=QP_buildout.from_file(directory),
-            qu_metparams=QU_metparams.from_file(directory),
-            quic_fire=QUIC_fire.from_file(directory, version=version),
-            gridlist=Gridlist.from_file(directory),
-            windsensors=WindSensorArray.from_file(directory),
-            qu_topoinputs=QU_TopoInputs.from_file(directory),
-            qu_simparams=QU_Simparams.from_file(directory),
+            rasterorigin=raster_origin,
+            qu_buildings=qu_buildings,
+            qu_fileoptions=qu_fileoptions,
+            qfire_advanced_user_inputs=qfire_advanced_user_inputs,
+            qfire_bldg_advanced_user_inputs=qfire_bldg_advanced_user_inputs,
+            qfire_plume_advanced_user_inputs=qfire_plume_advanced_user_inputs,
+            runtime_advanced_user_inputs=runtime_advanced_user_inputs,
+            qu_movingcoords=qu_movingcoords,
+            qp_buildout=qp_buildout,
+            qu_metparams=qu_metparams,
+            quic_fire=quic_fire,
+            gridlist=gridlist,
+            windsensors=windsensors,
+            qu_topoinputs=qu_topoinputs,
+            qu_simparams=qu_simparams,
         )
 
     @classmethod
