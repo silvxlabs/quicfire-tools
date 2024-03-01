@@ -1511,45 +1511,45 @@ class QU_Simparams(InputFile):
 
         try:
             # Read QU grid parameters
-            nx = int(lines[1].strip().split("!")[0])
-            ny = int(lines[2].strip().split("!")[0])
-            nz = int(lines[3].strip().split("!")[0])
-            dx = float(lines[4].strip().split("!")[0])
-            dy = float(lines[5].strip().split("!")[0])
+            nx = int(lines[1].strip().split()[0])
+            ny = int(lines[2].strip().split()[0])
+            nz = int(lines[3].strip().split()[0])
+            dx = float(lines[4].strip().split()[0])
+            dy = float(lines[5].strip().split()[0])
 
             # Read stretch grid flag
-            stretch_grid_flag = int(lines[6].strip().split("!")[0])
+            stretch_grid_flag = int(lines[6].strip().split()[0])
 
             # Read vertical grid lines as function of stretch grid flag
             _from_file_dz_array = []
             custom_dz_array = []
             if stretch_grid_flag == 0:
-                surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
-                number_surface_cells = int(lines[8].strip().split("!")[0])
+                surface_vertical_cell_size = float(lines[7].strip().split()[0])
+                number_surface_cells = int(lines[8].strip().split()[0])
                 quic_domain_height = surface_vertical_cell_size * number_surface_cells
                 current_line = 9
             elif stretch_grid_flag == 1:
-                surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
+                surface_vertical_cell_size = float(lines[7].strip().split()[0])
                 number_surface_cells = 5
                 for i in range(9, 9 + nz):
-                    custom_dz_array.append(float(lines[i].strip().split("!")[0]))
+                    custom_dz_array.append(float(lines[i].strip().split()[0]))
                 quic_domain_height = round(sum(custom_dz_array), 2)
                 current_line = 9 + nz
             elif stretch_grid_flag == 3:
-                surface_vertical_cell_size = float(lines[7].strip().split("!")[0])
-                number_surface_cells = int(lines[8].strip().split("!")[0])
-                _ = lines[9].strip().split("!")[0]
+                surface_vertical_cell_size = float(lines[7].strip().split()[0])
+                number_surface_cells = int(lines[8].strip().split()[0])
+                _ = lines[9].strip().split()[0]
                 for i in range(10, 10 + nz):
-                    _from_file_dz_array.append(float(lines[i].strip().split("!")[0]))
+                    _from_file_dz_array.append(float(lines[i].strip().split()[0]))
                 quic_domain_height = round(sum(_from_file_dz_array), 2)
                 current_line = 10 + nz
             else:
                 raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
 
             # Read QU wind parameters
-            number_wind_steps = int(lines[current_line].strip().split("!")[0])
-            utc_offset = int(lines[current_line + 1].strip().split("!")[0])
-            _ = lines[current_line + 2].strip().split("!")[0]
+            number_wind_steps = int(lines[current_line].strip().split()[0])
+            utc_offset = int(lines[current_line + 1].strip().split()[0])
+            _ = lines[current_line + 2].strip().split()[0]
             wind_times = []
             for i in range(current_line + 3, current_line + 3 + number_wind_steps):
                 wind_times.append(int(lines[i].strip()))
@@ -1559,20 +1559,20 @@ class QU_Simparams(InputFile):
             current_line += 9
 
             # Read remaining QU parameters
-            sor_iter_max = int(lines[current_line].strip().split("!")[0])
-            sor_residual_reduction = int(lines[current_line + 1].strip().split("!")[0])
-            use_diffusion_flag = int(lines[current_line + 2].strip().split("!")[0])
+            sor_iter_max = int(lines[current_line].strip().split()[0])
+            sor_residual_reduction = int(lines[current_line + 1].strip().split()[0])
+            use_diffusion_flag = int(lines[current_line + 2].strip().split()[0])
             number_diffusion_iterations = int(
-                lines[current_line + 3].strip().split("!")[0]
+                lines[current_line + 3].strip().split()[0]
             )
-            domain_rotation = float(lines[current_line + 4].strip().split("!")[0])
-            utm_x = float(lines[current_line + 5].strip().split("!")[0])
-            utm_y = float(lines[current_line + 6].strip().split("!")[0])
-            utm_zone_number = int(lines[current_line + 7].strip().split("!")[0])
-            utm_zone_letter = int(lines[current_line + 8].strip().split("!")[0])
-            quic_cfd_flag = int(lines[current_line + 9].strip().split("!")[0])
-            explosive_bldg_flag = int(lines[current_line + 10].strip().split("!")[0])
-            bldg_array_flag = int(lines[current_line + 11].strip().split("!")[0])
+            domain_rotation = float(lines[current_line + 4].strip().split()[0])
+            utm_x = float(lines[current_line + 5].strip().split()[0])
+            utm_y = float(lines[current_line + 6].strip().split()[0])
+            utm_zone_number = int(lines[current_line + 7].strip().split()[0])
+            utm_zone_letter = int(lines[current_line + 8].strip().split()[0])
+            quic_cfd_flag = int(lines[current_line + 9].strip().split()[0])
+            explosive_bldg_flag = int(lines[current_line + 10].strip().split()[0])
+            bldg_array_flag = int(lines[current_line + 11].strip().split()[0])
 
         except IndexError:
             raise ValueError(
@@ -2000,22 +2000,22 @@ class QUIC_fire(InputFile):
         try:
 
             # Read fire flag and random seed
-            fire_flag = int(lines[0].strip().split("!")[0])
-            random_seed = int(lines[1].strip().split("!")[0])
+            fire_flag = int(lines[0].strip().split()[0])
+            random_seed = int(lines[1].strip().split()[0])
 
             # Read fire times
-            time_now = int(lines[3].strip().split("!")[0])
-            sim_time = int(lines[4].strip().split("!")[0])
-            fire_time_step = int(lines[5].strip().split("!")[0])
-            quic_time_step = int(lines[6].strip().split("!")[0])
-            out_time_fire = int(lines[7].strip().split("!")[0])
-            out_time_wind = int(lines[8].strip().split("!")[0])
-            out_time_emis_rad = int(lines[9].strip().split("!")[0])
-            out_time_wind_avg = int(lines[10].strip().split("!")[0])
+            time_now = int(lines[3].strip().split()[0])
+            sim_time = int(lines[4].strip().split()[0])
+            fire_time_step = int(lines[5].strip().split()[0])
+            quic_time_step = int(lines[6].strip().split()[0])
+            out_time_fire = int(lines[7].strip().split()[0])
+            out_time_wind = int(lines[8].strip().split()[0])
+            out_time_emis_rad = int(lines[9].strip().split()[0])
+            out_time_wind_avg = int(lines[10].strip().split()[0])
 
             # Read fire grid parameters
-            nz = int(lines[12].strip().split("!")[0])
-            stretch_grid_flag = int(lines[13].strip().split("!")[0])
+            nz = int(lines[12].strip().split()[0])
+            stretch_grid_flag = int(lines[13].strip().split()[0])
             dz_array = []
             if stretch_grid_flag == 0:
                 dz = float(lines[14].strip().split()[0])
@@ -2037,7 +2037,7 @@ class QUIC_fire(InputFile):
             current_line += 1  # skip !FUEL line
 
             # Read fuel density
-            fuel_density_flag = int(lines[current_line].strip().split("!")[0])
+            fuel_density_flag = int(lines[current_line].strip().split()[0])
             fuel_density = None
             if fuel_density_flag == 1:
                 current_line += 1
@@ -2045,7 +2045,7 @@ class QUIC_fire(InputFile):
 
             # Read fuel moisture
             current_line += 1
-            fuel_moisture_flag = int(lines[current_line].strip().split("!")[0])
+            fuel_moisture_flag = int(lines[current_line].strip().split()[0])
             fuel_moisture = None
             if fuel_moisture_flag == 1:
                 current_line += 1
@@ -2055,7 +2055,7 @@ class QUIC_fire(InputFile):
             current_line += 1
             fuel_height_flag = 0
             if fuel_density_flag == 1:
-                fuel_height_flag = int(lines[current_line].strip().split("!")[0])
+                fuel_height_flag = int(lines[current_line].strip().split()[0])
             fuel_height = None
             if fuel_density_flag == 1 and fuel_moisture_flag == 1:
                 current_line += 1
@@ -2073,7 +2073,7 @@ class QUIC_fire(InputFile):
 
                 # Read size scale
                 current_line += 1
-                size_scale_flag = int(lines[current_line].strip().split("!")[0])
+                size_scale_flag = int(lines[current_line].strip().split()[0])
                 size_scale = 0.0005
                 if size_scale_flag == 1:
                     current_line += 1
@@ -2081,7 +2081,7 @@ class QUIC_fire(InputFile):
 
                 # Read patch and gap
                 current_line += 1
-                patch_and_gap_flag = int(lines[current_line].strip().split("!")[0])
+                patch_and_gap_flag = int(lines[current_line].strip().split()[0])
                 patch_size = 0.0
                 gap_size = 0.0
                 if patch_and_gap_flag == 1:
@@ -2110,13 +2110,13 @@ class QUIC_fire(InputFile):
 
             # Read ignition data
             current_line += 2  # skip ! IGNITION LOCATIONS header
-            ignition_flag = int(lines[current_line].strip().split("!")[0])
+            ignition_flag = int(lines[current_line].strip().split()[0])
             add_lines = {1: 4, 2: 6, 3: 5, 4: 0, 5: 0, 6: 0, 7: 0}
             add = add_lines.get(ignition_flag)
             ignition_params = []
             current_line += 1
             for i in range(current_line, current_line + add):
-                ignition_line = float(lines[i].split("!")[0].strip())
+                ignition_line = float(lines[i].split()[0].strip())
                 ignition_params.append(ignition_line)
             if ignition_flag == 1:
                 x_min, y_min, x_length, y_length = ignition_params
@@ -2146,32 +2146,32 @@ class QUIC_fire(InputFile):
                 ignition_type = IgnitionType(ignition_flag=ignition_flag)
 
             current_line += add
-            ignitions_per_cell = int(lines[current_line].strip().split("!")[0])
+            ignitions_per_cell = int(lines[current_line].strip().split()[0])
             current_line += 1
 
             # Read firebrands
             # current_line = ! FIREBRANDS
             current_line += 1  # header
-            firebrand_flag = int(lines[current_line].strip().split("!")[0])
+            firebrand_flag = int(lines[current_line].strip().split()[0])
             current_line += 1
 
             # Read output flags
             # current_line = !OUTPUT_FILES
-            eng_to_atm_out = int(lines[current_line + 1].strip().split("!")[0])
-            react_rate_out = int(lines[current_line + 2].strip().split("!")[0])
-            fuel_dens_out = int(lines[current_line + 3].strip().split("!")[0])
-            qf_wind_out = int(lines[current_line + 4].strip().split("!")[0])
-            qu_wind_inst_out = int(lines[current_line + 5].strip().split("!")[0])
-            qu_wind_avg_out = int(lines[current_line + 6].strip().split("!")[0])
+            eng_to_atm_out = int(lines[current_line + 1].strip().split()[0])
+            react_rate_out = int(lines[current_line + 2].strip().split()[0])
+            fuel_dens_out = int(lines[current_line + 3].strip().split()[0])
+            qf_wind_out = int(lines[current_line + 4].strip().split()[0])
+            qu_wind_inst_out = int(lines[current_line + 5].strip().split()[0])
+            qu_wind_avg_out = int(lines[current_line + 6].strip().split()[0])
             # ! Output plume trajectories
-            fuel_moist_out = int(lines[current_line + 8].strip().split("!")[0])
-            mass_burnt_out = int(lines[current_line + 9].strip().split("!")[0])
-            firebrand_out = int(lines[current_line + 10].strip().split("!")[0])
-            emissions_out = int(lines[current_line + 11].strip().split("!")[0])
-            radiation_out = int(lines[current_line + 12].strip().split("!")[0])
-            intensity_out = int(lines[current_line + 13].strip().split("!")[0])
+            fuel_moist_out = int(lines[current_line + 8].strip().split()[0])
+            mass_burnt_out = int(lines[current_line + 9].strip().split()[0])
+            firebrand_out = int(lines[current_line + 10].strip().split()[0])
+            emissions_out = int(lines[current_line + 11].strip().split()[0])
+            radiation_out = int(lines[current_line + 12].strip().split()[0])
+            intensity_out = int(lines[current_line + 13].strip().split()[0])
             # ! AUTOKILL
-            auto_kill = int(lines[current_line + 15].strip().split("!")[0])
+            auto_kill = int(lines[current_line + 15].strip().split()[0])
 
         except IndexError:
             raise ValueError(
@@ -2472,7 +2472,7 @@ class QU_TopoInputs(InputFile):
             # Line 0 is Header
             filename = str(lines[1].strip())
             # Get topo lines
-            topo_flag = int(lines[2].strip().split("!")[0])
+            topo_flag = int(lines[2].strip().split()[0])
             add_dict = {
                 0: 0,
                 1: 4,
@@ -2490,7 +2490,7 @@ class QU_TopoInputs(InputFile):
             add = add_dict.get(topo_flag)
             topo_params = []
             for i in range(3, 3 + add):
-                topo_params.append(float(lines[i].strip().split("!")[0]))
+                topo_params.append(float(lines[i].strip().split()[0]))
             if topo_flag == 1:
                 x_hilltop, y_hilltop, elevation_max, elevation_std = topo_params
                 topo_type = GaussianHillTopo(
@@ -2539,11 +2539,11 @@ class QU_TopoInputs(InputFile):
                 topo_type = TopoType(topo_flag=topo_flag)
             current_line = 3 + add
             # Smoothing and SOR
-            smoothing_method = int(lines[current_line].strip().split("!")[0])
-            smoothing_passes = int(lines[current_line + 1].strip().split("!")[0])
-            sor_iterations = int(lines[current_line + 2].strip().split("!")[0])
-            sor_cycles = int(lines[current_line + 3].strip().split("!")[0])
-            sor_relax = float(lines[current_line + 4].strip().split("!")[0])
+            smoothing_method = int(lines[current_line].strip().split()[0])
+            smoothing_passes = int(lines[current_line + 1].strip().split()[0])
+            sor_iterations = int(lines[current_line + 2].strip().split()[0])
+            sor_cycles = int(lines[current_line + 3].strip().split()[0])
+            sor_relax = float(lines[current_line + 4].strip().split()[0])
         except IndexError:
             raise ValueError(
                 f"Error parsing {cls.__name__} from file: QU_TopoInputs.inp"
@@ -2588,8 +2588,8 @@ class RuntimeAdvancedUserInputs(InputFile):
             lines = f.readlines()
         try:
             return cls(
-                num_cpus=int(lines[0].strip().split("!")[0]),
-                use_acw=int(lines[1].strip().split("!")[0]),
+                num_cpus=int(lines[0].strip().split()[0]),
+                use_acw=int(lines[1].strip().split()[0]),
             )
         except IndexError:
             raise ValueError(
@@ -2793,9 +2793,9 @@ class WindSensor(BaseModel, validate_assignment=True):
         wind_directions = []
 
         try:
-            x_location = int(lines[4].strip().split("!")[0])
-            y_location = int(lines[5].strip().split("!")[0])
-            time_now = float(lines[6].strip().split("!")[0])
+            x_location = int(lines[4].strip().split()[0])
+            y_location = int(lines[5].strip().split()[0])
+            time_now = float(lines[6].strip().split()[0])
             wind_line = lines[11].strip()
             sensor_height = float(wind_line.split()[0])
             wind_speed = float(wind_line.split()[1])
