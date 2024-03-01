@@ -1751,7 +1751,7 @@ class QUIC_fire(InputFile):
         Number of fire grid cells in the z-direction.
     stretch_grid_flag : Literal[0, 1]
         Vertical stretching flag: 0 = uniform dz, 1 = custom
-    dz : PositiveInt
+    dz : PositiveFloat
         Cell size in the z-direction [m] of the fire grid. Recommended value: 1m
     dz_array : List[PositiveFloat]
         Custom dz, one dz per line must be specified, from the ground to the
@@ -1865,7 +1865,7 @@ class QUIC_fire(InputFile):
     out_time_wind_avg: PositiveInt = 30
     nz: PositiveInt
     stretch_grid_flag: Literal[0, 1] = 0
-    dz: PositiveInt = 1
+    dz: PositiveFloat = 1
     dz_array: list[PositiveFloat] = []
     fuel_density_flag: Literal[1, 2, 3, 4] = 1
     fuel_density: Union[PositiveFloat, None] = 0.5
@@ -2018,7 +2018,7 @@ class QUIC_fire(InputFile):
             stretch_grid_flag = int(lines[13].strip().split("!")[0])
             dz_array = []
             if stretch_grid_flag == 0:
-                dz = int(lines[14].strip().split("!")[0])
+                dz = float(lines[14].strip().split()[0])
                 current_line = 15
             else:
                 for i in range(14, 14 + len(dz_array)):
