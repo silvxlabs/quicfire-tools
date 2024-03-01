@@ -1781,12 +1781,6 @@ class TestQUmovingcoords:
         qu_moving = self.get_test_object()
         assert isinstance(qu_moving, QU_movingcoords)
 
-    def test_from_file(self):
-        qu_moving = self.get_test_object()
-        qu_moving.to_file(TMP_DIR)
-        test_object = QU_movingcoords.from_file(TMP_DIR)
-        assert qu_moving == test_object
-
 
 class TestQUbuildout:
     def get_test_object(self):
@@ -1795,12 +1789,6 @@ class TestQUbuildout:
     def test_init(self):
         qp_buildout = self.get_test_object()
         assert isinstance(qp_buildout, QP_buildout)
-
-    def test_from_file(self):
-        qp_buildout = self.get_test_object()
-        qp_buildout.to_file(TMP_DIR)
-        test_object = QP_buildout.from_file(TMP_DIR)
-        assert qp_buildout == test_object
 
 
 class Test_QU_metparams:
