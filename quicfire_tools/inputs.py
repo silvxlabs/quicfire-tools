@@ -2431,18 +2431,18 @@ class QU_TopoInputs(InputFile):
         9 = terrain is provided via QP_elevation.bin (see Section 2.7)
         10 = terrain is provided via terrainOutput.txt
         11 = terrain.dat (firetec)
-    smoothing_method : int
+    smoothing_method : Literal[0, 1, 2]
         0 = none (default for idealized topo)
         1 = Blur
         2 = David Robinson’s method based on second derivative
-    smoothing_passes : int
+    smoothing_passes : NonNegativeInt
         Number of smoothing passes. Real terrain MUST be smoothed
-    sor_iterations : int
+    sor_iterations : PositiveInt
         Number of SOR iteration to define background winds before starting the fire
-    sor_cycles : int
+    sor_cycles : Literal[0, 1, 2, 3, 4]
         Number of times the SOR solver initial fields is reset to define
         background winds before starting the fire
-    sor_relax : float
+    sor_relax : PositiveFloat
         SOR overrelaxation coefficient. Only used if there is topo.
     """
 
@@ -2451,7 +2451,7 @@ class QU_TopoInputs(InputFile):
     filename: str = "topo.dat"
     topo_type: SerializeAsAny[TopoType] = TopoType(topo_flag=TopoSources(0))
     smoothing_method: Literal[0, 1, 2] = 2
-    smoothing_passes: PositiveInt = Field(le=500, default=500)
+    smoothing_passes: NonNegativeInt = Field(le=500, default=500)
     sor_iterations: PositiveInt = Field(le=500, default=200)
     sor_cycles: Literal[0, 1, 2, 3, 4] = 4
     sor_relax: PositiveFloat = Field(le=2, default=0.9)
