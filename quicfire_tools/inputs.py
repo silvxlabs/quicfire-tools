@@ -331,7 +331,7 @@ class SimulationInputs:
             l=quic_fire.nz,
             dx=qu_simparams.dx,
             dy=qu_simparams.dy,
-            dz=qu_simparams.dz,
+            dz=quic_fire.dz,
         )
 
         return cls(

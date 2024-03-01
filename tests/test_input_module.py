@@ -2519,6 +2519,29 @@ class TestSimulationInputs:
         # Check that the inputs are the same
         self.compare_simulation_inputs(sim_inputs, test_object)
 
+    def test_from_directory_optional_files(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.write_inputs(TMP_DIR)
+
+        # Remove optional files
+        gridlist_path = TMP_DIR / "gridlist"
+        gridlist_path.unlink()
+        raster_origin_path = TMP_DIR / "rasterorigin.txt"
+        raster_origin_path.unlink()
+
+        test_object = SimulationInputs.from_directory(TMP_DIR)
+        assert isinstance(test_object, SimulationInputs)
+        self.compare_simulation_inputs(sim_inputs, test_object)
+
+    def test_from_directory_missing_files(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.write_inputs(TMP_DIR)
+        quic_fire_path = TMP_DIR / "QUIC_fire.inp"
+        quic_fire_path.unlink()
+
+        with pytest.raises(FileNotFoundError):
+            SimulationInputs.from_directory(TMP_DIR)
+
     def test_to_dict(self):
         sim_inputs = self.get_test_object()
         sim_inputs.to_dict()
