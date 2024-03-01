@@ -207,8 +207,8 @@ ignition = CircularRingIgnition(
     ring_width = 10
 )
 
-# Next, assign it to the ignition_type attribute of the quic_fire InputFile
-simulation.quic_fire.ignition_type
+# Next, assign it to the ignition attribute of the quic_fire InputFile
+simulation.quic_fire.ignition
 ```
 
 Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of ignition patterns.

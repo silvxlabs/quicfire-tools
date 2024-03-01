@@ -36,12 +36,13 @@ from pydantic import (
 
 # Internal imports
 from quicfire_tools.ignitions import (
-    IgnitionSources,
+    IgnitionFlags,
     CircularRingIgnition,
-    IgnitionType,
+    Ignition,
     RectangleIgnition,
     SquareRingIgnition,
     default_line_ignition,
+    serialize_ignition,
 )
 from quicfire_tools.topography import (
     TopoFlags,
@@ -222,12 +223,12 @@ class SimulationInputs:
 
         # Initialize input files with required parameters
         start_time = int(time.time())
-        ignition_type = default_line_ignition(nx, ny, wind_direction)
+        ignition = default_line_ignition(nx, ny, wind_direction)
         quic_fire = QUIC_fire(
             nz=fire_nz,
             time_now=start_time,
             sim_time=simulation_time,
-            ignition_type=ignition_type,
+            ignition=ignition,
         )
         gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
         windsensors = WindSensorArray(
@@ -571,9 +572,7 @@ class SimulationInputs:
         if patch_and_gap:
             self.quic_fire.patch_and_gap_flag = 2
         if ignition:
-            self.quic_fire.ignition_type = IgnitionType(
-                ignition_flag=IgnitionSources(7)
-            )
+            self.quic_fire.ignition = Ignition(ignition_flag=IgnitionFlags(7))
         if topo:
             self.qu_topoinputs.topography = Topography(topo_flag=TopoFlags(5))
 
@@ -663,7 +662,7 @@ class SimulationInputs:
         ignition = RectangleIgnition(
             x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
         )
-        self.quic_fire.ignition_type = ignition
+        self.quic_fire.ignition = ignition
 
     def set_output_files(
         self,
@@ -1800,7 +1799,7 @@ class QUIC_fire(InputFile):
         0 = Default values (0, 0) over entire domain,
         1 = custom uniform values over the domain,
         2 = custom values provided by patch.dat and gap.dat
-    ignition_type: IgnitionType
+    ignition: Ignition
         Ignition type specified as an IgnitionsType class from ignitions.py
         1 = rectangle
         2 = square ring
@@ -1879,8 +1878,8 @@ class QUIC_fire(InputFile):
     patch_and_gap_flag: Literal[0, 1, 2] = 0
     patch_size: NonNegativeFloat = 0
     gap_size: NonNegativeFloat = 0
-    ignition_type: Union[
-        RectangleIgnition, SquareRingIgnition, CircularRingIgnition, IgnitionType
+    ignition: Union[
+        RectangleIgnition, SquareRingIgnition, CircularRingIgnition, Ignition
     ]
     ignitions_per_cell: PositiveInt = 2
     firebrand_flag: Literal[0, 1] = 0
@@ -1940,7 +1939,7 @@ class QUIC_fire(InputFile):
     @computed_field
     @property
     def _ignition_lines(self) -> str:
-        return str(self.ignition_type)
+        return str(self.ignition)
 
     @computed_field
     @property
@@ -1983,6 +1982,12 @@ class QUIC_fire(InputFile):
         if self.patch_and_gap_flag == 1:
             return patch_and_gap_flag_line + f"\n{self.patch_size}\n{self.gap_size}"
         return patch_and_gap_flag_line
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        if "ignition" in data:
+            data["ignition"] = serialize_ignition(data["ignition"])
+        return cls(**data)
 
     @classmethod
     def from_file(cls, directory: str | Path, **kwargs):
@@ -2121,12 +2126,12 @@ class QUIC_fire(InputFile):
                 ignition_params.append(ignition_line)
             if ignition_flag == 1:
                 x_min, y_min, x_length, y_length = ignition_params
-                ignition_type = RectangleIgnition(
+                ignition = RectangleIgnition(
                     x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
                 )
             elif ignition_flag == 2:
                 x_min, y_min, x_length, y_length, x_width, y_width = ignition_params
-                ignition_type = SquareRingIgnition(
+                ignition = SquareRingIgnition(
                     x_min=x_min,
                     y_min=y_min,
                     x_length=x_length,
@@ -2136,7 +2141,7 @@ class QUIC_fire(InputFile):
                 )
             elif ignition_flag == 3:
                 x_min, y_min, x_length, y_length, ring_width = ignition_params
-                ignition_type = CircularRingIgnition(
+                ignition = CircularRingIgnition(
                     x_min=x_min,
                     y_min=y_min,
                     x_length=x_length,
@@ -2144,7 +2149,7 @@ class QUIC_fire(InputFile):
                     ring_width=ring_width,
                 )
             else:
-                ignition_type = IgnitionType(ignition_flag=ignition_flag)
+                ignition = Ignition(ignition_flag=ignition_flag)
 
             current_line += add
             ignitions_per_cell = int(lines[current_line].strip().split()[0])
@@ -2206,7 +2211,7 @@ class QUIC_fire(InputFile):
             patch_and_gap_flag=patch_and_gap_flag,
             patch_size=patch_size,
             gap_size=gap_size,
-            ignition_type=ignition_type,
+            ignition=ignition,
             ignitions_per_cell=ignitions_per_cell,
             firebrand_flag=firebrand_flag,
             eng_to_atm_out=eng_to_atm_out,

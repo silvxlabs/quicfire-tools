@@ -4,6 +4,7 @@ Test module for the data module of the quicfire_tools package.
 
 from __future__ import annotations
 
+import shutil
 import pytest
 from pydantic import ValidationError
 from pandera.errors import SchemaError
@@ -31,17 +32,27 @@ from quicfire_tools.inputs import (
     WindSensor,
 )
 from quicfire_tools.ignitions import (
-    IgnitionType,
-    IgnitionSources,
+    Ignition,
+    IgnitionFlags,
     RectangleIgnition,
+    CircularRingIgnition,
 )
-from quicfire_tools.topography import TopoType, TopoSources, GaussianHillTopo
+from quicfire_tools.topography import (
+    Topography,
+    TopoFlags,
+    GaussianHillTopo,
+    CanyonTopo,
+    CosHillTopo,
+    HillPassTopo,
+)
 
 TEST_DIR = Path(__file__).parent
-TMP_DIR = TEST_DIR / "tmp"
-TMP_DIR.mkdir(exist_ok=True)
 TEST_DATA_DIR = TEST_DIR / "data" / "test-inputs"
-TEST_DATA_DIR.mkdir(exist_ok=True)
+SAMPLES_DIR = TEST_DIR / "data" / "samples"
+TMP_DIR = TEST_DIR / "tmp"
+if TMP_DIR.exists():
+    shutil.rmtree(TMP_DIR)
+TMP_DIR.mkdir(exist_ok=True)
 
 
 class TestInputFile:
@@ -965,9 +976,7 @@ class TestQUIC_fire:
             nz=26,
             sim_time=60,
             time_now=1695311421,
-            ignition_type=RectangleIgnition(
-                x_min=20, y_min=20, x_length=10, y_length=160
-            ),
+            ignition=RectangleIgnition(x_min=20, y_min=20, x_length=10, y_length=160),
         )
 
     def test_init(self):
@@ -1070,17 +1079,12 @@ class TestQUIC_fire:
         assert result_dict["patch_size"] == quic_fire.patch_size
         assert result_dict["gap_size"] == quic_fire.gap_size
         assert (
-            result_dict["ignition_type"]["ignition_flag"]
-            == quic_fire.ignition_type.ignition_flag
+            result_dict["ignition"]["ignition_flag"] == quic_fire.ignition.ignition_flag
         )
-        assert result_dict["ignition_type"]["x_min"] == quic_fire.ignition_type.x_min
-        assert result_dict["ignition_type"]["y_min"] == quic_fire.ignition_type.y_min
-        assert (
-            result_dict["ignition_type"]["x_length"] == quic_fire.ignition_type.x_length
-        )
-        assert (
-            result_dict["ignition_type"]["y_length"] == quic_fire.ignition_type.y_length
-        )
+        assert result_dict["ignition"]["x_min"] == quic_fire.ignition.x_min
+        assert result_dict["ignition"]["y_min"] == quic_fire.ignition.y_min
+        assert result_dict["ignition"]["x_length"] == quic_fire.ignition.x_length
+        assert result_dict["ignition"]["y_length"] == quic_fire.ignition.y_length
         assert result_dict["ignitions_per_cell"] == quic_fire.ignitions_per_cell
         assert result_dict["firebrand_flag"] == quic_fire.firebrand_flag
         assert result_dict["auto_kill"] == quic_fire.auto_kill
@@ -1159,7 +1163,7 @@ class TestQUIC_fire:
             for i in range(current_line, current_line + 4):
                 ignition_params.append(float(lines[i].strip().split("!")[0]))
             x_min, y_min, x_length, y_length = ignition_params
-            assert quic_fire.ignition_type == RectangleIgnition(
+            assert quic_fire.ignition == RectangleIgnition(
                 ignition_flag=ignition_flag,
                 x_min=x_min,
                 y_min=y_min,
@@ -1582,11 +1586,11 @@ class Test_QFire_Plume_Advanced_User_Inputs:
 
 class TestQUTopoInputs:
     def get_default_test_object(self):
-        return QU_TopoInputs(topo_type=TopoType(topo_flag=0))
+        return QU_TopoInputs(topography=Topography(topo_flag=0))
 
     def get_complex_test_object(self):
         return QU_TopoInputs(
-            topo_type=GaussianHillTopo(
+            topography=GaussianHillTopo(
                 x_hilltop=100, y_hilltop=150, elevation_max=500, elevation_std=20
             ),
             smoothing_method=1,
@@ -1596,12 +1600,12 @@ class TestQUTopoInputs:
     def test_default_inputs(self):
         topoinputs = self.get_default_test_object()
         assert topoinputs.filename == "topo.dat"
-        assert isinstance(topoinputs.topo_type, TopoType)
+        assert isinstance(topoinputs.topography, Topography)
         assert topoinputs.smoothing_passes == 500
 
     def test_complex_inputs(self):
         topoinputs = self.get_complex_test_object()
-        assert topoinputs.topo_type.topo_flag.value == 1
+        assert topoinputs.topography.topo_flag.value == 1
         assert topoinputs._topo_lines == (
             "1\t\t! N/A, "
             "topo flag: 0 = flat, 1 = Gaussian hill, "
@@ -1629,15 +1633,15 @@ class TestQUTopoInputs:
 
         topoinputs = self.get_complex_test_object()
         test_dict = topoinputs.to_dict()
-        assert test_dict["topo_type"]["x_hilltop"] == topoinputs.topo_type.x_hilltop
-        assert test_dict["topo_type"]["y_hilltop"] == topoinputs.topo_type.y_hilltop
+        assert test_dict["topography"]["x_hilltop"] == topoinputs.topography.x_hilltop
+        assert test_dict["topography"]["y_hilltop"] == topoinputs.topography.y_hilltop
         assert (
-            test_dict["topo_type"]["elevation_max"]
-            == topoinputs.topo_type.elevation_max
+            test_dict["topography"]["elevation_max"]
+            == topoinputs.topography.elevation_max
         )
         assert (
-            test_dict["topo_type"]["elevation_std"]
-            == topoinputs.topo_type.elevation_std
+            test_dict["topography"]["elevation_std"]
+            == topoinputs.topography.elevation_std
         )
         assert test_dict["smoothing_method"] == topoinputs.smoothing_method
         assert test_dict["smoothing_passes"] == topoinputs.smoothing_passes
@@ -1657,7 +1661,7 @@ class TestQUTopoInputs:
         with open(TMP_DIR / "QU_TopoInputs.inp", "r") as file:
             lines = file.readlines()
         topo_flag = int(lines[2].strip().split("!")[0])
-        assert topo_flag == topoinputs.topo_type.topo_flag.value
+        assert topo_flag == topoinputs.topography.topo_flag.value
         add_dict = {
             0: 0,
             1: 4,
@@ -1698,7 +1702,7 @@ class TestQUTopoInputs:
         with open(TMP_DIR / "QU_TopoInputs.inp", "r") as file:
             lines = file.readlines()
         topo_flag = int(lines[2].strip().split("!")[0])
-        assert topo_flag == topoinputs.topo_type.topo_flag.value
+        assert topo_flag == topoinputs.topography.topo_flag.value
         add_dict = {
             0: 0,
             1: 4,
@@ -1714,13 +1718,13 @@ class TestQUTopoInputs:
             11: 0,
         }
         add = add_dict.get(topo_flag)
-        assert float(lines[3].strip().split("!")[0]) == topoinputs.topo_type.x_hilltop
-        assert float(lines[4].strip().split("!")[0]) == topoinputs.topo_type.y_hilltop
+        assert float(lines[3].strip().split("!")[0]) == topoinputs.topography.x_hilltop
+        assert float(lines[4].strip().split("!")[0]) == topoinputs.topography.y_hilltop
         assert (
-            float(lines[5].strip().split("!")[0]) == topoinputs.topo_type.elevation_max
+            float(lines[5].strip().split("!")[0]) == topoinputs.topography.elevation_max
         )
         assert (
-            float(lines[6].strip().split("!")[0]) == topoinputs.topo_type.elevation_std
+            float(lines[6].strip().split("!")[0]) == topoinputs.topography.elevation_std
         )
         current_line = current_line = 3 + add
         assert (
@@ -2167,13 +2171,6 @@ class TestSimulationInputs:
             simulation_time=65,
         )
 
-    @staticmethod
-    def compare_simulation_inputs(a: SimulationInputs, b: SimulationInputs):
-        for a_input_file, b_input_file in zip(
-            a._input_files_dict.values(), b._input_files_dict.values()
-        ):
-            assert a_input_file == b_input_file
-
     def test_basic_inputs(self):
         sim_inputs = self.get_test_object()
         assert isinstance(sim_inputs, SimulationInputs)
@@ -2252,7 +2249,7 @@ class TestSimulationInputs:
             x_length=10,
             y_length=110,
         )
-        assert sim_inputs.quic_fire.ignition_type == RectangleIgnition(
+        assert sim_inputs.quic_fire.ignition == RectangleIgnition(
             x_min=20,
             y_min=20,
             x_length=10,
@@ -2299,10 +2296,8 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.fuel_height_flag == 3
         assert sim_inputs.quic_fire.size_scale_flag == 0  # Default
         assert sim_inputs.quic_fire.patch_and_gap_flag == 0  # Default
-        assert sim_inputs.quic_fire.ignition_type == IgnitionType(
-            ignition_flag=IgnitionSources(7)
-        )
-        assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag=TopoSources(5))
+        assert sim_inputs.quic_fire.ignition == Ignition(ignition_flag=IgnitionFlags(7))
+        assert sim_inputs.qu_topoinputs.topography == Topography(topo_flag=TopoFlags(5))
 
         # Test including size scale and patch/gap from set custom simulation
         sim_inputs = self.get_test_object()
@@ -2313,7 +2308,7 @@ class TestSimulationInputs:
         # Test excluding topo flag from set custom simulation
         sim_inputs = self.get_test_object()
         sim_inputs.set_custom_simulation(topo=False)
-        assert sim_inputs.qu_topoinputs.topo_type == TopoType(topo_flag=TopoSources(0))
+        assert sim_inputs.qu_topoinputs.topography == Topography(topo_flag=TopoFlags(0))
 
     def test_write_inputs_v5(self):
         sim_inputs = self.get_test_object()
@@ -2505,7 +2500,7 @@ class TestSimulationInputs:
         assert isinstance(test_object, SimulationInputs)
 
         # Check that the inputs are the same
-        self.compare_simulation_inputs(sim_inputs, test_object)
+        compare_simulation_inputs(sim_inputs, test_object)
 
     def test_from_directory_optional_files(self):
         sim_inputs = self.get_test_object()
@@ -2519,7 +2514,7 @@ class TestSimulationInputs:
 
         test_object = SimulationInputs.from_directory(TMP_DIR)
         assert isinstance(test_object, SimulationInputs)
-        self.compare_simulation_inputs(sim_inputs, test_object)
+        compare_simulation_inputs(sim_inputs, test_object)
 
     def test_from_directory_missing_files(self):
         sim_inputs = self.get_test_object()
@@ -2541,7 +2536,7 @@ class TestSimulationInputs:
         assert isinstance(test_obj, SimulationInputs)
 
         # Check that the inputs are the same
-        self.compare_simulation_inputs(sim_inputs, test_obj)
+        compare_simulation_inputs(sim_inputs, test_obj)
 
     def test_to_json(self):
         sim_inputs = self.get_test_object()
@@ -2554,4 +2549,11 @@ class TestSimulationInputs:
         assert isinstance(test_obj, SimulationInputs)
 
         # Check that the inputs are the same
-        self.compare_simulation_inputs(sim_inputs, test_obj)
+        compare_simulation_inputs(sim_inputs, test_obj)
+
+
+def compare_simulation_inputs(a: SimulationInputs, b: SimulationInputs):
+    for a_input_file, b_input_file in zip(
+        a._input_files_dict.values(), b._input_files_dict.values()
+    ):
+        assert a_input_file == b_input_file
