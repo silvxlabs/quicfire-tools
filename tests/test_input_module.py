@@ -756,7 +756,9 @@ class TestQU_Simparams:
         qu_simparams.to_file(TMP_DIR)
         test_object = QU_Simparams.from_file(TMP_DIR)
         assert isinstance(test_object, QU_Simparams)
-        assert qu_simparams == test_object
+        test_object_dict = test_object.to_dict()
+        qu_simparams_dict = qu_simparams.to_dict()
+        assert test_object_dict == qu_simparams_dict
 
         # # Test stretch grid flag = 0
         # qu_simparams = self.get_test_object()
@@ -2651,6 +2653,15 @@ class TestSamples:
     def test_line_fire(self):
         line_fire = SimulationInputs.from_directory(SAMPLES_DIR / "LineFire")
 
+        # Check parabolic quic grid
+        assert line_fire.qu_simparams.stretch_grid_flag == 3
+        assert line_fire.qu_simparams._dz_array[0] == 1
+        assert line_fire.qu_simparams._dz_array[4] == 1
+        assert line_fire.qu_simparams._dz_array[5] == 1.078399
+        assert line_fire.qu_simparams._dz_array[6] == 1.313596
+        assert line_fire.qu_simparams._dz_array[23] == 29.302056
+        assert line_fire.qu_simparams._dz_array[24] == 32.354352
+
         # Check topography
         assert isinstance(line_fire.qu_topoinputs.topography, Topography)
         assert line_fire.qu_topoinputs.topography.topo_flag == 0
@@ -2728,4 +2739,9 @@ def compare_simulation_inputs(a: SimulationInputs, b: SimulationInputs):
     for a_input_file, b_input_file in zip(
         a._input_files_dict.values(), b._input_files_dict.values()
     ):
+        if isinstance(a_input_file, QU_Simparams) or isinstance(
+            b_input_file, QU_Simparams
+        ):
+            a_input_file._from_file_dz_array = None
+            b_input_file._from_file_dz_array = None
         assert a_input_file == b_input_file

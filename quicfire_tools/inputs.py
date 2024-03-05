@@ -1329,13 +1329,12 @@ class QU_Simparams(InputFile):
     quic_cfd_flag: Literal[0, 1] = 0
     explosive_bldg_flag: Literal[0, 1] = 0
     bldg_array_flag: Literal[0, 1] = 0
-    _from_file: bool = False
-    _from_file_dz_array: list[PositiveFloat] = []
+    _from_file_dz_array: Optional[list[PositiveFloat]] = None
 
     @computed_field
     @property
     def _dz_array(self) -> list[float]:
-        if self._from_file:
+        if self._from_file_dz_array:
             return self._from_file_dz_array
         elif self.stretch_grid_flag == 0:
             return [self.surface_vertical_cell_size] * self.nz
@@ -1521,7 +1520,7 @@ class QU_Simparams(InputFile):
             stretch_grid_flag = int(lines[6].strip().split()[0])
 
             # Read vertical grid lines as function of stretch grid flag
-            _from_file_dz_array = []
+            from_file_dz_array = []
             custom_dz_array = []
             if stretch_grid_flag == 0:
                 surface_vertical_cell_size = float(lines[7].strip().split()[0])
@@ -1538,10 +1537,9 @@ class QU_Simparams(InputFile):
             elif stretch_grid_flag == 3:
                 surface_vertical_cell_size = float(lines[7].strip().split()[0])
                 number_surface_cells = int(lines[8].strip().split()[0])
-                _ = lines[9].strip().split()[0]
                 for i in range(10, 10 + nz):
-                    _from_file_dz_array.append(float(lines[i].strip().split()[0]))
-                quic_domain_height = round(sum(_from_file_dz_array), 2)
+                    from_file_dz_array.append(float(lines[i].strip().split()[0]))
+                quic_domain_height = round(sum(from_file_dz_array), 2)
                 current_line = 10 + nz
             else:
                 raise ValueError("stretch_grid_flag must be 0, 1, or 3.")
@@ -1580,7 +1578,7 @@ class QU_Simparams(InputFile):
                 f"\nPlease check the file for correctness."
             )
 
-        return cls(
+        qu_simparams = cls(
             nx=nx,
             ny=ny,
             nz=nz,
@@ -1605,9 +1603,9 @@ class QU_Simparams(InputFile):
             quic_cfd_flag=quic_cfd_flag,
             explosive_bldg_flag=explosive_bldg_flag,
             bldg_array_flag=bldg_array_flag,
-            _from_file=True,
-            _from_file_dz_array=_from_file_dz_array,
         )
+        qu_simparams._from_file_dz_array = from_file_dz_array
+        return qu_simparams
 
 
 class QFire_Advanced_User_Inputs(InputFile):
