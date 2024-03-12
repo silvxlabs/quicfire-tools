@@ -348,7 +348,7 @@ class OutputFile:
         selected_files = self._select_files_based_on_timestep(timestep)
         return self._get_multiple_timesteps(selected_files)
 
-    def to_netcdf(self, timestep: int | list[int] = None):
+    def to_netcdf(self, directory: Path, timestep: int | list[int] = None):
         """
         STEP 1: Create a "skeleton" with dimensions and variables corresponding
         to the axes of a the numpy arrays.
@@ -365,7 +365,7 @@ class OutputFile:
         For now I will just only allow a netcdf file from one output to be saved,
         similar to to_numpy
         """
-        dataset = Dataset(f"{self.name}.nc", "w")
+        dataset = Dataset(directory / f"{self.name}.nc", "w")
         dataset.createDimension("time", self.shape[0])
         dataset.createDimension("nz", self.shape[1])
         dataset.createDimension("ny", self.shape[2])
@@ -701,9 +701,9 @@ class SimulationOutputs:
 
     def to_netcdf(
         self,
-        fpath: str | Path,
-        outputs: str | list[str] = None,
-        over_write: bool = False,
+        directory: str | Path,
+        output: str = None,
+        timestep: int | list[int] = None,
     ):
         """
         Write QUIC-Fire output(s) to a netCDF file
@@ -711,24 +711,25 @@ class SimulationOutputs:
         Parameters
         ----------
         fpath: str | Path
-            The path to the folder where zarr files are written to be written.
-        outputs: str | list[str]
-            The name of the output(s) to write to the zarr file. If None, then
-            all outputs are written to the zarr file.
-        over_write: bool
-            Whether or not to over_write netCDF if it already exists
+            The path to the folder where netCDF file is written.
+        output: str
+            The name of the output to write to the netCDF file.
+        timestep: int | list[int] | None
+            The timestep(s) to write. If None, then all timesteps are written.
+
 
         Builds
         -------
         netCDF file to disk
         """
-        if isinstance(fpath, str):
-            fpath = Path(fpath)
+        if isinstance(directory, str):
+            directory = Path(directory)
 
-        if not fpath.exists():
-            fpath.mkdir(parents=True)
+        if not directory.exists():
+            directory.mkdir(parents=True)
 
-        fname = f"{outputs}.nc" if isinstance(outputs, str) else "quicfire_outputs.nc"
+        out = self._validate_output(output)
+        return out.to_netcdf(directory, timestep)
 
     # ZCC Changes
     def to_zarr(
