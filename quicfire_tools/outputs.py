@@ -15,6 +15,7 @@ import numpy as np
 import dask.array as da
 from numpy import ndarray
 from shutil import rmtree
+from netCDF4 import Dataset
 
 FUELS_OUTPUTS = {
     "fire-energy_to_atmos": {
@@ -347,6 +348,47 @@ class OutputFile:
         selected_files = self._select_files_based_on_timestep(timestep)
         return self._get_multiple_timesteps(selected_files)
 
+    def to_netcdf(self, timestep: int | list[int] = None):
+        """
+        STEP 1: Create a "skeleton" with dimensions and variables corresponding
+        to the axes of a the numpy arrays.
+        STEP 2: Create a new variable for the desired output(s) and fill it with
+        the bin file data
+
+        For this method to work, all output variables need to have the same array
+        shape, so that they fit in the skeleton. This won't always be a given,
+        since the user can set different output times for different output types,
+        and surface energy already has a hardcoded output time of every timestep.
+        If we want to output a single netcdf file with all outputs, we will have
+        find a way around this.
+
+        For now I will just only allow a netcdf file from one output to be saved,
+        similar to to_numpy
+        """
+        dataset = Dataset(f"{self.name}.nc", "w")
+        dataset.createDimension("time", self.shape[0])
+        dataset.createDimension("nz", self.shape[1])
+        dataset.createDimension("ny", self.shape[2])
+        dataset.createDimension("nx", self.shape[3])
+        dataset_time = dataset.createVariable("timestep", np.int64, ("time",))
+        dataset_nz = dataset.createVariable("z", np.int64, ("nz",))
+        dataset_ny = dataset.createVariable("y", np.int64, ("ny",))
+        dataset_nx = dataset.createVariable("x", np.int64, ("nx",))
+
+        dataset_time[:] = np.array(self.times)
+        dataset_nz[:] = range(self.shape[0])
+        # julia scales the horizontal resolution to meters using dx and dy
+        dataset_ny[:] = range(self.shape[1])
+        dataset_nx[:] = range(self.shape[2])
+
+        output = dataset.createVariable(
+            self.name, np.float32, ("timestep", "z", "y", "x")
+        )
+
+        selected_files = self._select_files_based_on_timestep(timestep)
+        output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
+        dataset.close()
+
     def _select_files_based_on_timestep(
         self, timestep: int | list[int] | range | None
     ) -> list[Path]:
@@ -656,6 +698,37 @@ class SimulationOutputs:
             dask_array[time_step, ...] = data
 
         return dask_array
+
+    def to_netcdf(
+        self,
+        fpath: str | Path,
+        outputs: str | list[str] = None,
+        over_write: bool = False,
+    ):
+        """
+        Write QUIC-Fire output(s) to a netCDF file
+
+        Parameters
+        ----------
+        fpath: str | Path
+            The path to the folder where zarr files are written to be written.
+        outputs: str | list[str]
+            The name of the output(s) to write to the zarr file. If None, then
+            all outputs are written to the zarr file.
+        over_write: bool
+            Whether or not to over_write netCDF if it already exists
+
+        Builds
+        -------
+        netCDF file to disk
+        """
+        if isinstance(fpath, str):
+            fpath = Path(fpath)
+
+        if not fpath.exists():
+            fpath.mkdir(parents=True)
+
+        fname = f"{outputs}.nc" if isinstance(outputs, str) else "quicfire_outputs.nc"
 
     # ZCC Changes
     def to_zarr(
