@@ -405,6 +405,7 @@ class OutputFile:
         selected_files = self._select_files_based_on_timestep(timestep)
         output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
         dataset.close()
+        return
 
     def _select_files_based_on_timestep(
         self, timestep: int | list[int] | range | None
