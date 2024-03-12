@@ -74,7 +74,7 @@ def compute_parabolic_stretched_grid(
     return dz
 
 
-def read_dat_file(
+def read_dat_to_array(
     filename: Path | str, nz: int, ny: int, nx: int, order: str = "C"
 ) -> ndarray:
     """
@@ -91,7 +91,8 @@ def read_dat_file(
     nx : int
         The number of cells in the x-direction.
     order : str, optional
-        The order of the array. Default is "C".
+        The order of the array. Default is "C". Files produced by
+        other programs such as DUET may be "F".
 
     Returns
     -------
@@ -110,3 +111,40 @@ def read_dat_file(
         )
 
     return arr
+
+
+def write_array_to_dat(
+    array: np.ndarray,
+    filename: str | Path,
+    dtype: type = np.float32,
+    reshape: bool = False,
+) -> None:
+    """
+    Write a numpy array to a fortran binary file
+
+    Parameters
+    ----------
+    array : np.ndarray
+        The numpy array to be written
+    filename : Path or str
+        The path to the .dat file to write.
+    dtype : type
+        The data type to cast data to. Defaults to np.float32, the native
+        type for QUIC-Fire files
+    reshape : bool
+        Whether to reshape input array from (y,x,z) to (z,y,x). Defaults to False.
+    """
+    if isinstance(filename, str):
+        filename = Path(filename)
+    # Reshape array from (y, x, z) to (z, y, x) (for fortran)
+    if reshape:
+        if len(array.shape) == 3:
+            array = np.moveaxis(array, 2, 0).astype(dtype)
+        else:
+            array = array.astype(dtype)
+    else:
+        array = array.astype(dtype)
+
+    # Write the zarr array to a dat file with scipy FortranFile package
+    with FortranFile(filename, "w") as f:
+        f.write_record(array)
