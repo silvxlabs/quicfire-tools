@@ -8,6 +8,7 @@ import numpy as np
 from pathlib import Path
 from numpy import ndarray
 from scipy.io import FortranFile
+from matplotlib import pyplot as plt
 
 
 def compute_parabolic_stretched_grid(
@@ -148,3 +149,31 @@ def write_array_to_dat(
     # Write the zarr array to a dat file with scipy FortranFile package
     with FortranFile(filename, "w") as f:
         f.write_record(array)
+
+
+def plot_array(
+    array: np.ndarray,
+    title: str = None,
+    colorbar_label: str = None,
+    colormap: str = "viridis",
+    save: Path = None,
+    show: bool = True,
+):
+    """
+    Plots a 2D numpy array with options to show and save.
+    """
+    if colorbar_label is None:
+        colorbar_label = ""
+    plt.figure()
+    plt.set_cmap(colormap)
+    try:
+        plt.imshow(array, origin="lower")
+    except ValueError:
+        print(f"Array must be 2D. Input array has shape {array.shape}")
+    plt.colorbar(label=colorbar_label)
+    if title:
+        plt.title(title, fontsize=14)
+    if save:
+        plt.savefig(save)
+    if show:
+        plt.show()
