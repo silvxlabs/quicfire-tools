@@ -348,23 +348,40 @@ class OutputFile:
         selected_files = self._select_files_based_on_timestep(timestep)
         return self._get_multiple_timesteps(selected_files)
 
-    def to_netcdf(self, directory: Path, timestep: int | list[int] = None):
+    def to_netcdf(self, directory: str | Path, timestep: int | list[int] = None):
         """
-        STEP 1: Create a "skeleton" with dimensions and variables corresponding
-        to the axes of a the numpy arrays.
-        STEP 2: Create a new variable for the desired output(s) and fill it with
-        the bin file data
+        Write a netCDF file for the given output and timestep(s) with dimensions
+        (time, nz, ny, nx). If timestep is None, then all timesteps are
+        returned.
 
-        For this method to work, all output variables need to have the same array
-        shape, so that they fit in the skeleton. This won't always be a given,
-        since the user can set different output times for different output types,
-        and surface energy already has a hardcoded output time of every timestep.
-        If we want to output a single netcdf file with all outputs, we will have
-        find a way around this.
+        Parameters
+        ----------
+        directory: str | Path
+            The path to the folder where netCDF file will be written.
+        timestep: int | list[int] | None
+            The timestep(s) to write. If None, then all timesteps are written.
 
-        For now I will just only allow a netcdf file from one output to be saved,
-        similar to to_numpy
+        Builds
+        -------
+        netCDF file to disk
+
+        Examples
+        --------
+        >>> import quicfire_tools as qft
+        >>> outputs = qft.SimulationOutputs("path/to/outputs", 50, 100, 100)
+        >>> fire_energy = outputs.get_output("fire-energy_to_atmos")
+        >>> out_dir = Path(path/to/output/dir)
+        >>> # Get all timesteps for the fire-energy_to_atmos output
+        >>> fire_energy_all = fire_energy.to_netcdf(directory = out_dir)
+        >>> # Get the first timestep for the fire-energy_to_atmos output
+        >>> fire_energy_slice = fire_energy.to_netcdf(directory = out_dir, timestep=0)
         """
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        if not directory.exists():
+            directory.mkdir(parents=True)
+
         dataset = Dataset(directory / f"{self.name}.nc", "w")
         dataset.createDimension("time", self.shape[0])
         dataset.createDimension("nz", self.shape[1])
@@ -710,8 +727,8 @@ class SimulationOutputs:
 
         Parameters
         ----------
-        fpath: str | Path
-            The path to the folder where netCDF file is written.
+        directory: str | Path
+            The path to the folder where netCDF file will be written.
         output: str
             The name of the output to write to the netCDF file.
         timestep: int | list[int] | None
@@ -721,6 +738,8 @@ class SimulationOutputs:
         Builds
         -------
         netCDF file to disk
+
+        TODO: create option for multiple output files?
         """
         if isinstance(directory, str):
             directory = Path(directory)
