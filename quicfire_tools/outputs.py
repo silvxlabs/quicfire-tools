@@ -20,7 +20,7 @@ FUELS_OUTPUTS = {
     "fire-energy_to_atmos": {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
-        "grid": "fire",
+        "grid": "en2atmos",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Energy released to the atmosphere that generates "
