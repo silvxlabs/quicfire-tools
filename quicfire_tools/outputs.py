@@ -18,7 +18,7 @@ from shutil import rmtree
 
 FUELS_OUTPUTS = {
     "fire-energy_to_atmos": {
-        "file_format": "compressed",
+        "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "en2atmos",
         "delimiter": "-",
