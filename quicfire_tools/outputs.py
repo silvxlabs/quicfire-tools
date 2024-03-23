@@ -414,6 +414,22 @@ class SimulationOutputs:
         # Build a list of present output files and their times
         self.outputs = {}
         self._build_output_files_map()
+        self._output_names = list(self.outputs.keys())
+
+    def __iter__(self):
+        """Return an iterator for the object."""
+        self._index = 0
+        return self
+
+    def __next__(self):
+        """Return the next item in the iterator."""
+        if self._index < len(self._output_names):
+            output = self.outputs[self._output_names[self._index]]
+            self._index += 1
+            return output
+        else:
+            raise StopIteration
+
     def __eq__(self, other):
         self_dict = self.__dict__.copy()
         other_dict = other.__dict__.copy()
