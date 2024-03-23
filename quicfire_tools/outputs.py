@@ -8,6 +8,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+# Internal imports
+from quicfire_tools.inputs import SimulationInputs
 
 # External imports
 import zarr
@@ -136,10 +138,10 @@ QF_WIND_OUTPUTS = {
     },
 }
 QU_WIND_OUTPUTS = {
-    "qf_windu": {
+    "qu_windu": {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
-        "grid": "wind",
+        "grid": "quic",
         "delimiter": "",
         "extension": ".bin",
         "description": "Instantaneous wind component in the x-direction, cell centered ",
@@ -148,7 +150,7 @@ QU_WIND_OUTPUTS = {
     "qu_windv": {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
-        "grid": "wind",
+        "grid": "quic",
         "delimiter": "",
         "extension": ".bin",
         "description": "Instantaneous wind component in the y-direction, cell centered ",
@@ -157,16 +159,16 @@ QU_WIND_OUTPUTS = {
     "qu_windw": {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
-        "grid": "wind",
+        "grid": "quic",
         "delimiter": "",
         "extension": ".bin",
         "description": "Instantaneous wind component in the x-direction, cell centered ",
         "units": "m/s",
     },
-    "qf_windu_ave": {
+    "qu_windu_ave": {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
-        "grid": "wind",
+        "grid": "quic",
         "delimiter": "",
         "extension": ".bin",
         "description": "Averaged wind component in the x-direction, cell centered ",
@@ -175,7 +177,7 @@ QU_WIND_OUTPUTS = {
     "qu_windv_ave": {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
-        "grid": "wind",
+        "grid": "quic",
         "delimiter": "",
         "extension": ".bin",
         "description": "Averaged wind component in the y-direction, cell centered ",
@@ -184,7 +186,7 @@ QU_WIND_OUTPUTS = {
     "qu_windw_ave": {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
-        "grid": "wind",
+        "grid": "quic",
         "delimiter": "",
         "extension": ".bin",
         "description": "Averaged wind component in the z-direction, cell centered ",
@@ -193,7 +195,7 @@ QU_WIND_OUTPUTS = {
     "qu_wplume": {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
-        "grid": "wind",
+        "grid": "quic",
         "delimiter": "",
         "extension": ".bin",
         "description": "Instantaneous wind component in the z-direction generated "
@@ -278,6 +280,8 @@ class OutputFile:
         A description of the output file.
     units: str
         The units of the output file.
+    filepaths: list[Path]
+        A list of file paths for each timestep.
     times: list[int]
         A list of times corresponding to the timesteps.
     """
@@ -293,6 +297,8 @@ class OutputFile:
         extension: str,
         description: str,
         units: str,
+        times: list[int],
+        filepaths: list[Path],
         index_map=None,
     ):
         self.name = name
@@ -304,8 +310,8 @@ class OutputFile:
         self.extension = extension
         self.description = description
         self.units = units
-        self.times = []  # List of times corresponding to the timesteps
-        self.filepaths = []  # List of file paths for each timestep
+        self.times = times
+        self.filepaths = filepaths
         function_mappings = {
             "gridded": _process_gridded_bin,
             "compressed": _process_compressed_bin,
@@ -393,23 +399,58 @@ class SimulationOutputs:
     files. This class facilitates the retrieval of data in various formats
     and can return a numpy array for a specific output, or write the data to a
     zarr file.
+
+    Attributes
+    ----------
+    output_directory: Path
+        The path to the directory containing the simulation outputs. QUIC-Fire
+        defaults this to the "Output" directory in the same directory as the
+        simulation input files, but that does not have to be the case for
+        quicfire-tools. The directory must contain the "fire_indexes.bin" and
+        "grid.bin" files.
+    fire_nz: int
+        The number of vertical cells in the fire grid.
+    ny: int
+        The number of cells in the y-direction.
+    nx: int
+        The number of cells in the x-direction.
+    dy: float
+        The grid spacing in the y-direction (m).
+    dx: float
+        The grid spacing in the x-direction (m).
+
     """
 
-    def __init__(self, output_directory: Path | str, nz: int, ny: int, nx: int):
-        # Convert to Path and resolve
-        output_directory = Path(output_directory).resolve()
-
-        # Validate outputs directory
+    def __init__(
+        self,
+        output_directory: Path | str,
+        fire_nz: int,
+        ny: int,
+        nx: int,
+        dy: float,
+        dx: float,
+    ):
+        if isinstance(output_directory, str):
+            output_directory = Path(output_directory)
         self._validate_output_dir(output_directory)
 
         # Assign attributes
         self.output_directory = output_directory
-        self.nz = nz
         self.ny = ny
         self.nx = nx
+        self.dy = dy
+        self.dx = dx
+        self.fire_nz = fire_nz
 
-        # Get indexing information from the fire grid
-        self._fire_indexes = self._process_fire_indexes()
+        # Get grid information from grid.bin and fire_indexes.bin
+        self._fire_indexes = _process_fire_indexes(
+            output_directory / "fire_indexes.bin"
+        )
+        self.quic_nz, self._quic_grid, self.en2atmos_nz, self._en2atmos_grid = (
+            _process_grid_info(output_directory / "grid.bin", ny, nx)
+        )
+        self.quic_dz = _get_resolution_from_coords(self._quic_grid)
+        self.fire_dz = _get_resolution_from_coords(self._en2atmos_grid)
 
         # Build a list of present output files and their times
         self.outputs = {}
@@ -510,7 +551,7 @@ class SimulationOutputs:
             )
 
         # Check for required files
-        required_files = ["fire_indexes.bin"]
+        required_files = ["fire_indexes.bin", "grid.bin"]
         for f in required_files:
             if not (outputs_directory / f).exists():
                 raise FileNotFoundError(f"Required file {f} not in outputs directory")
@@ -528,6 +569,11 @@ class SimulationOutputs:
             # Check if any output files of the given type exist in the directory
             if output_files_list:
                 shape = self._get_output_shape(attributes)
+                times = []
+                for file in output_files_list:
+                    time = self._get_output_file_time(key, file)
+                    times.append(time)
+
                 self.outputs[key] = OutputFile(
                     name=key,
                     file_format=attributes["file_format"],
@@ -538,14 +584,10 @@ class SimulationOutputs:
                     extension=attributes["extension"],
                     description=attributes["description"],
                     units=attributes["units"],
+                    times=times,
+                    filepaths=output_files_list,
                     index_map=self._fire_indexes,
                 )
-
-                # Populate the output file with timesteps and filepaths
-                for filepath in output_files_list:
-                    time = self._get_output_file_time(key, filepath)
-                    self.outputs[key].times.append(time)
-                    self.outputs[key].filepaths.append(filepath)
 
     def _get_list_output_paths(self, name, ext) -> list[Path]:
         """
@@ -557,13 +599,21 @@ class SimulationOutputs:
         return paths
 
     def _get_output_shape(self, attrs) -> tuple:
+        grid = attrs["grid"]
         number_dimensions = len(attrs["dimensions"])
+
         if number_dimensions == 2:
             return 1, self.ny, self.nx
         elif number_dimensions == 3 and attrs["grid"] == "fire":
-            return self.nz + 1, self.ny, self.nx
+            return self.fire_nz, self.ny, self.nx
+        elif number_dimensions == 3 and attrs["grid"] == "en2atmos":
+            return self.en2atmos_nz, self.ny, self.nx
+        elif number_dimensions == 3 and attrs["grid"] == "quic":
+            return self.quic_nz, self.ny, self.nx
         else:
-            return self.nz, self.ny, self.nx
+            raise ValueError(
+                f"Invalid number of dimensions ({number_dimensions}) for {grid} grid"
+            )
 
     @staticmethod
     def _get_output_file_time(output, fpath) -> int:
@@ -584,41 +634,6 @@ class SimulationOutputs:
         except ValueError:  # No numeric component
             return 0
 
-    def _process_fire_indexes(self) -> ndarray:
-        """
-        Process the `fire_indexes.bin` file to extract the necessary
-        information to rebuild the 3D fields of fire and fuel related variables.
-
-        - Data 1 (INT): Header
-        - Data 2 (INT): Number of cells with fuel (firegrid%num_fuel_cells = nfuel below)
-        - Data 3 (INT): Max index of the cells with fuel in the vertical direction
-        - Data 4-(nfuel+3) (INT): Unique cell identifiers (firegrid%num_fuel_cells)
-        - Data (nfuel+4)-(2*nfuel+4) (INT): i,j,k cell indexes
-        - Data (INT): Header
-
-        Function returns a 2D ndarray of shape (num_cells, 3) representing the
-        i, j, k indexes of each cell.
-        """
-        with open(self.output_directory / "fire_indexes.bin", "rb") as fid:
-            # Read in the number of cells and skip the header
-            num_cells = np.fromfile(fid, dtype=np.int32, offset=4, count=1)[0]
-
-            # Skip the max index of the cells with fuel in the vertical
-            # direction and unique cell identifiers
-            np.fromfile(fid, dtype=np.int32, count=7 + num_cells)
-
-            # Initialize an array to hold the indices
-            ijk = np.zeros((num_cells, 3), dtype=np.int32)
-
-            # Loop over each dimension's indices (Like a sparse meshgrid)
-            for i in range(0, 3):
-                ijk[:, i] = np.fromfile(fid, dtype=np.int32, count=num_cells)
-
-            # Convert to indices (numbered from 0)
-            ijk -= 1
-
-            return ijk
-
     def _validate_output(self, output: str) -> OutputFile:
         """Validate output."""
         try:
@@ -626,11 +641,11 @@ class SimulationOutputs:
         except KeyError:
             raise ValueError(
                 f"{output} is not a valid output. Valid "
-                f"outputs are: {self.list_available_outputs()}"
+                f"outputs are: {self.list_outputs()}"
             )
         return output
 
-    def list_available_outputs(self) -> list[str]:
+    def list_outputs(self) -> list[str]:
         """
         Return a list of available output names.
 
@@ -643,10 +658,10 @@ class SimulationOutputs:
         --------
         >>> import quicfire_tools as qft
         >>> outputs = qft.SimulationOutputs("path/to/outputs")
-        >>> outputs.list_available_outputs()
+        >>> outputs.list_outputs()
         ['fire-energy_to_atmos', 'fuels-dens', 'groundfuelheight', 'mburnt_integ']
         """
-        return list(self.outputs.keys())
+        return self._output_names
 
     def get_output(self, key) -> OutputFile:
         """
@@ -749,7 +764,6 @@ class SimulationOutputs:
 
         return dask_array
 
-    # ZCC Changes
     def to_zarr(
         self,
         fpath: str | Path,
@@ -788,7 +802,7 @@ class SimulationOutputs:
 
         # Get a list of outputs to write to the zarr file
         if outputs is None:
-            outputs = self.list_available_outputs()
+            outputs = self.list_outputs()
         elif isinstance(outputs, str):
             outputs = [outputs]
 
@@ -944,6 +958,132 @@ class SimulationOutputs:
     #     return zarr_file
 
 
+def _get_resolution_from_coords(coords: list[float]) -> float | list[float]:
+    """
+    Get the resolution from a list of coordinates. If the resolution is
+    constant, then a single float is returned. If the resolution is not
+    constant, then a list of floats is returned.
+    """
+    resolution = np.diff(coords)
+    if np.all(resolution == resolution[0]):
+        return resolution[0]
+    else:
+        return resolution
+
+
+def _process_grid_info(path_to_grid_bin: str | Path, ny: int, nx: int):
+    """
+    Reads grid information from the grid.bin file and populates attributes
+    for fire and quic grid sizes, as well as dx, dy, and dz.
+    """
+    if isinstance(path_to_grid_bin, str):
+        path_to_grid_bin = Path(path_to_grid_bin)
+
+    with open(path_to_grid_bin, "rb") as fid:
+        # Read the number of bytes in the vertical QUIC grid
+        num_bytes_quic_grid = np.fromfile(fid, dtype=np.int32, count=1)[0]
+
+        # Get the number of cells in the vertical direction
+        # num_cells * 32 bits = num_bytes * (8 bits / byte)
+        quic_nz = int(num_bytes_quic_grid / 4) - 2
+
+        # QUIC-URB grid bottom values
+        quic_grid_bottom = np.fromfile(fid, dtype=np.float32, count=quic_nz + 2)
+
+        np.fromfile(fid, dtype=np.int32, count=2)  # Header
+        np.fromfile(fid, dtype=np.float32, count=quic_nz + 2)  # quic grid mid values
+        np.fromfile(fid, dtype=np.int32, count=1)  # Header
+
+        # Try and read a topo or a fire header
+        test_header = np.fromfile(fid, dtype=np.int32, count=1)
+        if len(test_header) == 0:
+            raise ValueError("No fire or topo grids found in grid.bin file")
+
+        # Check if topo grid information is present
+        if test_header[0] == num_bytes_quic_grid:
+            # Read sigma_bottom (same as quic_grid_bottom)
+            np.fromfile(fid, dtype=np.float32, count=quic_nz + 2)
+
+            np.fromfile(fid, dtype=np.int32, count=2)  # Header
+
+            # Read sigma_mid (same as quic_grid_mid)
+            np.fromfile(fid, dtype=np.float32, count=quic_nz + 2)
+
+            np.fromfile(fid, dtype=np.int32, count=2)  # Header
+
+            quic_grid_bottom_terrain_following = np.fromfile(
+                fid, dtype=np.float32, count=ny * nx * (quic_nz + 2)
+            )
+
+            np.fromfile(fid, dtype=np.int32, count=2)  # Header
+
+            quic_grid_mid_terrain_following = np.fromfile(
+                fid, dtype=np.float32, count=ny * nx * (quic_nz + 2)
+            )
+
+            np.fromfile(fid, dtype=np.int32, count=2)  # Header
+
+            quic_grid_volume_correction = np.fromfile(
+                fid, dtype=np.float32, count=ny * nx
+            )
+
+            np.fromfile(fid, dtype=np.int32, count=1)  # Header
+
+            fire_header = np.fromfile(fid, dtype=np.int32, count=1)[0]
+        else:
+            fire_header = test_header[0]
+
+        num_eng_to_atmos_cells = np.fromfile(fid, dtype=np.int32, count=1)[0]
+        np.fromfile(fid, dtype=np.int32, count=2)  # Header
+        eng_to_amos_grid_bottom = np.fromfile(
+            fid, dtype=np.float32, count=num_eng_to_atmos_cells + 1
+        )
+
+        ending_header = np.fromfile(fid, dtype=np.int32, count=1)
+
+        _ = np.fromfile(fid, dtype=np.int32, count=4)  # Header
+
+        return (
+            quic_nz,
+            quic_grid_bottom[:],
+            num_eng_to_atmos_cells,
+            eng_to_amos_grid_bottom[:],
+        )
+
+
+def _process_fire_indexes(path_to_fire_indexes_bin: str | Path) -> ndarray:
+    """
+    Process the `fire_indexes.bin` file to extract the necessary
+    information to rebuild the 3D fields of fire and fuel related variables.
+    Function returns a 2D ndarray of shape (num_cells, 3) representing the
+    i, j, k indexes of each cell that contains data in the sparse (compressed)
+    format.
+    """
+    if isinstance(path_to_fire_indexes_bin, str):
+        path_to_fire_indexes_bin = Path(path_to_fire_indexes_bin)
+
+    with open(path_to_fire_indexes_bin, "rb") as fid:
+        np.fromfile(fid, dtype=np.int32, count=1)  # Header
+        num_cells = np.fromfile(fid, dtype=np.int32, count=1)[0]
+        np.fromfile(fid, dtype=np.int32, count=2)  # Header
+        np.fromfile(fid, dtype=np.int32, count=1)  # max k index
+        np.fromfile(fid, dtype=np.int32, count=2)  # Header
+        np.fromfile(fid, dtype=np.int32, count=num_cells)  # unique cell IDs
+        np.fromfile(fid, dtype=np.int32, count=2)  # Header
+
+        # Initialize an array to hold the indices
+        ijk = np.zeros((num_cells, 3), dtype=np.int32)
+
+        # Loop over each dimension's indices (Like a sparse meshgrid)
+        for i in range(0, 3):
+            ijk[:, i] = np.fromfile(fid, dtype=np.int32, count=num_cells)
+
+        # Convert to indices (numbered from 0)
+        ijk -= 1
+
+        return ijk
+
+
 def _process_compressed_bin(filename, dim_zyx, *args) -> ndarray:
     """
     Converts the contents of a sparse .bin file to a dense array with shape
@@ -1010,7 +1150,7 @@ def _process_compressed_bin(filename, dim_zyx, *args) -> ndarray:
         array_3d[indices] = sparse_values
 
     full_array[0, ...] = array_3d
-    return full_array.astype(float)
+    return full_array
 
 
 def _process_gridded_bin(filename, dims_zyx, *args) -> ndarray:
