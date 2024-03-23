@@ -16,7 +16,6 @@ from quicfire_tools.outputs import (
 
 # External imports
 import numpy as np
-import matplotlib.pyplot as plt
 
 TEST_DIR = Path(__file__).parent
 TEST_DATA_DIR = TEST_DIR / "data"
@@ -26,7 +25,7 @@ EG_CANOPY_DIR = SAMPLE_DATA_DIR / "EglinCanopyTest"
 COS_HILL_DIR = SAMPLE_DATA_DIR / "CosHill"
 
 
-class TestReadGridInfo:
+class TestProcessGridInfo:
     def test_read_grid_info_line_fire(self):
         line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
         quic_nz, quic_grid, en2atmos_nz, en2atmos_grid = _process_grid_info(
@@ -491,6 +490,8 @@ class TestSimulationOutputs:
             line_fire.quic_fire.nz,
             line_fire.qu_simparams.ny,
             line_fire.qu_simparams.nx,
+            line_fire.qu_simparams.dy,
+            line_fire.qu_simparams.dx,
         )
 
         # Check that the grid info is correct
@@ -506,6 +507,8 @@ class TestSimulationOutputs:
             line_fire.quic_fire.nz,
             line_fire.qu_simparams.ny,
             line_fire.qu_simparams.nx,
+            line_fire.qu_simparams.dy,
+            line_fire.qu_simparams.dx,
         )
         outputs_list = outputs.list_outputs()
 
@@ -515,13 +518,15 @@ class TestSimulationOutputs:
         assert "mburnt_integ" in outputs_list
         assert "surfEnergy" in outputs_list
 
-    def test_line_first_get_output(self):
+    def test_line_fire_get_output(self):
         line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
         outputs = SimulationOutputs(
             LINE_FIRE_DIR / "Output",
             line_fire.quic_fire.nz,
             line_fire.qu_simparams.ny,
             line_fire.qu_simparams.nx,
+            line_fire.qu_simparams.dy,
+            line_fire.qu_simparams.dx,
         )
 
         fire_energy = outputs.get_output("fire-energy_to_atmos")
@@ -535,6 +540,34 @@ class TestSimulationOutputs:
         groundfuelheight = outputs.get_output("groundfuelheight")
         assert 0 in groundfuelheight.times
 
+        mburnt_integ = outputs.get_output("mburnt_integ")
+        assert 0 in mburnt_integ.times
+        assert 60 in mburnt_integ.times
+
+        surf_energy = outputs.get_output("surfEnergy")
+        assert 0 in surf_energy.times
+        assert 9 in surf_energy.times
+
+    def test_line_fire_from_simulation(self):
+        # Create the SimulationOutputs object with the normal constructor
+        line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
+        outputs = SimulationOutputs(
+            LINE_FIRE_DIR / "Output",
+            line_fire.quic_fire.nz,
+            line_fire.qu_simparams.ny,
+            line_fire.qu_simparams.nx,
+            line_fire.qu_simparams.dy,
+            line_fire.qu_simparams.dx,
+        )
+
+        # Create the SimulationOutputs object from the SimulationInputs object
+        outputs_from_sim_inputs = SimulationOutputs.from_simulation_inputs(
+            LINE_FIRE_DIR / "Output", line_fire
+        )
+
+        # The two objects should be the same
+        assert outputs == outputs_from_sim_inputs
+
     def test_eglin_canopy(self):
         eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
         outputs = SimulationOutputs(
@@ -542,6 +575,8 @@ class TestSimulationOutputs:
             eglin_canopy.quic_fire.nz,
             eglin_canopy.qu_simparams.ny,
             eglin_canopy.qu_simparams.nx,
+            eglin_canopy.qu_simparams.dy,
+            eglin_canopy.qu_simparams.dx,
         )
 
         # Check that the grid info is correct
@@ -549,3 +584,72 @@ class TestSimulationOutputs:
         assert outputs.quic_nz == eglin_canopy.qu_simparams.nz
         assert outputs.fire_dz == eglin_canopy.quic_fire.dz
         assert np.allclose(outputs.quic_dz[:-1], eglin_canopy.qu_simparams._dz_array)
+
+    def test_eglin_canopy_list_outputs(self):
+        eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
+        outputs = SimulationOutputs(
+            EG_CANOPY_DIR / "Output",
+            eglin_canopy.quic_fire.nz,
+            eglin_canopy.qu_simparams.ny,
+            eglin_canopy.qu_simparams.nx,
+            eglin_canopy.qu_simparams.dy,
+            eglin_canopy.qu_simparams.dx,
+        )
+
+        assert "co_emissions" in outputs.list_outputs()
+        assert "fire-energy_to_atmos" in outputs.list_outputs()
+        assert "fuels-dens" in outputs.list_outputs()
+        assert "groundfuelheight" in outputs.list_outputs()
+        assert "mburnt_integ" in outputs.list_outputs()
+        assert "qu_windu" in outputs.list_outputs()
+        assert "thermalradiation" in outputs.list_outputs()
+        assert "windu" in outputs.list_outputs()
+
+    def test_eglin_canopy_get_output(self):
+        eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
+        outputs = SimulationOutputs(
+            EG_CANOPY_DIR / "Output",
+            eglin_canopy.quic_fire.nz,
+            eglin_canopy.qu_simparams.ny,
+            eglin_canopy.qu_simparams.nx,
+            eglin_canopy.qu_simparams.dy,
+            eglin_canopy.qu_simparams.dx,
+        )
+
+        co_emissions = outputs.get_output("co_emissions")
+        assert 600 in co_emissions.times
+        assert co_emissions.shape == (outputs.fire_nz, outputs.ny, outputs.nx)
+
+        fire_energy = outputs.get_output("fire-energy_to_atmos")
+        assert 0 in fire_energy.times
+        assert 600 in fire_energy.times
+        assert fire_energy.shape == (outputs.en2atmos_nz, outputs.ny, outputs.nx)
+
+        groundfuelheight = outputs.get_output("groundfuelheight")
+        mburnt_integ = outputs.get_output("mburnt_integ")
+        qu_windu = outputs.get_output("qu_windu")
+        thermal_rad = outputs.get_output("thermalradiation")
+        wind = outputs.get_output("windu")
+
+    def test_equality(self):
+        line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
+        line_fire_outputs = SimulationOutputs(
+            LINE_FIRE_DIR / "Output",
+            line_fire.quic_fire.nz,
+            line_fire.qu_simparams.ny,
+            line_fire.qu_simparams.nx,
+            line_fire.qu_simparams.dy,
+            line_fire.qu_simparams.dx,
+        )
+
+        eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
+        eglin_canopy_outputs = SimulationOutputs(
+            EG_CANOPY_DIR / "Output",
+            eglin_canopy.quic_fire.nz,
+            eglin_canopy.qu_simparams.ny,
+            eglin_canopy.qu_simparams.nx,
+            eglin_canopy.qu_simparams.dy,
+            eglin_canopy.qu_simparams.dx,
+        )
+
+        assert line_fire_outputs != eglin_canopy_outputs
