@@ -317,6 +317,20 @@ class OutputFile:
             index_map if (self.file_format == "compressed") else None
         )
 
+    def __eq__(self, other):
+        self_dict = self.__dict__.copy()
+        other_dict = other.__dict__.copy()
+        for key in self_dict.keys():
+            try:
+                if self_dict[key] != other_dict[key]:
+                    return False
+            except KeyError:
+                return False
+            except ValueError:
+                if np.any(self_dict[key] != other_dict[key]):
+                    return False
+        return True
+
     def to_numpy(self, timestep: int | list[int] = None) -> np.ndarray:
         """
         Return a numpy array for the given output and timestep(s) with shape
@@ -400,6 +414,68 @@ class SimulationOutputs:
         # Build a list of present output files and their times
         self.outputs = {}
         self._build_output_files_map()
+    def __eq__(self, other):
+        self_dict = self.__dict__.copy()
+        other_dict = other.__dict__.copy()
+        self_dict.pop("outputs")
+        other_dict.pop("outputs")
+        for key in self_dict.keys():
+            self_value = self_dict[key]
+            other_value = other_dict[key]
+            try:
+                if self_value != other_value:
+                    return False
+            except KeyError:
+                return False
+            except ValueError:
+                if np.any(self_value != other_value):
+                    return False
+        for key in self.outputs.keys():
+            try:
+                if self.outputs[key] != other.outputs[key]:
+                    return False
+            except KeyError:
+                return False
+        return True
+
+    @classmethod
+    def from_simulation_inputs(
+        cls, output_directory: Path | str, simulation_inputs: SimulationInputs
+    ) -> "SimulationOutputs":
+        """
+        Create a SimulationOutputs object from a path to a QUIC-Fire "Output"
+        directory and a SimulationInputs object.
+
+        Parameters
+        ----------
+        output_directory: Path | str
+            The path to the directory containing the simulation outputs. The
+            directory must contain the "fire_indexes.bin" and "grid.bin" files.
+            This is typically the "Output" directory in the same directory as
+            the simulation input files, but that does not have to be the case
+            for quicfire-tools.
+        simulation_inputs: SimulationInputs
+            The SimulationInputs object containing the simulation input data.
+
+        Returns
+        -------
+        SimulationOutputs
+            A SimulationOutputs object.
+
+        Examples
+        --------
+        >>> import quicfire_tools as qft
+        >>> inputs = qft.SimulationInputs.from_json("path/to/sim_inputs.json")
+        >>> outputs = qft.SimulationOutputs.from_simulation_inputs("path/to/outputs", inputs)
+        """
+        return cls(
+            output_directory,
+            simulation_inputs.quic_fire.nz,
+            simulation_inputs.qu_simparams.ny,
+            simulation_inputs.qu_simparams.nx,
+            simulation_inputs.qu_simparams.dy,
+            simulation_inputs.qu_simparams.dx,
+        )
 
     @staticmethod
     def _validate_output_dir(outputs_directory):
