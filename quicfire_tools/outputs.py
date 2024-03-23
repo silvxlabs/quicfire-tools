@@ -77,7 +77,7 @@ FUELS_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["y", "x"],
         "grid": "fire",
-        "delimiter": None,
+        "delimiter": "",
         "extension": ".bin",
         "description": "Array contains total energy output by each surface cell "
         "on a per second interval.",
