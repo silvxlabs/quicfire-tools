@@ -402,15 +402,19 @@ class OutputFile:
         if not directory.exists():
             directory.mkdir(parents=True)
 
-        dataset = Dataset(directory / f"{self.name}.nc", "w")
-        dataset.createDimension("time", self.shape[0])
+        dataset = Dataset(directory / f"{self.name}.nc", "w", format="NETCDF4_CLASSIC")
         dataset.createDimension("nz", self.shape[1])
         dataset.createDimension("ny", self.shape[2])
         dataset.createDimension("nx", self.shape[3])
-        dataset_time = dataset.createVariable("timestep", np.int64, ("time",))
+        dataset.createDimension("time", self.shape[0])
+
         dataset_nz = dataset.createVariable("z", np.int64, ("nz",))
         dataset_ny = dataset.createVariable("y", np.int64, ("ny",))
         dataset_nx = dataset.createVariable("x", np.int64, ("nx",))
+        dataset_time = dataset.createVariable("timestep", np.int64, ("time",))
+
+        dataset.title = self.name
+        dataset.subtitle = self.description
 
         dataset_time[:] = np.array(self.times)
         dataset_nz[:] = range(self.shape[0])
@@ -419,8 +423,9 @@ class OutputFile:
         dataset_nx[:] = range(self.shape[2])
 
         output = dataset.createVariable(
-            self.name, np.float32, ("timestep", "z", "y", "x")
+            self.name, np.float32, ("timestep", "nz", "ny", "nx")
         )
+        output.units = self.units
 
         selected_files = self._select_files_based_on_timestep(timestep)
         output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
