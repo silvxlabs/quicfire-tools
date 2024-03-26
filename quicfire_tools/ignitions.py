@@ -1,6 +1,7 @@
 """
 QUIC-Fire Tools Ignitions Module
 """
+
 from __future__ import annotations
 
 # Core Imports
@@ -10,7 +11,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 
-class IgnitionSources(int, Enum):
+class IgnitionFlags(int, Enum):
     """
     Enum class for all valid ignition source options in QUIC-Fire.
     """
@@ -21,13 +22,13 @@ class IgnitionSources(int, Enum):
     ignite_dat_file = 7
 
 
-class IgnitionType(BaseModel):
+class Ignition(BaseModel):
     """
     Base class for all ignition types in QUIC-Fire. This class is used to
     provide a common string representation for all ignition types.
     """
 
-    ignition_flag: IgnitionSources
+    ignition_flag: IgnitionFlags
 
     def __str__(self):
         return (
@@ -39,7 +40,7 @@ class IgnitionType(BaseModel):
         )
 
 
-class RectangleIgnition(IgnitionType):
+class RectangleIgnition(Ignition):
     """
     Represents a rectangle ignition source in QUIC-Fire.
 
@@ -55,7 +56,7 @@ class RectangleIgnition(IgnitionType):
         Length in the y-direction [m]
     """
 
-    ignition_flag: IgnitionSources = IgnitionSources(1)
+    ignition_flag: IgnitionFlags = IgnitionFlags(1)
     x_min: float
     y_min: float
     x_length: float
@@ -72,7 +73,7 @@ class RectangleIgnition(IgnitionType):
         return flag_line + locations
 
 
-class SquareRingIgnition(IgnitionType):
+class SquareRingIgnition(Ignition):
     """
     Represents a square ring ignition source in QUIC-Fire.
 
@@ -92,7 +93,7 @@ class SquareRingIgnition(IgnitionType):
         Width in the y-direction [m]
     """
 
-    ignition_flag: IgnitionSources = IgnitionSources(2)
+    ignition_flag: IgnitionFlags = IgnitionFlags(2)
     x_min: float
     y_min: float
     x_length: float
@@ -113,7 +114,7 @@ class SquareRingIgnition(IgnitionType):
         return flag_line + locations
 
 
-class CircularRingIgnition(IgnitionType):
+class CircularRingIgnition(Ignition):
     """
     Represents a circular ring ignition source in QUIC-Fire.
 
@@ -131,7 +132,7 @@ class CircularRingIgnition(IgnitionType):
         Width of the ring [m]
     """
 
-    ignition_flag: IgnitionSources = IgnitionSources(3)
+    ignition_flag: IgnitionFlags = IgnitionFlags(3)
     x_min: float
     y_min: float
     x_length: float
@@ -176,3 +177,15 @@ def default_line_ignition(nx, ny, wind_direction):
     return RectangleIgnition(
         x_min=x_min, y_min=y_min, x_length=x_length, y_length=y_length
     )
+
+
+def serialize_ignition(ignition_data: dict):
+    ignition_flag = ignition_data.get("ignition_flag")
+    if ignition_flag == IgnitionFlags(1):
+        return RectangleIgnition(**ignition_data)
+    elif ignition_flag == IgnitionFlags(2):
+        return SquareRingIgnition(**ignition_data)
+    elif ignition_flag == IgnitionFlags(3):
+        return CircularRingIgnition(**ignition_data)
+    else:
+        return Ignition(**ignition_data)
