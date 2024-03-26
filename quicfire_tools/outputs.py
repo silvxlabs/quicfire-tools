@@ -337,7 +337,7 @@ class OutputFile:
                     return False
         return True
 
-    def to_numpy(self, timestep: int | list[int] = None) -> np.ndarray:
+    def to_numpy(self, timestep: int | list[int] | range = None) -> np.ndarray:
         """
         Return a numpy array for the given output and timestep(s) with shape
         (time, nz, ny, nx). If timestep is None, then all timesteps are
@@ -692,7 +692,9 @@ class SimulationOutputs:
         """
         return self._validate_output(key)
 
-    def to_numpy(self, key: str, timestep: None | int | list[int] = None) -> np.ndarray:
+    def to_numpy(
+        self, key: str, timestep: None | int | list[int] | range = None
+    ) -> np.ndarray:
         """
         Returns a 4D numpy array for the given output and timestep(s) with shape
         (time, nz, ny, nx). If timestep is None, then all timesteps are
