@@ -900,18 +900,25 @@ class SimulationOutputs:
         root_ny[:] = range(self.ny)
         root_nx[:] = range(self.nx)
 
-        # Next grouping is fire grid, quic grid, and eng2atm grid
-        fire_grid = dataset.createGroup("fire_grid")
-        fire_grid.createDimension("fire_nz", self.fire_nz)
-        fire_grid_nz = fire_grid.createVariable("z", np.int64, ("fire_nz"))
+        # Find which grids and output times are needed
+        output_info = self._get_output_info(selected_outputs)
 
-        quic_grid = dataset.createGroup("quic_grid")
-        quic_grid.createDimension("quic_nz", self.quic_nz)
-        quic_grid_nz = quic_grid.createVariable("z", np.int64, ("quic_nz"))
+        # Make groups for the different grids present in the data
+        # There will always be at least one grid group present, ie the nz grid will never be in the root group
+        if "fire" in output_info["grids"]:
+            fire_grid = dataset.createGroup("fire_grid")
+            fire_grid.createDimension("fire_nz", self.fire_nz)
+            fire_grid_nz = fire_grid.createVariable("z", np.int64, ("fire_nz"))
 
-        eng2atm_grid = dataset.createGroup("eng2atm_grid")
-        eng2atm_grid.createDimension("eng2atm_nz", self.en2atmos_nz)
-        eng2atm_grid_nz = eng2atm_grid.createVariable("z", np.int64, ("eng2atm_nz"))
+        if "wind" in output_info["grids"]:
+            quic_grid = dataset.createGroup("quic_grid")
+            quic_grid.createDimension("quic_nz", self.quic_nz)
+            quic_grid_nz = quic_grid.createVariable("z", np.int64, ("quic_nz"))
+
+        if "eng2atm" in output_info["grids"]:
+            eng2atm_grid = dataset.createGroup("eng2atm_grid")
+            eng2atm_grid.createDimension("eng2atm_nz", self.en2atmos_nz)
+            eng2atm_grid_nz = eng2atm_grid.createVariable("z", np.int64, ("eng2atm_nz"))
 
         # Check if the output times in the output files are the same
         identical_times = self._check_identical_times(selected_outputs)
@@ -921,33 +928,47 @@ class SimulationOutputs:
             root_times[:] = identical_times
         else:
             """Set up different output time groups"""
-
             # And then by output time interval group
-            out_fire = fire_grid.createGroup("fire_related")
-            out_fire.createDimension("time_fire", self.shape[0])
-            out_fire_time = out_fire.createVariable(
-                "timestep_fire", np.int64, ("time_fire",)
-            )
-            out_emis_rad = fire_grid.createGroup("emissions_and_radiation")
-            out_emis_rad.createDimension("time_emis_rad", self.shape[0])
-            out_emis_rad_time = out_emis_rad.createVariable(
-                "timestep_emis_rad", np.int64, ("time_emis_rad",)
-            )
-            out_surf_eng = fire_grid.createGroup("surface_energy")
-            out_surf_eng.createDimension("time_surf_eng", self.shape[0])
-            out_surf_eng_time = out_surf_eng.createVariable(
-                "timestep_surf_eng", np.int64, ("time_surf_eng",)
-            )
-            out_wind = quic_grid.createGroup("instantaneous_wind")
-            out_wind.createDimension("time_wind", self.shape[0])
-            out_wind_time = out_wind.createVariable(
-                "timestep_wind", np.int64, ("time_wind",)
-            )
-            out_wind_ave = quic_grid.createGroup("averaged_wind")
-            out_wind_ave.createDimension("time_wind_ave", self.shape[0])
-            out_wind_ave_time = out_wind_ave.createVariable(
-                "timestep_wind_ave", np.int64, ("time_wind_ave",)
-            )
+            if "emis_rad" in output_info["output_times"]:
+                out_emis_rad = fire_grid.createGroup("emissions_and_radiation")
+                out_emis_rad.createDimension("time_emis_rad", self.shape[0])
+                out_emis_rad_time = out_emis_rad.createVariable(
+                    "timestep_emis_rad", np.int64, ("time_emis_rad",)
+                )
+
+            if "surf_eng" in output_info["output_times"]:
+                out_surf_eng = fire_grid.createGroup("surface_energy")
+                out_surf_eng.createDimension("time_surf_eng", self.shape[0])
+                out_surf_eng_time = out_surf_eng.createVariable(
+                    "timestep_surf_eng", np.int64, ("time_surf_eng",)
+                )
+
+            if "wind" in output_info["output_times"]:
+                out_wind = quic_grid.createGroup("instantaneous_wind")
+                out_wind.createDimension("time_wind", self.shape[0])
+                out_wind_time = out_wind.createVariable(
+                    "timestep_wind", np.int64, ("time_wind",)
+                )
+            if "wind_ave" in output_info["output_times"]:
+                out_wind_ave = quic_grid.createGroup("averaged_wind")
+                out_wind_ave.createDimension("time_wind_ave", self.shape[0])
+                out_wind_ave_time = out_wind_ave.createVariable(
+                    "timestep_wind_ave", np.int64, ("time_wind_ave",)
+                )
+
+            if "fire" in output_info["output_times"]:
+                if "fire" in output_info["grids"]:
+                    out_fire = fire_grid.createGroup("fire_related")
+                    out_fire.createDimension("time_fire", self.shape[0])
+                    out_fire_time = out_fire.createVariable(
+                        "timestep_fire", np.int64, ("time_fire",)
+                    )
+                if "eng2atm" in output_info["grids"]:
+                    out_eng2atm = eng2atm_grid.createGroup("eng2atm")
+                    out_eng2atm.createDimension("time_eng2atm", self.shape[0])
+                    out_fire_time = out_eng2atm.createVariable(
+                        "timestep_eng2atm", np.int64, ("time_eng2atm",)
+                    )
 
         for out in selected_outputs:
             output = self._validate_output(out)
@@ -1169,6 +1190,18 @@ class SimulationOutputs:
         if all_the_same:
             identical_times = first_output.times
         return identical_times
+
+    def _get_output_info(self, selected_outputs) -> dict:
+        grids = []
+        out_times = []
+        for output in selected_outputs:
+            info_dict = OUTPUTS_MAP.get(output)
+            grids.append(info_dict["grid"])
+            out_times.append(info_dict["output_times"])
+            grids = list(set(grids))
+            out_times = list(set(out_times))
+        out_dict = {"grids": grids, "output_times": out_times}
+        return out_dict
 
 
 def _get_resolution_from_coords(coords: list[float]) -> float | list[float]:
