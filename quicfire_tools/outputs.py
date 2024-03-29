@@ -6,7 +6,9 @@ from __future__ import annotations
 
 # Core imports
 import re
+import json
 from pathlib import Path
+import importlib.resources
 
 # Internal imports
 from quicfire_tools.inputs import SimulationInputs
@@ -18,263 +20,12 @@ import dask.array as da
 from numpy import ndarray
 from shutil import rmtree
 
-FUELS_OUTPUTS = {
-    "fire-energy_to_atmos": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "en2atmos",
-        "output_times": "fire",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "Energy released to the atmosphere that generates "
-        "buoyant plumes",
-        "units": "kW",
-    },
-    "fire-reaction_rate": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "fire",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "Rate of reaction of fuel",
-        "units": "kg/m^3/s",
-    },
-    "fuels-dens": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "fire",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "Fuel density",
-        "units": "kg/m^3",
-    },
-    "fuels-moist": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "fire",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "Fuel moisture content",
-        "units": "g water / g air",
-    },
-    "groundfuelheight": {
-        "file_format": "gridded",
-        "dimensions": ["y", "x"],
-        "grid": "fire",
-        "output_times": None,
-        "delimiter": None,
-        "extension": ".bin",
-        "description": "2D array with initial fuel height in the ground layer",
-        "units": "m",
-    },
-    "mburnt_integ": {
-        "file_format": "gridded",
-        "dimensions": ["y", "x"],
-        "grid": "fire",
-        "output_times": "fire",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "2D file containing the percentage of mass burnt for each (i,j) "
-        "location on the fire grid (vertically integrated)",
-        "units": "%",
-    },
-    "surfEnergy": {
-        "file_format": "gridded",
-        "dimensions": ["y", "x"],
-        "grid": "fire",
-        "output_times": "surf_eng",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Array contains total energy output by each surface cell "
-        "on a per second interval.",
-        "units": "kW/m^2",
-    },
-}
-THERMAL_RADIATION_OUTPUTS = {
-    "thermaldose": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "emis_rad",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "The output shows the thermal flux to skin of a person "
-        "collocated with fuel (for health effects).",
-        "units": "(kW/m^2)^(4/3)s",
-    },
-    "thermalradiation": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "emis_rad",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "The output shows the thermal flux to skin of a person "
-        "collocated with fuel (for health effects).",
-        "units": "kW/m^2",
-    },
-}
-QF_WIND_OUTPUTS = {
-    "windu": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "fire",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Fire u-components, cell centered ",
-        "units": "m/s",
-    },
-    "windv": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "fire",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Fire v-components, cell centered ",
-        "units": "m/s",
-    },
-    "windw": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "fire",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Fire w-components, cell centered ",
-        "units": "m/s",
-    },
-}
-QU_WIND_OUTPUTS = {
-    "qu_windu": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "quic",
-        "output_times": "wind",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Instantaneous wind component in the x-direction, cell centered ",
-        "units": "m/s",
-    },
-    "qu_windv": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "quic",
-        "output_times": "wind",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Instantaneous wind component in the y-direction, cell centered ",
-        "units": "m/s",
-    },
-    "qu_windw": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "quic",
-        "output_times": "wind",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Instantaneous wind component in the x-direction, cell centered ",
-        "units": "m/s",
-    },
-    "qu_windu_ave": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "quic",
-        "output_times": "wind_ave",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Averaged wind component in the x-direction, cell centered ",
-        "units": "m/s",
-    },
-    "qu_windv_ave": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "quic",
-        "output_times": "wind_ave",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Averaged wind component in the y-direction, cell centered ",
-        "units": "m/s",
-    },
-    "qu_windw_ave": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "quic",
-        "output_times": "wind_ave",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Averaged wind component in the z-direction, cell centered ",
-        "units": "m/s",
-    },
-    "qu_wplume": {
-        "file_format": "gridded",
-        "dimensions": ["z", "y", "x"],
-        "grid": "quic",
-        "output_times": "wind",
-        "delimiter": "",
-        "extension": ".bin",
-        "description": "Instantaneous wind component in the z-direction generated "
-        "by the fire, cell centered ",
-        "units": "m/s",
-    },
-}
-EMISSIONS_OUTPUTS = {
-    "co_emissions": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "emis_rad",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "Mass of CO emitted between two emission file output"
-        "times in grams",
-        "units": "g",
-    },
-    "pm_emissions": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "emis_rad",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "Mass of PM2.5 emitted between two emission file output"
-        "times in grams",
-        "units": "g",
-    },
-    "water_emissions": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "emis_rad",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "Mass of water emitted between two emission file output"
-        "times (fuel moisture + water from combustion) in grams",
-        "units": "g",
-    },
-    "emissions_distribution": {
-        "file_format": "compressed",
-        "dimensions": ["z", "y", "x"],
-        "grid": "fire",
-        "output_times": "emis_rad",
-        "delimiter": "-",
-        "extension": ".bin",
-        "description": "Size of PM2.5 emitted between two emission file output"
-        "times in microns",
-        "units": "g",
-    },
-}
-OUTPUTS_MAP = {
-    **FUELS_OUTPUTS,
-    **THERMAL_RADIATION_OUTPUTS,
-    **QF_WIND_OUTPUTS,
-    **QU_WIND_OUTPUTS,
-    **EMISSIONS_OUTPUTS,
-}
+
+OUTPUTS_DIR_PATH = (
+    importlib.resources.files("quicfire_tools").joinpath("data").joinpath("outputs")
+)
+with open(OUTPUTS_DIR_PATH.joinpath("outputs.json")) as f:
+    OUTPUTS_MAP = json.load(f)
 
 
 class OutputFile:
@@ -465,6 +216,10 @@ class SimulationOutputs:
         self.dx = dx
         self.fire_nz = fire_nz
 
+        # TODO: fire_nz can be optional
+        # TODO: Throw warning if fire_nz not provided and qf_wind outputs are present
+        # TODO: raise error if fire_nz is not provided and qf_qind is output
+
         # Get grid information from grid.bin and fire_indexes.bin
         self._fire_indexes = _process_fire_indexes(
             output_directory / "fire_indexes.bin"
@@ -545,7 +300,7 @@ class SimulationOutputs:
         Examples
         --------
         >>> import quicfire_tools as qft
-        >>> inputs = qft.SimulationInputs.from_json("path/to/sim_inputs.json")
+        >>> inputs = qft.SimulationInputs.from_directory("path/to/inputs")
         >>> outputs = qft.SimulationOutputs.from_simulation_inputs("path/to/outputs", inputs)
         """
         return cls(
