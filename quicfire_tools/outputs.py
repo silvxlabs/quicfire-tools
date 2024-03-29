@@ -24,6 +24,7 @@ FUELS_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "en2atmos",
+        "output_times": "fire",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Energy released to the atmosphere that generates "
@@ -34,6 +35,7 @@ FUELS_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "fire",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Rate of reaction of fuel",
@@ -43,6 +45,7 @@ FUELS_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "fire",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Fuel density",
@@ -52,6 +55,7 @@ FUELS_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "fire",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Fuel moisture content",
@@ -61,6 +65,7 @@ FUELS_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["y", "x"],
         "grid": "fire",
+        "output_times": None,
         "delimiter": None,
         "extension": ".bin",
         "description": "2D array with initial fuel height in the ground layer",
@@ -70,6 +75,7 @@ FUELS_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["y", "x"],
         "grid": "fire",
+        "output_times": "fire",
         "delimiter": "-",
         "extension": ".bin",
         "description": "2D file containing the percentage of mass burnt for each (i,j) "
@@ -80,6 +86,7 @@ FUELS_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["y", "x"],
         "grid": "fire",
+        "output_times": "surf_eng",
         "delimiter": "",
         "extension": ".bin",
         "description": "Array contains total energy output by each surface cell "
@@ -92,6 +99,7 @@ THERMAL_RADIATION_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "emis_rad",
         "delimiter": "-",
         "extension": ".bin",
         "description": "The output shows the thermal flux to skin of a person "
@@ -102,6 +110,7 @@ THERMAL_RADIATION_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "emis_rad",
         "delimiter": "-",
         "extension": ".bin",
         "description": "The output shows the thermal flux to skin of a person "
@@ -114,6 +123,7 @@ QF_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "fire",
         "delimiter": "",
         "extension": ".bin",
         "description": "Fire u-components, cell centered ",
@@ -123,6 +133,7 @@ QF_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "fire",
         "delimiter": "",
         "extension": ".bin",
         "description": "Fire v-components, cell centered ",
@@ -132,6 +143,7 @@ QF_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "fire",
         "delimiter": "",
         "extension": ".bin",
         "description": "Fire w-components, cell centered ",
@@ -143,6 +155,7 @@ QU_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "quic",
+        "output_times": "wind",
         "delimiter": "",
         "extension": ".bin",
         "description": "Instantaneous wind component in the x-direction, cell centered ",
@@ -152,6 +165,7 @@ QU_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "quic",
+        "output_times": "wind",
         "delimiter": "",
         "extension": ".bin",
         "description": "Instantaneous wind component in the y-direction, cell centered ",
@@ -161,6 +175,7 @@ QU_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "quic",
+        "output_times": "wind",
         "delimiter": "",
         "extension": ".bin",
         "description": "Instantaneous wind component in the x-direction, cell centered ",
@@ -170,6 +185,7 @@ QU_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "quic",
+        "output_times": "wind_ave",
         "delimiter": "",
         "extension": ".bin",
         "description": "Averaged wind component in the x-direction, cell centered ",
@@ -179,6 +195,7 @@ QU_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "quic",
+        "output_times": "wind_ave",
         "delimiter": "",
         "extension": ".bin",
         "description": "Averaged wind component in the y-direction, cell centered ",
@@ -188,6 +205,7 @@ QU_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "quic",
+        "output_times": "wind_ave",
         "delimiter": "",
         "extension": ".bin",
         "description": "Averaged wind component in the z-direction, cell centered ",
@@ -197,6 +215,7 @@ QU_WIND_OUTPUTS = {
         "file_format": "gridded",
         "dimensions": ["z", "y", "x"],
         "grid": "quic",
+        "output_times": "wind",
         "delimiter": "",
         "extension": ".bin",
         "description": "Instantaneous wind component in the z-direction generated "
@@ -209,6 +228,7 @@ EMISSIONS_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "emis_rad",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Mass of CO emitted between two emission file output"
@@ -219,6 +239,7 @@ EMISSIONS_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "emis_rad",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Mass of PM2.5 emitted between two emission file output"
@@ -229,6 +250,7 @@ EMISSIONS_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "emis_rad",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Mass of water emitted between two emission file output"
@@ -239,6 +261,7 @@ EMISSIONS_OUTPUTS = {
         "file_format": "compressed",
         "dimensions": ["z", "y", "x"],
         "grid": "fire",
+        "output_times": "emis_rad",
         "delimiter": "-",
         "extension": ".bin",
         "description": "Size of PM2.5 emitted between two emission file output"
@@ -402,7 +425,10 @@ class OutputFile:
         if not directory.exists():
             directory.mkdir(parents=True)
 
-        dataset = Dataset(directory / f"{self.name}.nc", "w", format="NETCDF4_CLASSIC")
+        dataset = Dataset(directory / f"{self.name}.nc", "w", format="NETCDF4")
+        dataset.title = self.name
+        dataset.subtitle = self.description
+
         dataset.createDimension("nz", self.shape[1])
         dataset.createDimension("ny", self.shape[2])
         dataset.createDimension("nx", self.shape[3])
@@ -412,9 +438,6 @@ class OutputFile:
         dataset_ny = dataset.createVariable("y", np.int64, ("ny",))
         dataset_nx = dataset.createVariable("x", np.int64, ("nx",))
         dataset_time = dataset.createVariable("timestep", np.int64, ("time",))
-
-        dataset.title = self.name
-        dataset.subtitle = self.description
 
         dataset_time[:] = np.array(self.times)
         dataset_nz[:] = range(self.shape[0])
@@ -834,8 +857,7 @@ class SimulationOutputs:
     def to_netcdf(
         self,
         directory: str | Path,
-        output: str = None,
-        timestep: int | list[int] = None,
+        outputs: str | list[str] = None,
     ):
         """
         Write QUIC-Fire output(s) to a netCDF file
@@ -844,10 +866,9 @@ class SimulationOutputs:
         ----------
         directory: str | Path
             The path to the folder where netCDF file will be written.
-        output: str
-            The name of the output to write to the netCDF file.
-        timestep: int | list[int] | None
-            The timestep(s) to write. If None, then all timesteps are written.
+        outputs: str
+            The name or list of names of the output(s) to write to the netCDF file.
+            If None, all output files present will be included.
 
 
         Builds
@@ -862,8 +883,85 @@ class SimulationOutputs:
         if not directory.exists():
             directory.mkdir(parents=True)
 
-        out = self._validate_output(output)
-        return out.to_netcdf(directory, timestep)
+        if isinstance(outputs, str):
+            outputs = [outputs]
+        selected_outputs = self._output_names if outputs is None else outputs
+
+        # Initiate dataset
+        dataset = Dataset(directory / f"simulation_outputs.nc", "w", format="NETCDF4")
+        dataset.title = "QUIC-Fire Simulation Outputs"
+        dataset.subtitle = f"Contains the following outputs: {selected_outputs}"
+
+        # Create nx and ny dimensions and variables in root group
+        dataset.createDimension("ny", self.ny)
+        dataset.createDimension("nx", self.nx)
+        root_ny = dataset.createVariable("y", np.int64, ("ny",))
+        root_nx = dataset.createVariable("x", np.int64, ("nx",))
+        root_ny[:] = range(self.ny)
+        root_nx[:] = range(self.nx)
+
+        # Next grouping is fire grid, quic grid, and eng2atm grid
+        fire_grid = dataset.createGroup("fire_grid")
+        fire_grid.createDimension("fire_nz", self.fire_nz)
+        fire_grid_nz = fire_grid.createVariable("z", np.int64, ("fire_nz"))
+
+        quic_grid = dataset.createGroup("quic_grid")
+        quic_grid.createDimension("quic_nz", self.quic_nz)
+        quic_grid_nz = quic_grid.createVariable("z", np.int64, ("quic_nz"))
+
+        eng2atm_grid = dataset.createGroup("eng2atm_grid")
+        eng2atm_grid.createDimension("eng2atm_nz", self.en2atmos_nz)
+        eng2atm_grid_nz = eng2atm_grid.createVariable("z", np.int64, ("eng2atm_nz"))
+
+        # Check if the output times in the output files are the same
+        identical_times = self._check_identical_times(selected_outputs)
+        if identical_times is not None:
+            dataset.createDimension("time", len(identical_times))
+            root_times = dataset.createVariable("times", np.int64, ("time",))
+            root_times[:] = identical_times
+        else:
+            """Set up different output time groups"""
+
+            # And then by output time interval group
+            out_fire = fire_grid.createGroup("fire_related")
+            out_fire.createDimension("time_fire", self.shape[0])
+            out_fire_time = out_fire.createVariable(
+                "timestep_fire", np.int64, ("time_fire",)
+            )
+            out_emis_rad = fire_grid.createGroup("emissions_and_radiation")
+            out_emis_rad.createDimension("time_emis_rad", self.shape[0])
+            out_emis_rad_time = out_emis_rad.createVariable(
+                "timestep_emis_rad", np.int64, ("time_emis_rad",)
+            )
+            out_surf_eng = fire_grid.createGroup("surface_energy")
+            out_surf_eng.createDimension("time_surf_eng", self.shape[0])
+            out_surf_eng_time = out_surf_eng.createVariable(
+                "timestep_surf_eng", np.int64, ("time_surf_eng",)
+            )
+            out_wind = quic_grid.createGroup("instantaneous_wind")
+            out_wind.createDimension("time_wind", self.shape[0])
+            out_wind_time = out_wind.createVariable(
+                "timestep_wind", np.int64, ("time_wind",)
+            )
+            out_wind_ave = quic_grid.createGroup("averaged_wind")
+            out_wind_ave.createDimension("time_wind_ave", self.shape[0])
+            out_wind_ave_time = out_wind_ave.createVariable(
+                "timestep_wind_ave", np.int64, ("time_wind_ave",)
+            )
+
+        for out in selected_outputs:
+            output = self._validate_output(out)
+
+        output = dataset.createVariable(
+            self.name, np.float32, ("timestep", "nz", "ny", "nx")
+        )
+        output.units = self.units
+
+        selected_files = self._select_files_based_on_timestep(timestep)
+        output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
+        dataset.close()
+
+        return
 
     # ZCC Changes
     def to_zarr(
@@ -1058,6 +1156,19 @@ class SimulationOutputs:
     #             zarr_dataset[time_step, ...] = data[0, ...]
 
     #     return zarr_file
+
+    def _check_identical_times(self, selected_outputs) -> list | None:
+        identical_times = None
+        all_the_same = True
+        first_output = self.get_output(selected_outputs[0])
+        if len(selected_outputs) > 1:
+            for i in range(1, len(selected_outputs)):
+                next_output = self.get_output(selected_outputs[i])
+                if next_output.times == first_output.times:
+                    all_the_same = False
+        if all_the_same:
+            identical_times = first_output.times
+        return identical_times
 
 
 def _get_resolution_from_coords(coords: list[float]) -> float | list[float]:
