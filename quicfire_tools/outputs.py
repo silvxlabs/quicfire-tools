@@ -317,6 +317,7 @@ class OutputFile:
         dimensions: list[str],
         shape: tuple,
         grid: str,
+        output_times: str,
         delimiter: str,
         extension: str,
         description: str,
@@ -330,6 +331,7 @@ class OutputFile:
         self.dimensions = dimensions
         self.shape = shape
         self.grid = grid
+        self.output_times = output_times
         self.delimiter = delimiter
         self.extension = extension
         self.description = description
@@ -972,11 +974,10 @@ class SimulationOutputs:
 
         for out in selected_outputs:
             output = self._validate_output(out)
-
-        output = dataset.createVariable(
-            self.name, np.float32, ("timestep", "nz", "ny", "nx")
-        )
-        output.units = self.units
+            new_var = dataset.createVariable(
+                output.name, np.float32, ("timestep", "nz", "ny", "nx")
+            )
+            new_var.units = output.units
 
         selected_files = self._select_files_based_on_timestep(timestep)
         output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
