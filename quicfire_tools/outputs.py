@@ -425,28 +425,35 @@ class OutputFile:
         if not directory.exists():
             directory.mkdir(parents=True)
 
+        if timestep is None:
+            times = list(range(0, len(self.times), 1))
+        elif isinstance(timestep, int):
+            times = [timestep]
+        else:
+            times = list(timestep)
+
         dataset = Dataset(directory / f"{self.name}.nc", "w", format="NETCDF4")
         dataset.title = self.name
         dataset.subtitle = self.description
 
-        dataset.createDimension("nz", self.shape[1])
-        dataset.createDimension("ny", self.shape[2])
-        dataset.createDimension("nx", self.shape[3])
-        dataset.createDimension("time", self.shape[0])
+        dataset.createDimension("nz", self.shape[0])
+        dataset.createDimension("ny", self.shape[1])
+        dataset.createDimension("nx", self.shape[2])
+        dataset.createDimension("time", len(times))
 
         dataset_nz = dataset.createVariable("z", np.int64, ("nz",))
         dataset_ny = dataset.createVariable("y", np.int64, ("ny",))
         dataset_nx = dataset.createVariable("x", np.int64, ("nx",))
         dataset_time = dataset.createVariable("timestep", np.int64, ("time",))
 
-        dataset_time[:] = np.array(self.times)
+        dataset_time[:] = np.array(times)
         dataset_nz[:] = range(self.shape[0])
         # julia scales the horizontal resolution to meters using dx and dy
         dataset_ny[:] = range(self.shape[1])
         dataset_nx[:] = range(self.shape[2])
 
         output = dataset.createVariable(
-            self.name, np.float32, ("timestep", "nz", "ny", "nx")
+            self.name, np.float32, ("time", "nz", "ny", "nx")
         )
         output.units = self.units
 
