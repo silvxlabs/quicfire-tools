@@ -19,6 +19,7 @@ import numpy as np
 import dask.array as da
 from numpy import ndarray
 from shutil import rmtree
+from netCDF4 import Dataset
 
 
 OUTPUTS_DIR_PATH = (
@@ -140,6 +141,77 @@ class OutputFile:
         """
         selected_files = self._select_files_based_on_timestep(timestep)
         return self._get_multiple_timesteps(selected_files)
+
+    def to_netcdf(self, directory: str | Path, timestep: int | list[int] = None):
+        """
+        Write a netCDF file for the given output and timestep(s) with dimensions
+        (time, nz, ny, nx). If timestep is None, then all timesteps are
+        returned.
+
+        Parameters
+        ----------
+        directory: str | Path
+            The path to the folder where netCDF file will be written.
+        timestep: int | list[int] | None
+            The timestep(s) to write. If None, then all timesteps are written.
+
+        Builds
+        -------
+        netCDF file to disk
+
+        Examples
+        --------
+        >>> import quicfire_tools as qft
+        >>> outputs = qft.SimulationOutputs("path/to/outputs", 50, 100, 100)
+        >>> fire_energy = outputs.get_output("fire-energy_to_atmos")
+        >>> out_dir = Path(path/to/output/dir)
+        >>> # Get all timesteps for the fire-energy_to_atmos output
+        >>> fire_energy_all = fire_energy.to_netcdf(directory = out_dir)
+        >>> # Get the first timestep for the fire-energy_to_atmos output
+        >>> fire_energy_slice = fire_energy.to_netcdf(directory = out_dir, timestep=0)
+        """
+        if isinstance(directory, str):
+            directory = Path(directory)
+
+        if not directory.exists():
+            directory.mkdir(parents=True)
+
+        if timestep is None:
+            times = list(range(0, len(self.times), 1))
+        elif isinstance(timestep, int):
+            times = [timestep]
+        else:
+            times = list(timestep)
+
+        dataset = Dataset(directory / f"{self.name}.nc", "w", format="NETCDF4")
+        dataset.title = self.name
+        dataset.subtitle = self.description
+
+        dataset.createDimension("nz", self.shape[0])
+        dataset.createDimension("ny", self.shape[1])
+        dataset.createDimension("nx", self.shape[2])
+        dataset.createDimension("time", len(times))
+
+        dataset_nz = dataset.createVariable("z", np.int64, ("nz",))
+        dataset_ny = dataset.createVariable("y", np.int64, ("ny",))
+        dataset_nx = dataset.createVariable("x", np.int64, ("nx",))
+        dataset_time = dataset.createVariable("timestep", np.int64, ("time",))
+
+        dataset_time[:] = np.array(times)
+        dataset_nz[:] = range(self.shape[0])
+        # julia scales the horizontal resolution to meters using dx and dy
+        dataset_ny[:] = range(self.shape[1])
+        dataset_nx[:] = range(self.shape[2])
+
+        output = dataset.createVariable(
+            self.name, np.float32, ("time", "nz", "ny", "nx")
+        )
+        output.units = self.units
+
+        selected_files = self._select_files_based_on_timestep(timestep)
+        output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
+        dataset.close()
+        return
 
     def _select_files_based_on_timestep(
         self, timestep: int | list[int] | range | None
@@ -276,7 +348,7 @@ class SimulationOutputs:
     @classmethod
     def from_simulation_inputs(
         cls, output_directory: Path | str, simulation_inputs: SimulationInputs
-    ) -> "SimulationOutputs":
+    ) -> SimulationOutputs:
         """
         Create a SimulationOutputs object from a path to a QUIC-Fire "Output"
         directory and a SimulationInputs object.

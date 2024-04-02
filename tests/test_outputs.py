@@ -17,6 +17,7 @@ from quicfire_tools.outputs import (
 
 # External imports
 import numpy as np
+import netCDF4 as nc
 
 TEST_DIR = Path(__file__).parent
 TEST_DATA_DIR = TEST_DIR / "data"
@@ -24,6 +25,8 @@ SAMPLE_DATA_DIR = TEST_DATA_DIR / "samples"
 LINE_FIRE_DIR = SAMPLE_DATA_DIR / "LineFire"
 EG_CANOPY_DIR = SAMPLE_DATA_DIR / "EglinCanopyTest"
 COS_HILL_DIR = SAMPLE_DATA_DIR / "CosHill"
+TMP_DIR = TEST_DIR / "tmp"
+TMP_DIR.mkdir(exist_ok=True)
 
 
 class TestProcessGridInfo:
@@ -663,6 +666,154 @@ class TestSimulationOutputs:
         )
 
         assert line_fire_outputs != eglin_canopy_outputs
+
+
+class TestOutputFileToNetCDF:
+    line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
+    line_fire_outputs = SimulationOutputs.from_simulation_inputs(
+        LINE_FIRE_DIR / "Output", line_fire
+    )
+
+    eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
+    eglin_canopy_outputs = SimulationOutputs.from_simulation_inputs(
+        EG_CANOPY_DIR / "Output", eglin_canopy
+    )
+
+    @staticmethod
+    def _test_to_netcdf(output: OutputFile, directory: Path, times, nz, ny, nx):
+        # Get all time steps
+        data_all = output.to_numpy()
+        output.to_netcdf(directory)
+        test = nc.Dataset(directory / f"{output.name}.nc", "r")
+        data_all = test.variables[output.name]
+        assert data_all.shape == (len(times), nz, ny, nx)
+        test.close()
+
+        # Get all time steps with range
+        data_all = output.to_numpy(range(len(times)))
+        output.to_netcdf(directory, range(len(times)))
+        test = nc.Dataset(directory / f"{output.name}.nc", "r")
+        data_all = test.variables[output.name]
+        assert data_all.shape == (len(times), nz, ny, nx)
+        test.close()
+
+        # Get every other time step with range
+        data_all = output.to_numpy(range(0, len(times), 2))
+        output.to_netcdf(directory, range(0, len(times), 2))
+        test = nc.Dataset(directory / f"{output.name}.nc", "r")
+        data_all = test.variables[output.name]
+        assert data_all.shape == (max(len(times) // 2, 1), nz, ny, nx)
+        test.close()
+
+        # Get the first time step
+        data_first = output.to_numpy(timestep=0)
+        output.to_netcdf(directory, timestep=0)
+        test = nc.Dataset(directory / f"{output.name}.nc", "r")
+        data_first = test.variables[output.name]
+        assert data_first.shape == (1, nz, ny, nx)
+        test.close()
+
+        # Get the last time step
+        data_last = output.to_numpy(timestep=-1)
+        output.to_netcdf(directory, timestep=-1)
+        test = nc.Dataset(directory / f"{output.name}.nc", "r")
+        data_last = test.variables[output.name]
+        assert data_last.shape == (1, nz, ny, nx)
+        test.close()
+
+    def test_lf_eng2atmos(self):
+        eng2atmos = self.line_fire_outputs.get_output("fire-energy_to_atmos")
+        self._test_to_netcdf(eng2atmos, TMP_DIR, eng2atmos.times, *eng2atmos.shape)
+
+    def test_lf_fuels_dens(self):
+        fuels_dens = self.line_fire_outputs.get_output("fuels-dens")
+        self._test_to_netcdf(fuels_dens, TMP_DIR, fuels_dens.times, *fuels_dens.shape)
+
+    def test_lf_groundfuelheight(self):
+        groundfuelheight = self.line_fire_outputs.get_output("groundfuelheight")
+        self._test_to_netcdf(
+            groundfuelheight,
+            TMP_DIR,
+            groundfuelheight.times,
+            *groundfuelheight.shape,
+        )
+
+    def test_lf_mburnt_integ(self):
+        mburnt_integ = self.line_fire_outputs.get_output("mburnt_integ")
+        self._test_to_netcdf(
+            mburnt_integ,
+            TMP_DIR,
+            mburnt_integ.times,
+            *mburnt_integ.shape,
+        )
+
+    def test_lf_surf_energy(self):
+        surf_energy = self.line_fire_outputs.get_output("surfEnergy")
+        self._test_to_netcdf(
+            surf_energy,
+            TMP_DIR,
+            surf_energy.times,
+            *surf_energy.shape,
+        )
+
+    def test_ec_co_emissions(self):
+        co_emissions = self.eglin_canopy_outputs.get_output("co_emissions")
+        self._test_to_netcdf(
+            co_emissions, TMP_DIR, co_emissions.times, *co_emissions.shape
+        )
+
+    def test_ec_eng2atmos(self):
+        eng2atmos = self.eglin_canopy_outputs.get_output("fire-energy_to_atmos")
+        self._test_to_netcdf(eng2atmos, TMP_DIR, eng2atmos.times, *eng2atmos.shape)
+
+    def test_ec_fuel_dens(self):
+        fuels_dens = self.eglin_canopy_outputs.get_output("fuels-dens")
+        self._test_to_netcdf(fuels_dens, TMP_DIR, fuels_dens.times, *fuels_dens.shape)
+
+    def test_ec_groundfuelheight(self):
+        groundfuelheight = self.eglin_canopy_outputs.get_output("groundfuelheight")
+        self._test_to_netcdf(
+            groundfuelheight,
+            TMP_DIR,
+            groundfuelheight.times,
+            *groundfuelheight.shape,
+        )
+
+    def test_ec_mburnt_integ(self):
+        mburnt_integ = self.eglin_canopy_outputs.get_output("mburnt_integ")
+        self._test_to_netcdf(
+            mburnt_integ,
+            TMP_DIR,
+            mburnt_integ.times,
+            *mburnt_integ.shape,
+        )
+
+    def test_ec_qu_windu_to_numpy(self):
+        qu_windu = self.eglin_canopy_outputs.get_output("qu_windu")
+        self._test_to_netcdf(
+            qu_windu,
+            TMP_DIR,
+            qu_windu.times,
+            *qu_windu.shape,
+        )
+
+    def test_ec_thermal_radiation_to_numpy(self):
+        thermal_radiation = self.eglin_canopy_outputs.get_output("thermalradiation")
+        self._test_to_netcdf(
+            thermal_radiation,
+            TMP_DIR,
+            thermal_radiation.times,
+            *thermal_radiation.shape,
+        )
+
+    def test_ec_windu_to_numpy(self):
+        windu = self.eglin_canopy_outputs.get_output("windu")
+        self._test_to_netcdf(
+            windu,
+            TMP_DIR,
+            windu.times,
+            *windu.shape,
+        )
 
 
 class TestOutputFileToNumpy:
