@@ -317,7 +317,6 @@ class OutputFile:
         dimensions: list[str],
         shape: tuple,
         grid: str,
-        output_times: str,
         delimiter: str,
         extension: str,
         description: str,
@@ -331,7 +330,6 @@ class OutputFile:
         self.dimensions = dimensions
         self.shape = shape
         self.grid = grid
-        self.output_times = output_times
         self.delimiter = delimiter
         self.extension = extension
         self.description = description
@@ -588,7 +586,7 @@ class SimulationOutputs:
     @classmethod
     def from_simulation_inputs(
         cls, output_directory: Path | str, simulation_inputs: SimulationInputs
-    ) -> "SimulationOutputs":
+    ) -> SimulationOutputs:
         """
         Create a SimulationOutputs object from a path to a QUIC-Fire "Output"
         directory and a SimulationInputs object.
@@ -856,138 +854,6 @@ class SimulationOutputs:
 
         return dask_array
 
-    def to_netcdf(
-        self,
-        directory: str | Path,
-        outputs: str | list[str] = None,
-    ):
-        """
-        Write QUIC-Fire output(s) to a netCDF file
-
-        Parameters
-        ----------
-        directory: str | Path
-            The path to the folder where netCDF file will be written.
-        outputs: str
-            The name or list of names of the output(s) to write to the netCDF file.
-            If None, all output files present will be included.
-
-
-        Builds
-        -------
-        netCDF file to disk
-
-        TODO: create option for multiple output files?
-        """
-        if isinstance(directory, str):
-            directory = Path(directory)
-
-        if not directory.exists():
-            directory.mkdir(parents=True)
-
-        if isinstance(outputs, str):
-            outputs = [outputs]
-        selected_outputs = self._output_names if outputs is None else outputs
-
-        # Initiate dataset
-        dataset = Dataset(directory / f"simulation_outputs.nc", "w", format="NETCDF4")
-        dataset.title = "QUIC-Fire Simulation Outputs"
-        dataset.subtitle = f"Contains the following outputs: {selected_outputs}"
-
-        # Create nx and ny dimensions and variables in root group
-        dataset.createDimension("ny", self.ny)
-        dataset.createDimension("nx", self.nx)
-        root_ny = dataset.createVariable("y", np.int64, ("ny",))
-        root_nx = dataset.createVariable("x", np.int64, ("nx",))
-        root_ny[:] = range(self.ny)
-        root_nx[:] = range(self.nx)
-
-        # Find which grids and output times are needed
-        output_info = self._get_output_info(selected_outputs)
-
-        # Make groups for the different grids present in the data
-        # There will always be at least one grid group present, ie the nz grid will never be in the root group
-        if "fire" in output_info["grids"]:
-            fire_grid = dataset.createGroup("fire_grid")
-            fire_grid.createDimension("fire_nz", self.fire_nz)
-            fire_grid_nz = fire_grid.createVariable("z", np.int64, ("fire_nz"))
-
-        if "wind" in output_info["grids"]:
-            quic_grid = dataset.createGroup("quic_grid")
-            quic_grid.createDimension("quic_nz", self.quic_nz)
-            quic_grid_nz = quic_grid.createVariable("z", np.int64, ("quic_nz"))
-
-        if "eng2atm" in output_info["grids"]:
-            eng2atm_grid = dataset.createGroup("eng2atm_grid")
-            eng2atm_grid.createDimension("eng2atm_nz", self.en2atmos_nz)
-            eng2atm_grid_nz = eng2atm_grid.createVariable("z", np.int64, ("eng2atm_nz"))
-
-        # Check if the output times in the output files are the same
-        identical_times = self._check_identical_times(selected_outputs)
-        if identical_times is not None:
-            dataset.createDimension("time", len(identical_times))
-            root_times = dataset.createVariable("times", np.int64, ("time",))
-            root_times[:] = identical_times
-        else:
-            """Set up different output time groups"""
-            # And then by output time interval group
-            if "emis_rad" in output_info["output_times"]:
-                out_emis_rad = fire_grid.createGroup("emissions_and_radiation")
-                out_emis_rad.createDimension("time_emis_rad", self.shape[0])
-                out_emis_rad_time = out_emis_rad.createVariable(
-                    "timestep_emis_rad", np.int64, ("time_emis_rad",)
-                )
-
-            if "surf_eng" in output_info["output_times"]:
-                out_surf_eng = fire_grid.createGroup("surface_energy")
-                out_surf_eng.createDimension("time_surf_eng", self.shape[0])
-                out_surf_eng_time = out_surf_eng.createVariable(
-                    "timestep_surf_eng", np.int64, ("time_surf_eng",)
-                )
-
-            if "wind" in output_info["output_times"]:
-                out_wind = quic_grid.createGroup("instantaneous_wind")
-                out_wind.createDimension("time_wind", self.shape[0])
-                out_wind_time = out_wind.createVariable(
-                    "timestep_wind", np.int64, ("time_wind",)
-                )
-            if "wind_ave" in output_info["output_times"]:
-                out_wind_ave = quic_grid.createGroup("averaged_wind")
-                out_wind_ave.createDimension("time_wind_ave", self.shape[0])
-                out_wind_ave_time = out_wind_ave.createVariable(
-                    "timestep_wind_ave", np.int64, ("time_wind_ave",)
-                )
-
-            if "fire" in output_info["output_times"]:
-                if "fire" in output_info["grids"]:
-                    out_fire = fire_grid.createGroup("fire_related")
-                    out_fire.createDimension("time_fire", self.shape[0])
-                    out_fire_time = out_fire.createVariable(
-                        "timestep_fire", np.int64, ("time_fire",)
-                    )
-                if "eng2atm" in output_info["grids"]:
-                    out_eng2atm = eng2atm_grid.createGroup("eng2atm")
-                    out_eng2atm.createDimension("time_eng2atm", self.shape[0])
-                    out_fire_time = out_eng2atm.createVariable(
-                        "timestep_eng2atm", np.int64, ("time_eng2atm",)
-                    )
-
-        for out in selected_outputs:
-            output = self._validate_output(out)
-            selected_output_times = self._select_output_times_group(dataset, output)
-            new_var = dataset.createVariable(
-                output.name,
-                np.float32,
-                (f"{output.output_times}", f"{output.grid}_nz", "ny", "nx"),
-            )
-            new_var.units = output.units
-
-        selected_files = self._select_files_based_on_timestep(timestep)
-        output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
-        dataset.close()
-
-        return
-
     # ZCC Changes
     def to_zarr(
         self,
@@ -1181,39 +1047,6 @@ class SimulationOutputs:
     #             zarr_dataset[time_step, ...] = data[0, ...]
 
     #     return zarr_file
-
-    def _check_identical_times(self, selected_outputs) -> list | None:
-        identical_times = None
-        all_the_same = True
-        first_output = self.get_output(selected_outputs[0])
-        if len(selected_outputs) > 1:
-            for i in range(1, len(selected_outputs)):
-                next_output = self.get_output(selected_outputs[i])
-                if next_output.times == first_output.times:
-                    all_the_same = False
-        if all_the_same:
-            identical_times = first_output.times
-        return identical_times
-
-    def _get_output_info(self, selected_outputs) -> dict:
-        grids = []
-        out_times = []
-        for output in selected_outputs:
-            info_dict = OUTPUTS_MAP.get(output)
-            grids.append(info_dict["grid"])
-            out_times.append(info_dict["output_times"])
-            grids = list(set(grids))
-            out_times = list(set(out_times))
-        out_dict = {"grids": grids, "output_times": out_times}
-        return out_dict
-
-    def _select_output_times_group(
-        self, dataset: Dataset, output: OutputFile
-    ) -> tuple[str]:
-        """
-        Figure out if the output times are in the root group or in the hierarchy,
-        and if so, which hierarchy group.
-        """
 
 
 def _get_resolution_from_coords(coords: list[float]) -> float | list[float]:
