@@ -974,8 +974,11 @@ class SimulationOutputs:
 
         for out in selected_outputs:
             output = self._validate_output(out)
+            selected_output_times = self._select_output_times_group(dataset, output)
             new_var = dataset.createVariable(
-                output.name, np.float32, ("timestep", "nz", "ny", "nx")
+                output.name,
+                np.float32,
+                (f"{output.output_times}", f"{output.grid}_nz", "ny", "nx"),
             )
             new_var.units = output.units
 
@@ -1203,6 +1206,14 @@ class SimulationOutputs:
             out_times = list(set(out_times))
         out_dict = {"grids": grids, "output_times": out_times}
         return out_dict
+
+    def _select_output_times_group(
+        self, dataset: Dataset, output: OutputFile
+    ) -> tuple[str]:
+        """
+        Figure out if the output times are in the root group or in the hierarchy,
+        and if so, which hierarchy group.
+        """
 
 
 def _get_resolution_from_coords(coords: list[float]) -> float | list[float]:
