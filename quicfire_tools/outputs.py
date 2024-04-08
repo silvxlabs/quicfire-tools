@@ -44,7 +44,7 @@ class OutputFile:
     dimensions: list[str]
         The dimensions of the output file as ["z", "y", "x"] or ["y", "x"].
     shape: tuple
-        The shape of the output file array data as (time, nz, ny, nx).
+        The shape of the output file array data as (nz, ny, nx).
     grid: str
         The grid type of the output file. Valid options are "fire" and "quic".
     delimiter: str
