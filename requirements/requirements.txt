@@ -3,3 +3,4 @@ numpy<2
 pandera
 pydantic>=2
 zarr>=2
+netCDF4

@@ -7,3 +7,4 @@ requests
 scipy
 xarray
 zarr>=2
+netCDF4
