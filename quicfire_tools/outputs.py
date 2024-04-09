@@ -16,9 +16,9 @@ from quicfire_tools.inputs import SimulationInputs
 # External imports
 import zarr
 import numpy as np
+import pyproj as proj
 import dask.array as da
 from numpy import ndarray
-from shutil import rmtree
 from netCDF4 import Dataset
 
 
@@ -44,9 +44,20 @@ class OutputFile:
     dimensions: list[str]
         The dimensions of the output file as ["z", "y", "x"] or ["y", "x"].
     shape: tuple
-        The shape of the output file array data as (time, nz, ny, nx).
+        The shape of the output file array data as (nz, ny, nx).
     grid: str
         The grid type of the output file. Valid options are "fire" and "quic".
+    x_coords: list[float]
+        The x coordinates of the output file. Coordinates are in the UTM
+        coordinate system with the origin at the southwest corner of the
+        domain.
+    y_coords: list[float]
+        The y coordinates of the output file. Coordinates are in the UTM
+        coordinate system with the origin at the southwest corner of the
+        domain.
+    z_coords: list[float]
+        The z coordinates of the output file. Coordinates are in meters above
+        the ground level.
     delimiter: str
         The delimiter used in the output file name.
     extension: str
@@ -70,8 +81,10 @@ class OutputFile:
         name: str,
         file_format: str,
         dimensions: list[str],
-        shape: tuple,
         grid: str,
+        x_coords: list[float],
+        y_coords: list[float],
+        z_coords: list[float],
         delimiter: str,
         extension: str,
         description: str,
@@ -79,11 +92,16 @@ class OutputFile:
         times: list[int],
         filepaths: list[Path],
         index_map=None,
+        crs: str = None,
     ):
         self.name = name
         self.file_format = file_format
         self.dimensions = dimensions
-        self.shape = shape
+        self.x_coords = x_coords
+        self.y_coords = y_coords
+        self.z_coords = z_coords
+        self.crs = crs
+        self.shape = (len(z_coords), len(y_coords), len(x_coords))
         self.grid = grid
         self.delimiter = delimiter
         self.extension = extension
@@ -115,6 +133,30 @@ class OutputFile:
                 if np.any(self_dict[key] != other_dict[key]):
                     return False
         return True
+
+    def _select_files_based_on_timestep(
+        self, timestep: int | list[int] | range | None
+    ) -> list[Path]:
+        """Return files selected based on timestep."""
+        if timestep is None:
+            return self.filepaths
+        if isinstance(timestep, int):
+            timestep = [timestep]
+        try:
+            return [self.filepaths[ts] for ts in timestep]
+        except IndexError:
+            raise ValueError(f"Invalid timestep: {timestep}")
+
+    def _get_single_timestep(self, output_file: Path) -> np.ndarray:
+        """Return a numpy array for the given output file."""
+        return self._output_function(
+            output_file, self.shape, self._compressed_index_map
+        )
+
+    def _get_multiple_timesteps(self, output_files: list[Path]) -> np.ndarray:
+        """Return a numpy array for the given output files."""
+        arrays = [self._get_single_timestep(of) for of in output_files]
+        return arrays[0] if len(arrays) == 1 else np.concatenate(arrays, axis=0)
 
     def to_numpy(self, timestep: int | list[int] | range = None) -> np.ndarray:
         """
@@ -216,29 +258,113 @@ class OutputFile:
         dataset.close()
         return
 
-    def _select_files_based_on_timestep(
-        self, timestep: int | list[int] | range | None
-    ) -> list[Path]:
-        """Return files selected based on timestep."""
-        if timestep is None:
-            return self.filepaths
-        if isinstance(timestep, int):
-            timestep = [timestep]
-        try:
-            return [self.filepaths[ts] for ts in timestep]
-        except IndexError:
-            raise ValueError(f"Invalid timestep: {timestep}")
+    def to_zarr(
+        self,
+        fpath: str | Path,
+        chunk_size: dict[str, int] = None,
+        **kwargs,
+    ) -> zarr.Group:
+        """
+        Write the outputs to a zarr file.
 
-    def _get_single_timestep(self, output_file: Path) -> np.ndarray:
-        """Return a numpy array for the given output file."""
-        return self._output_function(
-            output_file, self.shape, self._compressed_index_map
+        Parameters
+        ----------
+        fpath: str | Path
+            The path to the folder where zarr files are written to be written.
+        chunk_size: dict[str, int]
+            The chunk size for the zarr array. The dictionary may contain
+            keys "time", "z", "y", and "x" with integer values for the chunk
+            size in each dimension. The default chunk size is (1, nz, ny, nx).
+            If a key is not present, then the chunk size defaults to the size
+            of the dimension.
+        **kwargs
+            Additional keyword arguments to pass to the zarr array creation
+            function.
+
+        Returns
+        -------
+        zarr.Group
+            The zarr group containing the output data.
+
+        Examples
+        --------
+        >>> import quicfire_tools as qft
+        >>> outputs = qft.SimulationOutputs("path/to/outputs", 50, 100, 100)
+        >>> fire_energy = outputs.get_output("fire-energy_to_atmos")
+        >>> # Write fire-energy_to_atmos output to zarr
+        >>> zarr_group = fire_energy.to_zarr("path/to/zarr")
+        >>> zarr_group["fuels-dens"]
+        <zarr.core.Array '/fuels-dens' (2, 1, 200, 200) float64 read-only>
+        >>> # Write multiple timesteps to each zarr chunk to improve I/O
+        >>> zarr_group = fire_energy.to_zarr("path/to/zarr", chunk_size={"time": 100})
+        >>> zarr_group["fuels-dens"].chunks
+        (100, 1, 200, 200)
+        """
+        if isinstance(fpath, str):
+            fpath = Path(fpath)
+
+        if not fpath.exists():
+            fpath.mkdir(parents=True)
+
+        # Build the zarr file with directory storage
+        zarr_path = fpath / (self.name + ".zarr")
+        zroot = zarr.open(str(zarr_path), mode="w")
+        zroot.attrs["crs"] = self.crs
+
+        # Build the output data array. By default, the array has shape
+        # (time, nz, ny, nx) and chunks of size (1, nz, ny, nx).
+        shape = (len(self.times), *self.shape)
+        if chunk_size is None:
+            chunk_size = {}
+        chunks = [
+            chunk_size.get("time", 1),
+            chunk_size.get("z", self.shape[0]),
+            chunk_size.get("y", self.shape[1]),
+            chunk_size.get("x", self.shape[2]),
+        ]
+        output_array = zroot.create_dataset(
+            self.name, shape=shape, chunks=chunks, dtype=float, **kwargs
         )
+        output_array.attrs["_ARRAY_DIMENSIONS"] = ["time", "z", "y", "x"]
+        output_array.attrs["long_name"] = self.description
+        output_array.attrs["units"] = self.units
 
-    def _get_multiple_timesteps(self, output_files: list[Path]) -> np.ndarray:
-        """Return a numpy array for the given output files."""
-        arrays = [self._get_single_timestep(of) for of in output_files]
-        return arrays[0] if len(arrays) == 1 else np.concatenate(arrays, axis=0)
+        # Write each timestep to the output array
+        for time_step in range(len(self.times)):
+            data = self.to_numpy(time_step)
+            output_array[time_step, ...] = data[0, ...]
+
+        # Time dimension
+        time_array = zroot.create_dataset("time", shape=len(self.times), dtype=int)
+        time_array.attrs["long_name"] = "Time since start of simulation"
+        time_array.attrs["units"] = "s"
+        time_array[...] = self.times
+
+        # Z dimension
+        z_array = zroot.create_dataset("z", shape=self.shape[0], dtype=float)
+        z_array.attrs["long_name"] = "Cell height: bottom of cell from ground"
+        z_array.attrs["units"] = "m"
+        z_array[...] = self.z_coords
+
+        # Y dimension
+        y_array = zroot.create_dataset("y", shape=self.shape[1], dtype=float)
+        y_array.attrs[
+            "long_name"
+        ] = "Northing: cell distance north from southern edge of domain"
+        y_array.attrs["units"] = "m"
+        y_array[...] = self.y_coords
+
+        # X dimension
+        x_array = zroot.create_dataset("x", shape=self.shape[2], dtype=float)
+        x_array.attrs[
+            "long_name"
+        ] = "Easting: cell distance east from western edge of domain"
+        x_array.attrs["units"] = "m"
+        x_array[...] = self.x_coords
+
+        zarr.consolidate_metadata(zarr_path)
+
+        return zroot
 
 
 class SimulationOutputs:
@@ -267,7 +393,17 @@ class SimulationOutputs:
         The grid spacing in the y-direction (m).
     dx: float
         The grid spacing in the x-direction (m).
-
+    utm_x: float
+        UTM-x coordinates of the south-west corner of domain [m]. Default is 0.
+    utm_y: float
+        UTM-y coordinates of the south-west corner of domain [m]. Default is 0.
+    utm_zone: int
+        UTM zone of the domain. Default is None. If None, the coordinates are
+        considered not to be georeferenced.
+    crs: str
+        EPSG code for the coordinate reference system. If the UTM zone is
+        provided, the crs is set to the UTM zone. If the UTM zone is not
+        provided, the crs is set to None.
     """
 
     def __init__(
@@ -278,6 +414,9 @@ class SimulationOutputs:
         nx: int,
         dy: float,
         dx: float,
+        utm_x: float = 0,
+        utm_y: float = 0,
+        utm_zone: int = 1,
     ):
         if isinstance(output_directory, str):
             output_directory = Path(output_directory)
@@ -290,20 +429,43 @@ class SimulationOutputs:
         self.dy = dy
         self.dx = dx
         self.fire_nz = fire_nz
+        self.utm_x = utm_x
+        self.utm_y = utm_y
+        self.utm_zone = utm_zone
 
         # TODO: fire_nz can be optional
         # TODO: Throw warning if fire_nz not provided and qf_wind outputs are present
         # TODO: raise error if fire_nz is not provided and qf_qind is output
 
+        # Compute the x and y coordinate grids
+        self.x_coords = np.linspace(utm_x, utm_x + dx * (nx - 1), nx)
+        self.y_coords = np.linspace(utm_y, utm_y + dy * (ny - 1), ny)
+
+        # Set the crs if the UTM zone is provided. The if statement here is
+        # looking for the default QUIC-Fire values of 1, 0, 0. If the UTM
+        # zone is not 1 or the x and y coordinates are not 0, then the crs
+        # is set to the UTM zone.
+        if utm_zone != 1 or (utm_x != 0 and utm_y != 0):
+            crs = proj.CRS.from_proj4(f"+proj=utm +zone={utm_zone} +ellps=WGS84")
+            self.crs = f"EPSG:{crs.to_epsg()}"
+        else:
+            self.crs = None
+
         # Get grid information from grid.bin and fire_indexes.bin
         self._fire_indexes = _process_fire_indexes(
             output_directory / "fire_indexes.bin"
         )
-        self.quic_nz, self._quic_grid, self.en2atmos_nz, self._en2atmos_grid = (
-            _process_grid_info(output_directory / "grid.bin", ny, nx)
-        )
-        self.quic_dz = _get_resolution_from_coords(self._quic_grid)
-        self.fire_dz = _get_resolution_from_coords(self._en2atmos_grid)
+        (
+            self.quic_nz,
+            self.quic_z_coords,
+            self.en2atmos_nz,
+            self.en2atmos_z_coords,
+        ) = _process_grid_info(output_directory / "grid.bin", ny, nx)
+        self.quic_z_coords = self.quic_z_coords[: self.quic_nz]
+        self.en2atmos_z_coords = self.en2atmos_z_coords[: self.en2atmos_nz]
+        self.fire_z_coords = self.en2atmos_z_coords[:fire_nz]
+        self.quic_dz = _get_resolution_from_coords(self.quic_z_coords)
+        self.fire_dz = _get_resolution_from_coords(self.en2atmos_z_coords)
 
         # Build a list of present output files and their times
         self.outputs = {}
@@ -385,6 +547,9 @@ class SimulationOutputs:
             simulation_inputs.qu_simparams.nx,
             simulation_inputs.qu_simparams.dy,
             simulation_inputs.qu_simparams.dx,
+            simulation_inputs.qu_simparams.utm_x,
+            simulation_inputs.qu_simparams.utm_y,
+            simulation_inputs.qu_simparams.utm_zone_number,
         )
 
     @staticmethod
@@ -421,7 +586,7 @@ class SimulationOutputs:
 
             # Check if any output files of the given type exist in the directory
             if output_files_list:
-                shape = self._get_output_shape(attributes)
+                z_coords = self._get_z_coords(attributes)
                 times = []
                 for file in output_files_list:
                     time = self._get_output_file_time(key, file)
@@ -431,8 +596,10 @@ class SimulationOutputs:
                     name=key,
                     file_format=attributes["file_format"],
                     dimensions=attributes["dimensions"],
-                    shape=shape,
                     grid=attributes["grid"],
+                    x_coords=self.x_coords,
+                    y_coords=self.y_coords,
+                    z_coords=z_coords,
                     delimiter=attributes["delimiter"],
                     extension=attributes["extension"],
                     description=attributes["description"],
@@ -440,6 +607,7 @@ class SimulationOutputs:
                     times=times,
                     filepaths=output_files_list,
                     index_map=self._fire_indexes,
+                    crs=self.crs,
                 )
 
     def _get_list_output_paths(self, name, ext) -> list[Path]:
@@ -451,18 +619,18 @@ class SimulationOutputs:
         paths.sort()
         return paths
 
-    def _get_output_shape(self, attrs) -> tuple:
-        grid = attrs["grid"]
+    def _get_z_coords(self, attrs) -> tuple:
         number_dimensions = len(attrs["dimensions"])
+        grid = attrs["grid"]
 
         if number_dimensions == 2:
-            return 1, self.ny, self.nx
-        elif number_dimensions == 3 and attrs["grid"] == "fire":
-            return self.fire_nz, self.ny, self.nx
-        elif number_dimensions == 3 and attrs["grid"] == "en2atmos":
-            return self.en2atmos_nz, self.ny, self.nx
-        elif number_dimensions == 3 and attrs["grid"] == "quic":
-            return self.quic_nz, self.ny, self.nx
+            return [0.0]
+        elif number_dimensions == 3 and grid == "fire":
+            return self.fire_z_coords
+        elif number_dimensions == 3 and grid == "en2atmos":
+            return self.en2atmos_z_coords
+        elif number_dimensions == 3 and grid == "quic":
+            return self.quic_z_coords
         else:
             raise ValueError(
                 f"Invalid number of dimensions ({number_dimensions}) for {grid} grid"
@@ -663,37 +831,29 @@ def _process_grid_info(path_to_grid_bin: str | Path, ny: int, nx: int):
 
         # Check if topo grid information is present
         if test_header[0] == num_bytes_quic_grid:
-            # Read sigma_bottom (same as quic_grid_bottom)
-            np.fromfile(fid, dtype=np.float32, count=quic_nz + 2)
-
+            np.fromfile(
+                fid, dtype=np.float32, count=quic_nz + 2
+            )  # Read sigma_bottom (same as quic_grid_bottom)
             np.fromfile(fid, dtype=np.int32, count=2)  # Header
-
-            # Read sigma_mid (same as quic_grid_mid)
-            np.fromfile(fid, dtype=np.float32, count=quic_nz + 2)
-
+            np.fromfile(
+                fid, dtype=np.float32, count=quic_nz + 2
+            )  # Read sigma_mid (same as quic_grid_mid)
             np.fromfile(fid, dtype=np.int32, count=2)  # Header
-
-            quic_grid_bottom_terrain_following = np.fromfile(
+            np.fromfile(
                 fid, dtype=np.float32, count=ny * nx * (quic_nz + 2)
-            )
-
+            )  # quic grid bottom terrain following
             np.fromfile(fid, dtype=np.int32, count=2)  # Header
-
-            quic_grid_mid_terrain_following = np.fromfile(
+            np.fromfile(
                 fid, dtype=np.float32, count=ny * nx * (quic_nz + 2)
-            )
-
+            )  # quic grid mid terrain following
             np.fromfile(fid, dtype=np.int32, count=2)  # Header
-
-            quic_grid_volume_correction = np.fromfile(
+            np.fromfile(
                 fid, dtype=np.float32, count=ny * nx
-            )
-
+            )  # quic grid volume correction
             np.fromfile(fid, dtype=np.int32, count=1)  # Header
-
-            fire_header = np.fromfile(fid, dtype=np.int32, count=1)[0]
+            _ = np.fromfile(fid, dtype=np.int32, count=1)[0]  # fire header
         else:
-            fire_header = test_header[0]
+            _ = test_header[0]  # fire header
 
         num_eng_to_atmos_cells = np.fromfile(fid, dtype=np.int32, count=1)[0]
         np.fromfile(fid, dtype=np.int32, count=2)  # Header
@@ -701,9 +861,8 @@ def _process_grid_info(path_to_grid_bin: str | Path, ny: int, nx: int):
             fid, dtype=np.float32, count=num_eng_to_atmos_cells + 1
         )
 
-        ending_header = np.fromfile(fid, dtype=np.int32, count=1)
-
-        _ = np.fromfile(fid, dtype=np.int32, count=4)  # Header
+        np.fromfile(fid, dtype=np.int32, count=1)  # ending header
+        np.fromfile(fid, dtype=np.int32, count=4)  # Header
 
         return (
             quic_nz,
