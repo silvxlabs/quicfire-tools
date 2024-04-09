@@ -16,6 +16,7 @@ from quicfire_tools.outputs import (
 )
 
 # External imports
+import zarr
 import numpy as np
 import netCDF4 as nc
 
@@ -952,3 +953,86 @@ class TestOutputFileToNumpy:
             windu.times,
             *windu.shape,
         )
+
+
+class TestOutputFileToZarr:
+    def test_lf_fuel_dens(self):
+        line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
+        line_fire_outputs = SimulationOutputs.from_simulation_inputs(
+            LINE_FIRE_DIR / "Output", line_fire
+        )
+
+        fuels_dens = line_fire_outputs.get_output("fuels-dens")
+        fuels_dens.to_zarr(TMP_DIR)
+
+        zroot = zarr.open(str(TMP_DIR / "fuels-dens.zarr"), mode="r")
+        assert np.allclose(zroot["time"][:], fuels_dens.times)
+        assert np.allclose(zroot["x"][:], fuels_dens.x_coords)
+        assert np.allclose(zroot["y"][:], fuels_dens.y_coords)
+        assert np.allclose(zroot["z"][:], fuels_dens.z_coords)
+
+        z_array = zroot["fuels-dens"]
+        assert np.allclose(z_array[:], fuels_dens.to_numpy())
+        assert z_array.chunks == (1, *fuels_dens.shape)
+
+    def test_lf_fuel_dens_custom_time_chunks(self):
+        line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
+        line_fire_outputs = SimulationOutputs.from_simulation_inputs(
+            LINE_FIRE_DIR / "Output", line_fire
+        )
+
+        fuels_dens = line_fire_outputs.get_output("fuels-dens")
+        fuels_dens.to_zarr(TMP_DIR, chunk_size={"time": 100})
+
+        zroot = zarr.open(str(TMP_DIR / "fuels-dens.zarr"), mode="r")
+        z_array = zroot["fuels-dens"]
+        print(z_array.chunks)
+
+        assert z_array.chunks == (100, *fuels_dens.shape)
+
+    def test_ec_qu_windu(self):
+        eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
+        eglin_canopy_outputs = SimulationOutputs.from_simulation_inputs(
+            EG_CANOPY_DIR / "Output", eglin_canopy
+        )
+
+        qu_windu = eglin_canopy_outputs.get_output("qu_windu")
+        qu_windu.to_zarr(TMP_DIR)
+
+        zroot = zarr.open(str(TMP_DIR / "qu_windu.zarr"), mode="r")
+        assert np.allclose(zroot["time"][:], qu_windu.times)
+        assert np.allclose(zroot["x"][:], qu_windu.x_coords)
+        assert np.allclose(zroot["y"][:], qu_windu.y_coords)
+        assert np.allclose(zroot["z"][:], qu_windu.z_coords)
+
+        z_array = zroot["qu_windu"]
+        assert np.allclose(z_array[:], qu_windu.to_numpy())
+        assert z_array.chunks == (1, *qu_windu.shape)
+
+    def test_ec_qu_windu_custom_chunks(self):
+        eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
+        eglin_canopy_outputs = SimulationOutputs.from_simulation_inputs(
+            EG_CANOPY_DIR / "Output", eglin_canopy
+        )
+
+        qu_windu = eglin_canopy_outputs.get_output("qu_windu")
+        qu_windu.to_zarr(
+            TMP_DIR,
+            chunk_size={
+                "time": 10,
+                "z": qu_windu.shape[0] // 2,
+                "y": qu_windu.shape[1] // 2,
+                "x": qu_windu.shape[2] // 2,
+            },
+        )
+
+        zroot = zarr.open(str(TMP_DIR / "qu_windu.zarr"), mode="r")
+        z_array = zroot["qu_windu"]
+
+        assert z_array.chunks == (
+            10,
+            qu_windu.shape[0] // 2,
+            qu_windu.shape[1] // 2,
+            qu_windu.shape[2] // 2,
+        )
+        assert z_array.cdata_shape == (1, 2, 2, 2)
