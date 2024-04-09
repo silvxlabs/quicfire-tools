@@ -689,6 +689,124 @@ class TestSimulationOutputs:
         assert line_fire_outputs != eglin_canopy_outputs
 
 
+class TestOutputFileToNumpy:
+    line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
+    line_fire_outputs = SimulationOutputs.from_simulation_inputs(
+        LINE_FIRE_DIR / "Output", line_fire
+    )
+
+    eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
+    eglin_canopy_outputs = SimulationOutputs.from_simulation_inputs(
+        EG_CANOPY_DIR / "Output", eglin_canopy
+    )
+
+    @staticmethod
+    def _test_to_numpy(output: OutputFile, times, nz, ny, nx):
+        # Get all time steps
+        data_all = output.to_numpy()
+        assert data_all.shape == (len(times), nz, ny, nx)
+
+        # Get all time steps with range
+        data_all = output.to_numpy(range(len(times)))
+        assert data_all.shape == (len(times), nz, ny, nx)
+
+        # Get every other time step with range
+        data_all = output.to_numpy(range(0, len(times), 2))
+        assert data_all.shape == (max(len(times) // 2, 1), nz, ny, nx)
+
+        # Get the first time step
+        data_first = output.to_numpy(timestep=0)
+        assert data_first.shape == (1, nz, ny, nx)
+
+        # Get the last time step
+        data_last = output.to_numpy(timestep=-1)
+        assert data_last.shape == (1, nz, ny, nx)
+
+    def test_lf_eng2atmos(self):
+        eng2atmos = self.line_fire_outputs.get_output("fire-energy_to_atmos")
+        self._test_to_numpy(eng2atmos, eng2atmos.times, *eng2atmos.shape)
+
+    def test_lf_fuels_dens(self):
+        fuels_dens = self.line_fire_outputs.get_output("fuels-dens")
+        self._test_to_numpy(fuels_dens, fuels_dens.times, *fuels_dens.shape)
+
+    def test_lf_groundfuelheight(self):
+        groundfuelheight = self.line_fire_outputs.get_output("groundfuelheight")
+        self._test_to_numpy(
+            groundfuelheight,
+            groundfuelheight.times,
+            *groundfuelheight.shape,
+        )
+
+    def test_lf_mburnt_integ(self):
+        mburnt_integ = self.line_fire_outputs.get_output("mburnt_integ")
+        self._test_to_numpy(
+            mburnt_integ,
+            mburnt_integ.times,
+            *mburnt_integ.shape,
+        )
+
+    def test_lf_surf_energy(self):
+        surf_energy = self.line_fire_outputs.get_output("surfEnergy")
+        self._test_to_numpy(
+            surf_energy,
+            surf_energy.times,
+            *surf_energy.shape,
+        )
+
+    def test_ec_co_emissions(self):
+        co_emissions = self.eglin_canopy_outputs.get_output("co_emissions")
+        self._test_to_numpy(co_emissions, co_emissions.times, *co_emissions.shape)
+
+    def test_ec_eng2atmos(self):
+        eng2atmos = self.eglin_canopy_outputs.get_output("fire-energy_to_atmos")
+        self._test_to_numpy(eng2atmos, eng2atmos.times, *eng2atmos.shape)
+
+    def test_ec_fuel_dens(self):
+        fuels_dens = self.eglin_canopy_outputs.get_output("fuels-dens")
+        self._test_to_numpy(fuels_dens, fuels_dens.times, *fuels_dens.shape)
+
+    def test_ec_groundfuelheight(self):
+        groundfuelheight = self.eglin_canopy_outputs.get_output("groundfuelheight")
+        self._test_to_numpy(
+            groundfuelheight,
+            groundfuelheight.times,
+            *groundfuelheight.shape,
+        )
+
+    def test_ec_mburnt_integ(self):
+        mburnt_integ = self.eglin_canopy_outputs.get_output("mburnt_integ")
+        self._test_to_numpy(
+            mburnt_integ,
+            mburnt_integ.times,
+            *mburnt_integ.shape,
+        )
+
+    def test_ec_qu_windu_to_numpy(self):
+        qu_windu = self.eglin_canopy_outputs.get_output("qu_windu")
+        self._test_to_numpy(
+            qu_windu,
+            qu_windu.times,
+            *qu_windu.shape,
+        )
+
+    def test_ec_thermal_radiation_to_numpy(self):
+        thermal_radiation = self.eglin_canopy_outputs.get_output("thermalradiation")
+        self._test_to_numpy(
+            thermal_radiation,
+            thermal_radiation.times,
+            *thermal_radiation.shape,
+        )
+
+    def test_ec_windu_to_numpy(self):
+        windu = self.eglin_canopy_outputs.get_output("windu")
+        self._test_to_numpy(
+            windu,
+            windu.times,
+            *windu.shape,
+        )
+
+
 class TestOutputFileToNetCDF:
     line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
     line_fire_outputs = SimulationOutputs.from_simulation_inputs(
@@ -832,124 +950,6 @@ class TestOutputFileToNetCDF:
         self._test_to_netcdf(
             windu,
             TMP_DIR,
-            windu.times,
-            *windu.shape,
-        )
-
-
-class TestOutputFileToNumpy:
-    line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
-    line_fire_outputs = SimulationOutputs.from_simulation_inputs(
-        LINE_FIRE_DIR / "Output", line_fire
-    )
-
-    eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
-    eglin_canopy_outputs = SimulationOutputs.from_simulation_inputs(
-        EG_CANOPY_DIR / "Output", eglin_canopy
-    )
-
-    @staticmethod
-    def _test_to_numpy(output: OutputFile, times, nz, ny, nx):
-        # Get all time steps
-        data_all = output.to_numpy()
-        assert data_all.shape == (len(times), nz, ny, nx)
-
-        # Get all time steps with range
-        data_all = output.to_numpy(range(len(times)))
-        assert data_all.shape == (len(times), nz, ny, nx)
-
-        # Get every other time step with range
-        data_all = output.to_numpy(range(0, len(times), 2))
-        assert data_all.shape == (max(len(times) // 2, 1), nz, ny, nx)
-
-        # Get the first time step
-        data_first = output.to_numpy(timestep=0)
-        assert data_first.shape == (1, nz, ny, nx)
-
-        # Get the last time step
-        data_last = output.to_numpy(timestep=-1)
-        assert data_last.shape == (1, nz, ny, nx)
-
-    def test_lf_eng2atmos(self):
-        eng2atmos = self.line_fire_outputs.get_output("fire-energy_to_atmos")
-        self._test_to_numpy(eng2atmos, eng2atmos.times, *eng2atmos.shape)
-
-    def test_lf_fuels_dens(self):
-        fuels_dens = self.line_fire_outputs.get_output("fuels-dens")
-        self._test_to_numpy(fuels_dens, fuels_dens.times, *fuels_dens.shape)
-
-    def test_lf_groundfuelheight(self):
-        groundfuelheight = self.line_fire_outputs.get_output("groundfuelheight")
-        self._test_to_numpy(
-            groundfuelheight,
-            groundfuelheight.times,
-            *groundfuelheight.shape,
-        )
-
-    def test_lf_mburnt_integ(self):
-        mburnt_integ = self.line_fire_outputs.get_output("mburnt_integ")
-        self._test_to_numpy(
-            mburnt_integ,
-            mburnt_integ.times,
-            *mburnt_integ.shape,
-        )
-
-    def test_lf_surf_energy(self):
-        surf_energy = self.line_fire_outputs.get_output("surfEnergy")
-        self._test_to_numpy(
-            surf_energy,
-            surf_energy.times,
-            *surf_energy.shape,
-        )
-
-    def test_ec_co_emissions(self):
-        co_emissions = self.eglin_canopy_outputs.get_output("co_emissions")
-        self._test_to_numpy(co_emissions, co_emissions.times, *co_emissions.shape)
-
-    def test_ec_eng2atmos(self):
-        eng2atmos = self.eglin_canopy_outputs.get_output("fire-energy_to_atmos")
-        self._test_to_numpy(eng2atmos, eng2atmos.times, *eng2atmos.shape)
-
-    def test_ec_fuel_dens(self):
-        fuels_dens = self.eglin_canopy_outputs.get_output("fuels-dens")
-        self._test_to_numpy(fuels_dens, fuels_dens.times, *fuels_dens.shape)
-
-    def test_ec_groundfuelheight(self):
-        groundfuelheight = self.eglin_canopy_outputs.get_output("groundfuelheight")
-        self._test_to_numpy(
-            groundfuelheight,
-            groundfuelheight.times,
-            *groundfuelheight.shape,
-        )
-
-    def test_ec_mburnt_integ(self):
-        mburnt_integ = self.eglin_canopy_outputs.get_output("mburnt_integ")
-        self._test_to_numpy(
-            mburnt_integ,
-            mburnt_integ.times,
-            *mburnt_integ.shape,
-        )
-
-    def test_ec_qu_windu_to_numpy(self):
-        qu_windu = self.eglin_canopy_outputs.get_output("qu_windu")
-        self._test_to_numpy(
-            qu_windu,
-            qu_windu.times,
-            *qu_windu.shape,
-        )
-
-    def test_ec_thermal_radiation_to_numpy(self):
-        thermal_radiation = self.eglin_canopy_outputs.get_output("thermalradiation")
-        self._test_to_numpy(
-            thermal_radiation,
-            thermal_radiation.times,
-            *thermal_radiation.shape,
-        )
-
-    def test_ec_windu_to_numpy(self):
-        windu = self.eglin_canopy_outputs.get_output("windu")
-        self._test_to_numpy(
-            windu,
             windu.times,
             *windu.shape,
         )
