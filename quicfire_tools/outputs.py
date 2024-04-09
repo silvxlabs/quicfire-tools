@@ -20,6 +20,7 @@ import pyproj as proj
 import dask.array as da
 from numpy import ndarray
 from netCDF4 import Dataset
+from pyproj import CRS
 
 
 OUTPUTS_DIR_PATH = (
@@ -70,10 +71,6 @@ class OutputFile:
         A list of file paths for each timestep.
     times: list[int]
         A list of times corresponding to the timesteps.
-    dy: float
-        The grid spacing in the y-direction (m).
-    dx: float
-        The grid spacing in the x-direction (m).
     """
 
     def __init__(
@@ -265,8 +262,17 @@ class OutputFile:
         output.long_name = self.description
         output.units = self.units
 
+        if self.crs is not None:
+            wkt = CRS(f"EPSG:{self.crs}").to_wkt()
+            crs = dataset.createVariable("CRS", "c")
+            crs.spatial_ref = wkt
+            crs.long_name = f"EPSG: {self.crs}"
+            output.grid_mapping = "CRS"  # the crs variable name
+            output.grid_mapping_name = f"EPSG: {self.crs}"
+
         selected_files = self._select_files_based_on_timestep(timestep)
         output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
+
         dataset.close()
         return
 
