@@ -502,7 +502,27 @@ class TestSimulationOutputs:
         assert outputs.fire_nz == line_fire.quic_fire.nz
         assert outputs.quic_nz == line_fire.qu_simparams.nz
         assert outputs.fire_dz == line_fire.quic_fire.dz
-        assert np.allclose(outputs.quic_dz[:-1], line_fire.qu_simparams._dz_array)
+        assert np.allclose(outputs.quic_dz, line_fire.qu_simparams._dz_array[:-1])
+
+    def test_line_fire_georeferenced(self):
+        line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
+        utm_zones = range(1, 16)
+        epsg_codes = [32600 + utm_zone for utm_zone in utm_zones]
+        for zone, epsg in zip(utm_zones, epsg_codes):
+
+            outputs = SimulationOutputs(
+                LINE_FIRE_DIR / "Output",
+                line_fire.quic_fire.nz,
+                line_fire.qu_simparams.ny,
+                line_fire.qu_simparams.nx,
+                line_fire.qu_simparams.dy,
+                line_fire.qu_simparams.dx,
+                utm_x=np.random.randint(1, 1e12),
+                utm_y=np.random.randint(1, 1e12),
+                utm_zone=zone,
+            )
+
+            assert outputs.crs == f"EPSG:{epsg}"
 
     def test_line_fire_list_outputs(self):
         line_fire = SimulationInputs.from_directory(LINE_FIRE_DIR)
@@ -583,7 +603,7 @@ class TestSimulationOutputs:
         assert outputs.fire_nz == eglin_canopy.quic_fire.nz
         assert outputs.quic_nz == eglin_canopy.qu_simparams.nz
         assert outputs.fire_dz == eglin_canopy.quic_fire.dz
-        assert np.allclose(outputs.quic_dz[:-1], eglin_canopy.qu_simparams._dz_array)
+        assert np.allclose(outputs.quic_dz, eglin_canopy.qu_simparams._dz_array[:-1])
 
     def test_eglin_canopy_list_outputs(self):
         eglin_canopy = SimulationInputs.from_directory(EG_CANOPY_DIR)
