@@ -97,6 +97,7 @@ class OutputFile:
         self.x_coords = x_coords
         self.y_coords = y_coords
         self.z_coords = z_coords
+        self.crs = crs
         self.shape = (len(z_coords), len(y_coords), len(x_coords))
         self.grid = grid
         self.delimiter = delimiter
@@ -254,6 +255,85 @@ class OutputFile:
         """Return a numpy array for the given output files."""
         arrays = [self._get_single_timestep(of) for of in output_files]
         return arrays[0] if len(arrays) == 1 else np.concatenate(arrays, axis=0)
+
+    def to_zarr(
+        self,
+        fpath: str | Path,
+        **kwargs,
+    ) -> zarr.Group:
+        """
+        Write the outputs to a zarr file.
+
+        Parameters
+        ----------
+        fpath: str | Path
+            The path to the folder where zarr files are written to be written.
+        **kwargs
+            Additional keyword arguments to pass to the zarr array creation
+            function.
+
+        Returns
+        -------
+        zarr files to disk
+        """
+        if isinstance(fpath, str):
+            fpath = Path(fpath)
+
+        if not fpath.exists():
+            fpath.mkdir(parents=True)
+
+        # Build the zarr file with directory storage
+        zarr_path = fpath / (self.name + ".zarr")
+        zroot = zarr.open(str(zarr_path), mode="w")
+        zroot.attrs["crs"] = self.crs
+
+        # Build the output data array. By default, the array has shape (time,
+        # nz, ny, nx) and chunks of size (1, nz, ny, nx).
+        shape = (len(self.times), *self.shape)
+        chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
+        output_array = zroot.create_dataset(
+            self.name, shape=shape, chunks=chunks, dtype=float, **kwargs
+        )
+        output_array.attrs["_ARRAY_DIMENSIONS"] = ["time", "z", "y", "x"]
+        output_array.attrs["long_name"] = self.description
+        output_array.attrs["units"] = self.units
+
+        # Write each timestep to the output array
+        for time_step in range(len(self.times)):
+            data = self.to_numpy(time_step)
+            output_array[time_step, ...] = data[0, ...]
+
+        # Time dimension
+        time_array = zroot.create_dataset("time", shape=len(self.times), dtype=int)
+        time_array.attrs["long_name"] = "Time since start of simulation"
+        time_array.attrs["units"] = "s"
+        time_array[...] = self.times
+
+        # Z dimension
+        z_array = zroot.create_dataset("z", shape=self.shape[0], dtype=float)
+        z_array.attrs["long_name"] = "Cell height: bottom of cell from ground"
+        z_array.attrs["units"] = "m"
+        z_array[...] = self.z_coords
+
+        # Y dimension
+        y_array = zroot.create_dataset("y", shape=self.shape[1], dtype=float)
+        y_array.attrs["long_name"] = (
+            "Northing: cell distance north from southern edge of domain"
+        )
+        y_array.attrs["units"] = "m"
+        y_array[...] = self.y_coords
+
+        # X dimension
+        x_array = zroot.create_dataset("x", shape=self.shape[2], dtype=float)
+        x_array.attrs["long_name"] = (
+            "Easting: cell distance east from western edge of domain"
+        )
+        x_array.attrs["units"] = "m"
+        x_array[...] = self.x_coords
+
+        zarr.consolidate_metadata(zarr_path)
+
+        return zroot
 
 
 class SimulationOutputs:
