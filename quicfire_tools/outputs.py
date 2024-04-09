@@ -219,7 +219,12 @@ class OutputFile:
         if not directory.exists():
             directory.mkdir(parents=True)
 
-        times = self.times if timestep is None else self.times[timestep]
+        if timestep is None:
+            times = self.times
+        elif isinstance(timestep, int):
+            times = [self.times[timestep]]
+        else:
+            times = [self.times[i] for i in timestep]
 
         dataset = Dataset(directory / f"{self.name}.nc", "w", format="NETCDF4")
         dataset.title = self.name
@@ -227,7 +232,7 @@ class OutputFile:
 
         # Time dimension
         dataset.createDimension("time", len(times))
-        dataset_time = dataset.createVariable("time", np.int64, ("timestep",))
+        dataset_time = dataset.createVariable("time", np.int64, ("time",))
         dataset_time.long_name = "Time since start of simulation"
         dataset_time.units = "s"
         dataset_time[:] = np.array(times)
