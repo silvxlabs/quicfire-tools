@@ -77,8 +77,6 @@ class OutputFile:
         description: str,
         units: str,
         times: list[int],
-        dx: float,
-        dy: float,
         filepaths: list[Path],
         index_map=None,
     ):
@@ -92,8 +90,6 @@ class OutputFile:
         self.description = description
         self.units = units
         self.times = times
-        self.dx = dx
-        self.dy = dy
         self.filepaths = filepaths
         function_mappings = {
             "gridded": _process_gridded_bin,
@@ -442,8 +438,6 @@ class SimulationOutputs:
                     description=attributes["description"],
                     units=attributes["units"],
                     times=times,
-                    dx=self.dx,
-                    dy=self.dy,
                     filepaths=output_files_list,
                     index_map=self._fire_indexes,
                 )
