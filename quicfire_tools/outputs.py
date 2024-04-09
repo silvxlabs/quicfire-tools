@@ -259,6 +259,7 @@ class OutputFile:
     def to_zarr(
         self,
         fpath: str | Path,
+        chunk_size: dict[str, int] = None,
         **kwargs,
     ) -> zarr.Group:
         """
@@ -268,13 +269,34 @@ class OutputFile:
         ----------
         fpath: str | Path
             The path to the folder where zarr files are written to be written.
+        chunk_size: dict[str, int]
+            The chunk size for the zarr array. The dictionary may contain
+            keys "time", "z", "y", and "x" with integer values for the chunk
+            size in each dimension. The default chunk size is (1, nz, ny, nx).
+            If a key is not present, then the chunk size defaults to the size
+            of the dimension.
         **kwargs
             Additional keyword arguments to pass to the zarr array creation
             function.
 
         Returns
         -------
-        zarr files to disk
+        zarr.Group
+            The zarr group containing the output data.
+
+        Examples
+        --------
+        >>> import quicfire_tools as qft
+        >>> outputs = qft.SimulationOutputs("path/to/outputs", 50, 100, 100)
+        >>> fire_energy = outputs.get_output("fire-energy_to_atmos")
+        >>> # Write fire-energy_to_atmos output to zarr
+        >>> zarr_group = fire_energy.to_zarr("path/to/zarr")
+        >>> zarr_group["fuels-dens"]
+        <zarr.core.Array '/fuels-dens' (2, 1, 200, 200) float64 read-only>
+        >>> # Write multiple timesteps to each zarr chunk to improve I/O
+        >>> zarr_group = fire_energy.to_zarr("path/to/zarr", chunk_size={"time": 100})
+        >>> zarr_group["fuels-dens"].chunks
+        (100, 1, 200, 200)
         """
         if isinstance(fpath, str):
             fpath = Path(fpath)
@@ -287,10 +309,17 @@ class OutputFile:
         zroot = zarr.open(str(zarr_path), mode="w")
         zroot.attrs["crs"] = self.crs
 
-        # Build the output data array. By default, the array has shape (time,
-        # nz, ny, nx) and chunks of size (1, nz, ny, nx).
+        # Build the output data array. By default, the array has shape
+        # (time, nz, ny, nx) and chunks of size (1, nz, ny, nx).
         shape = (len(self.times), *self.shape)
-        chunks = [1 if i == 0 else shape[i] for i in range(len(shape))]
+        if chunk_size is None:
+            chunk_size = {}
+        chunks = [
+            chunk_size.get("time", 1),
+            chunk_size.get("z", self.shape[0]),
+            chunk_size.get("y", self.shape[1]),
+            chunk_size.get("x", self.shape[2]),
+        ]
         output_array = zroot.create_dataset(
             self.name, shape=shape, chunks=chunks, dtype=float, **kwargs
         )
