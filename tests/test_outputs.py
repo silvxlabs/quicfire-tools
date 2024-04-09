@@ -510,7 +510,6 @@ class TestSimulationOutputs:
         utm_zones = range(1, 16)
         epsg_codes = [32600 + utm_zone for utm_zone in utm_zones]
         for zone, epsg in zip(utm_zones, epsg_codes):
-
             outputs = SimulationOutputs(
                 LINE_FIRE_DIR / "Output",
                 line_fire.quic_fire.nz,

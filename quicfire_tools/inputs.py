@@ -2002,7 +2002,6 @@ class QUIC_fire(InputFile):
             lines = f.readlines()
 
         try:
-
             # Read fire flag and random seed
             fire_flag = int(lines[0].strip().split()[0])
             random_seed = int(lines[1].strip().split()[0])
@@ -2522,9 +2521,13 @@ class QU_TopoInputs(InputFile):
                     flat_fraction=flat_fraction,
                 )
             elif topo_flag == 4:
-                x_start, y_center, slope_value, canyon_std, vertical_offset = (
-                    topo_params
-                )
+                (
+                    x_start,
+                    y_center,
+                    slope_value,
+                    canyon_std,
+                    vertical_offset,
+                ) = topo_params
                 topography = CanyonTopo(
                     x_location=int(x_start),
                     y_location=int(y_center),
