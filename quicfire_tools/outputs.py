@@ -59,6 +59,10 @@ class OutputFile:
         A list of file paths for each timestep.
     times: list[int]
         A list of times corresponding to the timesteps.
+    dy: float
+        The grid spacing in the y-direction (m).
+    dx: float
+        The grid spacing in the x-direction (m).
     """
 
     def __init__(
@@ -73,6 +77,8 @@ class OutputFile:
         description: str,
         units: str,
         times: list[int],
+        dx: float,
+        dy: float,
         filepaths: list[Path],
         index_map=None,
     ):
@@ -86,6 +92,8 @@ class OutputFile:
         self.description = description
         self.units = units
         self.times = times
+        self.dx = dx
+        self.dy = dy
         self.filepaths = filepaths
         function_mappings = {
             "gridded": _process_gridded_bin,
@@ -176,12 +184,7 @@ class OutputFile:
         if not directory.exists():
             directory.mkdir(parents=True)
 
-        if timestep is None:
-            times = list(range(0, len(self.times), 1))
-        elif isinstance(timestep, int):
-            times = [timestep]
-        else:
-            times = list(timestep)
+        times = self.times if timestep is None else self.times[timestep]
 
         dataset = Dataset(directory / f"{self.name}.nc", "w", format="NETCDF4")
         dataset.title = self.name
@@ -190,21 +193,25 @@ class OutputFile:
         dataset.createDimension("nz", self.shape[0])
         dataset.createDimension("ny", self.shape[1])
         dataset.createDimension("nx", self.shape[2])
-        dataset.createDimension("time", len(times))
+        dataset.createDimension("timestep", len(times))
 
-        dataset_nz = dataset.createVariable("z", np.int64, ("nz",))
-        dataset_ny = dataset.createVariable("y", np.int64, ("ny",))
-        dataset_nx = dataset.createVariable("x", np.int64, ("nx",))
-        dataset_time = dataset.createVariable("timestep", np.int64, ("time",))
+        dataset_z = dataset.createVariable("z", np.int64, ("nz",))
+        dataset_y = dataset.createVariable("y", np.int64, ("ny",))
+        dataset_x = dataset.createVariable("x", np.int64, ("nx",))
+        dataset_time = dataset.createVariable("time", np.int64, ("timestep",))
 
         dataset_time[:] = np.array(times)
-        dataset_nz[:] = range(self.shape[0])
-        # julia scales the horizontal resolution to meters using dx and dy
-        dataset_ny[:] = range(self.shape[1])
-        dataset_nx[:] = range(self.shape[2])
+        dataset_z[:] = range(self.shape[0])
+        dataset_y[:] = range(self.shape[1] * self.dy)
+        dataset_x[:] = range(self.shape[2] * self.dx)
+
+        dataset_time.units = "s"
+        dataset_z.units = "m"
+        dataset_y.units = "m"
+        dataset_x.units = "m"
 
         output = dataset.createVariable(
-            self.name, np.float32, ("time", "nz", "ny", "nx")
+            self.name, np.float32, ("timestep", "nz", "ny", "nx")
         )
         output.units = self.units
 
@@ -435,6 +442,8 @@ class SimulationOutputs:
                     description=attributes["description"],
                     units=attributes["units"],
                     times=times,
+                    dx=self.dx,
+                    dy=self.dy,
                     filepaths=output_files_list,
                     index_map=self._fire_indexes,
                 )
