@@ -19,7 +19,6 @@ import numpy as np
 import pyproj as proj
 import dask.array as da
 from numpy import ndarray
-from shutil import rmtree
 from netCDF4 import Dataset
 
 
@@ -829,37 +828,29 @@ def _process_grid_info(path_to_grid_bin: str | Path, ny: int, nx: int):
 
         # Check if topo grid information is present
         if test_header[0] == num_bytes_quic_grid:
-            # Read sigma_bottom (same as quic_grid_bottom)
-            np.fromfile(fid, dtype=np.float32, count=quic_nz + 2)
-
+            np.fromfile(
+                fid, dtype=np.float32, count=quic_nz + 2
+            )  # Read sigma_bottom (same as quic_grid_bottom)
             np.fromfile(fid, dtype=np.int32, count=2)  # Header
-
-            # Read sigma_mid (same as quic_grid_mid)
-            np.fromfile(fid, dtype=np.float32, count=quic_nz + 2)
-
+            np.fromfile(
+                fid, dtype=np.float32, count=quic_nz + 2
+            )  # Read sigma_mid (same as quic_grid_mid)
             np.fromfile(fid, dtype=np.int32, count=2)  # Header
-
-            quic_grid_bottom_terrain_following = np.fromfile(
+            np.fromfile(
                 fid, dtype=np.float32, count=ny * nx * (quic_nz + 2)
-            )
-
+            )  # quic grid bottom terrain following
             np.fromfile(fid, dtype=np.int32, count=2)  # Header
-
-            quic_grid_mid_terrain_following = np.fromfile(
+            np.fromfile(
                 fid, dtype=np.float32, count=ny * nx * (quic_nz + 2)
-            )
-
+            )  # quic grid mid terrain following
             np.fromfile(fid, dtype=np.int32, count=2)  # Header
-
-            quic_grid_volume_correction = np.fromfile(
+            np.fromfile(
                 fid, dtype=np.float32, count=ny * nx
-            )
-
+            )  # quic grid volume correction
             np.fromfile(fid, dtype=np.int32, count=1)  # Header
-
-            fire_header = np.fromfile(fid, dtype=np.int32, count=1)[0]
+            _ = np.fromfile(fid, dtype=np.int32, count=1)[0]  # fire header
         else:
-            fire_header = test_header[0]
+            _ = test_header[0]  # fire header
 
         num_eng_to_atmos_cells = np.fromfile(fid, dtype=np.int32, count=1)[0]
         np.fromfile(fid, dtype=np.int32, count=2)  # Header
@@ -867,9 +858,8 @@ def _process_grid_info(path_to_grid_bin: str | Path, ny: int, nx: int):
             fid, dtype=np.float32, count=num_eng_to_atmos_cells + 1
         )
 
-        ending_header = np.fromfile(fid, dtype=np.int32, count=1)
-
-        _ = np.fromfile(fid, dtype=np.int32, count=4)  # Header
+        np.fromfile(fid, dtype=np.int32, count=1)  # ending header
+        np.fromfile(fid, dtype=np.int32, count=4)  # Header
 
         return (
             quic_nz,
