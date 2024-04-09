@@ -131,6 +131,30 @@ class OutputFile:
                     return False
         return True
 
+    def _select_files_based_on_timestep(
+        self, timestep: int | list[int] | range | None
+    ) -> list[Path]:
+        """Return files selected based on timestep."""
+        if timestep is None:
+            return self.filepaths
+        if isinstance(timestep, int):
+            timestep = [timestep]
+        try:
+            return [self.filepaths[ts] for ts in timestep]
+        except IndexError:
+            raise ValueError(f"Invalid timestep: {timestep}")
+
+    def _get_single_timestep(self, output_file: Path) -> np.ndarray:
+        """Return a numpy array for the given output file."""
+        return self._output_function(
+            output_file, self.shape, self._compressed_index_map
+        )
+
+    def _get_multiple_timesteps(self, output_files: list[Path]) -> np.ndarray:
+        """Return a numpy array for the given output files."""
+        arrays = [self._get_single_timestep(of) for of in output_files]
+        return arrays[0] if len(arrays) == 1 else np.concatenate(arrays, axis=0)
+
     def to_numpy(self, timestep: int | list[int] | range = None) -> np.ndarray:
         """
         Return a numpy array for the given output and timestep(s) with shape
@@ -231,30 +255,6 @@ class OutputFile:
         output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
         dataset.close()
         return
-
-    def _select_files_based_on_timestep(
-        self, timestep: int | list[int] | range | None
-    ) -> list[Path]:
-        """Return files selected based on timestep."""
-        if timestep is None:
-            return self.filepaths
-        if isinstance(timestep, int):
-            timestep = [timestep]
-        try:
-            return [self.filepaths[ts] for ts in timestep]
-        except IndexError:
-            raise ValueError(f"Invalid timestep: {timestep}")
-
-    def _get_single_timestep(self, output_file: Path) -> np.ndarray:
-        """Return a numpy array for the given output file."""
-        return self._output_function(
-            output_file, self.shape, self._compressed_index_map
-        )
-
-    def _get_multiple_timesteps(self, output_files: list[Path]) -> np.ndarray:
-        """Return a numpy array for the given output files."""
-        arrays = [self._get_single_timestep(of) for of in output_files]
-        return arrays[0] if len(arrays) == 1 else np.concatenate(arrays, axis=0)
 
     def to_zarr(
         self,
