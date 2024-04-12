@@ -517,8 +517,8 @@ class TestSimulationOutputs:
                 line_fire.qu_simparams.nx,
                 line_fire.qu_simparams.dy,
                 line_fire.qu_simparams.dx,
-                utm_x=np.random.randint(1, 1e12),
-                utm_y=np.random.randint(1, 1e12),
+                utm_x=np.random.randint(1, 1e8),
+                utm_y=np.random.randint(1, 1e8),
                 utm_zone=zone,
             )
 
