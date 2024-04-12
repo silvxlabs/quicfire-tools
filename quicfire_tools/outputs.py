@@ -358,17 +358,17 @@ class OutputFile:
 
         # Y dimension
         y_array = zroot.create_dataset("y", shape=self.shape[1], dtype=float)
-        y_array.attrs["long_name"] = (
-            "Northing: cell distance north from southern edge of domain"
-        )
+        y_array.attrs[
+            "long_name"
+        ] = "Northing: cell distance north from southern edge of domain"
         y_array.attrs["units"] = "m"
         y_array[...] = self.y_coords
 
         # X dimension
         x_array = zroot.create_dataset("x", shape=self.shape[2], dtype=float)
-        x_array.attrs["long_name"] = (
-            "Easting: cell distance east from western edge of domain"
-        )
+        x_array.attrs[
+            "long_name"
+        ] = "Easting: cell distance east from western edge of domain"
         x_array.attrs["units"] = "m"
         x_array[...] = self.x_coords
 

@@ -3,6 +3,7 @@ netcdf4
 numpy<2
 pandera
 pydantic>=2
+pyproj
 pytest
 requests
 scipy
