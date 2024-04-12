@@ -1,4 +1,5 @@
 dask
+netcdf4
 numpy<2
 pandera
 pydantic>=2
@@ -7,4 +8,3 @@ requests
 scipy
 xarray
 zarr>=2
-netCDF4

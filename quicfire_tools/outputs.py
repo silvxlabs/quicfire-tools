@@ -20,7 +20,6 @@ import pyproj as proj
 import dask.array as da
 from numpy import ndarray
 from netCDF4 import Dataset
-from pyproj import CRS
 
 
 OUTPUTS_DIR_PATH = (

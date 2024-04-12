@@ -1,8 +1,7 @@
 dask
+netCDF4
 numpy<2
 pandera
 pydantic>=2
 pyproj
 zarr>=2
-netCDF4
-pyproj
