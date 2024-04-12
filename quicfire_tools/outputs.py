@@ -231,39 +231,35 @@ class OutputFile:
         dataset.subtitle = self.description
 
         # Time dimension
-        dataset.createDimension("time", len(times))
+        dataset.createDimension("time", None)
         dataset_time = dataset.createVariable("time", np.int64, ("time",))
         dataset_time.long_name = "Time since start of simulation"
         dataset_time.units = "s"
         dataset_time[:] = np.array(times)
 
         # Z dimension
-        dataset.createDimension("nz", self.shape[0])
-        dataset_z = dataset.createVariable("z", np.int64, ("nz",))
+        dataset.createDimension("z", None)
+        dataset_z = dataset.createVariable("z", np.int64, ("z",))
         dataset_z.long_name = "Cell height: bottom of cell from ground"
         dataset_z.units = "m"
         dataset_z[:] = self.z_coords
 
         # Y dimension
-        dataset.createDimension("ny", self.shape[1])
-        dataset_y = dataset.createVariable("y", np.int64, ("ny",))
-        dataset_y.long_name = (
-            "Northing: cell distance north from southern edge of domain"
-        )
+        dataset.createDimension("y", None)
+        dataset_y = dataset.createVariable("y", np.int64, ("y",))
+        dataset_y.long_name = "Northing: y-coordinate of bottom edge of the cell"
         dataset_y.units = "m"
         dataset_y[:] = self.y_coords
 
         # X dimension
-        dataset.createDimension("nx", self.shape[2])
-        dataset_x = dataset.createVariable("x", np.int64, ("nx",))
-        dataset_x.long_name = "Easting: cell distance east from western edge of domain"
+        dataset.createDimension("x", None)
+        dataset_x = dataset.createVariable("x", np.int64, ("x",))
+        dataset_x.long_name = "Easting: x-coordinate of left edge of the cell"
         dataset_x.units = "m"
         dataset_x[:] = self.x_coords
 
         # Output variable
-        output = dataset.createVariable(
-            self.name, np.float32, ("time", "nz", "ny", "nx")
-        )
+        output = dataset.createVariable(self.name, np.float32, ("time", "z", "y", "x"))
         output.long_name = self.description
         output.units = self.units
 
