@@ -251,7 +251,7 @@ class TestProcessGriddedBin:
         )
 
         # Load reference data for comparison
-        npz = np.load(LINE_FIRE_DIR / "reference" / "fire-energy_to_atmos-00000.npz")
+        npz = np.load(LINE_FIRE_DIR / "Reference" / "fire-energy_to_atmos-00000.npz")
         reference_eng2atmos = npz["var"]
         reference_eng2atmos = np.swapaxes(reference_eng2atmos, 0, 2)
         reference_eng2atmos = np.swapaxes(reference_eng2atmos, 1, 2)
@@ -270,7 +270,7 @@ class TestProcessGriddedBin:
         )
 
         # Load reference data for comparison
-        npz = np.load(LINE_FIRE_DIR / "reference" / "fire-energy_to_atmos-00060.npz")
+        npz = np.load(LINE_FIRE_DIR / "Reference" / "fire-energy_to_atmos-00060.npz")
         reference_eng2atmos = npz["var"]
         reference_eng2atmos = np.swapaxes(reference_eng2atmos, 0, 2)
         reference_eng2atmos = np.swapaxes(reference_eng2atmos, 1, 2)
