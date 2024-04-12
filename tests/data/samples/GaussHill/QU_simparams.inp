@@ -1,0 +1,57 @@
+!QUIC 6.26
+400 !nx - Domain Length(X) Grid Cells
+300 !ny - Domain Width(Y) Grid Cells
+22 ! NZ - domain height(Z) grid cells
+2 ! DX [m]
+2 ! DY [m]
+3 !Vertical stretching flag (0 = uniform, 1 = custom, 2 = parabolic Z, 3 = parabolic DZ, 4 = exponential)
+1.000000 ! Surface DZ [m]
+5 ! Number of uniform surface cells
+! DZ array [m]
+1.000000
+1.000000
+1.000000
+1.000000
+1.226767
+1.907070
+3.040907
+4.628279
+6.669186
+9.163628
+12.111605
+15.513117
+19.368164
+23.676746
+28.438862
+33.654514
+39.323700
+45.446422
+52.022678
+59.052469
+66.535795
+74.220088
+1 ! Number of time increments
+0 ! UTC conversion [hours]
+! Begining of time step in Unix epoch time [integer seconds since 1970/1/1 00:00:00]
+1653321600
+2 ! Rooftop flag (0 = none, 1 = log profile, 2 = vortex)
+3 ! Upwind cavity flag (0 = none, 1 = Rockle, 2 = MVP, 3 = HMVP)
+4 ! Street canyon flag (0 = none, 1 = Roeckle, 2 = CPB, 3 = exp. param. PKK, 4 = Roeckle w/ Fackrel)
+1 ! Street intersection flag (0 = off, 1 = on)
+4 ! Wake flag (0 = none, 1 = Rockle, 2 = modified Rockle, 3 = area scaled)
+1 ! Sidewall flag (0 = off, 1 = on)
+1 ! Individual tree wake flag
+2 ! Canopy flag (0 = off, 1 = Cionco w/o wakes, 2 = Cionco w/ wakes)
+1 ! Season flag (1 = Summer, 2 = Winter, 3 = Transition)
+10 ! Maximum number of iterations
+3 ! Residual reduction (Orders of Magnitude)
+0 ! Use diffusion algorithm (0 = off, 1 = on)
+20 ! Number of diffusion iterations
+0 ! Domain rotation relative to true north [degrees] (cw = +)
+0.0 ! UTMX of domain origin [m]
+0.0 ! UTMY of domain origin [m]
+1 ! UTM zone
+17 ! UTM zone leter (1 = A, 2 = B, etc.)
+0 ! QUIC-CFD Flag
+0 ! Explosive building damage flag (1 = on)
+0 ! Building Array Flag (1 = on)

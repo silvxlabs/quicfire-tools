@@ -1,0 +1,17 @@
+!QUIC 6.3
+0   !Moving coordinates flag (0=no, 1=yes)
+0   !Reference bearing of the ship relative to the non-rotated domain (degrees)
+!Time (Unix Time), Ship Speed (m/s), Ship Bearing (deg), Ocean Current Speed (m/s), Ocean Current Direction (deg)
+1488794400	0	0	0	0
+1488794450	0	0	0	0
+1488794500	0	0	0	0
+1488794550	0	0	0	0
+1488794600	0	0	0	0
+1488794650	0	0	0	0
+1488794700	0	0	0	0
+1488794750	0	0	0	0
+1488794800	0	0	0	0
+1488794850	0	0	0	0
+1488794900	0	0	0	0
+1488794950	0	0	0	0
+1488795000	0	0	0	0

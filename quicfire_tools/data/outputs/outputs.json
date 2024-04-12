@@ -1,0 +1,265 @@
+{
+  "fire-energy_to_atmos": {
+    "file_format": "gridded",
+    "dimensions": [
+      "z",
+      "y",
+      "x"
+    ],
+    "grid": "en2atmos",
+    "output_times": "fire",
+    "delimiter": "-",
+    "extension": ".bin",
+    "description": "Energy released to the atmosphere that generates buoyant plumes",
+    "units": "kW"
+  },
+  "fire-reaction_rate": {
+    "file_format": "compressed",
+    "dimensions": [
+      "z",
+      "y",
+      "x"
+    ],
+    "grid": "fire",
+    "output_times": "fire",
+    "delimiter": "-",
+    "extension": ".bin",
+    "description": "Rate of reaction of fuel",
+    "units": "kg/m^3/s"
+  },
+  "fuels-dens": {
+    "file_format": "compressed",
+    "dimensions": [
+      "z",
+      "y",
+      "x"
+    ],
+    "grid": "fire",
+    "output_times": "fire",
+    "delimiter": "-",
+    "extension": ".bin",
+    "description": "Fuel density",
+    "units": "kg/m^3"
+  },
+  "fuels-moist": {
+    "file_format": "compressed",
+    "dimensions": [
+      "z",
+      "y",
+      "x"
+    ],
+    "grid": "fire",
+    "output_times": "fire",
+    "delimiter": "-",
+    "extension": ".bin",
+    "description": "Fuel moisture content",
+    "units": "g water / g air"
+  },
+  "groundfuelheight": {
+    "file_format": "gridded",
+    "dimensions": [
+      "y",
+      "x"
+    ],
+    "grid": "fire",
+    "output_times": null,
+    "delimiter": null,
+    "extension": ".bin",
+    "description": "2D array with initial fuel height in the ground layer",
+    "units": "m"
+  },
+  "mburnt_integ": {
+    "file_format": "gridded",
+    "dimensions": [
+      "y",
+      "x"
+    ],
+    "grid": "fire",
+    "output_times": "fire",
+    "delimiter": "-",
+    "extension": ".bin",
+    "description": "2D file containing the percentage of mass burnt for each (i,j) location on the fire grid (vertically integrated)",
+    "units": "%"
+  },
+  "surfEnergy": {
+    "file_format": "gridded",
+    "dimensions": [
+      "y",
+      "x"
+    ],
+    "grid": "fire",
+    "output_times": "surf_eng",
+    "delimiter": "",
+    "extension": ".bin",
+    "description": "Array contains total energy output by each surface cell on a per second interval.",
+    "units": "kW/m^2"
+  },
+  "thermaldose": {
+    "file_format": "compressed",
+    "dimensions": [
+      "z",
+      "y",
+      "x"
+    ],
+    "grid": "fire",
+    "output_times": "emis_rad",
+    "delimiter": "-",
+    "extension": ".bin",
+    "description": "The output shows the thermal flux to skin of a person collocated with fuel (for health effects).",
+    "units": "(kW/m^2)^(4/3)s"
+  },
+  "thermalradiation": {
+    "file_format": "compressed",
+    "dimensions": [
+      "z",
+      "y",
+      "x"
+    ],
+    "grid": "fire",
+    "output_times": "emis_rad",
+    "delimiter": "-",
+    "extension": ".bin",
+    "description": "The output shows the thermal flux to skin of a person collocated with fuel (for health effects).",
+    "units": "kW/m^2"
+  },
+  "windu": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "fire",
+        "output_times": "fire",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Fire u-components, cell centered ",
+        "units": "m/s"
+    },
+    "windv": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "fire",
+        "output_times": "fire",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Fire v-components, cell centered ",
+        "units": "m/s"
+    },
+    "windw": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "fire",
+        "output_times": "fire",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Fire w-components, cell centered ",
+        "units": "m/s"
+    },
+      "qu_windu": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "quic",
+        "output_times": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Instantaneous wind component in the x-direction, cell centered ",
+        "units": "m/s"
+    },
+    "qu_windv": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "quic",
+        "output_times": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Instantaneous wind component in the y-direction, cell centered ",
+        "units": "m/s"
+    },
+    "qu_windw": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "quic",
+        "output_times": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Instantaneous wind component in the x-direction, cell centered ",
+        "units": "m/s"
+    },
+    "qu_windu_ave": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "quic",
+        "output_times": "wind_ave",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Averaged wind component in the x-direction, cell centered ",
+        "units": "m/s"
+    },
+    "qu_windv_ave": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "quic",
+        "output_times": "wind_ave",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Averaged wind component in the y-direction, cell centered ",
+        "units": "m/s"
+    },
+    "qu_windw_ave": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "quic",
+        "output_times": "wind_ave",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Averaged wind component in the z-direction, cell centered ",
+        "units": "m/s"
+    },
+    "qu_wplume": {
+        "file_format": "gridded",
+        "dimensions": ["z", "y", "x"],
+        "grid": "quic",
+        "output_times": "wind",
+        "delimiter": "",
+        "extension": ".bin",
+        "description": "Instantaneous wind component in the z-direction generated by the fire, cell centered ",
+        "units": "m/s"
+    },
+      "co_emissions": {
+        "file_format": "compressed",
+        "dimensions": ["z", "y", "x"],
+        "grid": "fire",
+        "output_times": "emis_rad",
+        "delimiter": "-",
+        "extension": ".bin",
+        "description": "Mass of CO emitted between two emission file output times in grams",
+        "units": "g"
+    },
+    "pm_emissions": {
+        "file_format": "compressed",
+        "dimensions": ["z", "y", "x"],
+        "grid": "fire",
+        "output_times": "emis_rad",
+        "delimiter": "-",
+        "extension": ".bin",
+        "description": "Mass of PM2.5 emitted between two emission file output times in grams",
+        "units": "g"
+    },
+    "water_emissions": {
+        "file_format": "compressed",
+        "dimensions": ["z", "y", "x"],
+        "grid": "fire",
+        "output_times": "emis_rad",
+        "delimiter": "-",
+        "extension": ".bin",
+        "description": "Mass of water emitted between two emission file output times (fuel moisture + water from combustion) in grams",
+        "units": "g"
+    },
+    "emissions_distribution": {
+        "file_format": "compressed",
+        "dimensions": ["z", "y", "x"],
+        "grid": "fire",
+        "output_times": "emis_rad",
+        "delimiter": "-",
+        "extension": ".bin",
+        "description": "Size of PM2.5 emitted between two emission file output times in microns",
+        "units": "g"
+    }
+}

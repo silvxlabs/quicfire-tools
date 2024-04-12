@@ -179,14 +179,14 @@ from quicfire_tools.topography import GaussianHillTopo
 
 # First, create an TopoType class
 topo = GaussianHillTopo(
-    x_hilltop = 100,
-    y_hilltop = 150,
-    elevation_max = 50,
-    elevation_std = 15
+    x_hilltop=100,
+    y_hilltop=150,
+    elevation_max=50,
+    elevation_std=15
 )
 
-# Next, assign it to the topo_type attribute of the qu_topoinputs InputFile
-simulation.qu_topoinputs.topo_type = topo
+# Next, assign it to the topography attribute of the qu_topoinputs InputFile
+simulation.qu_topoinputs.topography = topo
 ```
 
 Please see [topopgraphy](reference.md#quicfire_tools.topography) for a full list of topography types.
@@ -207,8 +207,8 @@ ignition = CircularRingIgnition(
     ring_width = 10
 )
 
-# Next, assign it to the ignition_type attribute of the quic_fire InputFile
-simulation.quic_fire.ignition_type
+# Next, assign it to the ignition attribute of the quic_fire InputFile
+simulation.quic_fire.ignition
 ```
 
 Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of ignition patterns.
