@@ -219,39 +219,52 @@ class OutputFile:
             directory.mkdir(parents=True)
 
         if timestep is None:
-            times = list(range(0, len(self.times), 1))
+            times = self.times
         elif isinstance(timestep, int):
-            times = [timestep]
+            times = [self.times[timestep]]
         else:
-            times = list(timestep)
+            times = [self.times[i] for i in timestep]
 
         dataset = Dataset(directory / f"{self.name}.nc", "w", format="NETCDF4")
         dataset.title = self.name
         dataset.subtitle = self.description
 
-        dataset.createDimension("nz", self.shape[0])
-        dataset.createDimension("ny", self.shape[1])
-        dataset.createDimension("nx", self.shape[2])
-        dataset.createDimension("time", len(times))
-
-        dataset_nz = dataset.createVariable("z", np.int64, ("nz",))
-        dataset_ny = dataset.createVariable("y", np.int64, ("ny",))
-        dataset_nx = dataset.createVariable("x", np.int64, ("nx",))
-        dataset_time = dataset.createVariable("timestep", np.int64, ("time",))
-
+        # Time dimension
+        dataset.createDimension("time", None)
+        dataset_time = dataset.createVariable("time", np.int64, ("time",))
+        dataset_time.long_name = "Time since start of simulation"
+        dataset_time.units = "s"
         dataset_time[:] = np.array(times)
-        dataset_nz[:] = range(self.shape[0])
-        # julia scales the horizontal resolution to meters using dx and dy
-        dataset_ny[:] = range(self.shape[1])
-        dataset_nx[:] = range(self.shape[2])
 
-        output = dataset.createVariable(
-            self.name, np.float32, ("time", "nz", "ny", "nx")
-        )
+        # Z dimension
+        dataset.createDimension("z", None)
+        dataset_z = dataset.createVariable("z", np.int64, ("z",))
+        dataset_z.long_name = "Cell height: bottom of cell from ground"
+        dataset_z.units = "m"
+        dataset_z[:] = self.z_coords
+
+        # Y dimension
+        dataset.createDimension("y", None)
+        dataset_y = dataset.createVariable("y", np.int64, ("y",))
+        dataset_y.long_name = "Northing: y-coordinate of bottom edge of the cell"
+        dataset_y.units = "m"
+        dataset_y[:] = self.y_coords
+
+        # X dimension
+        dataset.createDimension("x", None)
+        dataset_x = dataset.createVariable("x", np.int64, ("x",))
+        dataset_x.long_name = "Easting: x-coordinate of left edge of the cell"
+        dataset_x.units = "m"
+        dataset_x[:] = self.x_coords
+
+        # Output variable
+        output = dataset.createVariable(self.name, np.float32, ("time", "z", "y", "x"))
+        output.long_name = self.description
         output.units = self.units
 
         selected_files = self._select_files_based_on_timestep(timestep)
         output[:, :, :, :] = self._get_multiple_timesteps(selected_files)
+
         dataset.close()
         return
 
@@ -345,17 +358,17 @@ class OutputFile:
 
         # Y dimension
         y_array = zroot.create_dataset("y", shape=self.shape[1], dtype=float)
-        y_array.attrs[
-            "long_name"
-        ] = "Northing: cell distance north from southern edge of domain"
+        y_array.attrs["long_name"] = (
+            "Northing: cell distance north from southern edge of domain"
+        )
         y_array.attrs["units"] = "m"
         y_array[...] = self.y_coords
 
         # X dimension
         x_array = zroot.create_dataset("x", shape=self.shape[2], dtype=float)
-        x_array.attrs[
-            "long_name"
-        ] = "Easting: cell distance east from western edge of domain"
+        x_array.attrs["long_name"] = (
+            "Easting: cell distance east from western edge of domain"
+        )
         x_array.attrs["units"] = "m"
         x_array[...] = self.x_coords
 
