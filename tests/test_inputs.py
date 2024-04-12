@@ -465,7 +465,7 @@ class TestQU_Simparams:
 
         # Test data type casting
         qu_simparams = QU_Simparams(
-            nx="100", ny=100, nz=26, dx=2, dy=2, quic_domain_height=5, wind_times=["0."]
+            nx="100", ny=100, nz=26, dx=2, dy=2, quic_domain_height=5, wind_times=[0.0]
         )
         assert qu_simparams.nx == 100
         assert qu_simparams.wind_times == [0]
