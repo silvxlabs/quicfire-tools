@@ -5,5 +5,3 @@
 ::: quicfire_tools.topography
 
 ::: quicfire_tools.outputs
-
-::: quicfire_tools.examples
