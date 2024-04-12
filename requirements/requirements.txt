@@ -1,4 +1,5 @@
 dask
+dask-expr
 netCDF4
 numpy<2
 pandera
