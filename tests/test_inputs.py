@@ -2303,6 +2303,15 @@ class TestSimulationInputs:
         assert sim_inputs.quic_fire.ignition == Ignition(ignition_flag=IgnitionFlags(7))
         assert sim_inputs.qu_topoinputs.topography == Topography(topo_flag=TopoFlags(5))
 
+        # Test interpolate argument
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_custom_simulation(interpolate=True)
+        assert sim_inputs.quic_fire.fuel_density_flag == 4
+        assert sim_inputs.quic_fire.fuel_moisture_flag == 4
+        assert sim_inputs.quic_fire.fuel_height_flag == 4
+        assert sim_inputs.quic_fire.ignition == Ignition(ignition_flag=IgnitionFlags(7))
+        assert sim_inputs.qu_topoinputs.topography == Topography(topo_flag=TopoFlags(5))
+
         # Test including size scale and patch/gap from set custom simulation
         sim_inputs = self.get_test_object()
         sim_inputs.set_custom_simulation(size_scale=True, patch_and_gap=True)
