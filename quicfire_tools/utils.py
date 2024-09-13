@@ -74,9 +74,7 @@ def compute_parabolic_stretched_grid(
     return dz
 
 
-def read_dat_file(
-    filename: Path | str, nz: int, ny: int, nx: int, order: str = "C"
-) -> ndarray:
+def read_dat_file(filename: Path | str, shape: tuple[int]) -> ndarray:
     """
     Read in a .dat file as a numpy array.
 
@@ -84,29 +82,25 @@ def read_dat_file(
     ----------
     filename : Path or str
         The path to the .dat file to read.
-    nz : int
-        The number of cells in the z-direction.
-    ny : int
-        The number of cells in the y-direction.
-    nx : int
-        The number of cells in the x-direction.
-    order : str, optional
-        The order of the array. Default is "C".
+    shape : tuple[int]
+        The shape of the array to read from the .dat file. Typically, .dat files
+        follow the Fortran column major order standard. The shape of a
+        general 2D .dat file has the form (nx, ny). For a 3D .dat file, the
+        shape is (nx, ny, nz). Sometimes additional information is attached to
+        the .dat files such as species or size classes. In this case, the shape
+        would be (ns, nx, ny, nz) where ns is the number of species or size
+        classes.
 
     Returns
     -------
     ndarray
-        A 3D numpy array representing the data in the .dat file. The array
-        has dimensions (nz, ny, nx).
+        A numpy array representing the data in the .dat file. The array shape
+        is determined by the `shape` parameter.
     """
     if isinstance(filename, str):
         filename = Path(filename)
 
     with open(filename, "rb") as fin:
-        arr = (
-            FortranFile(fin)
-            .read_reals(dtype="float32")
-            .reshape((nz, ny, nx), order=order)
-        )
+        arr = FortranFile(fin).read_reals(dtype="float32").reshape(shape, order="F")
 
     return arr
