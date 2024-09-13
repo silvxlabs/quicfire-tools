@@ -519,6 +519,7 @@ class SimulationInputs:
         patch_and_gap: bool = False,
         ignition: bool = True,
         topo: bool = True,
+        interpolate: bool = False,
     ) -> None:
         """
         Sets the simulation to use custom fuel, ignition, and topography
@@ -552,6 +553,14 @@ class SimulationInputs:
         topo : bool, optional
             If True, sets the simulation to use custom topography settings
             (topography flag 5). Default is True.
+        interpolate: bool, optional
+            If True, sets the simulation to interpolate the custom fuel inputs
+            to the fire grid (fuel flag 4). Default is False. This is also
+            useful as it addresses a bug in versions of QUIC-Fire ≤ v6.0.0 where
+            custom fuels don't work without the interpolation flag set.
+            Interpolation only applies to fuel density, fuel moisture, fuel
+            height, and size scale. Patch and gap, ignition, and topography
+            are not interpolated.
 
         Examples
         --------
@@ -562,13 +571,13 @@ class SimulationInputs:
         3
         """
         if fuel_density:
-            self.quic_fire.fuel_density_flag = 3
+            self.quic_fire.fuel_density_flag = 3 if not interpolate else 4
         if fuel_moisture:
-            self.quic_fire.fuel_moisture_flag = 3
+            self.quic_fire.fuel_moisture_flag = 3 if not interpolate else 4
         if fuel_height:
-            self.quic_fire.fuel_height_flag = 3
+            self.quic_fire.fuel_height_flag = 3 if not interpolate else 4
         if size_scale:
-            self.quic_fire.size_scale_flag = 3
+            self.quic_fire.size_scale_flag = 3 if not interpolate else 4
         if patch_and_gap:
             self.quic_fire.patch_and_gap_flag = 2
         if ignition:
