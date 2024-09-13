@@ -143,10 +143,13 @@ class TestProcessedCompressedBin:
         # Load in the input .dat file for comparison
         fuels_dens_dat = read_dat_file(
             EG_CANOPY_DIR / "treesrhof.dat",
-            self.eglin_canopy_sim.quic_fire.nz,
-            self.eglin_canopy_sim.qu_simparams.ny,
-            self.eglin_canopy_sim.qu_simparams.nx,
-        )
+            shape=(
+                self.eglin_canopy_sim.qu_simparams.nx,
+                self.eglin_canopy_sim.qu_simparams.ny,
+                self.eglin_canopy_sim.quic_fire.nz,
+            ),
+        )  # shape is (nx, ny, nz)
+        fuels_dens_dat = np.swapaxes(fuels_dens_dat, 0, 2)  # Reshape to nz, ny, nx
 
         # I have no idea why the edges are wonky, but the rest of the array
         # is fine. Maybe there's some model interpolation going on?
