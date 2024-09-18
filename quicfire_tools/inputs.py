@@ -686,7 +686,6 @@ class SimulationInputs:
         emissions: bool = False,
         radiation: bool = False,
         surf_eng: bool = False,
-        intensity: bool = False,
     ) -> None:
         """
         Sets the simulation to output the specified files. Files set to True
@@ -718,8 +717,8 @@ class SimulationInputs:
         radiation: bool, optional
             If True, output the thermaldose and thermalradiation .bin files.
             Default is False.
-        intensity: bool, optional
-            If True, output the fire-intensity.bin file. Default is False.
+        surf_eng: bool, optional
+            If True, output the surf_eng.bin file. Default is False.
 
         Examples
         --------
@@ -1854,7 +1853,7 @@ class QUIC_fire(InputFile):
             5 = output emissions files and simulate both water in QUIC-SMOKE
     radiation_out : Literal[0, 1]
         Output flag [0, 1]: gridded thermal radiation (fire grid)
-    intensity_out : Literal[0, 1]
+    surf_eng_out : Literal[0, 1]
         Output flag [0, 1]: surface fire intensity at every fire time step
     """
 
@@ -2181,7 +2180,7 @@ class QUIC_fire(InputFile):
             firebrand_out = int(lines[current_line + 10].strip().split()[0])
             emissions_out = int(lines[current_line + 11].strip().split()[0])
             radiation_out = int(lines[current_line + 12].strip().split()[0])
-            intensity_out = int(lines[current_line + 13].strip().split()[0])
+            surf_eng_out = int(lines[current_line + 13].strip().split()[0])
             # ! AUTOKILL
             auto_kill = int(lines[current_line + 15].strip().split()[0])
 
@@ -2231,7 +2230,7 @@ class QUIC_fire(InputFile):
             firebrand_out=firebrand_out,
             emissions_out=emissions_out,
             radiation_out=radiation_out,
-            intensity_out=intensity_out,
+            surf_eng_out=surf_eng_out,
             auto_kill=auto_kill,
         )
 
