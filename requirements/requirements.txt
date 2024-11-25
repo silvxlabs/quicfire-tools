@@ -1,7 +1,7 @@
 dask
 dask-expr
 netCDF4
-numpy<2
+numpy>=2
 pandera
 pydantic>=2
 pyproj
