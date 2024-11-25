@@ -1989,6 +1989,15 @@ class QUIC_fire(InputFile):
             return patch_and_gap_flag_line + f"\n{self.patch_size}\n{self.gap_size}"
         return patch_and_gap_flag_line
 
+    @computed_field
+    @property
+    def is_custom_fuel_model(self) -> bool:
+        return (
+            self.fuel_density_flag != 1
+            or self.fuel_moisture_flag != 1
+            or self.fuel_height_flag != 1
+        )
+
     @classmethod
     def from_dict(cls, data: dict):
         if "ignition" in data:
