@@ -2181,7 +2181,6 @@ class TestSimulationInputs:
 
     def test_input_files(self):
         sim_inputs = self.get_test_object()
-        assert isinstance(sim_inputs.gridlist, Gridlist)
         assert isinstance(sim_inputs.rasterorigin, RasterOrigin)
         assert isinstance(sim_inputs.qu_buildings, QU_Buildings)
         assert isinstance(sim_inputs.qu_fileoptions, QU_Fileoptions)
@@ -2454,15 +2453,37 @@ class TestSimulationInputs:
                 y_location=1,
             )
 
-    def test_write_inputs_latest(self):
+    @pytest.mark.parametrize("version", ["v5", "v6", "latest"])
+    def test_write_inputs(self, version):
         sim_inputs = self.get_test_object()
+        sim_inputs.write_inputs(TMP_DIR, version=version)
+
+        # Assert that the expected default files are present in the directory
+        sim_files = [file_name.name for file_name in Path(TMP_DIR).iterdir()]
+        for sim_object in sim_inputs._input_files_dict.values():
+            if isinstance(sim_object, WindSensorArray):
+                continue
+            file_name = sim_object.name + sim_object._extension
+            assert file_name in sim_files
+
+        # Assert that the custom fuel files were not written
+        assert "gridlist" not in sim_files
+        assert "rasterorigin.txt" not in sim_files
+
+    def test_write_inputs_custom_fuels(self):
+        sim_inputs = self.get_test_object()
+        sim_inputs.set_custom_simulation()
         sim_inputs.write_inputs(TMP_DIR, version="latest")
+        sim_files = [file_name.name for file_name in Path(TMP_DIR).iterdir()]
+        assert "gridlist" in sim_files
+        assert "rasterorigin.txt" in sim_files
 
     def test_write_inputs_invalid_version(self):
         sim_inputs = self.get_test_object()
         with pytest.raises(ValueError):
             sim_inputs.write_inputs(TMP_DIR, version="invalid_version")
 
+    # TODO: Remove me
     def test_update_shared_attributes(self):
         sim_inputs = self.get_test_object()
         # assign some new parameters directly to the input files
@@ -2470,17 +2491,14 @@ class TestSimulationInputs:
         sim_inputs.qu_simparams.ny = 100
         sim_inputs.quic_fire.nz = 2
         sim_inputs.quic_fire.time_now = 12345667
+
         # first test that these changes are not reflected in the same attributes of other input files
-        assert sim_inputs.qu_simparams.nx != sim_inputs.gridlist.n
-        assert sim_inputs.qu_simparams.ny != sim_inputs.gridlist.m
-        assert sim_inputs.quic_fire.nz != sim_inputs.gridlist.l
         assert sim_inputs.quic_fire.time_now != sim_inputs.qu_simparams.wind_times[0]
+
         # then write to a file and confirm that they are changed across input files at the write stage
         sim_inputs.write_inputs(TMP_DIR)
-        assert sim_inputs.qu_simparams.nx == sim_inputs.gridlist.n
-        assert sim_inputs.qu_simparams.ny == sim_inputs.gridlist.m
-        assert sim_inputs.quic_fire.nz == sim_inputs.gridlist.l
         assert sim_inputs.quic_fire.time_now == sim_inputs.qu_simparams.wind_times[0]
+
         # now add a sensor with windshifts and see if those changes get reflected
         sim_inputs.new_wind_sensor(
             x_location=1,
@@ -2516,6 +2534,16 @@ class TestSimulationInputs:
         compare_simulation_inputs(sim_inputs, test_object)
 
     def test_from_directory_optional_files(self):
+        """
+        Test loading simulation inputs from a directory after optional files have been removed.
+
+        This test verifies that the `SimulationInputs.from_directory` method can successfully load simulation
+        inputs from a directory even after certain optional files have been removed. It first creates a set of
+        simulation inputs, writes these inputs to a temporary directory, removes the optional files
+        (gridlist and rasterorigin.txt), and then attempts to read the simulation inputs back from the
+        directory. It finally checks whether the reloaded simulation inputs match the originally created
+        inputs.
+        """
         sim_inputs = self.get_test_object()
         sim_inputs.write_inputs(TMP_DIR)
 

@@ -101,8 +101,6 @@ class SimulationInputs:
         Object representing the QU_metparams.inp file.
     quic_fire: QUIC_fire
         Object representing the QUIC_fire.inp file.
-    gridlist: Gridlist
-        Object representing the gridlist.txt file.
     windsensor: dict[str, WindSensor]
         Object representing the all wind sensor input files, e.g. sensor1.inp.
     qu_topoinputs: QU_TopoInputs
@@ -124,7 +122,6 @@ class SimulationInputs:
         qp_buildout: QP_buildout,
         qu_metparams: QU_metparams,
         quic_fire: QUIC_fire,
-        gridlist: Gridlist,
         windsensors: WindSensorArray,
         qu_topoinputs: QU_TopoInputs,
         qu_simparams: QU_Simparams,
@@ -141,14 +138,12 @@ class SimulationInputs:
         self.qp_buildout = qp_buildout
         self.qu_metparams = qu_metparams
         self.quic_fire = quic_fire
-        self.gridlist = gridlist
         self.windsensors = windsensors
         self.qu_topoinputs = qu_topoinputs
         self.qu_simparams = qu_simparams
 
         # Create a dictionary from the local variables
         self._input_files_dict = {
-            "rasterorigin": rasterorigin,
             "qu_buildings": qu_buildings,
             "qu_fileoptions": qu_fileoptions,
             "qfire_advanced_user_inputs": qfire_advanced_user_inputs,
@@ -159,7 +154,6 @@ class SimulationInputs:
             "qp_buildout": qp_buildout,
             "qu_metparams": qu_metparams,
             "quic_fire": quic_fire,
-            "gridlist": gridlist,
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
             "windsensors": windsensors,
@@ -230,7 +224,6 @@ class SimulationInputs:
             sim_time=simulation_time,
             ignition=ignition,
         )
-        gridlist = Gridlist(n=nx, m=ny, l=fire_nz)
         windsensors = WindSensorArray(
             time_now=start_time,
         )
@@ -258,7 +251,6 @@ class SimulationInputs:
             qp_buildout=qp_buildout,
             qu_metparams=qu_metparams,
             quic_fire=quic_fire,
-            gridlist=gridlist,
             windsensors=windsensors,
             qu_topoinputs=qu_topoinputs,
             qu_simparams=qu_simparams,
@@ -326,16 +318,6 @@ class SimulationInputs:
         qp_buildout = QP_buildout()
         qu_movingcoords = QU_movingcoords()
 
-        # Instantiate derivative files. Eventually get rid of these...
-        gridlist = Gridlist(
-            n=qu_simparams.nx,
-            m=qu_simparams.ny,
-            l=quic_fire.nz,
-            dx=qu_simparams.dx,
-            dy=qu_simparams.dy,
-            dz=quic_fire.dz,
-        )
-
         return cls(
             rasterorigin=raster_origin,
             qu_buildings=qu_buildings,
@@ -348,7 +330,6 @@ class SimulationInputs:
             qp_buildout=qp_buildout,
             qu_metparams=qu_metparams,
             quic_fire=quic_fire,
-            gridlist=gridlist,
             windsensors=windsensors,
             qu_topoinputs=qu_topoinputs,
             qu_simparams=qu_simparams,
@@ -373,7 +354,11 @@ class SimulationInputs:
         >>> new_sim_inputs = SimulationInputs.from_dict(sim_dict)
         """
         return cls(
-            rasterorigin=RasterOrigin.from_dict(data["rasterorigin"]),
+            rasterorigin=(
+                RasterOrigin.from_dict(data["rasterorigin"])
+                if data.get("rasterorigin")
+                else RasterOrigin()
+            ),
             qu_buildings=QU_Buildings.from_dict(data["qu_buildings"]),
             qu_fileoptions=QU_Fileoptions.from_dict(data["qu_fileoptions"]),
             qfire_advanced_user_inputs=QFire_Advanced_User_Inputs.from_dict(
@@ -392,7 +377,6 @@ class SimulationInputs:
             qp_buildout=QP_buildout.from_dict(data["qp_buildout"]),
             qu_metparams=QU_metparams.from_dict(data["qu_metparams"]),
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
-            gridlist=Gridlist.from_dict(data["gridlist"]),
             windsensors=WindSensorArray.from_dict(data["windsensors"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
             qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
@@ -452,17 +436,24 @@ class SimulationInputs:
 
         self._update_shared_attributes()
 
-        # Skip writing gridlist and rasterorigin if fuel_flag == 1
-        skip_inputs = []
-        if self.quic_fire.fuel_density_flag == 3:
-            skip_inputs.extend(["gridlist", "rasterorigin"])
-
         # Write each input file to the output directory
         for input_file in self._input_files_dict.values():
             if input_file != self._input_files_dict["windsensors"]:
                 input_file.to_file(directory, version=version)
             else:
                 input_file.to_file(self.quic_fire.time_now, directory, version=version)
+
+        # Write required files for custom fuels
+        if self.quic_fire.is_custom_fuel_model:
+            Gridlist(
+                n=self.qu_simparams.nx,
+                m=self.qu_simparams.ny,
+                l=self.quic_fire.nz,
+                dx=self.qu_simparams.dx,
+                dy=self.qu_simparams.dy,
+                dz=self.quic_fire.dz,
+            ).to_file(directory, version=version)
+            RasterOrigin().to_file(directory, version=version)
 
         # Copy QU_landuse from the template directory to the output directory
         template_file_path = TEMPLATES_PATH / version / "QU_landuse.inp"
@@ -913,12 +904,8 @@ class SimulationInputs:
                 y_location=y_location,
             )
 
+    # TODO: Delete me
     def _update_shared_attributes(self):
-        self.gridlist.n = self.qu_simparams.nx
-        self.gridlist.m = self.qu_simparams.ny
-        self.gridlist.l = self.quic_fire.nz
-        self.gridlist.dx = self.qu_simparams.dx
-        self.gridlist.dy = self.qu_simparams.dy
         if not self.qu_simparams.wind_times[0] == self.quic_fire.time_now:
             print(
                 f"WARNING: fire start time must be the same for all input files.\n"
