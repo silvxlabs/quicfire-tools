@@ -1800,39 +1800,118 @@ class TestQUbuildout:
 
 
 class Test_QU_metparams:
-    def get_test_object(self):
-        return QU_metparams()
+    @pytest.fixture(scope="class")
+    def qu_metparams(self):
+        """Fixture that returns a basic QU_metparams object with a single sensor"""
+        return QU_metparams(site_names=["sensor1"], file_names=["sensor1.inp"])
 
-    def test_init(self):
-        qu_metparams = self.get_test_object()
+    def test_init(self, qu_metparams):
+        # Test basic initialization
         assert qu_metparams.num_sensors == 1
+        assert qu_metparams.site_names == ["sensor1"]
+        assert qu_metparams.file_names == ["sensor1.inp"]
 
-    def test_to_dict(self):
-        qu_metparams = self.get_test_object()
+    def test_multiple_sensors(self):
+        # Test initialization with multiple sensors
+        qu_metparams = QU_metparams(
+            site_names=["sensor1", "sensor2", "sensor3"],
+            file_names=["sensor1.inp", "sensor2.inp", "sensor3.inp"],
+        )
+        assert qu_metparams.num_sensors == 3
+        assert len(qu_metparams.site_names) == 3
+        assert len(qu_metparams.file_names) == 3
+
+    def test_validation_error(self):
+        # Test that validation catches mismatched lengths
+        with pytest.raises(
+            ValueError, match="site_names and file_names must be the same length"
+        ):
+            QU_metparams(site_names=["sensor1", "sensor2"], file_names=["sensor1.inp"])
+
+    def test_min_length_validation(self):
+        # Test that empty lists are not allowed
+        with pytest.raises(ValidationError):
+            QU_metparams(site_names=[], file_names=[])
+
+    def test_to_dict(self, qu_metparams):
         result_dict = qu_metparams.to_dict()
-        assert result_dict["num_sensors"] == qu_metparams.num_sensors
+        assert "site_names" in result_dict
+        assert "file_names" in result_dict
+        assert result_dict["site_names"] == ["sensor1"]
+        assert result_dict["file_names"] == ["sensor1.inp"]
 
-    def test_from_dict(self):
-        qu_metparams = self.get_test_object()
+    def test_from_dict(self, qu_metparams):
         result_dict = qu_metparams.to_dict()
         test_obj = QU_metparams.from_dict(result_dict)
         assert test_obj == qu_metparams
 
-    def test_to_file(self):
-        qu_metparams = self.get_test_object()
-        qu_metparams.to_file(TMP_DIR)
+    def test_to_file(self, qu_metparams, tmp_path):
+        qu_metparams.to_file(tmp_path)
 
         # Read the content of the file and check for correctness
-        with open(TMP_DIR / "QU_metparams.inp", "r") as file:
+        with open(tmp_path / "QU_metparams.inp", "r") as file:
             lines = file.readlines()
+
+        # Check number of sensors line
         assert int(lines[2].strip().split("!")[0]) == qu_metparams.num_sensors
 
-    def test_from_file(self):
-        qu_metparams = self.get_test_object()
-        qu_metparams.to_file(TMP_DIR)
-        test_object = QU_metparams.from_file(TMP_DIR)
-        assert isinstance(test_object, QU_metparams)
-        assert qu_metparams == test_object
+        # Check sensor name and file name
+        assert "sensor1" in lines[4]  # Site name line
+        assert "sensor1.inp" in lines[6]  # File name line
+
+    def test_to_file_multiple_sensors(self, tmp_path):
+        qu_metparams = QU_metparams(
+            site_names=["sensor1", "sensor2", "sensor3"],
+            file_names=["sensor1.inp", "sensor2.inp", "sensor3.inp"],
+        )
+        qu_metparams.to_file(tmp_path)
+
+        with open(tmp_path / "QU_metparams.inp", "r") as file:
+            content = file.read()
+
+        # Check that all sensor names and file names are present
+        for i in range(3):
+            assert f"sensor{i + 1}" in content
+            assert f"sensor{i + 1}.inp" in content
+
+    def test_from_file(self, qu_metparams, tmp_path):
+        qu_metparams.to_file(tmp_path)
+        loaded = QU_metparams.from_file(tmp_path)
+
+        assert isinstance(loaded, QU_metparams)
+        assert loaded.site_names == qu_metparams.site_names
+        assert loaded.file_names == qu_metparams.file_names
+        assert loaded.num_sensors == qu_metparams.num_sensors
+
+    def test_from_file_multiple_sensors(self, tmp_path):
+        """Test that from_file correctly reads multiple sensors"""
+        qu_metparams = QU_metparams(
+            site_names=["sensor1", "sensor2", "sensor3"],
+            file_names=["sensor1.inp", "sensor2.inp", "sensor3.inp"],
+        )
+        qu_metparams.to_file(tmp_path)
+
+        result = QU_metparams.from_file(tmp_path)
+        assert result.num_sensors == 3
+        assert result.site_names == ["sensor1", "sensor2", "sensor3"]
+        assert result.file_names == ["sensor1.inp", "sensor2.inp", "sensor3.inp"]
+
+    def test_from_file_malformed(self, tmp_path):
+        """Test that from_file handles malformed files appropriately"""
+        # Create a malformed file
+        content = """!QUIC 6.26
+    0 !Met input flag (0=QUIC,1=WRF,2=ITT MM5,3=HOTMAC)
+    1 !Number of measuring sites"""
+
+        with open(tmp_path / "QU_metparams.inp", "w") as f:
+            f.write(content)
+
+        with pytest.raises(ValueError, match="Error parsing"):
+            QU_metparams.from_file(tmp_path)
+
+    def test_sensor_lines_property(self, qu_metparams):
+        expected_lines = "sensor1 !Site Name\n!File name\nsensor1.inp"
+        assert qu_metparams._sensor_lines == expected_lines
 
 
 class TestWindSensorArray:
@@ -2202,7 +2281,6 @@ class TestSimulationInputs:
         )
         assert isinstance(sim_inputs.qu_movingcoords, QU_movingcoords)
         assert isinstance(sim_inputs.qp_buildout, QP_buildout)
-        assert isinstance(sim_inputs.qu_metparams, QU_metparams)
         assert isinstance(sim_inputs.windsensors, WindSensorArray)
 
         assert sim_inputs.quic_fire.nz == 1
@@ -2322,14 +2400,6 @@ class TestSimulationInputs:
         sim_inputs.set_custom_simulation(topo=False)
         assert sim_inputs.qu_topoinputs.topography == Topography(topo_flag=TopoFlags(0))
 
-    def test_write_inputs_v5(self):
-        sim_inputs = self.get_test_object()
-        sim_inputs.write_inputs(TMP_DIR, version="v5")
-
-    def test_write_inputs_v6(self):
-        sim_inputs = self.get_test_object()
-        sim_inputs.write_inputs(TMP_DIR, version="v6")
-
     def test_new_wind_sensor(self):
         sim_inputs = self.get_test_object()
         # Add a new wind sensor
@@ -2349,9 +2419,7 @@ class TestSimulationInputs:
         assert len(sim_inputs.qu_simparams.wind_times) == 1
         sim_inputs.write_inputs(TMP_DIR)
         assert sim_inputs.windsensors.wind_times == [0, 100]
-        assert sim_inputs.qu_simparams.wind_times == [
-            s + sim_inputs.quic_fire.time_now for s in sim_inputs.windsensors.wind_times
-        ]
+
         # Try replacing sensor1
         sim_inputs.new_wind_sensor(
             update="sensor1",
@@ -2363,13 +2431,10 @@ class TestSimulationInputs:
         assert len(sim_inputs.windsensors.sensor_array) == 2
         # and that windarray wind times were updated
         assert sim_inputs.windsensors.wind_times == [0, 100, 200]
-        # but the wind times in qu_simparams should not be reflected until the write stage
-        assert len(sim_inputs.qu_simparams.wind_times) == 2
+
         sim_inputs.write_inputs(TMP_DIR)
         assert sim_inputs.windsensors.wind_times == [0, 100, 200]
-        assert sim_inputs.qu_simparams.wind_times == [
-            s + sim_inputs.quic_fire.time_now for s in sim_inputs.windsensors.wind_times
-        ]
+
         # Test updating nonexistent sensors
         with pytest.raises(AttributeError):
             sim_inputs.new_wind_sensor(
@@ -2455,6 +2520,7 @@ class TestSimulationInputs:
 
     @pytest.mark.parametrize("version", ["v5", "v6", "latest"])
     def test_write_inputs(self, version):
+        shutil.rmtree(TMP_DIR)
         sim_inputs = self.get_test_object()
         sim_inputs.write_inputs(TMP_DIR, version=version)
 
@@ -2482,42 +2548,6 @@ class TestSimulationInputs:
         sim_inputs = self.get_test_object()
         with pytest.raises(ValueError):
             sim_inputs.write_inputs(TMP_DIR, version="invalid_version")
-
-    # TODO: Remove me
-    def test_update_shared_attributes(self):
-        sim_inputs = self.get_test_object()
-        # assign some new parameters directly to the input files
-        sim_inputs.qu_simparams.nx = 100
-        sim_inputs.qu_simparams.ny = 100
-        sim_inputs.quic_fire.nz = 2
-        sim_inputs.quic_fire.time_now = 12345667
-
-        # first test that these changes are not reflected in the same attributes of other input files
-        assert sim_inputs.quic_fire.time_now != sim_inputs.qu_simparams.wind_times[0]
-
-        # then write to a file and confirm that they are changed across input files at the write stage
-        sim_inputs.write_inputs(TMP_DIR)
-        assert sim_inputs.quic_fire.time_now == sim_inputs.qu_simparams.wind_times[0]
-
-        # now add a sensor with windshifts and see if those changes get reflected
-        sim_inputs.new_wind_sensor(
-            x_location=1,
-            y_location=1,
-            wind_speeds=[6, 6],
-            wind_directions=[270, 350],
-            wind_times=[0, 100],
-            sensor_height=6.1,
-        )
-        # wind times should be updated in windsensors but not qu_simparams
-        assert sim_inputs.windsensors.wind_times == [0, 100]
-        assert len(sim_inputs.windsensors.wind_times) != len(
-            sim_inputs.qu_simparams.wind_times
-        )
-        # until the write stage
-        sim_inputs.write_inputs(TMP_DIR)
-        assert sim_inputs.qu_simparams.wind_times == [
-            s + sim_inputs.quic_fire.time_now for s in sim_inputs.windsensors.wind_times
-        ]
 
     def test_from_directory(self):
         sim_inputs = self.get_test_object()
@@ -2757,7 +2787,6 @@ class TestSamples:
 
         # Check wind sensors
         assert transient_winds.qu_simparams.wind_times == [1653321600, 1653321700]
-        assert transient_winds.qu_metparams.num_sensors == 1
         assert len(transient_winds.windsensors) == 1
         assert isinstance(transient_winds.windsensors.sensor1, WindSensor)
         assert transient_winds.windsensors.sensor1.wind_times == [0, 100]

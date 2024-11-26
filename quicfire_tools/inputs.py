@@ -25,12 +25,14 @@ from pandera import (
 from pydantic import (
     BaseModel,
     Field,
+    field_validator,
+    model_validator,
+    ValidationInfo,
     NonNegativeFloat,
     NonNegativeInt,
     PositiveFloat,
     PositiveInt,
     computed_field,
-    field_validator,
     SerializeAsAny,
 )
 
@@ -97,8 +99,6 @@ class SimulationInputs:
         Object representing the QU_movingcoords.inp file.
     qp_buildout: QP_buildout
         Object representing the qp_buildout.inp file.
-    qu_metparams: QU_metparams
-        Object representing the QU_metparams.inp file.
     quic_fire: QUIC_fire
         Object representing the QUIC_fire.inp file.
     windsensor: dict[str, WindSensor]
@@ -120,7 +120,6 @@ class SimulationInputs:
         runtime_advanced_user_inputs: RuntimeAdvancedUserInputs,
         qu_movingcoords: QU_movingcoords,
         qp_buildout: QP_buildout,
-        qu_metparams: QU_metparams,
         quic_fire: QUIC_fire,
         windsensors: WindSensorArray,
         qu_topoinputs: QU_TopoInputs,
@@ -136,7 +135,6 @@ class SimulationInputs:
         self.runtime_advanced_user_inputs = runtime_advanced_user_inputs
         self.qu_movingcoords = qu_movingcoords
         self.qp_buildout = qp_buildout
-        self.qu_metparams = qu_metparams
         self.quic_fire = quic_fire
         self.windsensors = windsensors
         self.qu_topoinputs = qu_topoinputs
@@ -152,7 +150,6 @@ class SimulationInputs:
             "runtime_advanced_user_inputs": runtime_advanced_user_inputs,
             "qu_movingcoords": qu_movingcoords,
             "qp_buildout": qp_buildout,
-            "qu_metparams": qu_metparams,
             "quic_fire": quic_fire,
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
@@ -213,7 +210,6 @@ class SimulationInputs:
         runtime_advanced_user_inputs = RuntimeAdvancedUserInputs()
         qu_movingcoords = QU_movingcoords()
         qp_buildout = QP_buildout()
-        qu_metparams = QU_metparams()
 
         # Initialize input files with required parameters
         start_time = int(time.time())
@@ -249,7 +245,6 @@ class SimulationInputs:
             runtime_advanced_user_inputs=runtime_advanced_user_inputs,
             qu_movingcoords=qu_movingcoords,
             qp_buildout=qp_buildout,
-            qu_metparams=qu_metparams,
             quic_fire=quic_fire,
             windsensors=windsensors,
             qu_topoinputs=qu_topoinputs,
@@ -301,7 +296,6 @@ class SimulationInputs:
             directory
         )
         runtime_advanced_user_inputs = RuntimeAdvancedUserInputs.from_file(directory)
-        qu_metparams = QU_metparams.from_file(directory)
         quic_fire = QUIC_fire.from_file(directory, version=version)
         windsensors = WindSensorArray.from_file(directory)
         qu_topoinputs = QU_TopoInputs.from_file(directory)
@@ -328,7 +322,6 @@ class SimulationInputs:
             runtime_advanced_user_inputs=runtime_advanced_user_inputs,
             qu_movingcoords=qu_movingcoords,
             qp_buildout=qp_buildout,
-            qu_metparams=qu_metparams,
             quic_fire=quic_fire,
             windsensors=windsensors,
             qu_topoinputs=qu_topoinputs,
@@ -375,7 +368,6 @@ class SimulationInputs:
             ),
             qu_movingcoords=QU_movingcoords.from_dict(data["qu_movingcoords"]),
             qp_buildout=QP_buildout.from_dict(data["qp_buildout"]),
-            qu_metparams=QU_metparams.from_dict(data["qu_metparams"]),
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
             windsensors=WindSensorArray.from_dict(data["windsensors"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
@@ -389,7 +381,7 @@ class SimulationInputs:
 
         Parameters
         ----------
-        path: str | Path
+        path: Path | str
             Path to the JSON file.
 
         Examples
@@ -430,18 +422,43 @@ class SimulationInputs:
             directory = Path(directory)
 
         if not directory.exists():
-            raise NotADirectoryError(f"{directory} does not exist")
+            directory.mkdir(parents=True)
 
         version = _validate_and_return_version(version)
 
-        self._update_shared_attributes()
+        # Calculate absolute wind times for validation and writing
+        absolute_wind_times = [
+            t + self.quic_fire.time_now for t in self.windsensors.wind_times
+        ]
 
-        # Write each input file to the output directory
+        # The fire cannot start before the first wind field
+        # Is there a way to check this at assignment rather than write?
+        if self.quic_fire.time_now < self.qu_simparams.wind_times[0]:
+            raise ValueError(
+                f"The fire cannot start before the first wind field: "
+                f"\n\tFire time:{self.quic_fire.time_now}"
+                f"\n\tWind time:{self.qu_simparams.wind_times[0]}"
+            )
+
+        # Create QU_metparams dynamically from windsensors
+        QU_metparams(
+            site_names=[sensor.name for sensor in self.windsensors.sensor_array],
+            file_names=[sensor._filename for sensor in self.windsensors.sensor_array],
+        ).to_file(directory, version=version)
+
+        # Create a temporary copy of qu_simparams with absolute times for writing
+        qu_simparams_to_write = self.qu_simparams.model_copy(deep=True)
+        qu_simparams_to_write.wind_times = absolute_wind_times
+        qu_simparams_to_write.to_file(directory, version=version)
+
+        # Write remaining input files to the output directory
         for input_file in self._input_files_dict.values():
-            if input_file != self._input_files_dict["windsensors"]:
-                input_file.to_file(directory, version=version)
-            else:
+            if input_file == self._input_files_dict["qu_simparams"]:
+                continue  # Skip qu_simparams as we've already written it
+            elif input_file == self._input_files_dict["windsensors"]:
                 input_file.to_file(self.quic_fire.time_now, directory, version=version)
+            else:
+                input_file.to_file(directory, version=version)
 
         # Write required files for custom fuels
         if self.quic_fire.is_custom_fuel_model:
@@ -903,22 +920,6 @@ class SimulationInputs:
                 x_location=x_location,
                 y_location=y_location,
             )
-
-    # TODO: Delete me
-    def _update_shared_attributes(self):
-        if not self.qu_simparams.wind_times[0] == self.quic_fire.time_now:
-            print(
-                f"WARNING: fire start time must be the same for all input files.\n"
-                f"Times: \n"
-                f"\tQUIC_fire.inp: {self.quic_fire.time_now}\n"
-                f"\tQU_simparams.inp: {self.qu_simparams.wind_times[0]}\n"
-                f"Setting all values to {self.quic_fire.time_now}"
-            )
-        # TODO: check qu_metparams and qu_simparams
-        self.qu_simparams.wind_times = [
-            s + self.quic_fire.time_now for s in self.windsensors.wind_times
-        ]
-        self.qu_metparams.num_sensors = len(self.windsensors.sensor_array)
 
 
 class InputFile(BaseModel, validate_assignment=True):
@@ -2650,39 +2651,90 @@ class QU_metparams(InputFile):
 
     name: str = "QU_metparams"
     _extension: str = ".inp"
-    num_sensors: PositiveInt = 1
+    site_names: list[str] = Field(min_length=1)
+    file_names: list[str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def check_site_and_field_names(self):
+        if len(self.site_names) != len(self.file_names):
+            raise ValueError("site_names and file_names must be the same length")
+        return self
+
+    @computed_field
+    @property
+    def num_sensors(self) -> PositiveInt:
+        return len(self.site_names)
 
     @computed_field
     @property
     def _sensor_lines(self) -> str:
         sensor_lines = []
-        for i in range(1, self.num_sensors + 1):
-            sensor_lines.append(
-                f"sensor{str(i)} !Site Name\n" f"!File name\n" f"sensor{str(i)}.inp"
-            )
+        for i in range(self.num_sensors):
+            sensor_name = self.site_names[i]
+            file_name = self.file_names[i]
+            line = f"{sensor_name} !Site Name\n!File name\n{file_name}"
+            sensor_lines.append(line)
+
         return "\n".join(sensor_lines)
 
     @classmethod
     def from_file(cls, directory: str | Path, **kwargs):
+        """
+        Initializes a QU_metparams object from a directory containing a
+        QU_metparams.inp file.
+
+        Parameters
+        ----------
+        directory : str | Path
+            Directory containing the QU_metparams.inp file
+
+        Returns
+        -------
+        QU_metparams
+            Initialized QU_metparams object
+
+        Raises
+        ------
+        ValueError
+            If the file cannot be parsed correctly
+        """
         if isinstance(directory, str):
             directory = Path(directory)
+
         with open(directory / "QU_metparams.inp", "r") as f:
             lines = f.readlines()
+
         try:
-            sensor_name = str(lines[4].strip().split()[0].strip())
-            if sensor_name != "sensor1":
-                print(
-                    f"WARNING: wind sensor files must be named 'sensor*.inp'\n"
-                    f"Current sensor name = {sensor_name}"
-                )
-            return cls(
-                num_sensors=int(lines[2].strip().split()[0]),
-            )
-        except IndexError:
+            # Get number of sensors from file
+            num_sensors = int(lines[2].strip().split("!")[0])
+
+            site_names = []
+            file_names = []
+
+            # Parse sensor information
+            current_line = 4  # Start at first sensor entry
+            for _ in range(num_sensors):
+                # Get site name
+                site_name = lines[current_line].strip().split("!")[0].strip()
+                site_names.append(site_name)
+
+                # Skip "!File name" line
+                current_line += 1
+
+                # Get file name
+                file_name = lines[current_line + 1].strip()
+                file_names.append(file_name)
+
+                current_line += 2  # Move to next sensor block
+
+            return cls(site_names=site_names, file_names=file_names)
+
+        except (IndexError, ValueError) as e:
             raise ValueError(
-                f"Error parsing {cls.__name__} from file: QU_metparams.inp"
-                f"\nPlease check the file for correctness."
-            )
+                f"Error parsing {cls.__name__} from file: QU_metparams.inp\n"
+                f"Please check the file for correctness.\n"
+                f"Original error: {str(e)}"
+            ) from e
 
 
 class WindSensor(BaseModel, validate_assignment=True):
@@ -2694,8 +2746,6 @@ class WindSensor(BaseModel, validate_assignment=True):
 
     Attributes
     ----------
-    sensor_number : PositiveInt
-        Number representing the wind sensor
     wind_times : NonNegativeFloat | list(NonNegativeFloat)
         Time in seconds since the start of the fire for each wind shift.
         First time must be zero.
@@ -2713,7 +2763,7 @@ class WindSensor(BaseModel, validate_assignment=True):
 
     name: str
     _extension: str = ".inp"
-    wind_times: Union[NonNegativeFloat, List[NonNegativeFloat]] = 0
+    wind_times: Union[NonNegativeInt, List[NonNegativeInt]] = 0
     wind_speeds: Union[PositiveFloat, List[PositiveFloat]]
     wind_directions: Union[NonNegativeInt, List[NonNegativeInt]]
     sensor_height: PositiveFloat = 6.1
@@ -2970,6 +3020,7 @@ class WindSensorArray(BaseModel):
                 return sensor
         return None
 
+    # TODO: This needs to be updated to read sensor file names from QU_metparams.inp
     @classmethod
     def from_file(cls, directory: str | Path):
         if isinstance(directory, str):
