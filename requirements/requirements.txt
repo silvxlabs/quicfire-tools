@@ -5,4 +5,5 @@ numpy>=2
 pandera
 pydantic>=2
 pyproj
+scipy
 zarr>=2
