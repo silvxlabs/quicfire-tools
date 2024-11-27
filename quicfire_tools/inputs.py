@@ -1046,9 +1046,6 @@ class InputFile(BaseModel, validate_assignment=True):
         return cls(**data)
 
 
-# TODO: Unify class naming
-
-
 class Gridlist(InputFile):
     """
     Class representing the gridlist.txt file. This file contains the grid
@@ -1077,9 +1074,9 @@ class Gridlist(InputFile):
     n: PositiveInt
     m: PositiveInt
     l: PositiveInt
-    dx: PositiveFloat = 2
-    dy: PositiveFloat = 2
-    dz: PositiveFloat = 1
+    dx: PositiveFloat = 2.0
+    dy: PositiveFloat = 2.0
+    dz: PositiveFloat = 1.0
     aa1: PositiveFloat = 1.0
 
     @classmethod
