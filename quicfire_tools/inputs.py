@@ -60,13 +60,19 @@ from quicfire_tools.topography import (
 from quicfire_tools.utils import compute_parabolic_stretched_grid, list_default_factory
 
 
-DOCS_PATH = (
-    importlib.resources.files("quicfire_tools")
-    .joinpath("data")
-    .joinpath("documentation")
+DOCS_PATH = Path(
+    str(
+        importlib.resources.files("quicfire_tools")
+        .joinpath("data")
+        .joinpath("documentation")
+    )
 )
-TEMPLATES_PATH = (
-    importlib.resources.files("quicfire_tools").joinpath("data").joinpath("templates")
+TEMPLATES_PATH = Path(
+    str(
+        importlib.resources.files("quicfire_tools")
+        .joinpath("data")
+        .joinpath("templates")
+    )
 )
 
 LATEST_VERSION = "v6"
