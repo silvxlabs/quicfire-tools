@@ -219,9 +219,7 @@ class SimulationInputs:
             sim_time=simulation_time,
             ignition=ignition,
         )
-        wind_sensors = WindSensorArray(
-            time_now=start_time,
-        )
+        wind_sensors = WindSensorArray()
         wind_sensors.add_sensor(
             wind_speeds=[wind_speed],
             wind_directions=[wind_direction],
