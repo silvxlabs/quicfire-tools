@@ -858,39 +858,56 @@ class SimulationInputs:
         y_location: int = None,
     ):
         """
-        Adds a wind sensor or updates an existing one from a csv file.
+        Adds a wind sensor or updates an existing one by reading wind data from a CSV file.
+
+        The CSV file must contain three columns that define wind shift events over time:
+        - 'wind_times': Time in seconds from simulation start (non-negative integers).
+                       First value must be 0. Example: 0, 300, 600
+        - 'wind_speeds': Wind speed in meters per second (positive floats).
+                        Example: 1.5, 2.3, 1.8
+        - 'wind_directions': Wind direction in degrees (integers 0-359, where 0=North, 90=East).
+                            Example: 45, 90, 180
+
+        Each row in the CSV represents a wind shift event, with the values specifying
+        how the wind conditions change at that time.
 
         Parameters
         ----------
         directory : str | Path
-            Directory containing the csv to read
+            Directory containing the CSV file
         filename : str
-            Name of the csv file
-        update: str
-            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in wind_sensors.
-            Omit or use update = None to add a new sensor.
-        sensor_height : float > 0
-            Height of wind sensor.
-        x_location : int >= 0
-            Location of the wind sensor in the x-direction.
-        y_location : int >= 0
-            Location of the wind sensor in the y-direction.
-
-        Columns
-        -------
-        wind_times : int >= 0
-            Time in seconds that each windshift occurs from the start of the simulation.
-            First entry must be 0.
-        wind_speeds : float > 0
-            Wind speed of each windshift in m/s.
-        wind_directions : 0 <= int < 360
-            Wind direction of each windshift in degrees.
+            Name of the CSV file
+        update : str, optional
+            Name of an existing wind sensor to update (e.g., "sensor1").
+            If None, creates a new sensor.
+        sensor_height : float, optional
+            Height of the wind sensor in meters. Must be positive.
+        x_location : int, optional
+            Location of the wind sensor in the x-direction in meters. Must be non-negative.
+        y_location : int, optional
+            Location of the wind sensor in the y-direction in meters. Must be non-negative.
 
         Examples
         --------
         >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_inputs.new_wind_sensor_from_csv("path/to/directory","filename",update='sensor1')
+        >>> sim_inputs = SimulationInputs.create_simulation(
+        ...     nx=100, ny=100, fire_nz=26,
+        ...     wind_speed=1.8, wind_direction=90, simulation_time=600
+        ... )
+        >>> # Create new sensor from CSV
+        >>> sim_inputs.new_wind_sensor_from_csv(
+        ...     "path/to/directory", "winds.csv",
+        ...     sensor_height=6.1, x_location=50, y_location=50
+        ... )
+        >>> # Update existing sensor from CSV
+        >>> sim_inputs.new_wind_sensor_from_csv(
+        ...     "path/to/directory", "new_winds.csv", update='sensor1'
+        ... )
+
+        Raises
+        ------
+        ValueError
+            If the CSV file is missing required columns or contains invalid values
         """
         if isinstance(directory, str):
             directory = Path(directory)
