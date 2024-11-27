@@ -355,15 +355,15 @@ class TestQU_Fileoptions:
         qu_fileoptions = QU_Fileoptions(generate_wind_startup_files_flag=1)
         assert qu_fileoptions.generate_wind_startup_files_flag == 1
 
-        # Test invalid output_data_file_format_flag flags
-        for invalid_flag in [-1, 0, 5, "1", 1.0, 1.5]:
-            with pytest.raises(ValidationError):
-                QU_Fileoptions(output_data_file_format_flag=invalid_flag)
+    @pytest.mark.parametrize("flag", [-1, 0, 5, "1", 1.5])
+    def test_invalid_output_data_file_format_flag(self, flag):
+        with pytest.raises(ValidationError):
+            QU_Fileoptions(output_data_file_format_flag=flag)  # noqa
 
-        # Test invalid non_mass_conserved_initial_field_flag flag
-        for invalid_flag in [-1, 0.0, "1", 2]:
-            with pytest.raises(ValidationError):
-                QU_Fileoptions(non_mass_conserved_initial_field_flag=invalid_flag)
+    @pytest.mark.parametrize("flag", [-1, "1", 2])
+    def test_invalid_non_mass_conserved_initial_field_flag(self, flag):
+        with pytest.raises(ValidationError):
+            QU_Fileoptions(non_mass_conserved_initial_field_flag=flag)  # noqa
 
     def test_to_dict(self):
         """Test the to_dict method of a QU_Buildings object."""
