@@ -2281,15 +2281,15 @@ class TestSimulationInputs:
         )
         assert isinstance(sim_inputs.qu_movingcoords, QU_movingcoords)
         assert isinstance(sim_inputs.qp_buildout, QP_buildout)
-        assert isinstance(sim_inputs.windsensors, WindSensorArray)
+        assert isinstance(sim_inputs.wind_sensors, WindSensorArray)
 
         assert sim_inputs.quic_fire.nz == 1
         assert sim_inputs.quic_fire.sim_time == 65
         assert sim_inputs.qu_simparams.nx == 150
         assert sim_inputs.qu_simparams.ny == 150
         assert sim_inputs.qu_simparams.wind_times[0] == sim_inputs.quic_fire.time_now
-        assert sim_inputs.windsensors.sensor1.wind_speeds == [5.0]
-        assert sim_inputs.windsensors.sensor1.wind_directions == [90]
+        assert sim_inputs.wind_sensors.sensor1.wind_speeds == [5.0]
+        assert sim_inputs.wind_sensors.sensor1.wind_directions == [90]
 
     def test_set_uniform_fuels(self):
         sim_inputs = self.get_test_object()
@@ -2412,13 +2412,13 @@ class TestSimulationInputs:
             sensor_height=6.1,
         )
         # test that a windsensor was added to the sensor array
-        assert len(sim_inputs.windsensors.sensor_array) == 2
+        assert len(sim_inputs.wind_sensors.sensor_array) == 2
         # and that windarray wind times were updated
-        assert sim_inputs.windsensors.wind_times == [0, 100]
+        assert sim_inputs.wind_sensors.wind_times == [0, 100]
         # but the wind times in qu_simparams should not be reflected until the write stage
         assert len(sim_inputs.qu_simparams.wind_times) == 1
         sim_inputs.write_inputs(TMP_DIR)
-        assert sim_inputs.windsensors.wind_times == [0, 100]
+        assert sim_inputs.wind_sensors.wind_times == [0, 100]
 
         # Try replacing sensor1
         sim_inputs.new_wind_sensor(
@@ -2428,12 +2428,12 @@ class TestSimulationInputs:
             wind_times=[0, 100, 200],
         )
         # test that a windsensor was not added to the sensor array
-        assert len(sim_inputs.windsensors.sensor_array) == 2
+        assert len(sim_inputs.wind_sensors.sensor_array) == 2
         # and that windarray wind times were updated
-        assert sim_inputs.windsensors.wind_times == [0, 100, 200]
+        assert sim_inputs.wind_sensors.wind_times == [0, 100, 200]
 
         sim_inputs.write_inputs(TMP_DIR)
-        assert sim_inputs.windsensors.wind_times == [0, 100, 200]
+        assert sim_inputs.wind_sensors.wind_times == [0, 100, 200]
 
         # Test updating nonexistent sensors
         with pytest.raises(AttributeError):
@@ -2468,16 +2468,16 @@ class TestSimulationInputs:
             y_location=1,
         )
         assert (
-            sim_inputs.windsensors.sensor1.wind_times
-            == sim_inputs.windsensors.sensor2.wind_times
+            sim_inputs.wind_sensors.sensor1.wind_times
+            == sim_inputs.wind_sensors.sensor2.wind_times
         )
         assert (
-            sim_inputs.windsensors.sensor1.wind_speeds
-            == sim_inputs.windsensors.sensor2.wind_speeds
+            sim_inputs.wind_sensors.sensor1.wind_speeds
+            == sim_inputs.wind_sensors.sensor2.wind_speeds
         )
         assert (
-            sim_inputs.windsensors.sensor1.wind_directions
-            == sim_inputs.windsensors.sensor2.wind_directions
+            sim_inputs.wind_sensors.sensor1.wind_directions
+            == sim_inputs.wind_sensors.sensor2.wind_directions
         )
         # Test incorrect data frame
         csv_path = TEST_DATA_DIR / "sample_raws_data.csv"
@@ -2787,12 +2787,12 @@ class TestSamples:
 
         # Check wind sensors
         assert transient_winds.qu_simparams.wind_times == [1653321600, 1653321700]
-        assert len(transient_winds.windsensors) == 1
-        assert isinstance(transient_winds.windsensors.sensor1, WindSensor)
-        assert transient_winds.windsensors.sensor1.wind_times == [0, 100]
-        assert transient_winds.windsensors.sensor1.wind_speeds == [6, 6]
-        assert transient_winds.windsensors.sensor1.wind_directions == [270, 180]
-        assert transient_winds.windsensors.sensor1.sensor_height == 10.0
+        assert len(transient_winds.wind_sensors) == 1
+        assert isinstance(transient_winds.wind_sensors.sensor1, WindSensor)
+        assert transient_winds.wind_sensors.sensor1.wind_times == [0, 100]
+        assert transient_winds.wind_sensors.sensor1.wind_speeds == [6, 6]
+        assert transient_winds.wind_sensors.sensor1.wind_directions == [270, 180]
+        assert transient_winds.wind_sensors.sensor1.sensor_height == 10.0
 
         # Check I/O
         transient_winds.write_inputs(TMP_DIR)
