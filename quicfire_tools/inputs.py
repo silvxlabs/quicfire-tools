@@ -2039,6 +2039,7 @@ class QUIC_fire(InputFile):
             out_time_wind_avg = int(lines[10].strip().split()[0])
 
             # Read fire grid parameters
+            dz = 1.0
             nz = int(lines[12].strip().split()[0])
             stretch_grid_flag = int(lines[13].strip().split()[0])
             dz_array = []
