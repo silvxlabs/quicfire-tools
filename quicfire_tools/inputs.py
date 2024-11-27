@@ -2657,14 +2657,14 @@ class QP_buildout(InputFile):
 class QU_metparams(InputFile):
     """
     Class representing the QU_metparams.inp input file.
-    This file contains information about wind profiles
+    This file contains information about wind profiles.
 
     Attributes
     ----------
-    num_sensors : int
-        Number of measuring sites. Multiple wind profiles are not yet supported.
-    sensor_name : str
-        Name of the wind profile. This will correspond to the filename of the wind profile, e.g. sensor1.inp
+    site_names : list[str]
+        List of site names. Must be the same length as file_names.
+    file_names : list[str]
+        List of file names. Must be the same length as site_names.
     """
 
     name: str = "QU_metparams"
@@ -2969,15 +2969,8 @@ class WindSensorArray(BaseModel):
     """
     Class containing all WindSensor input files and shared attributes.
 
-    Parameters
+    Attributes
     ----------
-    time_now : PositiveInt
-        When the fire is ignited in Unix Epoch time (integer seconds since
-        1970/1/1 00:00:00). Must be greater or equal to the time of the first
-        wind
-    wind_times : NonNegativeFloat | list(NonNegativeFloat)
-        Time in seconds since the start of the fire for each wind shift.
-        First time must be zero.
     sensor_array : list(WindSensor)
         List of all WindSensor input files managed by the WindSensorArray.
 
@@ -3145,7 +3138,7 @@ class WindSensorArray(BaseModel):
 
         Parameters
         ----------
-        update: str
+        sensor_name: str
             Name of the wind sensor, e.g. "sensor1". Sensor must already exist in wind_sensors.
         x_location : PositiveInt
             Optional. Updated location of the wind sensor in the x-direction (m)
