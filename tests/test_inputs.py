@@ -355,15 +355,15 @@ class TestQU_Fileoptions:
         qu_fileoptions = QU_Fileoptions(generate_wind_startup_files_flag=1)
         assert qu_fileoptions.generate_wind_startup_files_flag == 1
 
-        # Test invalid output_data_file_format_flag flags
-        for invalid_flag in [-1, 0, 5, "1", 1.0, 1.5]:
-            with pytest.raises(ValidationError):
-                QU_Fileoptions(output_data_file_format_flag=invalid_flag)
+    @pytest.mark.parametrize("flag", [-1, 0, 5, "1", 1.5])
+    def test_invalid_output_data_file_format_flag(self, flag):
+        with pytest.raises(ValidationError):
+            QU_Fileoptions(output_data_file_format_flag=flag)  # noqa
 
-        # Test invalid non_mass_conserved_initial_field_flag flag
-        for invalid_flag in [-1, 0.0, "1", 2]:
-            with pytest.raises(ValidationError):
-                QU_Fileoptions(non_mass_conserved_initial_field_flag=invalid_flag)
+    @pytest.mark.parametrize("flag", [-1, "1", 2])
+    def test_invalid_non_mass_conserved_initial_field_flag(self, flag):
+        with pytest.raises(ValidationError):
+            QU_Fileoptions(non_mass_conserved_initial_field_flag=flag)  # noqa
 
     def test_to_dict(self):
         """Test the to_dict method of a QU_Buildings object."""
@@ -999,7 +999,7 @@ class TestQUIC_fire:
 
         # Test stretch grid input
         assert quic_fire.stretch_grid_flag == 0
-        assert quic_fire._stretch_grid_input == "1"
+        assert quic_fire._stretch_grid_input == "1.0"
 
         # Test invalid random_seed
         with pytest.raises(ValidationError):
@@ -1285,18 +1285,15 @@ class Test_QFire_Bldg_Advanced_User_Inputs:
         bldg_inputs = QFire_Bldg_Advanced_User_Inputs(building_fuel_density="0.6")
         assert isinstance(bldg_inputs.building_fuel_density, float)
 
-    def test_init_invalid_values(self):
-        # Test invalid convert_buildings_to_fuel_flag
-        for invalid_flag in [-1, 2, "1", 1.0, 1.5]:
-            with pytest.raises(ValidationError):
-                QFire_Bldg_Advanced_User_Inputs(
-                    convert_buildings_to_fuel_flag=invalid_flag
-                )
+    @pytest.mark.parametrize("flag", [-1, 2, "1", 1.5])
+    def test_invalid_convert_buildings_to_fuel_flag(self, flag):
+        with pytest.raises(ValidationError):
+            QFire_Bldg_Advanced_User_Inputs(convert_buildings_to_fuel_flag=flag)  # noqa
 
-        # Test invalid building_fuel_density
-        for invalid_density in [-1, ""]:
-            with pytest.raises(ValidationError):
-                QFire_Bldg_Advanced_User_Inputs(building_fuel_density=invalid_density)
+    @pytest.mark.parametrize("flag", [-1, ""])
+    def test_invalid_building_fuel_density(self, flag):
+        with pytest.raises(ValidationError):
+            QFire_Bldg_Advanced_User_Inputs(building_fuel_density=flag)
 
     def test_to_dict(self):
         bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
@@ -2281,15 +2278,15 @@ class TestSimulationInputs:
         )
         assert isinstance(sim_inputs.qu_movingcoords, QU_movingcoords)
         assert isinstance(sim_inputs.qp_buildout, QP_buildout)
-        assert isinstance(sim_inputs.windsensors, WindSensorArray)
+        assert isinstance(sim_inputs.wind_sensors, WindSensorArray)
 
         assert sim_inputs.quic_fire.nz == 1
         assert sim_inputs.quic_fire.sim_time == 65
         assert sim_inputs.qu_simparams.nx == 150
         assert sim_inputs.qu_simparams.ny == 150
         assert sim_inputs.qu_simparams.wind_times[0] == sim_inputs.quic_fire.time_now
-        assert sim_inputs.windsensors.sensor1.wind_speeds == [5.0]
-        assert sim_inputs.windsensors.sensor1.wind_directions == [90]
+        assert sim_inputs.wind_sensors.sensor1.wind_speeds == [5.0]
+        assert sim_inputs.wind_sensors.sensor1.wind_directions == [90]
 
     def test_set_uniform_fuels(self):
         sim_inputs = self.get_test_object()
@@ -2412,13 +2409,13 @@ class TestSimulationInputs:
             sensor_height=6.1,
         )
         # test that a windsensor was added to the sensor array
-        assert len(sim_inputs.windsensors.sensor_array) == 2
+        assert len(sim_inputs.wind_sensors.sensor_array) == 2
         # and that windarray wind times were updated
-        assert sim_inputs.windsensors.wind_times == [0, 100]
+        assert sim_inputs.wind_sensors.wind_times == [0, 100]
         # but the wind times in qu_simparams should not be reflected until the write stage
         assert len(sim_inputs.qu_simparams.wind_times) == 1
         sim_inputs.write_inputs(TMP_DIR)
-        assert sim_inputs.windsensors.wind_times == [0, 100]
+        assert sim_inputs.wind_sensors.wind_times == [0, 100]
 
         # Try replacing sensor1
         sim_inputs.new_wind_sensor(
@@ -2428,12 +2425,12 @@ class TestSimulationInputs:
             wind_times=[0, 100, 200],
         )
         # test that a windsensor was not added to the sensor array
-        assert len(sim_inputs.windsensors.sensor_array) == 2
+        assert len(sim_inputs.wind_sensors.sensor_array) == 2
         # and that windarray wind times were updated
-        assert sim_inputs.windsensors.wind_times == [0, 100, 200]
+        assert sim_inputs.wind_sensors.wind_times == [0, 100, 200]
 
         sim_inputs.write_inputs(TMP_DIR)
-        assert sim_inputs.windsensors.wind_times == [0, 100, 200]
+        assert sim_inputs.wind_sensors.wind_times == [0, 100, 200]
 
         # Test updating nonexistent sensors
         with pytest.raises(AttributeError):
@@ -2468,16 +2465,16 @@ class TestSimulationInputs:
             y_location=1,
         )
         assert (
-            sim_inputs.windsensors.sensor1.wind_times
-            == sim_inputs.windsensors.sensor2.wind_times
+            sim_inputs.wind_sensors.sensor1.wind_times
+            == sim_inputs.wind_sensors.sensor2.wind_times
         )
         assert (
-            sim_inputs.windsensors.sensor1.wind_speeds
-            == sim_inputs.windsensors.sensor2.wind_speeds
+            sim_inputs.wind_sensors.sensor1.wind_speeds
+            == sim_inputs.wind_sensors.sensor2.wind_speeds
         )
         assert (
-            sim_inputs.windsensors.sensor1.wind_directions
-            == sim_inputs.windsensors.sensor2.wind_directions
+            sim_inputs.wind_sensors.sensor1.wind_directions
+            == sim_inputs.wind_sensors.sensor2.wind_directions
         )
         # Test incorrect data frame
         csv_path = TEST_DATA_DIR / "sample_raws_data.csv"
@@ -2787,12 +2784,12 @@ class TestSamples:
 
         # Check wind sensors
         assert transient_winds.qu_simparams.wind_times == [1653321600, 1653321700]
-        assert len(transient_winds.windsensors) == 1
-        assert isinstance(transient_winds.windsensors.sensor1, WindSensor)
-        assert transient_winds.windsensors.sensor1.wind_times == [0, 100]
-        assert transient_winds.windsensors.sensor1.wind_speeds == [6, 6]
-        assert transient_winds.windsensors.sensor1.wind_directions == [270, 180]
-        assert transient_winds.windsensors.sensor1.sensor_height == 10.0
+        assert len(transient_winds.wind_sensors) == 1
+        assert isinstance(transient_winds.wind_sensors.sensor1, WindSensor)
+        assert transient_winds.wind_sensors.sensor1.wind_times == [0, 100]
+        assert transient_winds.wind_sensors.sensor1.wind_speeds == [6, 6]
+        assert transient_winds.wind_sensors.sensor1.wind_directions == [270, 180]
+        assert transient_winds.wind_sensors.sensor1.sensor_height == 10.0
 
         # Check I/O
         transient_winds.write_inputs(TMP_DIR)

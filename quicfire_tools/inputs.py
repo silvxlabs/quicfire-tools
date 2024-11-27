@@ -57,16 +57,22 @@ from quicfire_tools.topography import (
     Topography,
     serialize_topography,
 )
-from quicfire_tools.utils import compute_parabolic_stretched_grid
+from quicfire_tools.utils import compute_parabolic_stretched_grid, list_default_factory
 
 
-DOCS_PATH = (
-    importlib.resources.files("quicfire_tools")
-    .joinpath("data")
-    .joinpath("documentation")
+DOCS_PATH = Path(
+    str(
+        importlib.resources.files("quicfire_tools")
+        .joinpath("data")
+        .joinpath("documentation")
+    )
 )
-TEMPLATES_PATH = (
-    importlib.resources.files("quicfire_tools").joinpath("data").joinpath("templates")
+TEMPLATES_PATH = Path(
+    str(
+        importlib.resources.files("quicfire_tools")
+        .joinpath("data")
+        .joinpath("templates")
+    )
 )
 
 LATEST_VERSION = "v6"
@@ -100,7 +106,7 @@ class SimulationInputs:
         Object representing the qp_buildout.inp file.
     quic_fire: QUIC_fire
         Object representing the QUIC_fire.inp file.
-    windsensor: dict[str, WindSensor]
+    wind_sensors: dict[str, WindSensor]
         Object representing the all wind sensor input files, e.g. sensor1.inp.
     qu_topoinputs: QU_TopoInputs
         Object representing the QU_topoinputs.inp file.
@@ -120,7 +126,7 @@ class SimulationInputs:
         qu_movingcoords: QU_movingcoords,
         qp_buildout: QP_buildout,
         quic_fire: QUIC_fire,
-        windsensors: WindSensorArray,
+        wind_sensors: WindSensorArray,
         qu_topoinputs: QU_TopoInputs,
         qu_simparams: QU_Simparams,
     ):
@@ -135,7 +141,7 @@ class SimulationInputs:
         self.qu_movingcoords = qu_movingcoords
         self.qp_buildout = qp_buildout
         self.quic_fire = quic_fire
-        self.windsensors = windsensors
+        self.wind_sensors = wind_sensors
         self.qu_topoinputs = qu_topoinputs
         self.qu_simparams = qu_simparams
 
@@ -152,7 +158,7 @@ class SimulationInputs:
             "quic_fire": quic_fire,
             "qu_topoinputs": qu_topoinputs,
             "qu_simparams": qu_simparams,
-            "windsensors": windsensors,
+            "wind_sensors": wind_sensors,
         }
 
     @classmethod
@@ -219,10 +225,8 @@ class SimulationInputs:
             sim_time=simulation_time,
             ignition=ignition,
         )
-        windsensors = WindSensorArray(
-            time_now=start_time,
-        )
-        windsensors.add_sensor(
+        wind_sensors = WindSensorArray()
+        wind_sensors.add_sensor(
             wind_speeds=[wind_speed],
             wind_directions=[wind_direction],
             wind_times=[0],
@@ -245,7 +249,7 @@ class SimulationInputs:
             qu_movingcoords=qu_movingcoords,
             qp_buildout=qp_buildout,
             quic_fire=quic_fire,
-            windsensors=windsensors,
+            wind_sensors=wind_sensors,
             qu_topoinputs=qu_topoinputs,
             qu_simparams=qu_simparams,
         )
@@ -296,7 +300,7 @@ class SimulationInputs:
         )
         runtime_advanced_user_inputs = RuntimeAdvancedUserInputs.from_file(directory)
         quic_fire = QUIC_fire.from_file(directory, version=version)
-        windsensors = WindSensorArray.from_file(directory)
+        wind_sensors = WindSensorArray.from_file(directory)
         qu_topoinputs = QU_TopoInputs.from_file(directory)
         qu_simparams = QU_Simparams.from_file(directory)
 
@@ -322,7 +326,7 @@ class SimulationInputs:
             qu_movingcoords=qu_movingcoords,
             qp_buildout=qp_buildout,
             quic_fire=quic_fire,
-            windsensors=windsensors,
+            wind_sensors=wind_sensors,
             qu_topoinputs=qu_topoinputs,
             qu_simparams=qu_simparams,
         )
@@ -368,7 +372,7 @@ class SimulationInputs:
             qu_movingcoords=QU_movingcoords.from_dict(data["qu_movingcoords"]),
             qp_buildout=QP_buildout.from_dict(data["qp_buildout"]),
             quic_fire=QUIC_fire.from_dict(data["quic_fire"]),
-            windsensors=WindSensorArray.from_dict(data["windsensors"]),
+            wind_sensors=WindSensorArray.from_dict(data["wind_sensors"]),
             qu_topoinputs=QU_TopoInputs.from_dict(data["qu_topoinputs"]),
             qu_simparams=QU_Simparams.from_dict(data["qu_simparams"]),
         )
@@ -427,7 +431,7 @@ class SimulationInputs:
 
         # Calculate absolute wind times for validation and writing
         absolute_wind_times = [
-            t + self.quic_fire.time_now for t in self.windsensors.wind_times
+            t + self.quic_fire.time_now for t in self.wind_sensors.wind_times
         ]
 
         # The fire cannot start before the first wind field
@@ -439,10 +443,10 @@ class SimulationInputs:
                 f"\n\tWind time:{self.qu_simparams.wind_times[0]}"
             )
 
-        # Create QU_metparams dynamically from windsensors
+        # Create QU_metparams dynamically from wind_sensors
         QU_metparams(
-            site_names=[sensor.name for sensor in self.windsensors.sensor_array],
-            file_names=[sensor._filename for sensor in self.windsensors.sensor_array],
+            site_names=[sensor.name for sensor in self.wind_sensors.sensor_array],
+            file_names=[sensor._filename for sensor in self.wind_sensors.sensor_array],
         ).to_file(directory, version=version)
 
         # Create a temporary copy of qu_simparams with absolute times for writing
@@ -452,9 +456,9 @@ class SimulationInputs:
 
         # Write remaining input files to the output directory
         for input_file in self._input_files_dict.values():
-            if input_file == self._input_files_dict["qu_simparams"]:
+            if isinstance(input_file, QU_Simparams):
                 continue  # Skip qu_simparams as we've already written it
-            elif input_file == self._input_files_dict["windsensors"]:
+            elif isinstance(input_file, WindSensorArray):
                 input_file.to_file(self.quic_fire.time_now, directory, version=version)
             else:
                 input_file.to_file(directory, version=version)
@@ -771,9 +775,9 @@ class SimulationInputs:
     def new_wind_sensor(
         self,
         update: str = None,
-        wind_speeds: float | list(float) = None,
-        wind_directions: int | list(int) = None,
-        wind_times: int | list(int) = None,
+        wind_speeds: float | list[float] = None,
+        wind_directions: int | list[int] = None,
+        wind_times: int | list[int] = None,
         sensor_height: float = None,
         x_location: int = None,
         y_location: int = None,
@@ -784,7 +788,7 @@ class SimulationInputs:
         Parameters
         ----------
         update: str
-            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
+            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in wind_sensors.
             Omit or use update = None to add a new sensor.
         wind_speeds : PositiveFloat | list(PositiveFloat)
             Optional. Updated wind speed or list of wind speeds in m/s
@@ -825,7 +829,7 @@ class SimulationInputs:
                 raise TypeError(
                     f"Arguments {error_list} must be supplied when update = None"
                 )
-            self.windsensors.add_sensor(
+            self.wind_sensors.add_sensor(
                 wind_times=wind_times,
                 wind_speeds=wind_speeds,
                 wind_directions=wind_directions,
@@ -834,7 +838,7 @@ class SimulationInputs:
                 y_location=y_location,
             )
         else:
-            self.windsensors.update_sensor(
+            self.wind_sensors.update_sensor(
                 sensor_name=update,
                 wind_times=wind_times,
                 wind_speeds=wind_speeds,
@@ -854,39 +858,56 @@ class SimulationInputs:
         y_location: int = None,
     ):
         """
-        Adds a wind sensor or updates an existing one from a csv file.
+        Adds a wind sensor or updates an existing one by reading wind data from a CSV file.
+
+        The CSV file must contain three columns that define wind shift events over time:
+        - 'wind_times': Time in seconds from simulation start (non-negative integers).
+                       First value must be 0. Example: 0, 300, 600
+        - 'wind_speeds': Wind speed in meters per second (positive floats).
+                        Example: 1.5, 2.3, 1.8
+        - 'wind_directions': Wind direction in degrees (integers 0-359, where 0=North, 90=East).
+                            Example: 45, 90, 180
+
+        Each row in the CSV represents a wind shift event, with the values specifying
+        how the wind conditions change at that time.
 
         Parameters
         ----------
         directory : str | Path
-            Directory containing the csv to read
+            Directory containing the CSV file
         filename : str
-            Name of the csv file
-        update: str
-            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
-            Omit or use update = None to add a new sensor.
-        sensor_height : float > 0
-            Height of wind sensor.
-        x_location : int >= 0
-            Location of the wind sensor in the x-direction.
-        y_location : int >= 0
-            Location of the wind sensor in the y-direction.
-
-        Columns
-        -------
-        wind_times : int >= 0
-            Time in seconds that each windshift occurs from the start of the simulation.
-            First entry must be 0.
-        wind_speeds : float > 0
-            Wind speed of each windshift in m/s.
-        wind_directions : 0 <= int < 360
-            Wind direction of each windshift in degrees.
+            Name of the CSV file
+        update : str, optional
+            Name of an existing wind sensor to update (e.g., "sensor1").
+            If None, creates a new sensor.
+        sensor_height : float, optional
+            Height of the wind sensor in meters. Must be positive.
+        x_location : int, optional
+            Location of the wind sensor in the x-direction in meters. Must be non-negative.
+        y_location : int, optional
+            Location of the wind sensor in the y-direction in meters. Must be non-negative.
 
         Examples
         --------
         >>> from quicfire_tools import SimulationInputs
-        >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
-        >>> sim_inputs.new_wind_sensor_from_csv("path/to/directory","filename",update='sensor1')
+        >>> sim_inputs = SimulationInputs.create_simulation(
+        ...     nx=100, ny=100, fire_nz=26,
+        ...     wind_speed=1.8, wind_direction=90, simulation_time=600
+        ... )
+        >>> # Create new sensor from CSV
+        >>> sim_inputs.new_wind_sensor_from_csv(
+        ...     "path/to/directory", "winds.csv",
+        ...     sensor_height=6.1, x_location=50, y_location=50
+        ... )
+        >>> # Update existing sensor from CSV
+        >>> sim_inputs.new_wind_sensor_from_csv(
+        ...     "path/to/directory", "new_winds.csv", update='sensor1'
+        ... )
+
+        Raises
+        ------
+        ValueError
+            If the CSV file is missing required columns or contains invalid values
         """
         if isinstance(directory, str):
             directory = Path(directory)
@@ -901,7 +922,7 @@ class SimulationInputs:
         )
         validated_df = validate(df)
         if update is None:
-            self.windsensors.add_sensor(
+            self.wind_sensors.add_sensor(
                 wind_times=list(validated_df["wind_times"]),
                 wind_speeds=list(validated_df["wind_speeds"]),
                 wind_directions=list(validated_df["wind_directions"]),
@@ -910,7 +931,7 @@ class SimulationInputs:
                 y_location=y_location,
             )
         else:
-            self.windsensors.update_sensor(
+            self.wind_sensors.update_sensor(
                 sensor_name=update,
                 wind_times=list(validated_df["wind_times"]),
                 wind_speeds=list(validated_df["wind_speeds"]),
@@ -1025,9 +1046,6 @@ class InputFile(BaseModel, validate_assignment=True):
         return cls(**data)
 
 
-# TODO: Unify class naming
-
-
 class Gridlist(InputFile):
     """
     Class representing the gridlist.txt file. This file contains the grid
@@ -1056,9 +1074,9 @@ class Gridlist(InputFile):
     n: PositiveInt
     m: PositiveInt
     l: PositiveInt
-    dx: PositiveFloat = 2
-    dy: PositiveFloat = 2
-    dz: PositiveFloat = 1
+    dx: PositiveFloat = 2.0
+    dy: PositiveFloat = 2.0
+    dz: PositiveFloat = 1.0
     aa1: PositiveFloat = 1.0
 
     @classmethod
@@ -1303,14 +1321,14 @@ class QU_Simparams(InputFile):
     nx: PositiveInt
     ny: PositiveInt
     nz: PositiveInt = 22
-    dx: PositiveFloat = 2
-    dy: PositiveFloat = 2
-    quic_domain_height: PositiveFloat = 300
+    dx: PositiveFloat = 2.0
+    dy: PositiveFloat = 2.0
+    quic_domain_height: PositiveFloat = 300.0
     wind_times: list[int]
     surface_vertical_cell_size: PositiveFloat = 1.0
     number_surface_cells: PositiveInt = 5
     stretch_grid_flag: Literal[0, 1, 3] = 3
-    custom_dz_array: list[PositiveFloat] = []
+    custom_dz_array: list[PositiveFloat] = Field(default_factory=list_default_factory)
     utc_offset: int = 0
     sor_iter_max: PositiveInt = 10
     sor_residual_reduction: PositiveInt = 3
@@ -1858,8 +1876,8 @@ class QUIC_fire(InputFile):
     out_time_wind_avg: PositiveInt = 30
     nz: PositiveInt
     stretch_grid_flag: Literal[0, 1] = 0
-    dz: PositiveFloat = 1
-    dz_array: list[PositiveFloat] = []
+    dz: PositiveFloat = 1.0
+    dz_array: list[PositiveFloat] = Field(default_factory=list_default_factory)
     fuel_density_flag: Literal[1, 2, 3, 4, 5] = 1
     fuel_density: Union[PositiveFloat, None] = 0.5
     fuel_moisture_flag: Literal[1, 2, 3, 4, 5] = 1
@@ -1869,8 +1887,8 @@ class QUIC_fire(InputFile):
     size_scale_flag: Literal[0, 1, 2, 3, 4, 5] = 0
     size_scale: PositiveFloat = 0.0005
     patch_and_gap_flag: Literal[0, 1, 2] = 0
-    patch_size: NonNegativeFloat = 0
-    gap_size: NonNegativeFloat = 0
+    patch_size: NonNegativeFloat = 0.0
+    gap_size: NonNegativeFloat = 0.0
     ignition: Union[
         RectangleIgnition, SquareRingIgnition, CircularRingIgnition, Ignition
     ]
@@ -2021,6 +2039,7 @@ class QUIC_fire(InputFile):
             out_time_wind_avg = int(lines[10].strip().split()[0])
 
             # Read fire grid parameters
+            dz = 1.0
             nz = int(lines[12].strip().split()[0])
             stretch_grid_flag = int(lines[13].strip().split()[0])
             dz_array = []
@@ -2638,14 +2657,14 @@ class QP_buildout(InputFile):
 class QU_metparams(InputFile):
     """
     Class representing the QU_metparams.inp input file.
-    This file contains information about wind profiles
+    This file contains information about wind profiles.
 
     Attributes
     ----------
-    num_sensors : int
-        Number of measuring sites. Multiple wind profiles are not yet supported.
-    sensor_name : str
-        Name of the wind profile. This will correspond to the filename of the wind profile, e.g. sensor1.inp
+    site_names : list[str]
+        List of site names. Must be the same length as file_names.
+    file_names : list[str]
+        List of file names. Must be the same length as site_names.
     """
 
     name: str = "QU_metparams"
@@ -2950,21 +2969,14 @@ class WindSensorArray(BaseModel):
     """
     Class containing all WindSensor input files and shared attributes.
 
-    Parameters
+    Attributes
     ----------
-    time_now : PositiveInt
-        When the fire is ignited in Unix Epoch time (integer seconds since
-        1970/1/1 00:00:00). Must be greater or equal to the time of the first
-        wind
-    wind_times : NonNegativeFloat | list(NonNegativeFloat)
-        Time in seconds since the start of the fire for each wind shift.
-        First time must be zero.
     sensor_array : list(WindSensor)
         List of all WindSensor input files managed by the WindSensorArray.
 
     """
 
-    sensor_array: List[WindSensor] = []
+    sensor_array: List[WindSensor] = Field(default_factory=list_default_factory)
 
     @computed_field
     @property
@@ -3070,9 +3082,9 @@ class WindSensorArray(BaseModel):
 
     def add_sensor(
         self,
-        wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
-        wind_directions: Union[NonNegativeInt, list(NonNegativeInt)],
-        wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)],
+        wind_speeds: Union[PositiveFloat, list[PositiveFloat]],
+        wind_directions: Union[NonNegativeInt, list[NonNegativeInt]],
+        wind_times: Union[NonNegativeFloat, list[NonNegativeFloat]],
         sensor_height: PositiveFloat,
         x_location: PositiveInt,
         y_location: PositiveInt,
@@ -3115,9 +3127,9 @@ class WindSensorArray(BaseModel):
         sensor_name: str,
         x_location: Optional[PositiveInt] = None,
         y_location: Optional[PositiveInt] = None,
-        wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
-        wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-        wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
+        wind_speeds: Optional[Union[PositiveFloat, list[PositiveFloat]]] = None,
+        wind_directions: Optional[Union[NonNegativeInt, list[NonNegativeInt]]] = None,
+        wind_times: Optional[Union[NonNegativeInt, list[NonNegativeInt]]] = None,
         sensor_height: Optional[PositiveFloat] = None,
     ):
         """
@@ -3126,8 +3138,8 @@ class WindSensorArray(BaseModel):
 
         Parameters
         ----------
-        update: str
-            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in windsensors.
+        sensor_name: str
+            Name of the wind sensor, e.g. "sensor1". Sensor must already exist in wind_sensors.
         x_location : PositiveInt
             Optional. Updated location of the wind sensor in the x-direction (m)
         y_location : PositiveInt

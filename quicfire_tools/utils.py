@@ -104,3 +104,7 @@ def read_dat_file(filename: Path | str, shape: tuple[int]) -> ndarray:
         arr = FortranFile(fin).read_reals(dtype="float32").reshape(shape, order="F")
 
     return arr
+
+
+def list_default_factory():
+    return []
