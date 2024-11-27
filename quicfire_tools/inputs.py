@@ -450,9 +450,9 @@ class SimulationInputs:
 
         # Write remaining input files to the output directory
         for input_file in self._input_files_dict.values():
-            if input_file == self._input_files_dict["qu_simparams"]:
+            if isinstance(input_file, QU_Simparams):
                 continue  # Skip qu_simparams as we've already written it
-            elif input_file == self._input_files_dict["wind_sensors"]:
+            elif isinstance(input_file, WindSensorArray):
                 input_file.to_file(self.quic_fire.time_now, directory, version=version)
             else:
                 input_file.to_file(directory, version=version)
