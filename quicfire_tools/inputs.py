@@ -1876,7 +1876,7 @@ class QUIC_fire(InputFile):
     out_time_wind_avg: PositiveInt = 30
     nz: PositiveInt
     stretch_grid_flag: Literal[0, 1] = 0
-    dz: PositiveFloat = 1
+    dz: PositiveFloat = 1.0
     dz_array: list[PositiveFloat] = Field(default_factory=list_default_factory)
     fuel_density_flag: Literal[1, 2, 3, 4, 5] = 1
     fuel_density: Union[PositiveFloat, None] = 0.5
@@ -1887,8 +1887,8 @@ class QUIC_fire(InputFile):
     size_scale_flag: Literal[0, 1, 2, 3, 4, 5] = 0
     size_scale: PositiveFloat = 0.0005
     patch_and_gap_flag: Literal[0, 1, 2] = 0
-    patch_size: NonNegativeFloat = 0
-    gap_size: NonNegativeFloat = 0
+    patch_size: NonNegativeFloat = 0.0
+    gap_size: NonNegativeFloat = 0.0
     ignition: Union[
         RectangleIgnition, SquareRingIgnition, CircularRingIgnition, Ignition
     ]
