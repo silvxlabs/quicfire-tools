@@ -775,9 +775,9 @@ class SimulationInputs:
     def new_wind_sensor(
         self,
         update: str = None,
-        wind_speeds: float | list(float) = None,
-        wind_directions: int | list(int) = None,
-        wind_times: int | list(int) = None,
+        wind_speeds: float | list[float] = None,
+        wind_directions: int | list[int] = None,
+        wind_times: int | list[int] = None,
         sensor_height: float = None,
         x_location: int = None,
         y_location: int = None,
@@ -3074,9 +3074,9 @@ class WindSensorArray(BaseModel):
 
     def add_sensor(
         self,
-        wind_speeds: Union[PositiveFloat, list(PositiveFloat)],
-        wind_directions: Union[NonNegativeInt, list(NonNegativeInt)],
-        wind_times: Union[NonNegativeFloat, list(NonNegativeFloat)],
+        wind_speeds: Union[PositiveFloat, list[PositiveFloat]],
+        wind_directions: Union[NonNegativeInt, list[NonNegativeInt]],
+        wind_times: Union[NonNegativeFloat, list[NonNegativeFloat]],
         sensor_height: PositiveFloat,
         x_location: PositiveInt,
         y_location: PositiveInt,
@@ -3119,9 +3119,9 @@ class WindSensorArray(BaseModel):
         sensor_name: str,
         x_location: Optional[PositiveInt] = None,
         y_location: Optional[PositiveInt] = None,
-        wind_speeds: Optional[Union[PositiveFloat, list(PositiveFloat)]] = None,
-        wind_directions: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
-        wind_times: Optional[Union[NonNegativeInt, list(NonNegativeInt)]] = None,
+        wind_speeds: Optional[Union[PositiveFloat, list[PositiveFloat]]] = None,
+        wind_directions: Optional[Union[NonNegativeInt, list[NonNegativeInt]]] = None,
+        wind_times: Optional[Union[NonNegativeInt, list[NonNegativeInt]]] = None,
         sensor_height: Optional[PositiveFloat] = None,
     ):
         """
