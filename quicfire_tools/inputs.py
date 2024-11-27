@@ -1321,9 +1321,9 @@ class QU_Simparams(InputFile):
     nx: PositiveInt
     ny: PositiveInt
     nz: PositiveInt = 22
-    dx: PositiveFloat = 2
-    dy: PositiveFloat = 2
-    quic_domain_height: PositiveFloat = 300
+    dx: PositiveFloat = 2.0
+    dy: PositiveFloat = 2.0
+    quic_domain_height: PositiveFloat = 300.0
     wind_times: list[int]
     surface_vertical_cell_size: PositiveFloat = 1.0
     number_surface_cells: PositiveInt = 5

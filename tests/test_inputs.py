@@ -999,7 +999,7 @@ class TestQUIC_fire:
 
         # Test stretch grid input
         assert quic_fire.stretch_grid_flag == 0
-        assert quic_fire._stretch_grid_input == "1"
+        assert quic_fire._stretch_grid_input == "1.0"
 
         # Test invalid random_seed
         with pytest.raises(ValidationError):
