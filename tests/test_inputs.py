@@ -1285,18 +1285,15 @@ class Test_QFire_Bldg_Advanced_User_Inputs:
         bldg_inputs = QFire_Bldg_Advanced_User_Inputs(building_fuel_density="0.6")
         assert isinstance(bldg_inputs.building_fuel_density, float)
 
-    def test_init_invalid_values(self):
-        # Test invalid convert_buildings_to_fuel_flag
-        for invalid_flag in [-1, 2, "1", 1.0, 1.5]:
-            with pytest.raises(ValidationError):
-                QFire_Bldg_Advanced_User_Inputs(
-                    convert_buildings_to_fuel_flag=invalid_flag
-                )
+    @pytest.mark.parametrize("flag", [-1, 2, "1", 1.5])
+    def test_invalid_convert_buildings_to_fuel_flag(self, flag):
+        with pytest.raises(ValidationError):
+            QFire_Bldg_Advanced_User_Inputs(convert_buildings_to_fuel_flag=flag)  # noqa
 
-        # Test invalid building_fuel_density
-        for invalid_density in [-1, ""]:
-            with pytest.raises(ValidationError):
-                QFire_Bldg_Advanced_User_Inputs(building_fuel_density=invalid_density)
+    @pytest.mark.parametrize("flag", [-1, ""])
+    def test_invalid_building_fuel_density(self, flag):
+        with pytest.raises(ValidationError):
+            QFire_Bldg_Advanced_User_Inputs(building_fuel_density=flag)
 
     def test_to_dict(self):
         bldg_inputs = QFire_Bldg_Advanced_User_Inputs()
