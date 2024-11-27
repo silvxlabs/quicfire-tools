@@ -57,7 +57,7 @@ from quicfire_tools.topography import (
     Topography,
     serialize_topography,
 )
-from quicfire_tools.utils import compute_parabolic_stretched_grid
+from quicfire_tools.utils import compute_parabolic_stretched_grid, list_default_factory
 
 
 DOCS_PATH = (
@@ -1310,7 +1310,7 @@ class QU_Simparams(InputFile):
     surface_vertical_cell_size: PositiveFloat = 1.0
     number_surface_cells: PositiveInt = 5
     stretch_grid_flag: Literal[0, 1, 3] = 3
-    custom_dz_array: list[PositiveFloat] = []
+    custom_dz_array: list[PositiveFloat] = Field(default_factory=list_default_factory)
     utc_offset: int = 0
     sor_iter_max: PositiveInt = 10
     sor_residual_reduction: PositiveInt = 3
@@ -1859,7 +1859,7 @@ class QUIC_fire(InputFile):
     nz: PositiveInt
     stretch_grid_flag: Literal[0, 1] = 0
     dz: PositiveFloat = 1
-    dz_array: list[PositiveFloat] = []
+    dz_array: list[PositiveFloat] = Field(default_factory=list_default_factory)
     fuel_density_flag: Literal[1, 2, 3, 4, 5] = 1
     fuel_density: Union[PositiveFloat, None] = 0.5
     fuel_moisture_flag: Literal[1, 2, 3, 4, 5] = 1
@@ -2964,7 +2964,7 @@ class WindSensorArray(BaseModel):
 
     """
 
-    sensor_array: List[WindSensor] = []
+    sensor_array: List[WindSensor] = Field(default_factory=list_default_factory)
 
     @computed_field
     @property
