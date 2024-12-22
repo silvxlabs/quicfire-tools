@@ -2673,7 +2673,7 @@ class QU_metparams(InputFile):
     file_names: list[str] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def check_site_and_field_names(self):
+    def validate_site_and_field_name_lengths(self):
         if len(self.site_names) != len(self.file_names):
             raise ValueError("site_names and file_names must be the same length")
         return self
