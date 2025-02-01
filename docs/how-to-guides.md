@@ -107,17 +107,58 @@ For more advanced simulations, it may be necessary to specify custom fuel parame
 
 ```python
 simulation.set_custom_simulation(
-    fuel = True,
-    ignition = True,
-    topo = True
+    fuel_density=True,    # Use treesrhof.dat for fuel density
+    fuel_moisture=True,   # Use treesmoist.dat for fuel moisture
+    fuel_height=True,     # Use treesfueldepth.dat for fuel height
+    size_scale=False,     # Use default size scale
+    patch_and_gap=False,  # Use default patch and gap
+    ignition=True,        # Use ignite.dat for ignition pattern
+    topo=True,            # Use topo.dat for topography
+    interpolate=False     # Don't interpolate custom fuel inputs (default)
 )
 ```
 
-- **fuel** specifies that fuel density, moisture, and height are provided by treesrhof.dat, treesmoist.dat, and treesfueldepth.dat, respectively.
-- **ignition** specifies that ignitions are provided by ignite.dat
-- **topo** specifies that topography is provided by topo.dat
+The parameters control which aspects of the simulation will use custom .dat files:
+
+- **fuel_density**: Use treesrhof.dat for fuel density data
+- **fuel_moisture**: Use treesmoist.dat for fuel moisture data
+- **fuel_height**: Use treesfueldepth.dat for fuel height data
+- **size_scale**: Use treesss.dat for size scale data
+- **patch_and_gap**: Use patch.dat and gap.dat for patch and gap data
+- **ignition**: Use ignite.dat for ignition pattern
+- **topo**: Use topo.dat for topography
+- **interpolate**: Control whether custom fuel inputs are interpolated
 
 Any parameter not set to `True` will not be specified by a custom .dat file.
+
+##### Understanding the interpolate parameter
+
+The `interpolate` parameter controls how QUIC-Fire handles the grid spacing of custom fuel inputs. This is particularly important when working with data from sources like FastFuels where the fuel grid spacing may not match the QUIC-Fire grid spacing.
+
+When `interpolate=False` (default):
+- Sets fuel flags to 3 (for enabled fuel parameters)
+- Assumes fuel grid spacing matches QUIC-Fire grid spacing
+- No interpolation is performed
+- Good for when you know your input data matches the QUIC-Fire grid exactly
+
+When `interpolate=True`:
+- Sets fuel flags to 4 (for enabled fuel parameters)
+- Allows fuel grid spacing to differ from QUIC-Fire grid
+- Interpolates fuel data to match QUIC-Fire grid
+- May be required for proper functionality in some older versions of QUIC-Fire
+
+For example, to properly handle FastFuels data which typically has different grid spacing:
+
+```python
+simulation.set_custom_simulation(
+    fuel_density=True,
+    fuel_moisture=True,
+    fuel_height=True,
+    interpolate=True
+)
+```
+
+Note: For versions of QUIC-Fire ≤ v6.0.0, setting `interpolate=True` may be required for custom fuels to work properly, regardless of grid spacing.
 
 ### How to directly modify input files
 
