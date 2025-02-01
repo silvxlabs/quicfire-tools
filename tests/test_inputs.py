@@ -1911,7 +1911,6 @@ class Test_QU_metparams:
 
 
 class TestWindSensorArray:
-
     @pytest.fixture
     def single_value_sensor(self):
         return WindSensor(
@@ -1955,7 +1954,7 @@ class TestWindSensorArray:
         sensor_list = []
         for i in range(num_sensors):
             sensor = single_value_sensor.model_copy()
-            sensor.name = f"sensor{i+1}"  # Ensure unique names
+            sensor.name = f"sensor{i + 1}"  # Ensure unique names
             sensor_list.append(sensor)
         wind_array = WindSensorArray(sensor_array=sensor_list)
         assert len(wind_array) == num_sensors
@@ -2036,7 +2035,6 @@ class TestWindSensorArray:
 
 
 class TestWindSensor:
-
     @pytest.fixture
     def single_value_sensor(self):
         return WindSensor(
