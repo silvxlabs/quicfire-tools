@@ -152,7 +152,7 @@ For example, to properly handle FastFuels data which typically has different gri
 ```python
 simulation.set_custom_simulation(
     fuel_density=True,
-    fuel_moisture=True, 
+    fuel_moisture=True,
     fuel_height=True,
     interpolate=True
 )
