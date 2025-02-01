@@ -213,10 +213,85 @@ simulation.quic_fire.ignition
 
 Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of ignition patterns.
 
-### Set weather conditions
+### How to manage wind conditions
 
-What goes here?
+Wind conditions in QUIC-Fire are managed through wind sensors, which specify wind speeds and directions at specific locations and times. Multiple wind sensors can be used to represent spatial variation in wind conditions across the simulation domain.
 
+#### Adding wind sensors
+
+The simplest way to add a wind sensor is using the `add_wind_sensor` method. In the following example, we're creating a sensor with a constant wind speed of 5 m/s blowing from the east:
+
+```python
+simulation.add_wind_sensor(
+    wind_speeds=5.0,
+    wind_directions=90,
+    wind_times=0
+)
+```
+
+For varying wind conditions, provide lists of values that change over time. Times are specified in seconds relative to the simulation start (t=0):
+
+```python
+simulation.add_wind_sensor(
+    wind_speeds=[5.0, 7.0, 6.0],       # Wind speeds in m/s
+    wind_directions=[90, 180, 135],     # Wind directions in degrees
+    wind_times=[0, 600, 1200],         # Changes at 0, 10, and 20 minutes
+    sensor_height=10.0,                 # Sensor height in meters
+    x_location=50.0,                    # X-coordinate in meters
+    y_location=50.0,                    # Y-coordinate in meters
+    sensor_name="station_1"             # Optional custom name
+)
+```
+
+- **wind_speeds** specifies wind speeds in meters per second.
+- **wind_directions** specifies wind directions in degrees (0° = North, 90° = East).
+- **wind_times** specifies when each wind condition begins, in seconds from simulation start.
+- **sensor_height** sets the height of the sensor in meters (defaults to 6.1m/20ft).
+- **x_location** and **y_location** set the sensor position in meters.
+- **sensor_name** provides a custom identifier for the sensor.
+
+#### Adding wind sensors from data files
+
+For wind data stored in CSV files or pandas DataFrames, use the `add_wind_sensor_from_dataframe` method:
+
+```python
+import pandas as pd
+
+# Read wind data from CSV
+wind_data = pd.read_csv("weather_station_data.csv")
+
+simulation.add_wind_sensor_from_dataframe(
+    df=wind_data,
+    x_location=100.0,
+    y_location=100.0,
+    sensor_height=6.1,
+    time_column="time_seconds",         # Column containing times
+    speed_column="windspeed_ms",        # Column containing wind speeds
+    direction_column="direction_deg",    # Column containing wind directions
+    sensor_name="weather_station_2"
+)
+```
+
+The DataFrame must contain columns for:
+- Times in seconds relative to simulation start
+- Wind speeds in meters per second
+- Wind directions in degrees
+
+#### Removing wind sensors
+
+To remove a wind sensor from the simulation, use the `remove_wind_sensor` method with the sensor's name:
+
+```python
+simulation.remove_wind_sensor("station_1")
+```
+
+#### Notes on wind sensors
+
+- Multiple wind sensors can be used to represent spatial variation in wind conditions.
+- Wind times must be in ascending order and relative to simulation start (t=0).
+- Wind directions must be in degrees from 0° to 360°.
+- At least one wind sensor must remain in the simulation.
+- The simulation automatically manages wind field update times based on all active sensors.
 ### How to read and write input file decks
 
 #### How to write a SimulationInputs object to an input deck
