@@ -2,11 +2,10 @@ dask
 dask-expr
 netcdf4
 numpy<2
-pandera
+pandas
 pydantic>=2
 pyproj
 pytest
-requests
 scipy
 xarray
 zarr>=2

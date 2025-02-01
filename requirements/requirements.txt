@@ -2,8 +2,6 @@ dask
 dask-expr
 netCDF4
 numpy>=2
-pandas
-pandera
 pydantic>=2
 pyproj
 scipy
