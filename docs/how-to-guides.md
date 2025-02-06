@@ -237,10 +237,10 @@ Please see [topopgraphy](reference.md#quicfire_tools.topography) for a full list
 In addition to [rectangle ignitions](how-to-guides.md#set-rectangle-ignition-patterns) (the default) and [custom ignitions](how-to-guides.md#set-custom-fuels-ignitions-and-topography-from-dat-files), there are various build-in ignition patterns, all of which can be set using class in the [ignnitions](reference.md#quicfire_tools.ignitions) module. The following example creates and sets a circular ring ignition.
 
 ```python
-from quicfire_tools.ignitions import CurcularRingIgnition
+from quicfire_tools.ignitions import CircularRingIgnition
 
 # First, create an IgnitionType class
-ignition = CircularRingIgnition(
+ring_ignition = CircularRingIgnition(
     x_min = 50,
     y_min = 50,
     x_length = 20,
@@ -249,7 +249,7 @@ ignition = CircularRingIgnition(
 )
 
 # Next, assign it to the ignition attribute of the quic_fire InputFile
-simulation.quic_fire.ignition
+simulation.quic_fire.ignition = ring_ignition
 ```
 
 Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of ignition patterns.
