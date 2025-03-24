@@ -105,6 +105,27 @@ def read_dat_file(filename: Path | str, shape: tuple[int]) -> ndarray:
 
     return arr
 
+def write_dat_file(array: ndarray, filename: Path |str, dtype: type = np.float32):
+    """
+    Write a numpy array into a .dat file
+
+    Parameters
+    ----------
+    array : ndarray
+        The array written to the .dat file
+    filename : Path or str
+        The path to the .dat file to read.
+    dtype : type
+        The desired data type of the array written to the .dat file
+
+    """
+    if isinstance(filename, str):
+        filename = Path(filename)
+    array = array.astype(dtype)
+
+    with FortranFile(filename, "w") as f:
+        f.write_record(array) #this will write in row-major order
+
 
 def list_default_factory():
     return []
