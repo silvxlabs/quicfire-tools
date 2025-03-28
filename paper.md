@@ -11,8 +11,11 @@ authors:
   - name: Your Name Here
     orcid: 0000-0000-0000-0000
     affiliation: 1
+  - name: Niko J. Tutland
+    orcid: 0000-0002-3167-6842
+    affiliation: 1
 affiliations:
- - name: Your Institution, Country
+ - name: New Mexico Consortium, Center for Applied Fire and Ecosystem Sciences, Los Alamos, NM, USA
    index: 1
 date: 20 March 2025
 bibliography: paper.bib
@@ -20,8 +23,8 @@ bibliography: paper.bib
 
 # Summary
 
-Wildfire behavior modeling is a critical tool for understanding and predicting fire spread within landscapes, informing risk assessment, planning prescribed burns, and developing mitigation strategies. 
-QUIC-Fire is a coupled fire-atmospheric modeling tool designed to rapidly simulate the complex interactions between fire, fuels, and atmosphere that are essential for predicting prescribed fire behavior [@linn:2020].
+Fire behavior modeling is a critical tool for understanding and predicting fire spread within landscapes, informing risk assessment, planning prescribed burns, and developing mitigation strategies. 
+QUIC-Fire is a coupled fire-atmospheric modeling tool designed to rapidly simulate the complex interactions between fire, fuels, and atmosphere that are essential for predicting wildland fire behavior [@linn:2020].
 QUIC-Fire simulations require preparing numerous input files with complex interdependencies and generate large volumes of output data in a variety of formats.
 
 `quicfire-tools` is a Python package that provides a streamlined interface for creating, managing, and analyzing QUIC-Fire simulations. 
@@ -30,7 +33,7 @@ By simplifying these tasks, `quicfire-tools` enables researchers, fire managers,
 
 # Statement of need
 
-Physics-based fire behavior models, such as QUIC-Fire, produce high-fidelity simulations of wildfire behavior but present significant barriers to entry due to their complex input requirements and output formats. 
+Physics-based fire behavior models, such as QUIC-Fire, produce high-fidelity simulations of wildland fire behavior but present significant barriers to entry due to their complex input requirements and output formats. 
 Users of QUIC-Fire must navigate more than 15 interdependent input files, each with dozens of parameters governing aspects like terrain, fuel characteristics, ignition patterns, and weather conditions. 
 Manipulating these files manually is error-prone and time-consuming, particularly when setting up parameter studies or batch simulations.
 
@@ -108,6 +111,24 @@ This ensures that users can't create invalid simulation states, and provides hel
 
 The package includes specialized modules for creating complex ignition patterns, topographic features, and wind conditions, all backed by Pydantic models:
 
+A suite of ignition patterns can be set using the `ignitions` module:
+
+```python
+from quidfire_tools.ignitions import CircularRingIgnition
+
+# Create a circular ring ignition
+ignition = CircularRingIgnition(
+    x_min=50, y_min=50,
+    x_length=100, y_length=100,
+    ring_width=20
+)
+
+# Assign to simulation
+simulation.quic_fire.igntions = ignition
+```
+
+Idealized topography can be created using the `topography` module:
+
 ```python
 from quicfire_tools.topography import GaussianHillTopo
 
@@ -121,7 +142,7 @@ topo = GaussianHillTopo(
 simulation.qu_topoinputs.topography = topo
 ```
 
-Wind profiles can be imported from weather station data or defined programmatically:
+Wind profiles can be defined programmatically or imported from weather station data:
 
 ```python
 # Add custom wind conditions
@@ -207,11 +228,14 @@ The package includes robust validation to prevent common errors, comprehensive d
 
 # Conclusion
 
-`quicfire-tools` simplifies the creation, management, and analysis of QUIC-Fire simulations, enabling researchers to focus on scientific questions rather than technical implementation details. 
-The package significantly reduces the complexity of working with QUIC-Fire's multiple input files and specialized output formats, making it practical to run simulations that capture the complex fire-atmospheric interactions critical for understanding prescribed fire behavior.
+`quicfire-tools` simplifies the creation, management, and analysis of QUIC-Fire simulations, enabling users to programatically and interact with the inputs and outputs. 
+By defining a consistent framework for representing input files, the package offers a framework for integration of QUIC-Fire with fuel modeling platforms and large ensemble applications.
+Furthermore, its streamlined processing of QUIC-Fire output files aids with data analysis, visualization, and communication of results.
+The flexibile framework of `quicfire-tools` also allows for the package to keep pace with QUIC-Fire's active development.
+
 
 # Acknowledgements
 
-We acknowledge the contributions of the QUIC-Fire development team and the broader wildfire modeling community.
+Our thanks goes to David Robinson, Rod Linn, and the rest of the QUIC-Fire development team. We are also grateful for the input and testing from the QUIC-Fire community of practice, including Julia Oliveto, Sophie Bonner, Jay Charney, Leticia Lee, Alex Massarie, Mary Brady, and many others. 
 
 # References
