@@ -14,9 +14,14 @@ authors:
   - name: Niko J. Tutland
     orcid: 0000-0002-3167-6842
     affiliation: 1
+  - name: Zachary Cope
+    orcid: 0000-0003-1214-5365
+    affiliation: 2
 affiliations:
  - name: New Mexico Consortium, Center for Applied Fire and Ecosystem Sciences, Los Alamos, NM, USA
    index: 1
+ - name: USDA Forest Service Center for Forest Disturbance Science, Athens, GA, 30602, USA
+   index: 2
 date: 20 March 2025
 bibliography: paper.bib
 ---
@@ -65,7 +70,7 @@ This approach solves two critical problems:
 
 2. **Unified representation:** Instead of manually maintaining 15+ separate input files with complex interdependencies, `quicfire-tools` provides a single `SimulationInputs` object that encapsulates the entire simulation state, which can be serialized to JSON or written to individual input files to run the simulation.
 
-A typical workflow for creating a QUIC-Fire simulation might look like this:
+*A typical workflow for creating a QUIC-Fire simulation with the inputs module*:
 
 ```python
 from quicfire_tools.inputs import SimulationInputs
@@ -105,16 +110,14 @@ simulation.to_json("simulation_config.json")
 restored_simulation = SimulationInputs.from_json("simulation_config.json")
 ```
 
-[//]: # (Address this paragraph)
-Each input file is represented by a Pydantic model that inherits from the `InputFile` base class, which provides validation rules, default values, and documentation for all parameters. 
-This ensures that users can't create invalid simulation states, and provides helpful error messages when invalid values are specified.
+Each input file is represented by a Pydantic model that inherits from the `InputFile` base class. The Pydantic model framework provides attribute validation rules and default values. This framework prevents users from creating invalid simulation states and provides error messages when invalid values are specified. The `InputFile` base class provides standardized functionality for writing input files and returning documentation for QUIC-Fire input parameters. 
 
-The package includes specialized modules for creating complex ignition patterns, topographic features, and wind conditions, all backed by Pydantic models:
+The package includes specialized modules for defining ignition patterns, topographic features, and wind conditions, all backed by Pydantic models for validation and consistency. The following examples illustrate how users can programmatically configure these components using `quicfire-tools`.
 
-A suite of ignition patterns can be set using the `ignitions` module:
+*A suite of ignition patterns set using the `ignitions` module*:
 
 ```python
-from quidfire_tools.ignitions import CircularRingIgnition
+from quicfire_tools.ignitions import CircularRingIgnition
 
 # Create a circular ring ignition
 ignition = CircularRingIgnition(
@@ -127,7 +130,7 @@ ignition = CircularRingIgnition(
 simulation.quic_fire.igntions = ignition
 ```
 
-Idealized topography can be created using the `topography` module:
+*Idealized topography created using the `topography` module*:
 
 ```python
 from quicfire_tools.topography import GaussianHillTopo
@@ -142,17 +145,17 @@ topo = GaussianHillTopo(
 simulation.qu_topoinputs.topography = topo
 ```
 
-Wind profiles can be defined programmatically or imported from weather station data:
+*Wind profiles defined programmatically and using imported weather station data*:
 
 ```python
-# Add custom wind conditions
+# Add custom wind conditions programmatically
 simulation.add_wind_sensor(
     wind_speeds=[5.0, 7.0, 6.0],
     wind_directions=[90, 180, 135],
     wind_times=[0, 600, 1200]
 )
 
-# Import from weather station data
+# Or, import from weather station data
 import pandas as pd
 wind_data = pd.read_csv("weather_station_data.csv")
 simulation.add_wind_sensor_from_dataframe(
@@ -167,8 +170,9 @@ simulation.add_wind_sensor_from_dataframe(
 
 ## Output Processing
 
-[//]: # (This should be reworked)
-The outputs module handles the complex task of reading and interpreting QUIC-Fire output files:
+The outputs module simplifies loading binary QUIC-Fire outputs into common Python data structures. The `SimulationOutputs` class automatically detects available output files and creates corresponding `OutputFile` instances. Each `OutputFile` class is initialized with the necessary attributes to properly load and interpret the output files, including domain dimensionality, binary file format, and metadata. 
+
+*Reading and interpreting QUIC-Fire output files using the outputs module*:
 
 ```python
 from quicfire_tools.outputs import SimulationOutputs, SimulationInputs
@@ -194,7 +198,7 @@ timestep = 0
 first_timestep_data = outputs.to_numpy("fuels-dens", timestep)
 ```
 
-Output files can be saved in various formats for further analysis:
+*Output files saved in various data formats for further analysis*:
 
 ```python
 # Get an output file object
@@ -229,9 +233,9 @@ The package includes robust validation to prevent common errors, comprehensive d
 # Conclusion
 
 `quicfire-tools` simplifies the creation, management, and analysis of QUIC-Fire simulations, enabling users to programatically and interact with the inputs and outputs. 
-By defining a consistent framework for representing input files, the package offers a framework for integration of QUIC-Fire with fuel modeling platforms and large ensemble applications.
+By defining a consistent framework for representing input files, the package provides a user-friendly python class structure that facilites integration of QUIC-Fire with fuel modeling platforms and large ensemble applications.
 Furthermore, its streamlined processing of QUIC-Fire output files aids with data analysis, visualization, and communication of results.
-The flexibile framework of `quicfire-tools` also allows for the package to keep pace with QUIC-Fire's active development.
+The flexible framework of `quicfire-tools` also allows for the package to keep pace with QUIC-Fire's active development.
 
 
 # Acknowledgements
