@@ -113,10 +113,26 @@ def write_dat_file(array: ndarray, filename: Path |str, dtype: type = np.float32
     ----------
     array : ndarray
         The array written to the .dat file
+        The function uses Fortran row-major order to write
+        an array of any dimension into linear form (see example)
     filename : Path or str
         The path to the .dat file to read.
     dtype : type
         The desired data type of the array written to the .dat file
+
+    Example
+    ----------
+    If you have an array N x M:     | a11, a12, a13 |
+                                    | a21, a22, a23 |
+
+    Then this function will write it as:
+                                    [ a11, a12, a13, a21, a22, a23 ]
+
+    In order to modify the values of a 3D array of N x M x Z by loading from an existing dat file,
+    Use the read_dat_file() with the shape argument as a 1D array of length = (N)x(M)x(Z)
+    Then modify the numpy array and write back to .dat
+    This will preserve the order of the data when it is read and then written
+
 
     """
     if isinstance(filename, str):
