@@ -28,11 +28,11 @@ bibliography: paper.bib
 
 # Summary
 
-Fire behavior modeling is a critical tool for understanding and predicting fire spread within landscapes, informing risk assessment, planning prescribed burns, and developing mitigation strategies. 
+Fire behavior modeling is a critical tool for understanding and predicting fire spread across landscapes, informing risk assessment, planning prescribed burns, and developing mitigation strategies. 
 QUIC-Fire is a coupled fire-atmospheric modeling tool designed to rapidly simulate the complex interactions between fire, fuels, and atmosphere that are essential for predicting wildland fire behavior [@Linn2020a].
 QUIC-Fire simulations require preparing numerous input files with complex interdependencies and generate large volumes of output data in a variety of formats.
 
-`quicfire-tools` is a Python package that provides a streamlined interface for creating, managing, and analyzing QUIC-Fire simulations. 
+Here we introduce `quicfire-tools`, a Python package that provides a streamlined interface for creating, managing, and analyzing QUIC-Fire simulations. 
 The package handles two primary aspects of the QUIC-Fire workflow: (1) programmatic creation and management of input file decks with validation and documentation, and (2) processing of simulation outputs into standard data structures compatible with the scientific Python ecosystem. 
 By simplifying these tasks, `quicfire-tools` enables researchers, fire managers, and modelers to focus on scientific questions rather than the technical details of file format specifications.
 
@@ -63,7 +63,7 @@ The package facilitates more complex simulation studies, enhances reproducibilit
 
 ## Input Management
 
-The inputs module provides a comprehensive interface for creating and managing QUIC-Fire input decks, using Pydantic data models for validation and representation. 
+The inputs module provides a comprehensive interface for creating and managing QUIC-Fire input decks, using Pydantic data models for validation and representation [@pydantic2025]. 
 This approach solves two critical problems:
 
 1. **Input file validation:** By leveraging Pydantic's validation capabilities, each parameter is checked against allowable ranges and types, preventing invalid input states before the simulation runs.
