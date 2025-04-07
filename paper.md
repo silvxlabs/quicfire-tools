@@ -8,8 +8,8 @@ tags:
   - fire spread
   - fire behavior
 authors:
-  - name: Your Name Here
-    orcid: 0000-0000-0000-0000
+  - name: Anthony A. Marcozzi
+    orcid: 0000-0003-4697-8154
     affiliation: 1
   - name: Niko J. Tutland
     orcid: 0000-0002-3167-6842
