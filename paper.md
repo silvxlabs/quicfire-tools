@@ -233,7 +233,7 @@ The package includes robust validation to prevent common errors, comprehensive d
 # Conclusion
 
 `quicfire-tools` simplifies the creation, management, and analysis of QUIC-Fire simulations, enabling users to programatically and interact with the inputs and outputs. 
-By defining a consistent framework for representing input files, the package provides a user-friendly python class structure that facilites integration of QUIC-Fire with fuel modeling platforms and large ensemble applications.
+By defining a consistent framework for representing input files, the package provides a user-friendly python class structure that facilites integration of QUIC-Fire with fuel modeling platforms [@marcozzi_fastfuels_2025] and large ensemble applications [@ahmed_towards_2024].
 Furthermore, its streamlined processing of QUIC-Fire output files aids with data analysis, visualization, and communication of results.
 The flexible framework of `quicfire-tools` also allows for the package to keep pace with QUIC-Fire's active development.
 
