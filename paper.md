@@ -29,7 +29,7 @@ bibliography: paper.bib
 # Summary
 
 Fire behavior modeling is a critical tool for understanding and predicting fire spread within landscapes, informing risk assessment, planning prescribed burns, and developing mitigation strategies. 
-QUIC-Fire is a coupled fire-atmospheric modeling tool designed to rapidly simulate the complex interactions between fire, fuels, and atmosphere that are essential for predicting wildland fire behavior [@linn:2020].
+QUIC-Fire is a coupled fire-atmospheric modeling tool designed to rapidly simulate the complex interactions between fire, fuels, and atmosphere that are essential for predicting wildland fire behavior [@Linn2020a].
 QUIC-Fire simulations require preparing numerous input files with complex interdependencies and generate large volumes of output data in a variety of formats.
 
 `quicfire-tools` is a Python package that provides a streamlined interface for creating, managing, and analyzing QUIC-Fire simulations. 
