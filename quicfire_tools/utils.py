@@ -101,11 +101,14 @@ def read_dat_file(filename: Path | str, shape: tuple[int]) -> ndarray:
         filename = Path(filename)
 
     with open(filename, "rb") as fin:
-        arr = FortranFile(fin).read_reals(dtype="float32").reshape(shape, order="F")
+        arr = (
+            FortranFile(fin).read_reals(dtype="float32").reshape(shape, order="F").T
+        )  # read in column-major, then transpose
 
     return arr
 
-def write_dat_file(array: ndarray, filename: Path |str, dtype: type = np.float32):
+
+def write_dat_file(array: ndarray, filename: Path | str, dtype: type = np.float32):
     """
     Write a numpy array into a .dat file
 
@@ -140,7 +143,7 @@ def write_dat_file(array: ndarray, filename: Path |str, dtype: type = np.float32
     array = array.astype(dtype)
 
     with FortranFile(filename, "w") as f:
-        f.write_record(array) #this will write in row-major order
+        f.write_record(array)  # this will write in row-major order
 
 
 def list_default_factory():
