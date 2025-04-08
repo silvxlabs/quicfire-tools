@@ -222,7 +222,7 @@ output_file.to_zarr("zarr_directory", chunk_size={"time": 10})
    - Serialization/deserialization to/from JSON for storage and sharing
    - Extensibility through inheritance for specialized input types
 
-2. The `SimulationOutputs` class manages QUIC-Fire output files, providing methods to extract data from both compressed and gridded binary formats. It includes functionality to convert outputs to standard formats like NumPy arrays, Dask arrays, netCDF files, and zarr archives. The output processing system handles:
+2. The `SimulationOutputs` class manages QUIC-Fire output files, providing methods to extract data from both compressed and gridded binary formats. It includes functionality to convert outputs to standard formats like NumPy arrays, Dask arrays, netCDF files, and Zarr archives. The output processing system handles:
    - Automatic detection of available output files
    - Mapping between sparse compressed formats and dense array representations
    - Coordinate system transformations and grid alignment
