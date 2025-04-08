@@ -1110,6 +1110,23 @@ class TestQUIC_fire:
         test_object = QUIC_fire.from_dict(test_dict)
         assert test_object == quic_fire
 
+    def test_dz_custom_dz_array(self):
+        quic_fire = self.get_basic_test_object()
+        quic_fire.nz = 3
+        quic_fire.stretch_grid_flag = 1
+        dz_write = [1.0, 2.0, 3.0]
+        quic_fire.dz_array = dz_write
+        quic_fire.to_file(TMP_DIR, version="v6")
+        with open(TMP_DIR / "QUIC_fire.inp", "r") as file:
+            lines = file.readlines()
+        dz_array = []
+        for i in range(14, 14 + len(quic_fire.dz_array)):
+            dz_array.append(float(lines[i].strip().split("!")[0]))
+        assert dz_array == dz_write
+        assert quic_fire.dz_array == dz_array
+        current_line = 14 + len(quic_fire.dz_array)
+        assert lines[current_line] == "! FILE PATH\n"
+
     def test_to_file(self):
         quic_fire = self.get_basic_test_object()
         for version in ["v5", "v6"]:
@@ -1133,7 +1150,7 @@ class TestQUIC_fire:
             for i in range(14, 14 + len(quic_fire.dz_array)):
                 dz_array.append(float(lines[i].strip()))
             assert quic_fire.dz_array == dz_array
-            current_line = 15 + len(quic_fire.dz_array)
+            current_line = 14 + len(quic_fire.dz_array) + 1  # + 1 for quic_fire.dz
             current_line += 4  # skip unused lines
             current_line += 1  # header
             assert quic_fire.fuel_density_flag == int(
