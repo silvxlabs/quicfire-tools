@@ -52,8 +52,8 @@ While ad-hoc scripts were previously used, these were neither standardized, test
 
 1. A consistent, validated interface for creating and modifying QUIC-Fire input files, with particular attention to the complex interdependencies between parameters
 2. Programmatic management of spatially and temporally varying parameters like fuels, winds, and topography
-3. Robust output processing capabilities that convert binary data to standard formats (NumPy arrays, zarr archives, netCDF files)
-4. Integration with the scientific Python ecosystem (NumPy, Dask, Pandas, xarray)
+3. Robust output processing capabilities that convert binary data to standard formats (NumPy arrays, Zarr archives, netCDF files)
+4. Integration with the scientific Python ecosystem (NumPy, Dask, Pandas, Xarray)
 5. Comprehensive documentation with step-by-step tutorials and examples
 
 By standardizing these essential workflow components, `quicfire-tools` enables users to focus on the scientific aspects of fire simulation rather than technical implementation details. 
