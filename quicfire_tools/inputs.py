@@ -2074,7 +2074,7 @@ class QUIC_fire(InputFile):
                 dz_array_lines_list.append(f"{float(dz)}")
             dz_array_lines = "\n".join(dz_array_lines_list)
 
-            return f"{dz_array_lines}\n"
+            return f"{dz_array_lines}"
         else:
             return str(self.dz)
 

@@ -143,16 +143,13 @@ class TestProcessedCompressedBin:
         # Load in the input .dat file for comparison
         fuels_dens_dat = read_dat_file(
             EG_CANOPY_DIR / "treesrhof.dat",
-            shape=(
-                self.eglin_canopy_sim.qu_simparams.nx,
-                self.eglin_canopy_sim.qu_simparams.ny,
-                self.eglin_canopy_sim.quic_fire.nz,
-            ),
-        )  # shape is (nx, ny, nz)
-        fuels_dens_dat = np.swapaxes(fuels_dens_dat, 0, 2)  # Reshape to nz, ny, nx
+            nx=self.eglin_canopy_sim.qu_simparams.nx,
+            ny=self.eglin_canopy_sim.qu_simparams.ny,
+            nz=self.eglin_canopy_sim.quic_fire.nz,
+        )
 
-        # I have no idea why the edges are wonky, but the rest of the array
-        # is fine. Maybe there's some model interpolation going on?
+        # QUIC-Fire removes fuel from the edges of the outputs
+        # I don't know why but David confirmed this 4/1/25 - NJT
         assert np.allclose(
             fuels_dens_start[0, :, 1:-1, 2:-1], fuels_dens_dat[:, 1:-1, 1:-2], atol=1e-3
         )
