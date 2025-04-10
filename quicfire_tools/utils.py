@@ -74,31 +74,30 @@ def compute_parabolic_stretched_grid(
     return dz
 
 
-def read_dat_file(filename: Path | str, shape: tuple[int]) -> ndarray:
+def read_dat_file(filename: Path | str, nx: int, ny: int, nz: int | None) -> ndarray:
     """
-    Read in a .dat file as a numpy array.
+    Read in a .dat file as a numpy array. For 2D .dat files use nz = None.
 
     Parameters
     ----------
     filename : Path or str
         The path to the .dat file to read.
-    shape : tuple[int]
-        The shape of the array to read from the .dat file. Typically, .dat files
-        follow the Fortran column major order standard. The shape of a
-        general 2D .dat file has the form (nx, ny). For a 3D .dat file, the
-        shape is (nx, ny, nz). Sometimes additional information is attached to
-        the .dat files such as species or size classes. In this case, the shape
-        would be (ns, nx, ny, nz) where ns is the number of species or size
-        classes.
+    nx : int
+        Number of cells in the x-direction.
+    ny : int
+        Number of cells in the y-direction.
+    nz : int | None
+        Number of cells in the z-direction. Use None for a 2D array.
 
     Returns
     -------
     ndarray
-        A numpy array representing the data in the .dat file. The array shape
-        is determined by the `shape` parameter.
+        A numpy array representing the data in the .dat file with shape (nz, ny, nx)
     """
     if isinstance(filename, str):
         filename = Path(filename)
+
+    shape = (nx, ny, nz) if nz else (nx, ny)
 
     with open(filename, "rb") as fin:
         arr = (
