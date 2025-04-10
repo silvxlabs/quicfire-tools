@@ -143,11 +143,9 @@ class TestProcessedCompressedBin:
         # Load in the input .dat file for comparison
         fuels_dens_dat = read_dat_file(
             EG_CANOPY_DIR / "treesrhof.dat",
-            shape=(
-                self.eglin_canopy_sim.qu_simparams.nx,
-                self.eglin_canopy_sim.qu_simparams.ny,
-                self.eglin_canopy_sim.quic_fire.nz,
-            ),
+            nx=self.eglin_canopy_sim.qu_simparams.nx,
+            ny=self.eglin_canopy_sim.qu_simparams.ny,
+            nz=self.eglin_canopy_sim.quic_fire.nz,
         )
 
         # QUIC-Fire removes fuel from the edges of the outputs
