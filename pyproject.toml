@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quicfire-tools"
+dynamic = ["version"]
+description = "Input and output management tools for the QUIC-Fire fire model"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Anthony Marcozzi"},
+    {name = "Niko Tutland"},
+    {name = "Zachary Cope"},
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "dask",
+    "dask-expr",
+    "netCDF4",
+    "numpy",
+    "pydantic>=2",
+    "pyproj",
+    "scipy",
+    "zarr",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/silvxlabs/quicfire-tools"
+"Bug Tracker" = "https://github.com/silvxlabs/quicfire-tools/issues"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+packages = ["quicfire_tools"]
+
+[tool.setuptools.package-data]
+"quicfire_tools" = [
+    "data/templates/*/*",
+    "data/documentation/*",
+    "data/outputs/*",
+]
