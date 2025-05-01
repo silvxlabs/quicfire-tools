@@ -30,6 +30,7 @@ dependencies = [
     "dask-expr",
     "netCDF4",
     "numpy",
+    "pandas",
     "pydantic>=2",
     "pyproj",
     "scipy",
