@@ -28,8 +28,8 @@ bibliography: paper.bib
 
 # Summary
 
-Fire behavior modeling is a critical tool for understanding and predicting fire spread across landscapes, informing risk assessment, planning prescribed burns, and developing mitigation strategies. 
-QUIC-Fire is a coupled fire-atmospheric modeling tool designed to rapidly simulate the complex interactions between fire, fuels, and atmosphere that are essential for predicting wildland fire behavior [@Linn2020a].
+Fire behavior modeling is a critical tool for understanding and predicting fire spread across landscapes; informing risk assessment, planning prescribed burns, and developing mitigation strategies. 
+QUIC-Fire is a coupled fire-atmospheric modeling tool designed to rapidly simulate the complex interactions between fire, fuels, and atmospheric that are essential for predicting wildland fire behavior [@Linn2020a].
 QUIC-Fire simulations require preparing numerous input files with complex interdependencies and generate large volumes of output data in a variety of formats.
 
 Here we introduce `quicfire-tools`, a Python package that provides a streamlined interface for creating, managing, and analyzing QUIC-Fire simulations. 
@@ -38,7 +38,7 @@ By simplifying these tasks, `quicfire-tools` enables researchers, fire managers,
 
 # Statement of need
 
-Physics-based fire behavior models, such as QUIC-Fire, produce high-fidelity simulations of wildland fire behavior but present significant barriers to entry due to their complex input requirements and output formats. 
+Physics-based fire behavior models, such as QUIC-Fire, produce high-fidelity simulations of wildland fire behavior, but present significant barriers to entry due to their complex input requirements and output formats. 
 Users of QUIC-Fire must navigate more than 15 interdependent input files, each with dozens of parameters governing aspects like terrain, fuel characteristics, ignition patterns, and weather conditions. 
 Manipulating these files manually is error-prone and time-consuming, particularly when setting up parameter studies or batch simulations.
 
