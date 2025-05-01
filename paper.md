@@ -70,18 +70,18 @@ This approach solves two critical problems:
 
 2. **Unified representation:** Instead of manually maintaining 15+ separate input files with complex interdependencies, `quicfire-tools` provides a single `SimulationInputs` object that encapsulates the entire simulation state, which can be serialized to JSON or written to individual input files to run the simulation.
 
-The package repository contains detailed examples of QUIC-Fire simulation creation in the [how-to-guides](https://silvxlabs.github.io/quicfire-tools/how-to-guides/) and [tutorials](https://silvxlabs.github.io/quicfire-tools/tutorials/) documentation pages. 
+The package repository contains detailed examples of QUIC-Fire simulation creation in the [how-to-guides](https://silvxlabs.github.io/quicfire-tools/how-to-guides/) and [tutorials](https://silvxlabs.github.io/quicfire-tools/tutorials/) documentation pages.
 These examples demonstrate typical workflows for creating simulations with uniform or custom fuels, various ignition patterns, and complex terrain features.
-The package includes specialized modules for defining ignition patterns, topographic features, and wind conditions, all backed by Pydantic models for validation and consistency. 
+The package includes specialized modules for defining ignition patterns, topographic features, and wind conditions, all backed by Pydantic models for validation and consistency.
 These components can be easily configured programmatically as demonstrated in the repository documentation.
 
 ## Output Processing
 
-The outputs module simplifies loading binary QUIC-Fire outputs into common Python data structures. 
-The `SimulationOutputs` class automatically detects available output files and creates corresponding `OutputFile` instances. 
+The outputs module simplifies loading binary QUIC-Fire outputs into common Python data structures.
+The `SimulationOutputs` class automatically detects available output files and creates corresponding `OutputFile` instances.
 Each `OutputFile` class is initialized with the necessary attributes to properly load and interpret the output files, including domain dimensionality, binary file format, and metadata.
 
-Examples of reading and interpreting QUIC-Fire output files using the outputs module are included in the [how-to-guides](https://silvxlabs.github.io/quicfire-tools/how-to-guides/) documentation. 
+Examples of reading and interpreting QUIC-Fire output files using the outputs module are included in the [how-to-guides](https://silvxlabs.github.io/quicfire-tools/how-to-guides/) documentation.
 The documentation also showcases how output files can be saved in various data formats (NumPy arrays, netCDF, Zarr) for further analysis.
 
 # Implementation
