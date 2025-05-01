@@ -7,7 +7,7 @@ name = "quicfire-tools"
 dynamic = ["version"]
 description = "Input and output management tools for the QUIC-Fire fire model"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.8"
 authors = [
     {name = "Anthony Marcozzi"},
@@ -17,7 +17,6 @@ authors = [
 classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
