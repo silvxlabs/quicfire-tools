@@ -70,146 +70,19 @@ This approach solves two critical problems:
 
 2. **Unified representation:** Instead of manually maintaining 15+ separate input files with complex interdependencies, `quicfire-tools` provides a single `SimulationInputs` object that encapsulates the entire simulation state, which can be serialized to JSON or written to individual input files to run the simulation.
 
-*A typical workflow for creating a QUIC-Fire simulation with the inputs module*:
-
-```python
-from quicfire_tools.inputs import SimulationInputs
-
-# Create a basic simulation with key parameters
-simulation = SimulationInputs.create_simulation(
-    nx=200,                 # Number of grid cells in x-direction
-    ny=200,                 # Number of grid cells in y-direction
-    fire_nz=1,              # Number of grid cells in z-direction
-    wind_speed=1.7,         # Wind speed in m/s
-    wind_direction=90,      # Wind direction in degrees from north
-    simulation_time=600     # Simulation duration in seconds
-)
-
-# Customize fuel parameters in a uniform fuel bed
-simulation.set_uniform_fuels(
-    fuel_density=0.7, fuel_moisture=0.10, fuel_height=1.0
-)
-
-# Set ignition pattern
-simulation.set_rectangle_ignition(
-    x_min=150, y_min=100, x_length=10, y_length=100
-)
-
-# Specify output files
-simulation.set_output_files(
-    fuel_dens=True, emissions=True, qu_wind_inst=True
-)
-
-# Write input files to the simulation directory
-simulation.write_inputs("path/to/simulation/directory")
-
-# Or save the entire state to a single JSON file for version control or sharing
-simulation.to_json("simulation_config.json")
-
-# Later, the simulation can be recreated from the JSON file
-restored_simulation = SimulationInputs.from_json("simulation_config.json")
-```
-
-Each input file is represented by a Pydantic model that inherits from the `InputFile` base class. The Pydantic model framework provides attribute validation rules and default values. This framework prevents users from creating invalid simulation states and provides error messages when invalid values are specified. The `InputFile` base class provides standardized functionality for writing input files and returning documentation for QUIC-Fire input parameters.
-
-The package includes specialized modules for defining ignition patterns, topographic features, and wind conditions, all backed by Pydantic models for validation and consistency. The following examples illustrate how users can programmatically configure these components using `quicfire-tools`.
-
-*A suite of ignition patterns set using the `ignitions` module*:
-
-```python
-from quicfire_tools.ignitions import CircularRingIgnition
-
-# Create a circular ring ignition
-ignition = CircularRingIgnition(
-    x_min=50, y_min=50,
-    x_length=100, y_length=100,
-    ring_width=20
-)
-
-# Assign to simulation
-simulation.quic_fire.igntions = ignition
-```
-
-*Idealized topography created using the `topography` module*:
-
-```python
-from quicfire_tools.topography import GaussianHillTopo
-
-# Create a Gaussian hill topography
-topo = GaussianHillTopo(
-    x_hilltop=100, y_hilltop=150,
-    elevation_max=50, elevation_std=15
-)
-
-# Assign to simulation
-simulation.qu_topoinputs.topography = topo
-```
-
-*Wind profiles defined programmatically and using imported weather station data*:
-
-```python
-# Add custom wind conditions programmatically
-simulation.add_wind_sensor(
-    wind_speeds=[5.0, 7.0, 6.0],
-    wind_directions=[90, 180, 135],
-    wind_times=[0, 600, 1200]
-)
-
-# Or, import from weather station data
-import pandas as pd
-wind_data = pd.read_csv("weather_station_data.csv")
-simulation.add_wind_sensor_from_dataframe(
-    df=wind_data,
-    x_location=100.0,
-    y_location=100.0,
-    time_column="time_seconds",
-    speed_column="windspeed_ms",
-    direction_column="direction_deg"
-)
-```
+The package repository contains detailed examples of QUIC-Fire simulation creation in the [how-to-guides](https://silvxlabs.github.io/quicfire-tools/how-to-guides/) and [tutorials](https://silvxlabs.github.io/quicfire-tools/tutorials/) documentation pages. 
+These examples demonstrate typical workflows for creating simulations with uniform or custom fuels, various ignition patterns, and complex terrain features.
+The package includes specialized modules for defining ignition patterns, topographic features, and wind conditions, all backed by Pydantic models for validation and consistency. 
+These components can be easily configured programmatically as demonstrated in the repository documentation.
 
 ## Output Processing
 
-The outputs module simplifies loading binary QUIC-Fire outputs into common Python data structures. The `SimulationOutputs` class automatically detects available output files and creates corresponding `OutputFile` instances. Each `OutputFile` class is initialized with the necessary attributes to properly load and interpret the output files, including domain dimensionality, binary file format, and metadata.
+The outputs module simplifies loading binary QUIC-Fire outputs into common Python data structures. 
+The `SimulationOutputs` class automatically detects available output files and creates corresponding `OutputFile` instances. 
+Each `OutputFile` class is initialized with the necessary attributes to properly load and interpret the output files, including domain dimensionality, binary file format, and metadata.
 
-*Reading and interpreting QUIC-Fire output files using the outputs module*:
-
-```python
-from quicfire_tools.outputs import SimulationOutputs, SimulationInputs
-
-# Create outputs object from simulation directory
-outputs = SimulationOutputs(
-    "path/to/output/directory",
-    fire_nz=26, ny=100, nx=100, dy=2., dx=2.
-)
-
-# Or, create the outputs object from a simulation inputs object
-sim_inputs = SimulationInputs.from_json("simulation_config.json")
-outputs = SimulationOutputs.from_simulation_inputs("path/to/output/directory")
-
-# List available output variables
-output_names = outputs.list_outputs()
-
-# Get fuel density output as NumPy array
-fuel_density_np = outputs.to_numpy("fuels-dens")
-
-# Access specific timestep
-timestep = 0
-first_timestep_data = outputs.to_numpy("fuels-dens", timestep)
-```
-
-*Output files saved in various data formats for further analysis*:
-
-```python
-# Get an output file object
-output_file = outputs.get_output("fuels-dens")
-
-# Save to netCDF
-output_file.to_netcdf("output_directory")
-
-# Save to zarr with chunks every 10 timesteps
-output_file.to_zarr("zarr_directory", chunk_size={"time": 10})
-```
+Examples of reading and interpreting QUIC-Fire output files using the outputs module are included in the [how-to-guides](https://silvxlabs.github.io/quicfire-tools/how-to-guides/) documentation. 
+The documentation also showcases how output files can be saved in various data formats (NumPy arrays, netCDF, Zarr) for further analysis.
 
 # Implementation
 
@@ -240,6 +113,6 @@ The flexible framework of `quicfire-tools` also allows for the package to keep p
 
 # Acknowledgements
 
-Our thanks goes to David Robinson, Rod Linn, and the rest of the QUIC-Fire development team. We are also grateful for the input and testing from the QUIC-Fire community of practice, including Julia Oliveto, Sophie Bonner, Jay Charney, Leticia Lee, Alex Massarie, Mary Brady, and many others.
+We thank David Robinson, Rod Linn, and the rest of the QUIC-Fire development team. We are also grateful for the input and testing from the QUIC-Fire community of practice, including Julia Oliveto, Sophie Bonner, Jay Charney, Leticia Lee, Alex Massarie, Mary Brady, and many others.
 
 # References
