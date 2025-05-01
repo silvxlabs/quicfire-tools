@@ -1,4 +1,5 @@
-import requests
+import json
+import urllib.request
 from setuptools import find_packages, setup
 
 
@@ -9,22 +10,12 @@ def read_file(fname):
 
 def get_version():
     """Get the version number."""
-    url = "https://api.github.com/repos/silvxlabs/quicfire-tools/releases/latest"
-    response = requests.get(url)
-    response.raise_for_status()
-    version = response.json()["tag_name"]
+    with urllib.request.urlopen(
+        "https://api.github.com/repos/silvxlabs/quicfire-tools/releases/latest"
+    ) as response:
+        data = json.loads(response.read().decode("utf-8"))
+    version = data["tag_name"]
     return version[1:]  # Remove the leading "v" from the version number
-
-
-def get_requirements():
-    """Get the requirements from the requirements.txt file."""
-    requirements = []
-    with open("requirements/requirements.txt", encoding="utf-8") as fd:
-        for line in fd:
-            line = line.strip()
-            if line and not line.startswith("#"):
-                requirements.append(line)
-    return requirements
 
 
 NAME = "quicfire-tools"
@@ -34,7 +25,16 @@ VERSION = get_version()
 LICENSE = "MIT"
 URL = "https://github.com/silvxlabs/quicfire-tools"
 PROJECT_URLS = {"Bug Tracker": f"{URL}/issues"}
-REQUIREMENTS = get_requirements()
+REQUIREMENTS = [
+    "dask",
+    "dask-expr",
+    "netCDF4",
+    "numpy",
+    "pydantic>=2",
+    "pyproj",
+    "scipy",
+    "zarr",
+]
 
 setup(
     name=NAME,
