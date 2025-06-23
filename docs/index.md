@@ -32,7 +32,9 @@ pip install quicfire-tools
 
 ### conda
 
-Conda support is coming soon!
+```bash
+conda install conda-forge::quicfire-tools
+```
 
 
 ## Issues
