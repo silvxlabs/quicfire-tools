@@ -2,7 +2,7 @@
 
 ## Quick-Links
 
-[Documentation](https://silvxlabs.github.io/quicfire-tools/) - [PyPi Package](https://pypi.org/project/quicfire-tools/)
+[Documentation](https://silvxlabs.github.io/quicfire-tools/) - [PyPi Package](https://pypi.org/project/quicfire-tools/) [Conda](https://anaconda.org/conda-forge/quicfire-tools)
 
 ## What is quicfire-tools?
 
@@ -36,8 +36,9 @@ pip install quicfire-tools
 
 ### conda
 
-Conda support is coming soon!
-
+```bash
+conda install conda-forge::quicfire-tools
+```
 
 ## Issues
 
