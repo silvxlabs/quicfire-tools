@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Input and output management tools for the QUIC-Fire fire model"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [
     {name = "Anthony Marcozzi"},
     {name = "Niko Tutland"},
