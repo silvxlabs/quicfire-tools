@@ -16,6 +16,13 @@ The goals of quicfire-tools are to:
    new QUIC-Fire tools and applications.
 3. Provide a platform for collaboration among QUIC-Fire developers and users.
 
+## What is QUIC-Fire?
+
+QUIC-Fire is a fast-running, coupled fire-atmospheric modeling tool developed by Los Alamos National Laboratory for wildland fire behavior prediction and prescribed fire planning. 
+It combines a 3D wind solver (QUIC-URB) with a physics-based cellular automata fire spread model (Fire-CA) to rapidly simulate the complex interactions between fire, fuels, and atmospheric conditions.
+
+**Important Licensing Note**: QUIC-Fire is a closed-source simulation tool. The maintainers of quicfire-tools are not responsible for QUIC-Fire licensing. Users must obtain QUIC-Fire access through appropriate channels.
+
 
 ## Installation
 
