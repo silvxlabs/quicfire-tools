@@ -400,9 +400,9 @@ class SimulationOutputs:
     nx: int
         The number of cells in the x-direction.
     dy: float
-        The grid spacing in the y-direction (m).
+        The grid spacing in the y-direction (m). Defaults to 2m.
     dx: float
-        The grid spacing in the x-direction (m).
+        The grid spacing in the x-direction (m). Defaults to 2m.
     utm_x: float
         UTM-x coordinates of the south-west corner of domain [m]. Default is 0.
     utm_y: float
@@ -422,8 +422,8 @@ class SimulationOutputs:
         fire_nz: int,
         ny: int,
         nx: int,
-        dy: float,
-        dx: float,
+        dy: float = 2,
+        dx: float = 2,
         utm_x: float = 0,
         utm_y: float = 0,
         utm_zone: int = 1,
