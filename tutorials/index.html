@@ -1,0 +1,1020 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../explanation/">
+      
+      
+        <link rel="next" href="../how-to-guides/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>Tutorials - quicfire-tools Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#creating-a-quic-fire-simulation-with-quicfire-tools" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="quicfire-tools Documentation" class="md-header__button md-logo" aria-label="quicfire-tools Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            quicfire-tools Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Tutorials
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/silvxlabs/quicfire-tools" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    quicfire-tools
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="quicfire-tools Documentation" class="md-nav__button md-logo" aria-label="quicfire-tools Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    quicfire-tools Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/silvxlabs/quicfire-tools" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    quicfire-tools
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Explanation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tutorials
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#creating-a-quic-fire-simulation-with-quicfire-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a QUIC-Fire Simulation with quicfire-tools.
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Creating a QUIC-Fire Simulation with quicfire-tools.">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-import-the-simulationinputs-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Import the SimulationInputs class
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-creating-a-uniform-line-fire-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Creating a Uniform Line Fire Simulation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Creating a Uniform Line Fire Simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-21-initialize-the-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2.1: Initialize the simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-22-define-uniform-fuel-characteristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2.2: Define Uniform Fuel Characteristics
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-23-set-the-ignition-area" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2.3: Set the Ignition Area
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-24-specify-output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2.4: Specify Output Files
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-write-the-simulation-to-a-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Write the Simulation to a Directory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finished-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      Finished Code
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-quic-fire-output-files-with-quicfire-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reading QUIC-Fire Output Files with quicfire-tools.
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reading QUIC-Fire Output Files with quicfire-tools.">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-import-the-necessary-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Import the necessary modules
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-create-a-simulationoutputs-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Create a SimulationOutputs object
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-get-an-output-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Get an Output File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-get-the-output-data-as-a-numpy-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4: Get the output data as a numpy array
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finished-code_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Finished Code
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to-guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    How-To Guides
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#creating-a-quic-fire-simulation-with-quicfire-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating a QUIC-Fire Simulation with quicfire-tools.
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Creating a QUIC-Fire Simulation with quicfire-tools.">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-import-the-simulationinputs-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Import the SimulationInputs class
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-creating-a-uniform-line-fire-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Creating a Uniform Line Fire Simulation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Creating a Uniform Line Fire Simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-21-initialize-the-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2.1: Initialize the simulation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-22-define-uniform-fuel-characteristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2.2: Define Uniform Fuel Characteristics
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-23-set-the-ignition-area" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2.3: Set the Ignition Area
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-24-specify-output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2.4: Specify Output Files
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-write-the-simulation-to-a-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Write the Simulation to a Directory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finished-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      Finished Code
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-quic-fire-output-files-with-quicfire-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reading QUIC-Fire Output Files with quicfire-tools.
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reading QUIC-Fire Output Files with quicfire-tools.">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-import-the-necessary-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Import the necessary modules
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-create-a-simulationoutputs-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Create a SimulationOutputs object
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-get-an-output-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Get an Output File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-get-the-output-data-as-a-numpy-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4: Get the output data as a numpy array
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finished-code_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Finished Code
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>Tutorials</h1>
+
+<h2 id="creating-a-quic-fire-simulation-with-quicfire-tools">Creating a QUIC-Fire Simulation with quicfire-tools.</h2>
+<p>Welcome to the tutorial on how to create a QUIC-Fire simulation using quicfire-tools, a Python package designed to
+streamline the process of managing QUIC-Fire input file decks and processing output files. This tutorial will take you
+through the necessary steps to set up a basic QUIC-Fire simulation, focusing on using the SimulationInputs class from
+the inputs module.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<p>Before starting this tutorial, ensure that you have:</p>
+<ul>
+<li>Python 3.8 or higher installed on your system.</li>
+<li>The quicfire-tools package installed on your system. If you do not have quicfire-tools installed, please see the
+  <a href="../#installation">installation instructions</a> in the documentation.</li>
+</ul>
+<h3 id="step-1-import-the-simulationinputs-class">Step 1: Import the SimulationInputs class</h3>
+<p>Start by importing the SimulationInputs class from the quicfire_tools.inputs module:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">quicfire_tools.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationInputs</span>
+</code></pre></div>
+<h3 id="step-2-creating-a-uniform-line-fire-simulation">Step 2: Creating a Uniform Line Fire Simulation</h3>
+<p>In this step, we will create a function to set up a basic QUIC-Fire simulation. This involves initializing the
+simulation, defining fuel characteristics, setting the ignition area, and specifying output files.</p>
+<h4 id="step-21-initialize-the-simulation">Step 2.1: Initialize the simulation</h4>
+<p>First, we initialize the simulation with the grid size, simulation time, and wind conditions. The
+<a href="../reference/#quicfire_tools.inputs.SimulationInputs.create_simulation"><code>create_simulation</code></a> method of
+<a href="../reference/#quicfire_tools.inputs.SimulationInputs"><code>SimulationInputs</code></a> is used for this purpose.</p>
+<div class="highlight"><pre><span></span><code><span class="n">simulation</span> <span class="o">=</span> <span class="n">SimulationInputs</span><span class="o">.</span><span class="n">create_simulation</span><span class="p">(</span>
+    <span class="n">nx</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">ny</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">fire_nz</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">wind_speed</span><span class="o">=</span><span class="mf">1.7</span><span class="p">,</span>
+    <span class="n">wind_direction</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">simulation_time</span><span class="o">=</span><span class="mi">600</span>
+<span class="p">)</span>
+</code></pre></div>
+<ul>
+<li><strong>nx</strong> and <strong>ny</strong> define the number of cells in the x and y axis of the simulation grid.</li>
+<li><strong>fire_nz</strong> determines the number of cells in the z-axis for the fire grid.</li>
+<li><strong>wind_speed</strong> and <strong>wind_direction</strong> set the initial wind conditions.</li>
+<li><strong>simulation_time</strong> specifies how long the simulation will run in seconds.</li>
+</ul>
+<h4 id="step-22-define-uniform-fuel-characteristics">Step 2.2: Define Uniform Fuel Characteristics</h4>
+<p>Next, we define the characteristics of the fuel. The <a href="../reference/#quicfire_tools.inputs.SimulationInputs.set_uniform_fuels"><code>set_uniform_fuels</code></a>
+method sets the fuel density, moisture, and height uniformly across the simulation grid.</p>
+<div class="highlight"><pre><span></span><code><span class="n">simulation</span><span class="o">.</span><span class="n">set_uniform_fuels</span><span class="p">(</span>
+    <span class="n">fuel_density</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+    <span class="n">fuel_moisture</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
+    <span class="n">fuel_height</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">)</span>
+</code></pre></div>
+<ul>
+<li><strong>fuel_density</strong> sets the surface fuel density in kg/m^3.</li>
+<li><strong>fuel_moisture</strong> sets the surface fuel moisture content as a fraction of the fuel's dry weight.</li>
+<li><strong>fuel_height</strong> sets the surface fuel height in meters.</li>
+</ul>
+<h4 id="step-23-set-the-ignition-area">Step 2.3: Set the Ignition Area</h4>
+<p>Now, we specify the area where the fire will start. The <a href="../reference/#quicfire_tools.inputs.SimulationInputs.set_rectangle_ignition"><code>set_rectangle_ignition</code></a>
+method is used to create a rectangular ignition zone simulating a line fire ignition pattern.</p>
+<div class="highlight"><pre><span></span><code><span class="n">simulation</span><span class="o">.</span><span class="n">set_rectangle_ignition</span><span class="p">(</span>
+    <span class="n">x_min</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+    <span class="n">y_min</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">x_length</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">y_length</span><span class="o">=</span><span class="mi">100</span>
+<span class="p">)</span>
+</code></pre></div>
+<ul>
+<li><strong>x_min</strong> and <strong>y_min</strong> set the coordinates of the bottom left corner of the ignition zone. These coordinates are specified in meters, not grid cells.</li>
+<li><strong>x_length</strong> and <strong>y_length</strong> set the length of the ignition zone in the x and y directions in meters.</li>
+</ul>
+<h4 id="step-24-specify-output-files">Step 2.4: Specify Output Files</h4>
+<p>Finally, we specify the types of output files the simulation will generate.
+The <a href="../reference/#quicfire_tools.inputs.SimulationInputs.set_output_files"><code>set_output_files</code></a>
+method allows you to choose which data to output.</p>
+<div class="highlight"><pre><span></span><code><span class="n">simulation</span><span class="o">.</span><span class="n">set_output_files</span><span class="p">(</span>
+    <span class="n">fuel_dens</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">emissions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">qu_wind_inst</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>In this example:
+- <strong>fuel_dens</strong> specifies a compressed array fuel density output.
+- <strong>emissions</strong> specifies CO, PM2.5, and water emissions outputs.
+- <strong>qu_wind_inst</strong> specifies gridded wind components (u, v, w) for the QUIC (wind) grid.</p>
+<h3 id="step-3-write-the-simulation-to-a-directory">Step 3: Write the Simulation to a Directory</h3>
+<p>Now that we have created the simulation, we can write it to a directory containing a QUIC-Fire executable to run the
+fire model.
+The <a href="../reference/#quicfire_tools.inputs.SimulationInputs.write_simulation"><code>write_simulation</code></a>
+method of is used for this purpose.</p>
+<div class="highlight"><pre><span></span><code><span class="n">simulation</span><span class="o">.</span><span class="n">write_inputs</span><span class="p">(</span><span class="s2">&quot;path/to/directory&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="finished-code">Finished Code</h3>
+<p>The following code block combines all the steps in this tutorial to create a basic QUIC-Fire simulation using
+quicfire-tools.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">quicfire_tools.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationInputs</span>
+
+<span class="n">simulation</span> <span class="o">=</span> <span class="n">SimulationInputs</span><span class="o">.</span><span class="n">create_simulation</span><span class="p">(</span>
+    <span class="n">nx</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">ny</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">fire_nz</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">wind_speed</span><span class="o">=</span><span class="mf">1.7</span><span class="p">,</span>
+    <span class="n">wind_direction</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">simulation_time</span><span class="o">=</span><span class="mi">600</span>
+<span class="p">)</span>
+
+<span class="n">simulation</span><span class="o">.</span><span class="n">set_uniform_fuels</span><span class="p">(</span>
+    <span class="n">fuel_density</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+    <span class="n">fuel_moisture</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
+    <span class="n">fuel_height</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">)</span>
+
+<span class="n">simulation</span><span class="o">.</span><span class="n">set_rectangle_ignition</span><span class="p">(</span>
+    <span class="n">x_min</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+    <span class="n">y_min</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">x_length</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">y_length</span><span class="o">=</span><span class="mi">100</span>
+<span class="p">)</span>
+
+<span class="n">simulation</span><span class="o">.</span><span class="n">set_output_files</span><span class="p">(</span>
+    <span class="n">fuel_dens</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">emissions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">qu_wind_inst</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">simulation</span><span class="o">.</span><span class="n">write_inputs</span><span class="p">(</span><span class="s2">&quot;path/to/directory&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="conclusion">Conclusion</h3>
+<p>In this tutorial, we have learned how to create a basic QUIC-Fire simulation using the SimulationInputs class from the
+inputs module. We have also learned how to write the simulation to a directory containing a QUIC-Fire executable to run
+the fire model.</p>
+<p>quicfire-tools is designed to set up simulations in a quick, easy, and repeatable manner. The scope of the inputs module
+ends at writing the simulation to a directory. Running a simulation and understanding the relevant inputs are the
+responsibility of the user.</p>
+<p>For more information about setting up a QUIC-Fire simulation, please see the <a href="../how-to-guides/">How-to-Guide</a>
+for more examples of working with the inputs module,
+and the <a href="../reference/#quicfire_tools.inputs">Reference</a> page for a complete list of available methods and attributes.</p>
+<h2 id="reading-quic-fire-output-files-with-quicfire-tools">Reading QUIC-Fire Output Files with quicfire-tools.</h2>
+<p>In this tutorial, we will learn how to read QUIC-Fire output files using quicfire-tools, a Python package designed to
+streamline the process of managing QUIC-Fire input file decks and processing output files. This tutorial will take you
+through the necessary steps to read a QUIC-Fire output file into a numpy array, focusing on using the OutputFile class
+from the outputs module.</p>
+<h3 id="prerequisites_1">Prerequisites</h3>
+<p>Before starting this tutorial, ensure that you have:</p>
+<ul>
+<li>Python 3.8 or higher installed on your system.</li>
+<li>The quicfire-tools package installed on your system. If you do not have quicfire-tools installed, please see the
+  <a href="../#installation">installation instructions</a> in the documentation.</li>
+<li>An Outputs directory containing the output files from a QUIC-Fire simulation. quicfire-tools does not handle running
+  QUIC-Fire simulations and it is the responsibility of the user to run the fire model and understand the relevant
+  inputs.</li>
+</ul>
+<h3 id="step-1-import-the-necessary-modules">Step 1: Import the necessary modules</h3>
+<p>Start by importing the SimulationInputs class from the quicfire_tools.outputs module:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">quicfire_tools.outputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationOutputs</span>
+</code></pre></div>
+<h3 id="step-2-create-a-simulationoutputs-object">Step 2: Create a SimulationOutputs object</h3>
+<p>Next, create a SimulationOutputs object. The SimulationOutputs class is used to read and process QUIC-Fire outputs.
+You can create a SimulationOutputs object by passing the path to the Outputs directory containing the output files to
+the constructor.</p>
+<p>In addition to the path to the Outputs directory, you also need to specify the number of cells in the z, y, and x
+directions of the simulation grid. This information is used to reshape the output files into a 3D numpy array.</p>
+<div class="highlight"><pre><span></span><code><span class="n">output_directory</span> <span class="o">=</span> <span class="s2">&quot;/path/to/output/directory&quot;</span>
+<span class="n">nz</span> <span class="o">=</span> <span class="mi">56</span>  <span class="c1"># number of z cells</span>
+<span class="n">ny</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># number of y cells</span>
+<span class="n">nx</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># number of x cells</span>
+
+<span class="n">simulation_outputs</span> <span class="o">=</span> <span class="n">SimulationOutputs</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="step-3-get-an-output-file">Step 3: Get an Output File</h3>
+<p>You can use the SimulationOutputs object to get the <code>OutputFile</code> object for the output that you want to read data from.
+To do this, use the <a href="../reference/#quicfire_tools.outputs.SimulationOutputs.get_output_file"><code>get_output_file</code></a>
+method of the SimulationOutputs class.</p>
+<div class="highlight"><pre><span></span><code><span class="n">output_name</span> <span class="o">=</span> <span class="s2">&quot;fire-energy_to_atmos&quot;</span>  <span class="c1"># replace with the name of the output you are interested in</span>
+<span class="n">output_file</span> <span class="o">=</span> <span class="n">simulation_outputs</span><span class="o">.</span><span class="n">get_output</span><span class="p">(</span><span class="n">output_name</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="step-4-get-the-output-data-as-a-numpy-array">Step 4: Get the output data as a numpy array</h3>
+<p>Finally, you can get a numpy array for the output data using the
+<a href="../reference/#quicfire_tools.outputs.OutputFile.to_numpy"><code>to_numpy</code></a> method of the <code>OutputFile</code> instance. You can
+specify the timestep(s) you are interested in. If you don't provide a timestep, all timesteps will be returned:</p>
+<div class="highlight"><pre><span></span><code><span class="n">timestep</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># replace with the timestep you are interested in</span>
+<span class="n">output_data</span> <span class="o">=</span> <span class="n">output_file</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">timestep</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="finished-code_1">Finished Code</h3>
+<p>The following code block combines all the steps in this tutorial to read a QUIC-Fire output file into a numpy array
+using quicfire-tools.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">quicfire_tools.outputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationOutputs</span>
+
+<span class="n">output_directory</span> <span class="o">=</span> <span class="s2">&quot;/path/to/output/directory&quot;</span>
+<span class="n">nz</span> <span class="o">=</span> <span class="mi">56</span>  <span class="c1"># number of z cells</span>
+<span class="n">ny</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># number of y cells</span>
+<span class="n">nx</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># number of x cells</span>
+
+<span class="n">simulation_outputs</span> <span class="o">=</span> <span class="n">SimulationOutputs</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">)</span>
+
+<span class="n">output_name</span> <span class="o">=</span> <span class="s2">&quot;fire-energy_to_atmos&quot;</span>  <span class="c1"># replace with the name of the output you are interested in</span>
+<span class="n">output_file</span> <span class="o">=</span> <span class="n">simulation_outputs</span><span class="o">.</span><span class="n">get_output</span><span class="p">(</span><span class="n">output_name</span><span class="p">)</span>
+
+<span class="n">timestep</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># replace with the timestep you are interested in</span>
+<span class="n">output_data</span> <span class="o">=</span> <span class="n">output_file</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">timestep</span><span class="p">)</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+    
+  </body>
+</html>
