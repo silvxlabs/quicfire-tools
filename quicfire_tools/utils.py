@@ -29,7 +29,7 @@ def compute_parabolic_stretched_grid(
     domain_height : float
         Total height of the grid. For flat terrain without smoke transport
         concerns, it is usually around 100 m. For terrain with features, it
-        should be approximately 3 times the height of the tallest feature.
+        must be greater than 3 times the height of the tallest feature.
 
     Returns
     -------
