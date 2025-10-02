@@ -530,7 +530,6 @@ class SimulationInputs:
         patch_and_gap: bool = False,
         ignition: bool = True,
         topo: bool = True,
-        interpolate: bool = False,
     ) -> None:
         """
         Sets the simulation to use custom fuel, ignition, and topography
@@ -579,16 +578,16 @@ class SimulationInputs:
         >>> sim_inputs = SimulationInputs.create_simulation(nx=100, ny=100, fire_nz=26, wind_speed=1.8, wind_direction=90, simulation_time=600)
         >>> sim_inputs.set_custom_simulation(fuel=True, ignition=True, topo=True)
         >>> sim_inputs.quic_fire.fuel_flag
-        3
+        4
         """
         if fuel_density:
-            self.quic_fire.fuel_density_flag = 3 if not interpolate else 4
+            self.quic_fire.fuel_density_flag = 4
         if fuel_moisture:
-            self.quic_fire.fuel_moisture_flag = 3 if not interpolate else 4
+            self.quic_fire.fuel_moisture_flag = 4
         if fuel_height:
-            self.quic_fire.fuel_height_flag = 3 if not interpolate else 4
+            self.quic_fire.fuel_height_flag = 4
         if size_scale:
-            self.quic_fire.size_scale_flag = 3 if not interpolate else 4
+            self.quic_fire.size_scale_flag = 4
         if patch_and_gap:
             self.quic_fire.patch_and_gap_flag = 2
         if ignition:
@@ -1451,10 +1450,10 @@ class QU_Simparams(InputFile):
     _extension: str = ".inp"
     nx: PositiveInt
     ny: PositiveInt
-    nz: PositiveInt = 22
+    nz: PositiveInt = 25
     dx: PositiveFloat = 2.0
     dy: PositiveFloat = 2.0
-    quic_domain_height: PositiveFloat = 300.0
+    quic_domain_height: PositiveFloat = 100.0  # TODO: should this be 700?
     wind_times: list[int]
     surface_vertical_cell_size: PositiveFloat = 1.0
     number_surface_cells: PositiveInt = 5
@@ -1996,7 +1995,7 @@ class QUIC_fire(InputFile):
     name: str = "QUIC_fire"
     _extension: str = ".inp"
     fire_flag: Literal[0, 1] = 1
-    random_seed: int = Field(ge=-1, default=-1)
+    random_seed: int = Field(ge=-1, default=222)
     time_now: PositiveInt
     sim_time: PositiveInt
     fire_time_step: PositiveInt = 1
@@ -2023,7 +2022,7 @@ class QUIC_fire(InputFile):
     ignition: Union[
         RectangleIgnition, SquareRingIgnition, CircularRingIgnition, Ignition
     ]
-    ignitions_per_cell: PositiveInt = 2
+    ignitions_per_cell: PositiveInt = 1
     firebrand_flag: Literal[0, 1] = 0
     auto_kill: Literal[0, 1] = 1
     eng_to_atm_out: Literal[0, 1] = 0
@@ -2417,11 +2416,11 @@ class QFire_Bldg_Advanced_User_Inputs(InputFile):
 
     name: str = Field("QFire_Bldg_Advanced_User_Inputs", frozen=True)
     _extension: str = ".inp"
-    convert_buildings_to_fuel_flag: Literal[0, 1] = 0
+    convert_buildings_to_fuel_flag: Literal[0, 1] = 1
     building_fuel_density: PositiveFloat = Field(0.5, ge=0)
     building_attenuation_coefficient: PositiveFloat = Field(2.0, ge=0)
-    building_surface_roughness: PositiveFloat = Field(0.01, ge=0)
-    convert_fuel_to_canopy_flag: Literal[0, 1] = 1
+    building_surface_roughness: PositiveFloat = Field(0.1, ge=0)
+    convert_fuel_to_canopy_flag: Literal[0, 1, 2] = 2  # TODO this won't work in v6.0
     update_canopy_winds_flag: Literal[0, 1] = 1
     fuel_attenuation_coefficient: PositiveFloat = Field(1.0, ge=0)
     fuel_surface_roughness: PositiveFloat = Field(0.1, ge=0)
@@ -2515,7 +2514,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
 
     name: str = Field("QFire_Plume_Advanced_User_Inputs", frozen=True)
     _extension: str = ".inp"
-    max_plumes_per_timestep: PositiveInt = Field(150000, gt=0)
+    max_plumes_per_timestep: PositiveInt = Field(85000, gt=0)
     min_plume_updraft_velocity: PositiveFloat = Field(0.1, gt=0)
     max_plume_updraft_velocity: PositiveFloat = Field(100.0, gt=0)
     min_velocity_ratio: PositiveFloat = Field(0.1, gt=0)
@@ -2525,7 +2524,7 @@ class QFire_Plume_Advanced_User_Inputs(InputFile):
     plume_timestep: PositiveFloat = Field(1.0, gt=0)
     sor_option_flag: Literal[0, 1] = 1
     sor_alpha_plume_center: PositiveFloat = Field(10.0, gt=0)
-    sor_alpha_plume_edge: PositiveFloat = Field(1.0, gt=0)
+    sor_alpha_plume_edge: PositiveFloat = Field(2.0, gt=0)
     max_plume_merging_angle: PositiveFloat = Field(30.0, gt=0, le=180)
     max_plume_overlap_fraction: PositiveFloat = Field(0.7, gt=0, le=1)
     plume_to_grid_updrafts_flag: Literal[0, 1] = 1
@@ -2608,10 +2607,10 @@ class QU_TopoInputs(InputFile):
     filename: str = "topo.dat"
     topography: SerializeAsAny[Topography] = Topography(topo_flag=TopoFlags(0))
     smoothing_method: Literal[0, 1, 2] = 2
-    smoothing_passes: NonNegativeInt = Field(le=500, default=500)
-    sor_iterations: PositiveInt = Field(le=500, default=200)
-    sor_cycles: Literal[0, 1, 2, 3, 4] = 4
-    sor_relax: PositiveFloat = Field(le=2, default=0.9)
+    smoothing_passes: NonNegativeInt = Field(le=500, default=50)
+    sor_iterations: PositiveInt = Field(le=500, default=500)
+    sor_cycles: Literal[0, 1, 2, 3, 4] = 2
+    sor_relax: PositiveFloat = Field(le=2, default=1.3)
 
     @computed_field
     @property
