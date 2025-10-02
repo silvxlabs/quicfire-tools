@@ -138,6 +138,7 @@ dev/
 tests/dev/
 tests/tmp/
 tests/data/test-output-zarr/
+tests/data/test-visualization
 
 # macOS
 .DS_Store
