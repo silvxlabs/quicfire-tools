@@ -1453,10 +1453,10 @@ class QU_Simparams(InputFile):
     nz: PositiveInt = 25
     dx: PositiveFloat = 2.0
     dy: PositiveFloat = 2.0
-    quic_domain_height: PositiveFloat = 100.0  # TODO: should this be 700?
+    quic_domain_height: PositiveFloat = 700.0
     wind_times: list[int]
     surface_vertical_cell_size: PositiveFloat = 1.0
-    number_surface_cells: PositiveInt = 5
+    number_surface_cells: PositiveInt = 4
     stretch_grid_flag: Literal[0, 1, 3] = 3
     custom_dz_array: list[PositiveFloat] = Field(default_factory=list_default_factory)
     utc_offset: int = 0
