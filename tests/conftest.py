@@ -91,11 +91,13 @@ LINE_A_PROPS = {
     "fire_order": 1,
     "TimeStart": "4/18/2025 14:30:00 (UTC)",
     "TimeEnd": "4/18/2025 14:32:00 (UTC)",
+    "delay": 0,
 }
 LINE_B_PROPS = {
     "fire_order": 2,
-    "TimeStart": "4/18/2025 14:31:00 (UTC)",
-    "TimeEnd": "4/18/2025 14:34:40 (UTC)",
+    "TimeStart": "4/18/2025 14:33:00 (UTC)",
+    "TimeEnd": "4/18/2025 14:36:40 (UTC)",
+    "delay": 60,
 }
 
 POINTS = [
@@ -230,7 +232,7 @@ def expected_ignite_dat(tmp_path):
         for coords, props in lines:
             if props["fire_order"] != order:
                 continue
-            t = group_start
+            t = group_start + props["delay"]
             for (x1, y1), (x2, y2) in zip(coords[:-1], coords[1:]):
                 t_end = t + math.hypot(x2 - x1, y2 - y1) / speed_mps
                 rows.append((x1 - ox, y1 - oy, x2 - ox, y2 - oy, t, t_end))

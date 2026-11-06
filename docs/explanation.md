@@ -77,3 +77,9 @@ Key functionality includes:
 * Getting outputs as NumPy arrays
 * Writing outputs to Zarr files
 * Integration with Dask arrays
+
+## Ignite.dat Files module
+
+The [`ignite.dat files`](reference.md#quicfire_tools.ignite_dat_files) module in `quicfire_tools` is a standalone part of the package for creating and visualizing ignite.dat files. It is not built into the [`inputs`](reference.md#quicfire_tools.inputs.set_rectangle_ignition) module because there are many different ways to create ignition plans for QUIC-Fire and this module only covers a few of them. The ignitions options that are pre-set in the [`inputs`](reference.md#quicfire_tools.inputs) module do not require any additional files from the user. [`Ignite.dat files`](reference.md#quicfire_tools.ignite_dat_files)  module, on the other hand, requires either a pre-made geojson of points or lines (likely made by hand in a GIS) or a csv of timestamped points (for example, a gps track), which are used as the basis for ignitions.
+
+The functions for visualizing ignite.dat files can be run on any ignite.dat file, regardless of if it was created by this module or from another source. These visuals allow users to sanity check their ignition files before running a QUIC-Fire simulation and provide a tool for communicating burn plans or explaining the simulation. The [`animation function`](reference.md#quicfire_tools.ignite_dat_files.animate_geojson_ignition) only runs on geojsons formatted for use in this module. It does not work on ignite.dat files. The animation shows ignition groups (simultaneous ignitions) in different colors and preserves the timing of different groups relative to each other, which is useful for designing and checking complex ignition plans.

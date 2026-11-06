@@ -79,8 +79,39 @@ def test_output_matches_dat_format(
     assert_valid_ignite_dat(path)
 
 
-# only checking lines with order mode
-def test_lines_output_matches_expected(
+# only checking lines. haven't made example for points
+def test_lines_time_output_matches_expected(
+    tmp_path, domain_file, lines_file, expected_ignite_dat
+):
+    geojson_lines_to_dat(
+        tmp_path,
+        domain_file,
+        lines_file,
+        "ignite.dat",
+        order_time="time",
+        speed_mps=1,
+        start_t_name="TimeStart",
+        end_t_name="TimeEnd",
+    )
+    actual = (tmp_path / "ignite.dat").read_text().splitlines()
+    expected = expected_ignite_dat.read_text().splitlines()
+    # Same number of lines (header + data rows)
+    assert len(actual) == len(
+        expected
+    ), f"expected {len(expected)} lines, got {len(actual)}"
+    # Header (first 6 lines) must match exactly, including natv
+    assert actual[:6] == expected[:6]
+    # Data rows: compare numerically, so tiny float differences don't fail
+    for i, (a_row, e_row) in enumerate(zip(actual[6:], expected[6:]), start=7):
+        a_vals = [float(v) for v in a_row.split()]
+        e_vals = [float(v) for v in e_row.split()]
+        assert len(a_vals) == 6, f"line {i}: expected 6 columns, got {len(a_vals)}"
+        assert a_vals == pytest.approx(
+            e_vals, abs=0.01
+        ), f"line {i}: got {a_row!r}, expected {e_row!r}"
+
+
+def test_lines_order_output_matches_expected(
     tmp_path, domain_file, lines_file, expected_ignite_dat
 ):
     geojson_lines_to_dat(

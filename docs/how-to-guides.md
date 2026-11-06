@@ -62,7 +62,7 @@ simulation.set_uniform_fuels(
 #### How to set a rectangle ignition pattern
 
 By default, ignitions are set up perpendicular to the wind direction specified in `create_simulation`, spanning 80% of the domain
-edge length, 10% from either side. A different igntion line can be created using the [`set_rectangle_ignition`](reference.md#quicfire_tools.inputs.SimulationInputs.set_rectangle_ignition) method.
+edge length, 10% from either side. A different igntion line can be created using the [`set_rectangle_ignition`](reference.md#quicfire_tools.inputs.SimulationInputs.set_rectangle_ignition) method or through the [`Ignite.dat Files`](reference.md#quicfire_tools.ignite_dat_files) module, either before or after creating your simulation files.
 In the following example, ignitions start 150m from the western edge of the domain (x=0) and 100m from the southern edge of the domain (y=0). The rectangle extends 10 meters east in the x-direction,
 and 100m north in the y-direction.
 
@@ -78,8 +78,8 @@ simulation.set_rectangle_ignition(
 - **x_min** and **y_min** set the coordinates of the bottom left corner of the ignition zone. These coordinates are specified in meters, not grid cells.
 - **x_length** and **y_length** set the length of the ignition zone in the x and y directions in meters.
 
-Ignition patterns other than rectangular can be specified using the [ignitions module](how-to-guides.md#define-ignitions-using-ignitionspy).
-Please see [ignitions](reference.md#quicfire_tools.ignitions) for a full list of available ignition patterns.
+Ignition patterns other than rectangular can be specified using the [ignitions module](how-to-guides.md#define-ignitions-using-ignitionspy) or the [`ignite.dat files`](reference.md#quicfire_tools.ignite_dat_files) module.
+Please see [ignitions](reference.md#quicfire_tools.ignitions) for a full list of pre-made ignition patterns.
 
 #### How to specify which files to output
 
@@ -103,7 +103,7 @@ Please see the [`QUIC_fire`](reference.md#quicfire_tools.inputs.QUIC_fire) class
 
 #### How to set custom fuels, ignitions, and topography from .dat files
 
-For more advanced simulations, it may be necessary to specify custom fuel parameters, ignition patterns, or topography using .dat files. These files must be created and provided by the user, but the [`set_custom_simulation`](reference.md#quicfire_tools.inputs.SimulationInputs.set_custom_simulation) method can be used to specify which custom .dat files should be used in the simulation.
+For more advanced simulations, it may be necessary to specify custom fuel parameters, ignition patterns, or topography using .dat files. These files must be created and provided by the user, but the [`set_custom_simulation`](reference.md#quicfire_tools.inputs.SimulationInputs.set_custom_simulation) method can be used to specify which custom .dat files should be used in the simulation. Custom ignite.dat files can be created using [`Ignite.dat Files`](reference.md#quicfire_tools.ignite_dat_files) module. Details for using this module can be found at [`ignitions using ignite_dat_files`](how-to-guides.md#How-to-define-ignitions-using-ignite_dat_files.py).
 
 ```python
 simulation.set_custom_simulation(
@@ -234,7 +234,7 @@ Please see [topopgraphy](reference.md#quicfire_tools.topography) for a full list
 
 ### How to define ignitions using ignitions.py
 
-In addition to [rectangle ignitions](how-to-guides.md#set-rectangle-ignition-patterns) (the default) and [custom ignitions](how-to-guides.md#set-custom-fuels-ignitions-and-topography-from-dat-files), there are various build-in ignition patterns, all of which can be set using class in the [ignnitions](reference.md#quicfire_tools.ignitions) module. The following example creates and sets a circular ring ignition.
+In addition to [rectangle ignitions](how-to-guides.md#set-rectangle-ignition-patterns) (the default) and [custom ignitions](how-to-guides.md#set-custom-fuels-ignitions-and-topography-from-dat-files), there are various built-in ignition patterns, all of which can be set using class in the [ignnitions](reference.md#quicfire_tools.ignitions) module. The following example creates and sets a circular ring ignition.
 
 ```python
 from quicfire_tools.ignitions import CircularRingIgnition
@@ -252,7 +252,42 @@ ring_ignition = CircularRingIgnition(
 simulation.quic_fire.ignition = ring_ignition
 ```
 
-Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of ignition patterns.
+Please see [igntions](reference.md#quicfire_tools.ignitions) for a full list of pre-made ignition patterns.
+
+### How to define ignitions using ignite_dat_files.py
+
+The [`ignite.dat files`](reference.md#quicfire_tools.ignite_dat_files) module operates outside the [`inputs`](how-to-guides.md#inputs) framework. This set of functions can be run in a directory containing a full QUIC-Fire input deck or simply the geojson files required by a specific ignite.dat creation function.
+
+To use an ignite.dat file in a QUIC-Fire simulation, ensure the QUIC_fire.inp file has the appropriate ignition flag. If using `quicfire_tools` to make your QUIC-Fire files, see [`custom files`](how-to-guides.md#how-to-set-custom-fuels-ignitions-and-topography-from-dat-files) for setting the ignitions flag to ignite.dat.
+
+The following examples show function calls for creating and visualizing ignitions
+```python
+from quicfire_tools.ignite_dat_files import *
+
+# to create lines and points geojsons from a csv (such as a gps track)
+# which has columns for the timestamp, and x & y coordinates
+geojsons_from_track_csv(prj_path="path/to/project", csv_fname="heli_track.csv",
+                        input_time="DateTime", input_y="Northing", input_x="Easting",
+                        epsg=32617, resample_interval=10)
+
+# to create an ignite.dat file from a geojson of lines (hand-made or
+# produced from the function above)
+geojson_lines_to_dat(prj_path="file/path/to/project", domain_fname="domain.geojson",
+                     geojson_fname="my_ignition_lines.geojson", ign_fname="ignite.dat",
+                     order_time="order", speed_mps=1)
+
+## Visuals
+# to make an animation of your ignition plan
+animate_geojson_ignition(prj_path="path/to/project", domain_fname="domain.geojson",
+                         unit_fname="unit.geojson",
+                         lines_fname="my_ignition_lines.geojson",  speed_mps=0.5,
+                         gif_fname="ignition_plan_animation.gif", seconds_per_frame=15)
+# to create a still image of an ignite.dat ignition
+plot_ignition(prj_path="path/to/project", domain_fname="domain.geojson",
+              ign_fname="ignite.dat", unit_fname="unit.geojson",
+              out_fname="ignition_plan.png")
+```
+See [`ignite.dat overview`](explanation.md#ignitedat-files-module) for more information or go to [`individual ignite.dat functions`](reference.md#quicfire_tools.ignite_dat_files) for function specific information.
 
 ### How to manage wind conditions
 

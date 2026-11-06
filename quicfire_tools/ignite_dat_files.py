@@ -1023,7 +1023,7 @@ def plot_ignition(
 
 def plot_ignition_deluxe(
     prj_path: str | Path,
-    ign_fname,
+    ign_fname: str,
     out_fname=None,
     unit_fname: str | None = None,
     domain_fname: str | None = None,
