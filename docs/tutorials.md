@@ -13,6 +13,7 @@ Before starting this tutorial, ensure that you have:
 - The quicfire-tools package installed on your system. If you do not have quicfire-tools installed, please see the
   [installation instructions](index.md#installation) in the documentation.
 
+## Simple Simulation
 ### Step 1: Import the SimulationInputs class
 
 Start by importing the SimulationInputs class from the quicfire_tools.inputs module:
@@ -150,10 +151,68 @@ simulation.set_output_files(
 
 simulation.write_inputs("path/to/directory")
 ```
+## Advanced Simulation
+### Step 1: Import the SimulationInputs class and build a simulation
+
+Start by importing the SimulationInputs class from the quicfire_tools.inputs module and set it to use custom fuels, topography, and ignitions
+
+```python
+from quicfire_tools.inputs import SimulationInputs
+my_domain_dimensions = [35, 200, 500] #number of cells z, y, x. Match fuel array dimensions (ex. treesrhof.dat)
+simulation = SimulationInputs.create_simulation(
+    nx=my_domain_dimensions[2],
+    ny=my_domain_dimensions[1],
+    fire_nz=my_domain_dimensions[0],
+    wind_speed=1.7,
+    wind_direction=90,
+    simulation_time=600
+)
+simulation = simulation.set_custom_simulation(
+    fuel_density=True,    # Use treesrhof.dat for fuel density -- obtained from fast fuels
+    fuel_moisture=True,   # Use treesmoist.dat for fuel moisture -- obtained from fast fuels
+    fuel_height=True,     # Use treesfueldepth.dat for fuel height -- obtained from fast fuels
+    topo=True,            # Use topo.dat for topography -- obtained from fast fuels
+    ignition=True,        # Use ignite.dat for ignition pattern
+)
+```
+### Step 2: Optionally, add details to your wind sensor
+```python
+ simulation.add_wind_sensor(
+        wind_times=[0, 600], #Wind changes after 600 sec
+        wind_speeds=[1.7, 3.0],
+        wind_directions=[90, 90],
+        sensor_height=30,
+        x_location=my_domain_dimensions[2] / 2, #center the sensor in the plot
+        y_location=my_domain_dimensions[1] / 2,
+        sensor_name="sensor1"
+    )
+```
+
+### Step3: Specify output files and create QUIC-Fire file deck
+```python
+simulation.set_output_files(
+    fuel_dens=True,
+    emissions=True,
+    qu_wind_inst=True
+)
+simulation.write_inputs("path/to/project directory") #likely the same directory containing the fuels and topo dat files
+```
+
+### Step 4: Create an ignite.dat file
+import the ignite_dat_files module and create the dat file either from lines, points, or a gps track
+```python
+from quicfire_tools.ignite_dat_files import *
+#create the ignite.dat file
+geojson_lines_to_dat(prj_path="path/to/project directory", domain_fname="domain.geojson",
+                     geojson_fname="my_ignition_lines.geojson", ign_fname="ignite.dat",
+                     order_time="order", speed_mps=1)
+# visualize the ignition plan
+plot_ignition_deluxe(prj_path="path/to/project directory", ign_fname="ignite.dat")
+```
 
 ### Conclusion
 
-In this tutorial, we have learned how to create a basic QUIC-Fire simulation using the SimulationInputs class from the
+In this tutorial, we have learned how to create a basic and more complex QUIC-Fire simulation using the SimulationInputs class from the
 inputs module. We have also learned how to write the simulation to a directory containing a QUIC-Fire executable to run
 the fire model.
 
